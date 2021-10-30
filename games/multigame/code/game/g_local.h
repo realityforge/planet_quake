@@ -611,6 +611,9 @@ gentity_t *fire_blaster (gentity_t *self, vec3_t start, vec3_t aimdir);
 gentity_t *fire_plasma (gentity_t *self, vec3_t start, vec3_t aimdir);
 gentity_t *fire_grenade (gentity_t *self, vec3_t start, vec3_t aimdir);
 gentity_t *fire_rocket (gentity_t *self, vec3_t start, vec3_t dir);
+#ifdef USE_PORTALS
+gentity_t *fire_portal (gentity_t *self, vec3_t start, vec3_t dir, qboolean altFire);
+#endif
 gentity_t *fire_bfg (gentity_t *self, vec3_t start, vec3_t dir);
 gentity_t *fire_grapple (gentity_t *self, vec3_t start, vec3_t dir);
 #ifdef MISSIONPACK
@@ -684,7 +687,11 @@ qboolean G_FilterPacket (char *from);
 //
 // g_weapon.c
 //
+#ifdef USE_ALT_FIRE
+void FireWeapon( gentity_t *ent, qboolean altFire );
+#else
 void FireWeapon( gentity_t *ent );
+#endif
 #ifdef MISSIONPACK
 void G_StartKamikaze( gentity_t *ent );
 #endif
@@ -920,6 +927,13 @@ extern vmCvar_t  wp_chainDamage;
 extern vmCvar_t  wp_flameDamage;
 extern vmCvar_t  wp_flameSplash;
 extern vmCvar_t  wp_flameRadius;
+#endif
+#endif
+
+#ifdef USE_PORTALS
+extern vmCvar_t  g_portalsEnabled;
+#ifdef USE_ALT_FIRE
+extern vmCvar_t  g_altPortal;
 #endif
 #endif
 

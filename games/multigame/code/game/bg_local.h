@@ -59,19 +59,25 @@ extern	int		c_pmove;
 #ifdef MISSIONPACK
 #define g_scoutFactor  cg_scoutFactor
 #endif
+
 #define g_hasteFactor  cg_hasteFactor
 #define g_jumpVelocity cg_jumpVelocity
 #define g_gravity      cg_gravity
 #define g_wallWalk     cg_wallWalk
+#endif // end USE_PHYSICS_VARS
+
+
+#ifdef USE_PORTALS
+#define g_portalsEnabled cg_portalsEnabled
+#define g_altPortal cg_altPortal
 #endif
+
 
 #ifdef USE_GRAPPLE
 #define g_altGrapple cg_altGrapple
 #define wp_grapplePull cgwp_grapplePull
 #endif
-#endif
 
-#ifdef CGAME
 #ifdef USE_WEAPON_VARS
 #define wp_gauntCycle   cgwp_gauntCycle
 #define wp_lightCycle   cgwp_lightCycle
@@ -88,7 +94,8 @@ extern	int		c_pmove;
 #define wp_chainCycle   cgwp_chainCycle
 #define wp_flameCycle   cgwp_flameCycle
 #endif
-#endif
+
+#endif // end CGAME
 
 #ifdef USE_WEAPON_VARS
 extern vmCvar_t  wp_gauntCycle;
@@ -115,6 +122,11 @@ extern vmCvar_t  g_hasteFactor;
 extern vmCvar_t  g_jumpVelocity;
 extern vmCvar_t  g_gravity;
 extern vmCvar_t  g_wallWalk;
+#endif
+
+#ifdef USE_PORTALS
+extern vmCvar_t  g_portalsEnabled;
+extern vmCvar_t  g_altPortal;
 #endif
 
 #ifdef USE_GRAPPLE

@@ -257,6 +257,10 @@ vmCvar_t	cg_jumpVelocity;
 vmCvar_t	cg_gravity;
 vmCvar_t	cg_wallWalk;
 #endif
+#ifdef USE_PORTALS
+vmCvar_t  cg_portalsEnabled;
+vmCvar_t  cg_altPortal;
+#endif
 #ifdef USE_GRAPPLE
 vmCvar_t  cgwp_grappleEnable;
 vmCvar_t  cgwp_grapplePull;
@@ -398,6 +402,10 @@ static const cvarTable_t cvarTable[] = {
 #endif
 #ifdef USE_WEAPON_CENTER
   { &cg_gunCenter, "cg_gunCenter", "1", CVAR_ARCHIVE },
+#endif
+#ifdef USE_PORTALS
+  { &cg_portalsEnabled,  "g_portalsEnabled", "1", CVAR_SERVERINFO },
+  { &cg_altPortal,       "g_altPortal", "0", CVAR_SERVERINFO },
 #endif
 #ifdef USE_GRAPPLE
   { &cgwp_grappleEnable, "wp_grappleEnable", "1", CVAR_SERVERINFO },

@@ -576,15 +576,29 @@ void ClientEvents( gentity_t *ent, int oldEventSequence ) {
       if(g_altGrapple.integer) {
         int oldWeapon = ent->s.weapon;
         ent->s.weapon = WP_GRAPPLING_HOOK;
-        FireWeapon( ent );
+        FireWeapon( ent, qtrue );
         ent->s.weapon = oldWeapon;
-      }
+      } else
 #endif
+#ifdef USE_PORTALS
+      if(g_altPortal.integer) {
+        int oldWeapon = ent->s.weapon;
+        ent->s.weapon = WP_BFG;
+        FireWeapon( ent, qtrue );
+        ent->s.weapon = oldWeapon;
+      } else
+#endif
+      FireWeapon( ent, qtrue );
+
       if(event != EV_ALTFIRE_BOTH)
       break;        
 #endif
 		case EV_FIRE_WEAPON:
-			FireWeapon( ent );
+#ifdef USE_ALT_FIRE
+			FireWeapon( ent, qfalse );
+#else
+      FireWeapon( ent );
+#endif
 			break;
 
     case EV_USE_ITEM:

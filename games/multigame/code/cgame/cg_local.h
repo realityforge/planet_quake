@@ -878,6 +878,8 @@ typedef struct {
 	qhandle_t	rocketExplosionShader;
 	qhandle_t	grenadeExplosionShader;
 	qhandle_t	bfgExplosionShader;
+  qhandle_t	redBFG;
+  qhandle_t	blueBFG;
 	qhandle_t	bloodExplosionShader;
   qhandle_t	grappleShader;	
 
@@ -1336,6 +1338,10 @@ extern	vmCvar_t	  cg_hasteFactor;
 extern	vmCvar_t	  cg_jumpVelocity;
 extern	vmCvar_t	  cg_gravity;
 extern	vmCvar_t	  cg_wallWalk;
+#endif
+#ifdef USE_PORTALS
+extern  vmCvar_t    cg_portalsEnabled;
+extern  vmCvar_t    cg_altPortal;
 #endif
 #ifdef USE_GRAPPLE
 extern  vmCvar_t    cg_altGrapple;

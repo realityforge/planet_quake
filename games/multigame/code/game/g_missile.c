@@ -438,6 +438,19 @@ void G_MissileImpact( gentity_t *ent, trace_t *trace ) {
 		return;
 	}
 
+#ifdef USE_PORTALS
+  if(g_portalsEnabled.integer && ent->s.weapon == WP_BFG) {
+    ent->client = ent->parent->client;
+    if(ent->classname[7] == 'a') {
+      DropPortalDestination( ent );
+    } else {
+      DropPortalSource( ent );
+    }
+    G_FreeEntity(ent);
+    return;
+  }
+#endif
+
 	// is it cheaper in bandwidth to just remove this ent and create a new
 	// one, rather than changing the missile into the explosion?
 
@@ -905,6 +918,57 @@ gentity_t *fire_grenade (gentity_t *self, vec3_t start, vec3_t dir) {
 }
 
 //=============================================================================
+
+
+#ifdef USE_PORTALS
+gentity_t *fire_portal (gentity_t *self, vec3_t start, vec3_t dir, qboolean altFire) {
+	gentity_t	*bolt;
+
+	VectorNormalize (dir);
+
+	bolt = G_Spawn();
+  // TODO: something for g_altPortal mode that resets
+  if(altFire) {
+    Com_Printf("portal b\n");
+    bolt->classname = "portal_b";
+  } else {
+    Com_Printf("portal a\n");
+    bolt->classname = "portal_a";
+    bolt->s.powerups = 1;
+  }
+	bolt->nextthink = level.time + 10000;
+	bolt->think = G_ExplodeMissile;
+	bolt->s.eType = ET_MISSILE;
+	bolt->r.svFlags = SVF_USE_CURRENT_ORIGIN;
+	bolt->s.weapon = WP_BFG;
+	bolt->r.ownerNum = self->s.number;
+	bolt->parent = self;
+  // TODO: use these as pickup and throwing values in bfg mode?
+	bolt->damage = 0;
+  bolt->splashDamage = 0;
+	bolt->splashRadius = 0;
+
+	bolt->methodOfDeath = MOD_TELEFRAG;
+	bolt->splashMethodOfDeath = MOD_UNKNOWN;
+	bolt->clipmask = MASK_SHOT;
+	bolt->target_ent = NULL;
+
+	// missile owner
+	bolt->s.clientNum = self->s.clientNum;
+	// unlagged
+	bolt->s.otherEntityNum = self->s.number;
+
+	bolt->s.pos.trType = TR_LINEAR;
+	bolt->s.pos.trTime = level.time - MISSILE_PRESTEP_TIME;		// move a bit on the very first frame
+	VectorCopy( start, bolt->s.pos.trBase );
+	SnapVector( bolt->s.pos.trBase );			// save net bandwidth
+	VectorScale( dir, 2000, bolt->s.pos.trDelta );
+	SnapVector( bolt->s.pos.trDelta );			// save net bandwidth
+	VectorCopy (start, bolt->r.currentOrigin);
+
+	return bolt;
+}
+#endif
 
 
 /*

@@ -18,7 +18,7 @@ textures/portal/portal_sfx_blue
 	portal
 	surfaceparm nolightmap
   surfaceparm nomarks
-	//deformVertexes wave 100 sin 0 2 0 .5
+	deformVertexes wave 100 sin 0 2 0 .5
 
 	{
 		map textures/portal/blue/portal_sfx3.tga
@@ -49,7 +49,7 @@ textures/portal/portal_sfx_blue
 
 textures/portal/portal_sfx_ring_blue
 {
-	//deformVertexes wave 100 sin 0 2 0 .5
+	deformVertexes wave 100 sin 0 2 0 .5
 	surfaceparm nolightmap
   surfaceparm nomarks
 
@@ -85,7 +85,7 @@ textures/portal/portal_sfx_red
 {
 	portal
 	surfaceparm nolightmap
-	//deformVertexes wave 100 sin 0 2 0 .5
+	deformVertexes wave 100 sin 0 2 0 .5
   surfaceparm nomarks
 
 	{
@@ -117,7 +117,7 @@ textures/portal/portal_sfx_red
 
 textures/portal/portal_sfx_ring_red
 {
-	//deformVertexes wave 100 sin 0 2 0 .5
+	deformVertexes wave 100 sin 0 2 0 .5
 	surfaceparm nolightmap
   surfaceparm nomarks
 	
@@ -147,4 +147,76 @@ textures/portal/portal_sfx_ring_red
 		rgbgen wave inversesawtooth 0 .5 .2 .7
 	}
 
+}
+
+textures/portal/blueBFG
+{
+//  deformVertexes autoSprite
+  cull none
+  nomipmaps
+
+  {
+          clampmap models/weaphits/bfg01.tga
+          blendFunc GL_ONE GL_ONE
+          tcMod rotate 333
+          rgbGen identity
+          rgbgen const ( 0.1 0.1 1.0 )
+  }
+  {
+          clampmap models/weaphits/bfg01.tga
+          blendFunc GL_ONE GL_ONE
+          tcMod rotate -100
+          rgbGen identity
+          rgbgen const ( 0.1 0.1 1.0 )
+  }
+  {
+          map models/weaphits/bfg03.tga
+          blendFunc GL_ONE GL_ONE
+          tcmod scroll 2 0
+          rgbGen identity
+          rgbgen const ( 0.1 0.1 1.0 )
+  }
+  {
+          map models/weaphits/bfg02.tga
+          blendFunc GL_ONE GL_ONE
+          tcmod scroll 3 0
+          tcMod turb 0 .25 0 1.6
+          rgbGen identity
+  }
+}
+
+textures/portal/redBFG
+{
+//  deformVertexes autoSprite
+  cull none
+  nomipmaps
+
+  {
+          clampmap models/weaphits/bfg01.tga
+          blendFunc GL_ONE GL_ONE
+          tcMod rotate 333
+          rgbGen identity
+          rgbgen const ( 0.9 0.5 0.1 )
+  }
+  {
+          clampmap models/weaphits/bfg01.tga
+          blendFunc GL_ONE GL_ONE
+          tcMod rotate -100
+          rgbGen identity
+          rgbgen const ( 0.9 0.5 0.1 )
+  }
+  {
+          map models/weaphits/bfg03.tga
+          blendFunc GL_ONE GL_ONE
+          tcmod scroll 2 0
+          rgbGen identity
+          rgbgen const ( 0.9 0.5 0.1 )
+  }
+  {
+          map models/weaphits/bfg02.tga
+          blendFunc GL_ONE GL_ONE
+          tcmod scroll 3 0
+          tcMod turb 0 .25 0 1.6
+          rgbGen identity
+  }
 }

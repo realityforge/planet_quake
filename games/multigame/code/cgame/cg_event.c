@@ -1014,6 +1014,12 @@ Com_Printf("global item pickup\n");
   case EV_ALTFIRE_WEAPON:
 #ifdef USE_GRAPPLE
     if(cg_altGrapple.integer) {
+      // don't play firing animation
+      break;
+    }
+#endif
+#ifdef USE_PORTALS
+    if(cg_altPortal.integer) {
       break;
     }
 #endif

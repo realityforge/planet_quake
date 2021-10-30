@@ -821,7 +821,9 @@ static qboolean R_GetPortalOrientations( const drawSurf_t *drawSurf, int entityN
 			
 		// now get the camera origin and orientation
 		VectorCopy( e->e.oldorigin, camera->origin );
-Com_Printf("camera: %i - %f, %f, %f\n", entityNum, camera->origin[0], camera->origin[1], camera->origin[2]);
+//Com_Printf("camera: %i - %f, %f, %f - %f, %f, %f\n", entityNum, 
+//  camera->origin[0], camera->origin[1], camera->origin[2],
+//  e->e.origin[0], e->e.origin[1], e->e.origin[2]);
 		AxisCopy( e->e.axis, camera->axis );
 		VectorSubtract( vec3_origin, camera->axis[0], camera->axis[0] );
 		VectorSubtract( vec3_origin, camera->axis[1], camera->axis[1] );
@@ -1565,8 +1567,8 @@ void R_AddEntitySurfaces( void ) {
 		tr.shiftedEntityNum = tr.currentEntityNum << QSORT_REFENTITYNUM_SHIFT;
 
     if(tr.viewParms.portalView != PV_NONE
-    //  && ent->e.oldframe
-    //  && ent->e.oldframe == tr.viewParms.portalEntity
+      && ent->e.oldframe
+      && ent->e.oldframe == tr.viewParms.portalEntity
     ) {
       continue;
     }

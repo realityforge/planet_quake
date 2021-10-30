@@ -822,6 +822,10 @@ void CG_RegisterWeapon( int weaponNum ) {
 		cgs.media.bfgExplosionShader = trap_R_RegisterShader( "bfgExplosion" );
 		weaponInfo->missileModel = trap_R_RegisterModel( "models/weaphits/bfg.md3" );
 		weaponInfo->missileSound = trap_S_RegisterSound( "sound/weapons/rocket/rockfly.wav", qfalse );
+#ifdef USE_PORTALS
+    cgs.media.redBFG = trap_R_RegisterShader( "textures/portal/redBFG" );
+    cgs.media.blueBFG = trap_R_RegisterShader( "textures/portal/blueBFG" );
+#endif
 		break;
 
 #ifdef USE_FLAME_THROWER
@@ -1322,6 +1326,10 @@ void CG_AddPlayerWeapon( refEntity_t *parent, playerState_t *ps, centity_t *cent
 #if defined(USE_GRAPPLE) && defined(USE_ALT_FIRE)
   if(cg_altGrapple.integer)
     CG_RegisterWeapon( WP_GRAPPLING_HOOK );
+#endif
+#ifdef USE_PORTALS
+  if(cg_altPortal.integer)
+    CG_RegisterWeapon( WP_BFG );
 #endif
 	weapon = &cg_weapons[weaponNum];
   weaponNum = weaponNum & 0xF;

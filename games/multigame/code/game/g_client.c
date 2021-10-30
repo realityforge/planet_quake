@@ -1142,17 +1142,6 @@ void ClientSpawn(gentity_t *ent) {
 	client->ps.stats[STAT_WEAPONS] |= ( 1 << WP_GAUNTLET );
   client->ps.ammo[WP_GAUNTLET] = -1;
 
-#if defined(USE_GRAPPLE) && defined(USE_WEAPON_VARS)
-  if(wp_grappleEnable.integer 
-#ifdef USE_ALT_FIRE
-    && !g_altGrapple.integer
-#endif
-  ) {
-    client->ps.stats[STAT_WEAPONS] |= ( 1 << WP_GRAPPLING_HOOK );
-    client->ps.ammo[WP_GRAPPLING_HOOK] = -1;
-  }
-#endif
-
 #ifdef USE_FLAME_THROWER
   //Spawn player with flame thrower
   client->ps.stats[STAT_WEAPONS] |= ( 1 << WP_FLAME_THROWER );
@@ -1197,6 +1186,24 @@ if(g_hotBFG.integer) {
   client->ps.stats[STAT_HEALTH] = max;
   client->ps.stats[STAT_MAX_HEALTH] = max;
 }
+#endif
+#ifdef USE_PORTALS
+  if(g_portalsEnabled.integer && !g_hotBFG.integer) {
+    // in alt-fire mode, both ends reset with right click
+    // otherwise, use BFG left and right click for both ends
+    client->ps.stats[STAT_WEAPONS] = ( 1 << WP_BFG );
+    client->ps.ammo[WP_BFG] = INFINITE;  
+  }
+#endif
+#if defined(USE_GRAPPLE) && defined(USE_WEAPON_VARS)
+  if(wp_grappleEnable.integer 
+#ifdef USE_ALT_FIRE
+    && !g_altGrapple.integer
+#endif
+  ) {
+    client->ps.stats[STAT_WEAPONS] |= ( 1 << WP_GRAPPLING_HOOK );
+    client->ps.ammo[WP_GRAPPLING_HOOK] = -1;
+  }
 #endif
 
 

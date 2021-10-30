@@ -593,6 +593,17 @@ static void CG_Missile( centity_t *cent ) {
 	ent.skinNum = cg.clientFrame & 1;
 	ent.hModel = weapon->missileModel;
 	ent.renderfx = weapon->missileRenderfx | RF_NOSHADOW;
+  
+#ifdef USE_PORTALS
+  if(cent->currentState.weapon == WP_BFG
+    && cg_portalsEnabled.integer) {
+    if(cent->currentState.powerups) {
+      ent.customShader = cgs.media.redBFG;
+    } else {
+      ent.customShader = cgs.media.blueBFG;
+    }
+  }
+#endif
 
 #ifdef MISSIONPACK
 	if ( cent->currentState.weapon == WP_PROX_LAUNCHER ) {
@@ -762,7 +773,7 @@ static void CG_PersonalPortal(const centity_t *cent) {
   // add portal model
   memset (&ent, 0, sizeof(ent));
   VectorCopy( cent->lerpOrigin, ent.origin);
-  ent.origin[2] += 32; // TODO: wtf?
+  ent.origin[2] += 16; // TODO: wtf?
   ent.hModel = cgs.gameModels[cent->currentState.modelindex];
   if(!ent.hModel) {
     return;
@@ -782,7 +793,7 @@ static void CG_PersonalPortal(const centity_t *cent) {
   // TODO: change cg_weapons to match, it also uses midpoint of weapon models?
   ent.oldorigin[2] += 50;
   //if(cent->currentState.powerups)
-  Com_Printf("origin: %f, %f, %f\n", ent.oldorigin[0], ent.oldorigin[1], ent.oldorigin[2]);
+  //Com_Printf("origin: %f, %f, %f\n", ent.oldorigin[0], ent.oldorigin[1], ent.oldorigin[2]);
   angles[1] += 180;
   angles[2] = -90;
   AnglesToAxis( angles, ent.axis );

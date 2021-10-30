@@ -150,6 +150,13 @@ vmCvar_t  wp_flameRadius;
 #endif
 #endif // USE_WEAPON_VARS
 
+#if defined(USE_PORTALS)
+vmCvar_t  g_portalsEnabled;
+#if defined(USE_ALT_FIRE)
+vmCvar_t  g_altPortal;
+#endif
+#endif
+
 #if defined(USE_ALT_FIRE) && defined(USE_GRAPPLE)
 vmCvar_t  g_altGrapple;
 #endif
@@ -297,7 +304,7 @@ static cvarTable_t gameCvarTable[] = {
 #ifdef BUILD_GAME_STATIC
   { &pmove_fixed, "pmove_fixed", "1", CVAR_SYSTEMINFO, 0, qfalse},
 #else
-  { &pmove_fixed, "pmove_fixed", "1", CVAR_SYSTEMINFO, 0, qfalse},
+  { &pmove_fixed, "pmove_fixed", "3", CVAR_SYSTEMINFO, 0, qfalse},
 #endif
 	{ &pmove_msec, "pmove_msec", "8", CVAR_SYSTEMINFO, 0, qfalse},
 
@@ -337,6 +344,7 @@ static cvarTable_t gameCvarTable[] = {
   { &wp_bfgDamage,         "wp_bfgDamage",         "100",  CVAR_ARCHIVE },
   { &wp_bfgSplash,         "wp_bfgSplash",         "100",  CVAR_ARCHIVE },
   { &wp_bfgRadius,         "wp_bfgRadius",         "120",  CVAR_ARCHIVE },
+
 #ifdef USE_GRAPPLE
   { &wp_grappleEnable,     "wp_grappleEnable", "1", CVAR_ARCHIVE, 0, qfalse },
   { &wp_grapplePull,       "wp_grapplePull", "700", CVAR_ARCHIVE | CVAR_SERVERINFO, 0, qfalse },
@@ -344,6 +352,7 @@ static cvarTable_t gameCvarTable[] = {
   { &wp_grappleCycle,      "wp_grappleCycle",      "400",  CVAR_ARCHIVE | CVAR_SERVERINFO },
   { &wp_grappleDamage,     "wp_grappleDamage",     "300",  CVAR_ARCHIVE },
 #endif
+
 #ifdef MISSIONPACK
 
   { &wp_nailCycle,         "wp_nailCycle",         "1000", CVAR_ARCHIVE | CVAR_SERVERINFO },
@@ -357,17 +366,28 @@ static cvarTable_t gameCvarTable[] = {
   { &wp_chainCycle,        "wp_chainCycle",        "30",   CVAR_ARCHIVE | CVAR_SERVERINFO },
   { &wp_chainDamage,       "wp_chainDamage",       "7",    CVAR_ARCHIVE },
 #endif
+
 #ifdef USE_FLAME_THROWER
   { &wp_flameCycle,        "wp_flameCycle",        "40",   CVAR_ARCHIVE | CVAR_SERVERINFO },
   { &wp_flameDamage,       "wp_flameDamage",       "30",   CVAR_ARCHIVE },
   { &wp_flameSplash,       "wp_flameSplash",       "25",   CVAR_ARCHIVE },
   { &wp_flameRadius,       "wp_flameRadius",       "45",   CVAR_ARCHIVE },
 #endif
+
+#endif // end USE_WEAPON_VARS
+
+
+#ifdef USE_PORTALS
+  { &g_portalsEnabled,     "g_portalsEnabled",     "1",  CVAR_ARCHIVE | CVAR_SERVERINFO },
+#ifdef USE_ALT_FIRE
+  { &g_altPortal,          "g_altPortal",     "0",  CVAR_ARCHIVE | CVAR_SERVERINFO },
+#endif
 #endif
 
 #if defined(USE_ALT_FIRE) && defined(USE_GRAPPLE)
   { &g_altGrapple,         "g_altGrapple",     "1",  CVAR_ARCHIVE | CVAR_SERVERINFO },
 #endif
+
 #ifdef USE_PHYSICS_VARS
 #ifdef MISSIONPACK
   { &g_scoutFactor, "g_scoutFactor", "1.5", CVAR_SERVERINFO | CVAR_ARCHIVE, 0, qtrue, qfalse },

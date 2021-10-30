@@ -61,7 +61,7 @@ void TeleportPlayer_real( gentity_t *player, vec3_t origin, vec3_t angles, qbool
 
 	// use temp events at source and destination to prevent the effect
 	// from getting dropped by a second player event
-	if ( player->client->sess.sessionTeam != TEAM_SPECTATOR ) {
+	if ( !personal && player->client->sess.sessionTeam != TEAM_SPECTATOR ) {
 		tent = G_TempEntity( player->client->ps.origin, EV_PLAYER_TELEPORT_OUT );
 		tent->s.clientNum = player->s.clientNum;
 
@@ -434,14 +434,15 @@ void DropPortalDestination( gentity_t *player ) {
 	vec3_t		snapped;
 
   if(player->client->portalDestination) {
-    PortalDestroy(player->client->portalDestination);
+    G_FreeEntity(player->client->portalDestination);
+    player->client->portalDestination = NULL;
   }
 
 	// create the portal destination
 	ent = G_Spawn();
 	ent->s.modelindex = G_ModelIndex( "models/portal/portal_blue.md3" );
 
-	VectorCopy( player->s.pos.trBase, snapped );
+	VectorCopy( player->r.currentOrigin, snapped );
 	SnapVector( snapped );
 	G_SetOrigin( ent, snapped );
   VectorCopy( ent->r.currentOrigin, ent->s.origin2 );
@@ -458,7 +459,7 @@ void DropPortalDestination( gentity_t *player ) {
 	ent->die = PortalDie;
 
   // copied from misc_portal
-  ent->r.ownerNum = player->s.number;
+  ent->r.ownerNum = player->client->ps.clientNum;
 	ent->s.clientNum = 0;
 
 	VectorCopy( player->s.apos.trBase, ent->s.angles );
@@ -481,11 +482,16 @@ void DropPortalSource( gentity_t *player ) {
 	gentity_t	*ent;
 	vec3_t		snapped;
 
+  if(player->client->portalSource) {
+    G_FreeEntity(player->client->portalSource);
+    player->client->portalSource = NULL;
+  }
+
 	// create the portal source
 	ent = G_Spawn();
 	ent->s.modelindex = G_ModelIndex( "models/portal/portal_red.md3" );
 
-	VectorCopy( player->s.pos.trBase, snapped );
+	VectorCopy( player->r.currentOrigin, snapped );
 	SnapVector( snapped );
 	G_SetOrigin( ent, snapped );
 	VectorCopy( player->r.mins, ent->r.mins );

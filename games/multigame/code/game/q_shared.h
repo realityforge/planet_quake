@@ -234,7 +234,9 @@
 #define USE_HOTRPG 1
 // hot BFG better balance, infinite ammo
 #define USE_HOTBFG 1
-// 
+// enable portal gun, requires modified client
+#define USE_PORTALS 1
+//
 
 #endif
 

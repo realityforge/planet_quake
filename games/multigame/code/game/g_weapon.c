@@ -276,6 +276,22 @@ static void Bullet_Fire( gentity_t *ent, float spread, int damage ) {
 }
 
 
+#ifdef USE_PORTALS
+/*
+======================================================================
+
+PORTAL
+
+======================================================================
+*/
+
+static void Portal_Fire( gentity_t *ent, qboolean altFire ) {
+	fire_portal( ent, muzzle, forward, altFire );
+//	VectorAdd( m->s.pos.trDelta, ent->client->ps.velocity, m->s.pos.trDelta );	// "real" physics
+}
+#endif
+
+
 /*
 ======================================================================
 
@@ -1239,7 +1255,11 @@ qboolean LogAccuracyHit( gentity_t *target, gentity_t *attacker ) {
 FireWeapon
 ===============
 */
-void FireWeapon( gentity_t *ent ) {
+void FireWeapon( gentity_t *ent
+#ifdef USE_ALT_FIRE
+  , qboolean altFire 
+#endif
+) {
 	if ( ent->items[ITEM_PW_MIN + PW_QUAD] ) {
 		s_quadFactor = g_quadfactor.value;
 	} else {
@@ -1308,6 +1328,15 @@ void FireWeapon( gentity_t *ent ) {
 		weapon_railgun_fire( ent );
 		break;
 	case WP_BFG:
+#ifdef USE_PORTALS
+    if(g_portalsEnabled.integer
+#ifdef USE_ALT_FIRE
+      && !g_altPortal.integer // do both ends with right click, reset each time
+#endif
+    ) {
+      Portal_Fire(ent, altFire);
+    } else
+#endif
 		BFG_Fire( ent );
 		break;
 	case WP_GRAPPLING_HOOK:

@@ -1638,27 +1638,32 @@ static void PM_Weapon( void ) {
 		}
 		return;
 	}
-
+  
 	// check for fire
 #ifdef USE_ALT_FIRE
 #ifdef USE_GRAPPLE
+  // this exits early with weapon time so alt grapple doesn't show weapon firing
   if(!(pm->cmd.buttons & BUTTON_ATTACK)
     && g_altGrapple.integer
     && (pm->cmd.buttons & BUTTON_ALT_ATTACK)) {
+    // don't show fire animation
     pm->ps->weaponTime = 0;
 		pm->ps->weaponstate = WEAPON_READY;
   	PM_AddEvent( EV_ALTFIRE_WEAPON );
     return;
   } else
 #endif
-  if( !(pm->cmd.buttons & BUTTON_ATTACK)
-    && !(pm->cmd.buttons & BUTTON_ALT_ATTACK)
-  ) {
-		pm->ps->weaponTime = 0;
+#ifdef USE_PORTALS
+  if(!(pm->cmd.buttons & BUTTON_ATTACK)
+    && g_altPortal.integer
+    && (pm->cmd.buttons & BUTTON_ALT_ATTACK)) {
+    // don't show fire animation
+    pm->ps->weaponTime = 0;
 		pm->ps->weaponstate = WEAPON_READY;
-		return;
-	} else 
+  	PM_AddEvent( EV_ALTFIRE_WEAPON );
+  } else
 #endif
+#endif // end USE_ALT_FIRE
 #if defined(USE_GAME_FREEZETAG) || defined(USE_REFEREE_CMDS)
   if(pm->ps->pm_type == PM_FROZEN) {
     pm->ps->weaponTime = 0;
@@ -1666,7 +1671,11 @@ static void PM_Weapon( void ) {
 		return;
   } else
 #endif
-	if( !(pm->cmd.buttons & BUTTON_ATTACK) ) {
+	if( !(pm->cmd.buttons & BUTTON_ATTACK) 
+#ifdef USE_ALT_FIRE
+    && !(pm->cmd.buttons & BUTTON_ALT_ATTACK)
+#endif
+  ) {
 		pm->ps->weaponTime = 0;
 		pm->ps->weaponstate = WEAPON_READY;
 		return;
@@ -1792,6 +1801,11 @@ static void PM_Weapon( void ) {
 		addTime = 1500;
 		break;
 	case WP_BFG:
+#ifdef USE_PORTALS
+    if(g_portalsEnabled.integer) {
+      addTime = 1000;
+    } else
+#endif
 		addTime = 200;
 		break;
 #ifdef USE_GRAPPLE
@@ -1821,9 +1835,15 @@ static void PM_Weapon( void ) {
 #ifdef USE_ALT_FIRE
   // Hypo: simple alt-fire example
   if (pm->cmd.buttons & BUTTON_ALT_ATTACK) {
+#ifdef USE_PORTALS
+    if(g_portalsEnabled.integer
+      && pm->ps->weapon == WP_BFG) {
+      // do nothing to speed
+    } else
+#endif
 #ifdef USE_GRAPPLE
     if(g_altGrapple.integer) {
-      
+      // do nothing
     } else
 #endif
   	addTime /= 2.0;
