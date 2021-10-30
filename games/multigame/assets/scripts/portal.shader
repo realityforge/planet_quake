@@ -21,17 +21,12 @@ textures/portal/portal_sfx_blue
 	deformVertexes wave 100 sin 0 2 0 .5
 
 	{
-		map textures/portal/blue/portal_sfx3.tga
-    alphagen portal 1024
-		blendFunc GL_SRC_ALPHA GL_ONE_MINUS_SRC_ALPHA
-		depthWrite
-	}
-
-	{
 		map textures/portal/blue/portalfog.jpg
 		blendfunc GL_SRC_ALPHA GL_ONE
 		tcmod rotate .1 //.1
 		tcmod scroll .01 .03
+    alphagen portal 1024
+  	depthWrite
 	}
 
 	{
@@ -88,18 +83,13 @@ textures/portal/portal_sfx_red
 	deformVertexes wave 100 sin 0 2 0 .5
   surfaceparm nomarks
 
-	{
-		map textures/portal/red/portal_sfx3.tga
-    alphagen portal 1024
-		blendFunc GL_SRC_ALPHA GL_ONE_MINUS_SRC_ALPHA
-		depthWrite
-	}
-
   {
 		map textures/portal/red/portalfog.jpg
     blendfunc GL_SRC_ALPHA GL_ONE
 		tcmod rotate .1 //.1
 		tcmod scroll .01 .03
+    alphagen portal 1024
+		depthWrite
 	}
 
 	{

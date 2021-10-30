@@ -441,10 +441,11 @@ void G_MissileImpact( gentity_t *ent, trace_t *trace ) {
 #ifdef USE_PORTALS
   if(g_portalsEnabled.integer && ent->s.weapon == WP_BFG) {
     ent->client = ent->parent->client;
+    VectorCopy(trace->plane.normal, ent->movedir);
     if(ent->classname[7] == 'a') {
-      DropPortalDestination( ent );
+      DropPortalDestination( ent, qtrue );
     } else {
-      DropPortalSource( ent );
+      DropPortalSource( ent, qtrue );
     }
     G_FreeEntity(ent);
     return;

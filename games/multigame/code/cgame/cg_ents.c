@@ -757,7 +757,8 @@ void CG_Beam( const centity_t *cent ) {
 static void CG_PersonalPortal(const centity_t *cent) {
   vec3_t          angles, vec;
   refEntity_t			ent;
-  float             len;
+  float           len;
+  qboolean        isMirror;
 
   // always face portal towards player
   VectorClear(angles);
@@ -772,13 +773,22 @@ static void CG_PersonalPortal(const centity_t *cent) {
 
   // add portal model
   memset (&ent, 0, sizeof(ent));
+
+  if( cent->currentState.eventParm ) {
+    // is wall portal
+    ByteToDir( cent->currentState.eventParm, ent.axis[0] );
+    vectoangles( ent.axis[0], angles );
+    AnglesToAxis( angles, ent.axis );
+  } else {
+    AnglesToAxis( angles, ent.axis );
+  }
+  
   VectorCopy( cent->lerpOrigin, ent.origin);
-  ent.origin[2] += 16; // TODO: wtf?
+  ent.origin[2] += 32; // TODO: wtf?
   ent.hModel = cgs.gameModels[cent->currentState.modelindex];
   if(!ent.hModel) {
     return;
   }
-  AnglesToAxis( angles, ent.axis );
   ent.reType = RT_MODEL;
   ent.frame = cent->currentState.number;
   ent.oldframe = cent->currentState.otherEntityNum;
@@ -791,12 +801,26 @@ static void CG_PersonalPortal(const centity_t *cent) {
   VectorCopy( cent->currentState.origin2, ent.oldorigin );
   // TODO: size of portal model cached somewhere else like itemInfo_t?
   // TODO: change cg_weapons to match, it also uses midpoint of weapon models?
-  ent.oldorigin[2] += 50;
   //if(cent->currentState.powerups)
-  //Com_Printf("origin: %f, %f, %f\n", ent.oldorigin[0], ent.oldorigin[1], ent.oldorigin[2]);
-  angles[1] += 180;
-  angles[2] = -90;
-  AnglesToAxis( angles, ent.axis );
+  //Com_Printf("origin: %f, %f, %f == %f, %f, %f\n", 
+  //  ent.origin[0], ent.origin[1], ent.origin[2],
+  //  ent.oldorigin[0], ent.oldorigin[1], ent.oldorigin[2]);
+  if(ent.origin[0] == ent.oldorigin[0]
+    && ent.origin[1] == ent.oldorigin[1]
+    && ent.origin[2] == ent.oldorigin[2]
+  ) {
+    // is mirror
+    isMirror = qtrue;
+    //Com_Printf("mirror!\n");
+  } else {
+    angles[1] += 180;
+    angles[2] = -90;
+    //ent.oldorigin[2] += 32;
+  }
+  if( cent->currentState.eventParm ) {
+  } else {
+    AnglesToAxis( angles, ent.axis );
+  }
   ent.reType = RT_PORTALSURFACE;
   ent.frame = cent->currentState.number;
   ent.oldframe = cent->currentState.otherEntityNum;

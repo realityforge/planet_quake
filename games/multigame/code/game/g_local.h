@@ -639,8 +639,8 @@ void trigger_teleporter_touch (gentity_t *self, gentity_t *other, trace_t *trace
 //
 void TeleportPlayer( gentity_t *player, vec3_t origin, vec3_t angles );
 #ifdef MISSIONPACK
-void DropPortalSource( gentity_t *ent );
-void DropPortalDestination( gentity_t *ent );
+void DropPortalSource( gentity_t *ent, qboolean isWall );
+void DropPortalDestination( gentity_t *ent, qboolean isWall );
 #endif
 
 

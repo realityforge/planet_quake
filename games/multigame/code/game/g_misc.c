@@ -407,8 +407,10 @@ static void PortalTouch( gentity_t *self, gentity_t *other, trace_t *trace) {
 			TeleportPlayer_real( other, self->pos1, other->client->ps.viewangles, qtrue );
       return;
 		}
-    Com_Printf("kill player\n");
-		G_Damage( other, other, other, NULL, NULL, 100000, DAMAGE_NO_PROTECTION, MOD_TELEFRAG );
+    if(self->damage == GIB_HEALTH) {
+      Com_Printf("kill player\n");
+      G_Damage( other, other, other, NULL, NULL, 100000, DAMAGE_NO_PROTECTION, MOD_TELEFRAG );
+    }
 		return;
 	}
 
@@ -417,21 +419,47 @@ static void PortalTouch( gentity_t *self, gentity_t *other, trace_t *trace) {
 
 
 static void PortalEnable( gentity_t *self ) {
+  vec3_t dir;
+  gentity_t	*target = NULL;
   gclient_t *client = &level.clients[self->r.ownerNum];
+  
 	self->touch = PortalTouch;
 	self->think = PortalDestroy;
 	self->nextthink = level.time + 2 * 60 * 1000;
-  if(client->portalDestination) {
-    client->portalDestination->touch = PortalTouch;
-  	client->portalDestination->think = PortalDestroy;
-  	client->portalDestination->nextthink = level.time + 2 * 60 * 1000;
+
+  // see if the portal_camera has a target
+  if(self == client->portalSource)
+  	target = client->portalDestination;
+  else if (self == client->portalDestination)
+    target = client->portalSource;
+
+  if(target) {
+    target->touch = PortalTouch;
+  	target->think = PortalDestroy;
+  	target->nextthink = level.time + 2 * 60 * 1000;
+    
+    VectorCopy( target->s.pos.trBase,   self->pos1 );
+    VectorCopy( target->r.currentOrigin,self->s.origin2 );
+    VectorCopy( self->s.pos.trBase,      target->pos1 );
+    VectorCopy( self->r.currentOrigin,   target->s.origin2 );
+    VectorSubtract( target->s.origin, self->s.origin, dir );
+    VectorNormalize( dir );
+    if ( target ) {
+      // TODO: use eventParm to represent wall portal perpendicular vector
+    	//ent->s.eventParm = DirToByte( dir );
+  	}
+    self->s.otherEntityNum = target->s.number;
+    target->s.otherEntityNum = self->s.number;
+    Com_Printf("portal enabled");
   }
 }
 
+#define PORTAL_TIMEOUT 200
+#define AWAY_FROM_WALL 16
 
-void DropPortalDestination( gentity_t *player ) {
+void DropPortalDestination( gentity_t *player, qboolean isWall ) {
 	gentity_t	*ent;
-	vec3_t		snapped;
+	vec3_t		snapped, velocity;
 
   if(player->client->portalDestination) {
     G_FreeEntity(player->client->portalDestination);
@@ -443,6 +471,12 @@ void DropPortalDestination( gentity_t *player ) {
 	ent->s.modelindex = G_ModelIndex( "models/portal/portal_blue.md3" );
 
 	VectorCopy( player->r.currentOrigin, snapped );
+  if(isWall) {
+    AngleVectors (player->movedir, velocity, NULL, NULL);
+    VectorNormalize(velocity);
+    VectorScale(velocity, AWAY_FROM_WALL, velocity);
+    VectorSubtract(snapped, velocity, snapped);
+  }
 	SnapVector( snapped );
 	G_SetOrigin( ent, snapped );
   VectorCopy( ent->r.currentOrigin, ent->s.origin2 );
@@ -455,6 +489,10 @@ void DropPortalDestination( gentity_t *player ) {
   ent->r.svFlags = SVF_PORTAL | SVF_BROADCAST;
 	ent->r.contents = CONTENTS_CORPSE | CONTENTS_TRIGGER;
 	ent->takedamage = qtrue;
+  if(isWall) {
+    ent->damage = GIB_HEALTH;
+    ent->s.eventParm = DirToByte( player->movedir );
+  }
 	ent->health = 200;
 	ent->die = PortalDie;
 
@@ -462,14 +500,15 @@ void DropPortalDestination( gentity_t *player ) {
   ent->r.ownerNum = player->client->ps.clientNum;
 	ent->s.clientNum = 0;
 
-	VectorCopy( player->s.apos.trBase, ent->s.angles );
+  // TODO: angles not used because model rotates?
+	//VectorCopy( player->s.apos.trBase, ent->s.angles );
 
-	ent->nextthink = level.time + 2 * 60 * 1000;
-  ent->think = PortalDestroy;
+  player->client->portalDestination = ent;
+  ent->nextthink = level.time + PORTAL_TIMEOUT; // give the player time to get away from it
+	ent->think = PortalEnable;
 
 	trap_LinkEntity( ent );
 
-  player->client->portalDestination = ent;
 	player->client->portalID = ++level.portalSequence;
 	ent->count = player->client->portalID;
 
@@ -477,10 +516,9 @@ void DropPortalDestination( gentity_t *player ) {
 	player->client->ps.stats[STAT_HOLDABLE_ITEM] = BG_FindItem( "Portal" ) - bg_itemlist;
 }
 
-void DropPortalSource( gentity_t *player ) {
-	gentity_t	*target;
+void DropPortalSource( gentity_t *player, qboolean isWall ) {
 	gentity_t	*ent;
-	vec3_t		snapped;
+	vec3_t		snapped, velocity;
 
   if(player->client->portalSource) {
     G_FreeEntity(player->client->portalSource);
@@ -492,8 +530,15 @@ void DropPortalSource( gentity_t *player ) {
 	ent->s.modelindex = G_ModelIndex( "models/portal/portal_red.md3" );
 
 	VectorCopy( player->r.currentOrigin, snapped );
+  if(isWall) {
+    AngleVectors (player->movedir, velocity, NULL, NULL);
+    VectorNormalize(velocity);
+    VectorScale(velocity, AWAY_FROM_WALL, velocity);
+    VectorSubtract(snapped, velocity, snapped);
+  }
 	SnapVector( snapped );
 	G_SetOrigin( ent, snapped );
+  VectorCopy( ent->r.currentOrigin, ent->s.origin2 );
 	VectorCopy( player->r.mins, ent->r.mins );
 	VectorCopy( player->r.maxs, ent->r.maxs );
 
@@ -503,38 +548,27 @@ void DropPortalSource( gentity_t *player ) {
   ent->r.svFlags = SVF_PORTAL | SVF_BROADCAST;
 	ent->r.contents = CONTENTS_CORPSE | CONTENTS_TRIGGER;
 	ent->takedamage = qtrue;
+  if(isWall) {
+    ent->damage = GIB_HEALTH;
+    ent->s.eventParm = DirToByte( player->movedir );
+  }
 	ent->health = 200;
 	ent->die = PortalDie;
+  ent->s.powerups = 1;
 
   // copied from misc_portal
-  ent->r.ownerNum = player->s.number;
+  ent->r.ownerNum = player->client->ps.clientNum;
 	ent->s.clientNum = 0;
-
-	// see if the portal_camera has a target
-	target = player->client->portalDestination;
-	if ( target ) {
-    vec3_t dir;
-    VectorCopy( target->s.pos.trBase,   ent->pos1 );
-    VectorCopy( target->r.currentOrigin,ent->s.origin2 );
-    VectorCopy( ent->s.pos.trBase,      target->pos1 );
-    VectorCopy( ent->r.currentOrigin,   target->s.origin2 );
-    VectorSubtract( target->s.origin, ent->s.origin, dir );
-		VectorNormalize( dir );
-    ent->s.otherEntityNum = target->s.number;
-    target->s.otherEntityNum = ent->s.number;
-  	//ent->s.eventParm = DirToByte( dir );
-	}
   // end misc_portal
+
+  player->client->portalSource = ent;
+	ent->nextthink = level.time + PORTAL_TIMEOUT; // give the player time to get away from it
+	ent->think = PortalEnable;
 
 	trap_LinkEntity( ent );
 
-  player->client->portalSource = ent;
 	ent->count = player->client->portalID;
 	player->client->portalID = 0;
-  ent->s.powerups = 1;
 //	ent->spawnflags = player->client->ps.persistant[PERS_TEAM];
-
-	ent->nextthink = level.time + 100;
-	ent->think = PortalEnable;
 }
 #endif

@@ -750,7 +750,7 @@ Returns qtrue if it should be mirrored
 */
 static qboolean R_GetPortalOrientations( const drawSurf_t *drawSurf, int entityNum,
 							 orientation_t *surface, orientation_t *camera,
-							 vec3_t pvsOrigin, portalView_t *portalView ) {
+							 vec3_t pvsOrigin, portalView_t *portalView, int *portalEntity ) {
 	int			i;
 	cplane_t	originalPlane, plane;
 	trRefEntity_t	*e;
@@ -832,6 +832,7 @@ static qboolean R_GetPortalOrientations( const drawSurf_t *drawSurf, int entityN
 		if ( e->e.oldframe ) {
 			// if a speed is specified
 			if ( e->e.frame ) {
+        *portalEntity = e->e.frame;
 				// continuous rotate
 				//d = (tr.refdef.time/1000.0f) * e->e.frame;
 				//VectorCopy( camera->axis[1], transformed );
@@ -1144,12 +1145,12 @@ static qboolean R_MirrorViewBySurface( const drawSurf_t *drawSurf, int entityNum
 
 	newParms = tr.viewParms;
 	newParms.portalView = PV_NONE;
+  newParms.portalEntity = 0;
 
 	if ( !R_GetPortalOrientations( drawSurf, entityNum, &surface, &camera, 
-		newParms.pvsOrigin, &newParms.portalView ) ) {
+		newParms.pvsOrigin, &newParms.portalView, &newParms.portalEntity) ) {
 		return qfalse;		// bad portal, no portalentity
 	}
-  newParms.portalEntity = tr.refdef.entities[entityNum].e.frame;
   
 #ifdef USE_PMLIGHT
 	// create dedicated set for each view
@@ -1566,10 +1567,12 @@ void R_AddEntitySurfaces( void ) {
 		// preshift the value we are going to OR into the drawsurf sort
 		tr.shiftedEntityNum = tr.currentEntityNum << QSORT_REFENTITYNUM_SHIFT;
 
-    if(tr.viewParms.portalView != PV_NONE
-      && ent->e.oldframe
-      && ent->e.oldframe == tr.viewParms.portalEntity
+    if(//tr.viewParms.portalView != PV_NONE
+      //&& tr.viewParms.portalEntity
+      ((ent->e.frame && ent->e.frame == tr.viewParms.portalEntity)
+      || (ent->e.oldframe && ent->e.oldframe == tr.viewParms.portalEntity))
     ) {
+      Com_Printf("skipping portal %i\n", ent->e.reType);
       continue;
     }
 

@@ -673,10 +673,10 @@ void ClientEvents( gentity_t *ent, int oldEventSequence ) {
 
   		case HI_PORTAL:		// portal
   			if( ent->client->portalID ) {
-  				DropPortalSource( ent );
+  				DropPortalSource( ent, qfalse );
   			}
   			else {
-  				DropPortalDestination( ent );
+  				DropPortalDestination( ent, qfalse );
   			}
   			break;
   		case HI_INVULNERABILITY:		// invulnerability

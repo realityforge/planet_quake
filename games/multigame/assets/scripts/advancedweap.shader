@@ -1,5 +1,6 @@
 sprites/flameball
 {
+  deformVertexes autosprite
 	cull disable
 	{
 		clampmap sprites/flameball.tga
