@@ -762,6 +762,7 @@ static void CG_PersonalPortal(const centity_t *cent) {
   // add portal model
   memset (&ent, 0, sizeof(ent));
   VectorCopy( cent->lerpOrigin, ent.origin);
+  ent.origin[2] += 32; // TODO: wtf?
   ent.hModel = cgs.gameModels[cent->currentState.modelindex];
   if(!ent.hModel) {
     return;
@@ -777,10 +778,17 @@ static void CG_PersonalPortal(const centity_t *cent) {
   memset (&ent, 0, sizeof(ent));
   VectorCopy( cent->lerpOrigin, ent.origin );
   VectorCopy( cent->currentState.origin2, ent.oldorigin );
+  // TODO: size of portal model cached somewhere else like itemInfo_t?
+  // TODO: change cg_weapons to match, it also uses midpoint of weapon models?
+  ent.oldorigin[2] += 50;
+  //if(cent->currentState.powerups)
+  Com_Printf("origin: %f, %f, %f\n", ent.oldorigin[0], ent.oldorigin[1], ent.oldorigin[2]);
   angles[1] += 180;
   angles[2] = -90;
   AnglesToAxis( angles, ent.axis );
   ent.reType = RT_PORTALSURFACE;
+  ent.frame = cent->currentState.number;
+  ent.oldframe = cent->currentState.otherEntityNum;
   trap_R_AddRefEntityToScene(&ent);
 }
 

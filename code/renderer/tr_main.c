@@ -821,6 +821,7 @@ static qboolean R_GetPortalOrientations( const drawSurf_t *drawSurf, int entityN
 			
 		// now get the camera origin and orientation
 		VectorCopy( e->e.oldorigin, camera->origin );
+Com_Printf("camera: %i - %f, %f, %f\n", entityNum, camera->origin[0], camera->origin[1], camera->origin[2]);
 		AxisCopy( e->e.axis, camera->axis );
 		VectorSubtract( vec3_origin, camera->axis[0], camera->axis[0] );
 		VectorSubtract( vec3_origin, camera->axis[1], camera->axis[1] );
@@ -1147,7 +1148,7 @@ static qboolean R_MirrorViewBySurface( const drawSurf_t *drawSurf, int entityNum
 		return qfalse;		// bad portal, no portalentity
 	}
   newParms.portalEntity = tr.refdef.entities[entityNum].e.frame;
-
+  
 #ifdef USE_PMLIGHT
 	// create dedicated set for each view
 	if ( r_numdlights + oldParms.num_dlights <= ARRAY_LEN( backEndData->dlights ) ) {
@@ -1160,7 +1161,7 @@ static qboolean R_MirrorViewBySurface( const drawSurf_t *drawSurf, int entityNum
 	}
 #endif
 
-	if ( tess.numVertexes > 2 && r_fastsky->integer ) {
+	if ( tess.numVertexes > 2 /* && r_fastsky->integer */ ) {
 		int mins[2], maxs[2];
 		R_GetModelViewBounds( mins, maxs );
 		newParms.scissorX = newParms.viewportX + mins[0];
@@ -1511,9 +1512,11 @@ static void R_SortDrawSurfs( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 			if ( r_portalOnly->integer ) {
 				return;
 			}
-			if ( r_fastsky->integer == 0 ) {
-				break;	// only one mirror view at a time
-			}
+      // TODO: is this really necessary with modern technology? 
+      //   I bet I can get 6-10 full renderings before it affects performance.
+			//if ( r_fastsky->integer == 0 ) {
+			//	break;	// only one mirror view at a time
+			//}
 		}
 	}
 

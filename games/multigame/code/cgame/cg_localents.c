@@ -753,6 +753,7 @@ CG_AddInvulnerabilityJuiced
 void CG_AddInvulnerabilityJuiced( localEntity_t *le ) {
 	int t;
 
+Com_Printf("juiced\n");
 	t = cg.time - le->startTime;
 	if ( t > 3000 ) {
 		le->refEntity.axis[0][0] = (float) 1.0 + 0.3 * (t - 3000) / 2000;

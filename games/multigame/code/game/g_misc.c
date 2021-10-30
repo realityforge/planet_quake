@@ -56,7 +56,7 @@ TELEPORTERS
 =================================================================================
 */
 
-void TeleportPlayer( gentity_t *player, vec3_t origin, vec3_t angles ) {
+void TeleportPlayer_real( gentity_t *player, vec3_t origin, vec3_t angles, qboolean personal ) {
 	gentity_t	*tent;
 
 	// use temp events at source and destination to prevent the effect
@@ -78,7 +78,11 @@ void TeleportPlayer( gentity_t *player, vec3_t origin, vec3_t angles ) {
 	// spit the player out
 	if ( angles )
 		AngleVectors( angles, player->client->ps.velocity, NULL, NULL );
-	VectorScale( player->client->ps.velocity, (g_speed.value * 1.25f), player->client->ps.velocity );
+  if(!personal) {
+    VectorScale( player->client->ps.velocity, (g_speed.value * 1.25f), player->client->ps.velocity );
+  } else {
+    VectorScale( player->client->ps.velocity, (g_speed.value * 1.25f), player->client->ps.velocity );
+  }
 	player->client->ps.pm_time = 160; // hold time
 	player->client->ps.pm_flags |= PMF_TIME_KNOCKBACK;
 
@@ -107,7 +111,9 @@ void TeleportPlayer( gentity_t *player, vec3_t origin, vec3_t angles ) {
 		trap_LinkEntity( player );
 	}
 }
-
+void TeleportPlayer( gentity_t *player, vec3_t origin, vec3_t angles ) {
+  TeleportPlayer_real(player, origin, angles, qfalse);
+}
 
 /*QUAKED misc_teleporter_dest (1 0 0) (-32 -32 -24) (32 32 -16)
 Point teleporters at these.
@@ -327,6 +333,12 @@ void PortalDestroy( gentity_t *self ) {
   gclient_t *client;
   client = &level.clients[self->r.ownerNum];
   client->portalID = 0;
+  // free both ends
+  if(self != client->portalDestination
+    && self != client->portalSource) {
+    G_FreeEntity(&g_entities[self->s.otherEntityNum]);
+    G_FreeEntity(self);
+  }
   if(client->portalDestination) {
     G_FreeEntity(client->portalDestination);
     client->portalDestination = NULL;
@@ -392,13 +404,15 @@ static void PortalTouch( gentity_t *self, gentity_t *other, trace_t *trace) {
 	// if there is not one, die!
 	if( !destination ) {
 		if( self->pos1[0] || self->pos1[1] || self->pos1[2] ) {
-			TeleportPlayer( other, self->pos1, other->client->ps.viewangles );
+			TeleportPlayer_real( other, self->pos1, other->client->ps.viewangles, qtrue );
+      return;
 		}
+    Com_Printf("kill player\n");
 		G_Damage( other, other, other, NULL, NULL, 100000, DAMAGE_NO_PROTECTION, MOD_TELEFRAG );
 		return;
 	}
 
-	TeleportPlayer( other, destination->s.pos.trBase, other->client->ps.viewangles );
+	TeleportPlayer_real( other, destination->s.pos.trBase, other->client->ps.viewangles, qtrue );
 }
 
 
@@ -502,7 +516,7 @@ void DropPortalSource( gentity_t *player ) {
 		VectorNormalize( dir );
     ent->s.otherEntityNum = target->s.number;
     target->s.otherEntityNum = ent->s.number;
-  	ent->s.eventParm = DirToByte( dir );
+  	//ent->s.eventParm = DirToByte( dir );
 	}
   // end misc_portal
 
@@ -511,7 +525,7 @@ void DropPortalSource( gentity_t *player ) {
   player->client->portalSource = ent;
 	ent->count = player->client->portalID;
 	player->client->portalID = 0;
-
+  ent->s.powerups = 1;
 //	ent->spawnflags = player->client->ps.persistant[PERS_TEAM];
 
 	ent->nextthink = level.time + 100;

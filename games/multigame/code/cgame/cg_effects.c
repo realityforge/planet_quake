@@ -650,6 +650,8 @@ Generated a bunch of gibs launching out from the bodies location
 void CG_GibPlayer( const vec3_t playerOrigin ) {
 	vec3_t	origin, velocity;
 
+Com_Printf("gibs!\n");
+
 	if ( !cg_blood.integer ) {
 		return;
 	}
