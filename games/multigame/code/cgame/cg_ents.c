@@ -598,9 +598,9 @@ static void CG_Missile( centity_t *cent ) {
   if(cent->currentState.weapon == WP_BFG
     && cg_portalsEnabled.integer) {
     if(cent->currentState.powerups) {
-      ent.customShader = cgs.media.redBFG;
-    } else {
       ent.customShader = cgs.media.blueBFG;
+    } else {
+      ent.customShader = cgs.media.redBFG;
     }
   }
 #endif

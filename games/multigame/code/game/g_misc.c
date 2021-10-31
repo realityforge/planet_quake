@@ -81,11 +81,12 @@ void TeleportPlayer_real( gentity_t *player, vec3_t origin, vec3_t angles, qbool
     VectorScale( player->client->ps.velocity, (g_speed.value * 1.25f), player->client->ps.velocity );
     SetClientViewAngle( player, angles );
   } else {
-    float normal = player->client->ps.speed;
+    float normal = VectorNormalize(player->client->ps.velocity);
     vec3_t angleView;
     AngleVectors( angles, player->client->ps.velocity, NULL, NULL );
-    //Com_Printf("speed: %f\n", player->client->ps.speed);
-    VectorScale( player->client->ps.velocity, normal + 64.0f, player->client->ps.velocity );
+#define PORTAL_EXTRA_SPEED 42.0f
+    VectorScale( player->client->ps.velocity, normal + PORTAL_EXTRA_SPEED, player->client->ps.velocity );
+    //player->client->ps.velocity[2] -= player->client->ps.gravity;
     VectorSubtract(angles2, player->client->ps.viewangles, angleView);
     angleView[1] -= 180; // for the other side of the portal?
     VectorSubtract(angles, angleView, angleView);
@@ -448,7 +449,7 @@ static void PortalTouch( gentity_t *self, gentity_t *other, trace_t *trace) {
 	//TeleportPlayer_real( other, destination->s.pos.trBase, other->client->ps.viewangles, qtrue );
 }
 
-#define AWAY_FROM_WALL 32.0f
+#define AWAY_FROM_WALL 16.0f
 //
 
 static void PortalEnable( gentity_t *self ) {

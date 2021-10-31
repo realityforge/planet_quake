@@ -222,7 +222,8 @@ void	G_TouchTriggers( gentity_t *ent ) {
 	int			touch[MAX_GENTITIES];
 	gentity_t	*hit;
 	trace_t		trace;
-	vec3_t		mins, maxs, velocity;
+	vec3_t		mins, maxs;
+  //vec3_t    velocity;
 	static vec3_t	range = { 40, 40, 52 };
 
 	if ( !ent->client ) {

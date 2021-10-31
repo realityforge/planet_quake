@@ -191,21 +191,21 @@ textures/portal/redBFG
           blendFunc GL_ONE GL_ONE
           tcMod rotate 333
           rgbGen identity
-          rgbgen const ( 0.9 0.5 0.1 )
+          rgbgen const ( 0.9 0.4 0.0 )
   }
   {
           clampmap models/weaphits/bfg01.tga
           blendFunc GL_ONE GL_ONE
           tcMod rotate -100
           rgbGen identity
-          rgbgen const ( 0.9 0.5 0.1 )
+          rgbgen const ( 0.9 0.4 0.0 )
   }
   {
           map models/weaphits/bfg03.tga
           blendFunc GL_ONE GL_ONE
           tcmod scroll 2 0
           rgbGen identity
-          rgbgen const ( 0.9 0.5 0.1 )
+          rgbgen const ( 0.9 0.4 0.0 )
   }
   {
           map models/weaphits/bfg02.tga
