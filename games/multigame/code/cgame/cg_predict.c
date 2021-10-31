@@ -958,6 +958,7 @@ void CG_PredictPlayerState( void ) {
 	usercmd_t	oldestCmd;
 	usercmd_t	latestCmd;
 	int stateIndex = 0, predictCmd = 0;
+  vec3_t sources[32], destinations[32], sourcesAngles[32], destinationsAngles[32];
 
 	cg.hyperspace = qfalse;	// will be set if touching a trigger_teleport
 
@@ -1215,7 +1216,8 @@ void CG_PredictPlayerState( void ) {
 #endif
 		if ( /*cg_optimizePrediction.integer && */ ( cmdNum >= predictCmd || ( stateIndex + 1 ) % NUM_SAVED_STATES == cg.stateHead ) ) {
 
-			Pmove( &cg_pmove, cg_entities[cg.snap->ps.clientNum].items );
+			Pmove( &cg_pmove, cg_entities[cg.snap->ps.clientNum].items, 
+        sources, destinations, sourcesAngles, destinationsAngles );
 
 			// add push trigger movement effects
 			CG_TouchTriggerPrediction();

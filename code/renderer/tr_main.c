@@ -1515,11 +1515,13 @@ static void R_SortDrawSurfs( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 			if ( r_portalOnly->integer ) {
 				return;
 			}
-      // TODO: is this really necessary with modern technology? 
-      //   I bet I can get 6-10 full renderings before it affects performance.
-			//if ( r_fastsky->integer == 0 ) {
-			//	break;	// only one mirror view at a time
-			//}
+#ifdef THIS_IS_A_SLOW_COMPUTER
+			// TODO: is this really necessary with modern technology? 
+			//   I bet I can get 6-10 full renderings before it affects performance.
+			if ( r_fastsky->integer == 0 ) {
+				break;	// only one mirror view at a time
+			}
+#endif
 		}
 	}
 

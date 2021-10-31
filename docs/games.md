@@ -43,7 +43,7 @@ The following features I've added to baseq3a without affecting the networking pr
 
 ## TODO
 
-  * Fix portal gun. Looking through a standing portal has a weird repetative effect because of depth write or sorting or something. Turn off depth in shader or skip entity in tr_main.c? Measure/cache midpoint of portal model and use on floor and wall alignment. Fix corners by tracing in server for edges. Add NOPORTAL surfaceParm. Still take falling damage for landing on a portal. Ceiling and floor infinite fall doesn't work.
+  * Fix portal gun. Looking through a standing portal has a weird repetative effect because of depth write or sorting or something. Turn off depth in shader or skip entity in tr_main.c? Measure/cache midpoint of portal model and use on floor and wall alignment. Fix corners by tracing in server for edges. Add NOPORTAL surfaceParm. Still take falling damage for landing on a portal. Ceiling and floor infinite fall doesn't work. Projectiles through portals. Face wall portals like 5 degrees towards player away from original angle.
   * Infinite haste, how is this different than g_speed? Applies to only one player.
   * Boots that can climb steep slopes. 
   * Jump velocity as a part of anti-gravity boots. 

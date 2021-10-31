@@ -8,7 +8,11 @@
 #include "bg_local.h"
 
 pmove_t		*pm;
-int       *items;
+int         *items;
+vec3_t      *portals;
+vec3_t      *portalsAngles;
+vec3_t      *destinations;
+vec3_t      *destinationsAngles;
 pml_t		pml;
 
 // movement parameters
@@ -1139,6 +1143,15 @@ static void PM_GroundTrace( void ) {
 	pm->trace (&trace, pm->ps->origin, pm->mins, pm->maxs, point, pm->ps->clientNum, pm->tracemask);
 	pml.groundTrace = trace;
 
+#ifdef USE_PORTALS
+	{
+		// find nearest portal from our current trajectory the distance from the portal
+		// rerun the trace from the point of the portal
+	}
+
+
+#endif
+
 	// do something corrective if the trace starts in a solid...
 	if ( trace.allsolid ) {
 		if ( !PM_CorrectAllSolid(&trace) )
@@ -2099,9 +2112,14 @@ PmoveSingle
 */
 void trap_SnapVector( float *v );
 
-static void PmoveSingle (pmove_t *pmove, int *itms) {
+static void PmoveSingle (pmove_t *pmove, int *itms, vec3_t *prtls, vec3_t *dstnts, 
+	vec3_t *prtlsNgls, vec3_t *dstntsNgls) {
 	pm = pmove;
-  items = itms;
+	items = itms;
+	portals = prtls;
+	destinations = dstnts;
+	portalsAngles = prtlsNgls;
+	destinationsAngles = dstntsNgls;
 
 	// this counter lets us debug movement problems with a journal
 	// by setting a conditional breakpoint fot the previous frame
@@ -2330,7 +2348,8 @@ Pmove
 Can be called by either the server or the client
 ================
 */
-void Pmove (pmove_t *pmove, int *items) {
+void Pmove (pmove_t *pmove, int *items, vec3_t *portals, vec3_t *destinations, 
+	vec3_t *portalsAngles, vec3_t *destinationsAngles) {
 	int			finalTime;
 
 	finalTime = pmove->cmd.serverTime;
@@ -2367,7 +2386,7 @@ void Pmove (pmove_t *pmove, int *items) {
 			}
 		}
 		pmove->cmd.serverTime = pmove->ps->commandTime + msec;
-		PmoveSingle( pmove, items );
+		PmoveSingle( pmove, items, portals, destinations, portalsAngles, destinationsAngles );
 
 		if ( pmove->ps->pm_flags & PMF_JUMP_HELD ) {
 			pmove->cmd.upmove = 20;

@@ -83,14 +83,24 @@ void TeleportPlayer_real( gentity_t *player, vec3_t origin, vec3_t angles, qbool
   } else {
     float normal = VectorNormalize(player->client->ps.velocity);
     vec3_t angleView;
-    AngleVectors( angles, player->client->ps.velocity, NULL, NULL );
+    if(angles[0] != vec3_origin[0]
+      || angles[1] != vec3_origin[1]
+      || angles[2] != vec3_origin[2]) {
+      AngleVectors( angles, player->client->ps.velocity, NULL, NULL );
+    } else {
+      AngleVectors( player->client->ps.viewangles, player->client->ps.velocity, NULL, NULL );
+    }
 #define PORTAL_EXTRA_SPEED 42.0f
     VectorScale( player->client->ps.velocity, normal + PORTAL_EXTRA_SPEED, player->client->ps.velocity );
     //player->client->ps.velocity[2] -= player->client->ps.gravity;
-    VectorSubtract(angles2, player->client->ps.viewangles, angleView);
-    angleView[1] -= 180; // for the other side of the portal?
-    VectorSubtract(angles, angleView, angleView);
-    SetClientViewAngle( player, angleView );
+    if(angles2[0] != vec3_origin[0]
+      || angles2[1] != vec3_origin[1]
+      || angles2[2] != vec3_origin[2]) {
+      VectorSubtract(angles2, player->client->ps.viewangles, angleView);
+      angleView[1] -= 180; // for the other side of the portal?
+      VectorSubtract(angles, angleView, angleView);
+      SetClientViewAngle( player, angleView );
+    }
   }
 	player->client->ps.pm_time = 160; // hold time
 	player->client->ps.pm_flags |= PMF_TIME_KNOCKBACK;
@@ -362,10 +372,10 @@ static void PortalDie (gentity_t *self, gentity_t *inflictor, gentity_t *attacke
 
 
 static void PortalTouch( gentity_t *self, gentity_t *other, trace_t *trace) {
-  vec3_t		vec;
-  int       len;
+	//vec3_t		vec;
+	//int       len;
 	gentity_t	*destination;
-  gclient_t *client = &level.clients[self->r.ownerNum];
+	gclient_t *client = &level.clients[self->r.ownerNum];
 
 	// see if we will even let other try to use it
 	if( other->health <= 0 ) {
@@ -375,17 +385,19 @@ static void PortalTouch( gentity_t *self, gentity_t *other, trace_t *trace) {
 		return;
 	}
   
-  VectorSubtract(self->r.currentOrigin, other->r.currentOrigin, vec);
-  len = VectorNormalize(vec);
-  if(level.time - client->lastPortal < 1 * 1000
+  //VectorSubtract(self->r.currentOrigin, other->r.currentOrigin, vec);
+  //len = VectorNormalize(vec);
+  //if(len > 64) {
+
+  if(level.time - other->client->lastPortal < 1 * 1000
     // keep track of the exit point so we don't switch back and 
     //   forth a ton before there is time to move out of the way, 
-    && self == client->lastPortalEnt 
+    && self == other->client->lastPortalEnt 
   ) {
     //Com_Printf("portal too soon\n");
     return;
   }
-  client->lastPortal = level.time;
+  other->client->lastPortal = level.time;
 
 //	if( other->client->ps.persistant[PERS_TEAM] != self->spawnflags ) {
 //		return;

@@ -373,6 +373,7 @@ void hurt_touch( gentity_t *self, gentity_t *other, trace_t *trace ) {
 		dflags = 0;
 
 #ifdef USE_MODES_DEATH
+Com_Printf("void death: %f\n", other->client->ps.velocity[2]);
   if(other->client && other->client->ps.velocity[2] < 1000
     && other->client->ps.groundEntityNum == ENTITYNUM_NONE) {
     G_Damage (other, self, self, NULL, NULL, self->damage, dflags, MOD_VOID);
