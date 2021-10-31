@@ -56,7 +56,7 @@ TELEPORTERS
 =================================================================================
 */
 
-void TeleportPlayer_real( gentity_t *player, vec3_t origin, vec3_t angles, qboolean personal ) {
+void TeleportPlayer_real( gentity_t *player, vec3_t origin, vec3_t angles, qboolean personal, vec3_t angles2 ) {
 	gentity_t	*tent;
 
 	// use temp events at source and destination to prevent the effect
@@ -76,22 +76,26 @@ void TeleportPlayer_real( gentity_t *player, vec3_t origin, vec3_t angles, qbool
 	player->client->ps.origin[2] += 1.0f;
 
 	// spit the player out
-	if ( angles )
-		AngleVectors( angles, player->client->ps.velocity, NULL, NULL );
   if(!personal) {
+    AngleVectors( angles, player->client->ps.velocity, NULL, NULL );
     VectorScale( player->client->ps.velocity, (g_speed.value * 1.25f), player->client->ps.velocity );
+    SetClientViewAngle( player, angles );
   } else {
-    VectorScale( player->client->ps.velocity, (g_speed.value * 1.25f), player->client->ps.velocity );
+    float normal = player->client->ps.speed;
+    vec3_t angleView;
+    AngleVectors( angles, player->client->ps.velocity, NULL, NULL );
+    //Com_Printf("speed: %f\n", player->client->ps.speed);
+    VectorScale( player->client->ps.velocity, normal + 64.0f, player->client->ps.velocity );
+    VectorSubtract(angles2, player->client->ps.viewangles, angleView);
+    angleView[1] -= 180; // for the other side of the portal?
+    VectorSubtract(angles, angleView, angleView);
+    SetClientViewAngle( player, angleView );
   }
 	player->client->ps.pm_time = 160; // hold time
 	player->client->ps.pm_flags |= PMF_TIME_KNOCKBACK;
 
 	// toggle the teleport bit so the client knows to not lerp
 	player->client->ps.eFlags ^= EF_TELEPORT_BIT;
-
-	// set angles
-	if ( angles )
-		SetClientViewAngle( player, angles );
 
 	// unlagged
 	G_ResetHistory( player );
@@ -112,7 +116,7 @@ void TeleportPlayer_real( gentity_t *player, vec3_t origin, vec3_t angles, qbool
 	}
 }
 void TeleportPlayer( gentity_t *player, vec3_t origin, vec3_t angles ) {
-  TeleportPlayer_real(player, origin, angles, qfalse);
+  TeleportPlayer_real(player, origin, angles, qfalse, vec3_origin);
 }
 
 /*QUAKED misc_teleporter_dest (1 0 0) (-32 -32 -24) (32 32 -16)
@@ -372,7 +376,12 @@ static void PortalTouch( gentity_t *self, gentity_t *other, trace_t *trace) {
   
   VectorSubtract(self->r.currentOrigin, other->r.currentOrigin, vec);
   len = VectorNormalize(vec);
-  if(level.time - client->lastPortal < 1 * 1000) {
+  if(level.time - client->lastPortal < 1 * 1000
+    // keep track of the exit point so we don't switch back and 
+    //   forth a ton before there is time to move out of the way, 
+    && self == client->lastPortalEnt 
+  ) {
+    //Com_Printf("portal too soon\n");
     return;
   }
   client->lastPortal = level.time;
@@ -400,19 +409,34 @@ static void PortalTouch( gentity_t *self, gentity_t *other, trace_t *trace) {
   } else {
     destination = client->portalSource;
   }
+  client->lastPortalEnt = destination;
 
-	// if there is not one, die!
   if( self->pos1[0] || self->pos1[1] || self->pos1[2] ) {
     if(destination->s.eventParm) {
       vec3_t angles;
       ByteToDir( destination->s.eventParm, angles );
       vectoangles( angles, angles );
-      TeleportPlayer_real( other, self->pos1, angles, qtrue );
+      if(self->s.eventParm) {
+        vec3_t angles2;
+        ByteToDir( self->s.eventParm, angles2 );
+        vectoangles( angles2, angles2 );
+        TeleportPlayer_real( other, self->pos1, angles, qtrue, angles2 );
+      } else {
+        TeleportPlayer_real( other, self->pos1, angles, qtrue, vec3_origin );
+      }
     } else {
-      TeleportPlayer_real( other, self->pos1, other->client->ps.viewangles, qtrue );
+      if(self->s.eventParm) {
+        vec3_t angles2;
+        ByteToDir( self->s.eventParm, angles2 );
+        vectoangles( angles2, angles2 );
+        TeleportPlayer_real( other, self->pos1, vec3_origin, qtrue, angles2 );
+      } else {
+        TeleportPlayer_real( other, self->pos1, vec3_origin, qtrue, vec3_origin );
+      }
     }
     return;
   }
+  // if there is not one, die!
 	if( !destination ) {
     if(self->damage == GIB_HEALTH) {
       Com_Printf("kill player\n");
@@ -424,7 +448,7 @@ static void PortalTouch( gentity_t *self, gentity_t *other, trace_t *trace) {
 	//TeleportPlayer_real( other, destination->s.pos.trBase, other->client->ps.viewangles, qtrue );
 }
 
-#define AWAY_FROM_WALL 16.0f
+#define AWAY_FROM_WALL 32.0f
 //
 
 static void PortalEnable( gentity_t *self ) {
@@ -485,7 +509,9 @@ static void PortalEnable( gentity_t *self ) {
   }
 }
 
-#define PORTAL_TIMEOUT 200
+static vec3_t	range = { 32, 32, 32 };
+//static vec3_t	range = { 160, 160, 208 };
+#define PORTAL_TIMEOUT 100
 void DropPortalDestination( gentity_t *player, qboolean isWall ) {
 	gentity_t	*ent;
 	vec3_t		snapped;
@@ -506,14 +532,17 @@ void DropPortalDestination( gentity_t *player, qboolean isWall ) {
 	SnapVector( snapped );
 	G_SetOrigin( ent, snapped );
   VectorCopy( ent->r.currentOrigin, ent->s.origin2 );
-	VectorCopy( player->r.mins, ent->r.mins );
-	VectorCopy( player->r.maxs, ent->r.maxs );
+  VectorSubtract( vec3_origin, range, ent->r.mins );
+	VectorAdd( vec3_origin, range, ent->r.maxs );
+	//VectorCopy( player->r.mins, ent->r.mins );
+	//VectorCopy( player->r.maxs, ent->r.maxs );
 
 	ent->classname = "hi_portal destination";
 	ent->s.pos.trType = TR_STATIONARY;
   ent->s.eType = ET_TELEPORT_TRIGGER;
   ent->r.svFlags = SVF_PORTAL | SVF_BROADCAST;
-	ent->r.contents = CONTENTS_CORPSE | CONTENTS_TRIGGER;
+  ent->clipmask = CONTENTS_TRIGGER;
+	ent->r.contents = CONTENTS_TRIGGER;
 	ent->takedamage = qtrue;
   if(isWall) {
     ent->damage = GIB_HEALTH;
@@ -562,14 +591,17 @@ void DropPortalSource( gentity_t *player, qboolean isWall ) {
 	SnapVector( snapped );
 	G_SetOrigin( ent, snapped );
   VectorCopy( ent->r.currentOrigin, ent->s.origin2 );
-	VectorCopy( player->r.mins, ent->r.mins );
-	VectorCopy( player->r.maxs, ent->r.maxs );
+  VectorSubtract( vec3_origin, range, ent->r.mins );
+	VectorAdd( vec3_origin, range, ent->r.maxs );
+	//VectorCopy( player->r.mins, ent->r.mins );
+	//VectorCopy( player->r.maxs, ent->r.maxs );
 
 	ent->classname = "hi_portal source";
 	ent->s.pos.trType = TR_STATIONARY;
   ent->s.eType = ET_TELEPORT_TRIGGER;
   ent->r.svFlags = SVF_PORTAL | SVF_BROADCAST;
-	ent->r.contents = CONTENTS_CORPSE | CONTENTS_TRIGGER;
+  ent->clipmask = CONTENTS_TRIGGER;
+	ent->r.contents = CONTENTS_TRIGGER;
 	ent->takedamage = qtrue;
   if(isWall) {
     ent->damage = GIB_HEALTH;

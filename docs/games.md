@@ -43,7 +43,7 @@ The following features I've added to baseq3a without affecting the networking pr
 
 ## TODO
 
-  * Fix portal gun. White outline of other portal visible from inside the portal view. Turn off depth in shader or skip entity in tr_main.c? Measure/cache midpoint of portal model and use on floor and wall alignment. Move portals a little bit away from walls like rail mark? Fix corners by tracing in server for edges. No camera following for wall portals, it opposes the plane. Add NOPORTAL surfaceParm.
+  * Fix portal gun. Looking through a standing portal has a weird repetative effect because of deptch write or sorting or something. Turn off depth in shader or skip entity in tr_main.c? Measure/cache midpoint of portal model and use on floor and wall alignment. Fix corners by tracing in server for edges. Add NOPORTAL surfaceParm.
   * Infinite haste, how is this different than g_speed? Applies to only one player.
   * Boots that can climb steep slopes. 
   * Jump velocity as a part of anti-gravity boots. 

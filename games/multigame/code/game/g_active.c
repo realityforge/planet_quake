@@ -222,7 +222,7 @@ void	G_TouchTriggers( gentity_t *ent ) {
 	int			touch[MAX_GENTITIES];
 	gentity_t	*hit;
 	trace_t		trace;
-	vec3_t		mins, maxs;
+	vec3_t		mins, maxs, velocity;
 	static vec3_t	range = { 40, 40, 52 };
 
 	if ( !ent->client ) {
@@ -236,6 +236,10 @@ void	G_TouchTriggers( gentity_t *ent ) {
 
 	VectorSubtract( ent->client->ps.origin, range, mins );
 	VectorAdd( ent->client->ps.origin, range, maxs );
+  //VectorCopy(ent->client->ps.velocity, velocity);
+  //VectorScale( velocity, 52, velocity );
+  //VectorSubtract( mins, velocity, mins );
+  //VectorSubtract( maxs, velocity, maxs );
 
 	num = trap_EntitiesInBox( mins, maxs, touch, MAX_GENTITIES );
 
@@ -1024,9 +1028,9 @@ void ClientThink_real( gentity_t *ent ) {
 				ent->client->ps.pm_type = PM_SPINTERMISSION;
 			}
 		}
-		Pmove (&pm, ent->items);
+		Pmove(&pm, ent->items);
 #else
-		Pmove (&pm, ent->items);
+		Pmove(&pm, ent->items);
 #endif
 
 	// save results of pmove

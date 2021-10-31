@@ -755,7 +755,7 @@ void CG_Beam( const centity_t *cent ) {
 
 
 static void CG_PersonalPortal(const centity_t *cent) {
-  vec3_t          angles, vec;
+  vec3_t          angles, vec, velocity;
   refEntity_t			ent;
   float           len;
   qboolean        isMirror;
@@ -776,15 +776,20 @@ static void CG_PersonalPortal(const centity_t *cent) {
   memset (&ent, 0, sizeof(ent));
 
   if( cent->currentState.eventParm ) {
+#define AWAY_FROM_WALL 8.0f
     // is wall portal
     ByteToDir( cent->currentState.eventParm, ent.axis[0] );
     vectoangles( ent.axis[0], angles );
+    AngleVectors ( angles, velocity, NULL, NULL );
+    VectorNormalize( velocity );
+    VectorScale( velocity, AWAY_FROM_WALL, velocity );
     AnglesToAxis( angles, ent.axis );
+    VectorSubtract( cent->lerpOrigin, velocity, ent.origin );
   } else {
     AnglesToAxis( angles, ent.axis );
+    VectorCopy( cent->lerpOrigin, ent.origin);
   }
   
-  VectorCopy( cent->lerpOrigin, ent.origin);
   ent.hModel = cgs.gameModels[cent->currentState.modelindex];
   if(!ent.hModel) {
     return;

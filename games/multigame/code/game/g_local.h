@@ -360,6 +360,7 @@ struct gclient_s {
   gentity_t *portalDestination;
   gentity_t *portalSource;
   int       lastPortal;
+  gentity_t *lastPortalEnt;
 	int			ammoTimes[WP_NUM_WEAPONS];
 	int			invulnerabilityTime;
 #endif

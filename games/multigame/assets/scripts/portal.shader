@@ -1,9 +1,10 @@
 textures/portal/portal_sfx_blue2
 {
   qer_editorimage textures/common/qer_mirror.tga
+  portal
   surfaceparm nolightmap
   surfaceparm nomarks
-  portal
+  surfaceparm nodamage
 
   {
     map textures/common/mirror1.tga
@@ -16,9 +17,10 @@ textures/portal/portal_sfx_blue2
 textures/portal/portal_sfx_blue
 {
 	portal
-	surfaceparm nolightmap
-  surfaceparm nomarks
 	deformVertexes wave 100 sin 0 2 0 .5
+  surfaceparm nolightmap
+  surfaceparm nomarks
+  surfaceparm nodamage
 
 	{
 		map textures/portal/blue/portalfog.jpg
@@ -47,6 +49,7 @@ textures/portal/portal_sfx_ring_blue
 	deformVertexes wave 100 sin 0 2 0 .5
 	surfaceparm nolightmap
   surfaceparm nomarks
+  surfaceparm nodamage
 
 	{
 		map textures/portal/blue/portal_sfx_ring_blue1.tga 
@@ -79,9 +82,10 @@ textures/portal/portal_sfx_ring_blue
 textures/portal/portal_sfx_red
 {
 	portal
-	surfaceparm nolightmap
 	deformVertexes wave 100 sin 0 2 0 .5
+  surfaceparm nolightmap
   surfaceparm nomarks
+  surfaceparm nodamage
 
   {
 		map textures/portal/red/portalfog.jpg
@@ -110,7 +114,8 @@ textures/portal/portal_sfx_ring_red
 	deformVertexes wave 100 sin 0 2 0 .5
 	surfaceparm nolightmap
   surfaceparm nomarks
-	
+  surfaceparm nodamage
+
 	{
 		map textures/portal/red/portal_sfx_ring_blue1.tga 
 		blendfunc gl_src_alpha gl_one_minus_src_alpha

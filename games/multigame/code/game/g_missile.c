@@ -439,6 +439,7 @@ void G_MissileImpact( gentity_t *ent, trace_t *trace ) {
 	}
 
 #ifdef USE_PORTALS
+#define AWAY_FROM_WALL 16.0f
   if(g_portalsEnabled.integer && ent->s.weapon == WP_BFG) {
     vec3_t velocity, angles;
     ent->client = ent->parent->client;
@@ -446,7 +447,7 @@ void G_MissileImpact( gentity_t *ent, trace_t *trace ) {
     vectoangles( trace->plane.normal, angles );
     AngleVectors ( angles, velocity, NULL, NULL );
     VectorNormalize( velocity );
-    VectorScale( velocity, 6, velocity );
+    VectorScale( velocity, AWAY_FROM_WALL, velocity );
     VectorAdd( ent->r.currentOrigin, velocity, ent->r.currentOrigin );
     if(ent->classname[7] == 'a') {
       DropPortalDestination( ent, qtrue );
