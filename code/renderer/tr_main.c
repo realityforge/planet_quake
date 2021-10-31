@@ -1572,7 +1572,7 @@ void R_AddEntitySurfaces( void ) {
       ((ent->e.frame && ent->e.frame == tr.viewParms.portalEntity)
       || (ent->e.oldframe && ent->e.oldframe == tr.viewParms.portalEntity))
     ) {
-      Com_Printf("skipping portal %i\n", ent->e.reType);
+      //Com_Printf("skipping portal %i\n", ent->e.reType);
       continue;
     }
 

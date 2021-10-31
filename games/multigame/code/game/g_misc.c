@@ -402,11 +402,18 @@ static void PortalTouch( gentity_t *self, gentity_t *other, trace_t *trace) {
   }
 
 	// if there is not one, die!
+  if( self->pos1[0] || self->pos1[1] || self->pos1[2] ) {
+    if(destination->s.eventParm) {
+      vec3_t angles;
+      ByteToDir( destination->s.eventParm, angles );
+      vectoangles( angles, angles );
+      TeleportPlayer_real( other, self->pos1, angles, qtrue );
+    } else {
+      TeleportPlayer_real( other, self->pos1, other->client->ps.viewangles, qtrue );
+    }
+    return;
+  }
 	if( !destination ) {
-		if( self->pos1[0] || self->pos1[1] || self->pos1[2] ) {
-			TeleportPlayer_real( other, self->pos1, other->client->ps.viewangles, qtrue );
-      return;
-		}
     if(self->damage == GIB_HEALTH) {
       Com_Printf("kill player\n");
       G_Damage( other, other, other, NULL, NULL, 100000, DAMAGE_NO_PROTECTION, MOD_TELEFRAG );
@@ -414,9 +421,11 @@ static void PortalTouch( gentity_t *self, gentity_t *other, trace_t *trace) {
 		return;
 	}
 
-	TeleportPlayer_real( other, destination->s.pos.trBase, other->client->ps.viewangles, qtrue );
+	//TeleportPlayer_real( other, destination->s.pos.trBase, other->client->ps.viewangles, qtrue );
 }
 
+#define AWAY_FROM_WALL 16.0f
+//
 
 static void PortalEnable( gentity_t *self ) {
   vec3_t dir;
@@ -437,10 +446,30 @@ static void PortalEnable( gentity_t *self ) {
     target->touch = PortalTouch;
   	target->think = PortalDestroy;
   	target->nextthink = level.time + 2 * 60 * 1000;
-    
-    VectorCopy( target->s.pos.trBase,   self->pos1 );
-    VectorCopy( target->r.currentOrigin,self->s.origin2 );
-    VectorCopy( self->s.pos.trBase,      target->pos1 );
+
+    if(self->s.eventParm) {
+      vec3_t velocity, angles;
+      ByteToDir( self->s.eventParm, angles );
+      vectoangles( angles, angles );
+      AngleVectors (angles, velocity, NULL, NULL);
+      VectorNormalize(velocity);
+      VectorScale(velocity, AWAY_FROM_WALL, velocity);
+      VectorAdd(self->r.currentOrigin, velocity, target->pos1);
+    } else
+      VectorCopy( self->r.currentOrigin, target->pos1 );
+  
+    if(target->s.eventParm) {
+      vec3_t velocity, angles;
+      ByteToDir( target->s.eventParm, angles );
+      vectoangles( angles, angles );
+      AngleVectors (angles, velocity, NULL, NULL);
+      VectorNormalize(velocity);
+      VectorScale(velocity, AWAY_FROM_WALL, velocity);
+      VectorAdd(target->r.currentOrigin, velocity, self->pos1);
+    } else
+      VectorCopy( target->r.currentOrigin,   self->pos1 );
+  
+    VectorCopy( target->r.currentOrigin, self->s.origin2 );
     VectorCopy( self->r.currentOrigin,   target->s.origin2 );
     VectorSubtract( target->s.origin, self->s.origin, dir );
     VectorNormalize( dir );
@@ -450,16 +479,13 @@ static void PortalEnable( gentity_t *self ) {
   	}
     self->s.otherEntityNum = target->s.number;
     target->s.otherEntityNum = self->s.number;
-    Com_Printf("portal enabled");
   }
 }
 
 #define PORTAL_TIMEOUT 200
-#define AWAY_FROM_WALL 16
-
 void DropPortalDestination( gentity_t *player, qboolean isWall ) {
 	gentity_t	*ent;
-	vec3_t		snapped, velocity;
+	vec3_t		snapped;
 
   if(player->client->portalDestination) {
     G_FreeEntity(player->client->portalDestination);
@@ -471,11 +497,8 @@ void DropPortalDestination( gentity_t *player, qboolean isWall ) {
 	ent->s.modelindex = G_ModelIndex( "models/portal/portal_blue.md3" );
 
 	VectorCopy( player->r.currentOrigin, snapped );
-  if(isWall) {
-    AngleVectors (player->movedir, velocity, NULL, NULL);
-    VectorNormalize(velocity);
-    VectorScale(velocity, AWAY_FROM_WALL, velocity);
-    VectorSubtract(snapped, velocity, snapped);
+  if(!isWall) {
+    snapped[2] += 32; // TODO: mipoint?
   }
 	SnapVector( snapped );
 	G_SetOrigin( ent, snapped );
@@ -518,7 +541,7 @@ void DropPortalDestination( gentity_t *player, qboolean isWall ) {
 
 void DropPortalSource( gentity_t *player, qboolean isWall ) {
 	gentity_t	*ent;
-	vec3_t		snapped, velocity;
+	vec3_t		snapped;
 
   if(player->client->portalSource) {
     G_FreeEntity(player->client->portalSource);
@@ -530,11 +553,8 @@ void DropPortalSource( gentity_t *player, qboolean isWall ) {
 	ent->s.modelindex = G_ModelIndex( "models/portal/portal_red.md3" );
 
 	VectorCopy( player->r.currentOrigin, snapped );
-  if(isWall) {
-    AngleVectors (player->movedir, velocity, NULL, NULL);
-    VectorNormalize(velocity);
-    VectorScale(velocity, AWAY_FROM_WALL, velocity);
-    VectorSubtract(snapped, velocity, snapped);
+  if(!isWall) {
+    snapped[2] += 32; // TODO: mipoint?
   }
 	SnapVector( snapped );
 	G_SetOrigin( ent, snapped );

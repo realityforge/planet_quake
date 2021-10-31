@@ -759,6 +759,7 @@ static void CG_PersonalPortal(const centity_t *cent) {
   refEntity_t			ent;
   float           len;
   qboolean        isMirror;
+  centity_t       *target;
 
   // always face portal towards player
   VectorClear(angles);
@@ -784,12 +785,12 @@ static void CG_PersonalPortal(const centity_t *cent) {
   }
   
   VectorCopy( cent->lerpOrigin, ent.origin);
-  ent.origin[2] += 32; // TODO: wtf?
   ent.hModel = cgs.gameModels[cent->currentState.modelindex];
   if(!ent.hModel) {
     return;
   }
   ent.reType = RT_MODEL;
+  ent.renderfx = RF_FIRST_PERSON;
   ent.frame = cent->currentState.number;
   ent.oldframe = cent->currentState.otherEntityNum;
   trap_R_AddRefEntityToScene (&ent);
@@ -813,15 +814,22 @@ static void CG_PersonalPortal(const centity_t *cent) {
     isMirror = qtrue;
     //Com_Printf("mirror!\n");
   } else {
-    angles[1] += 180;
-    angles[2] = -90;
     //ent.oldorigin[2] += 32;
   }
-  if( cent->currentState.eventParm ) {
-  } else {
+  target = &cg_entities[cent->currentState.otherEntityNum];
+  if( target->currentState.eventParm ) {
+    ByteToDir( target->currentState.eventParm, ent.axis[0] );
+    vectoangles( ent.axis[0], angles );
+    angles[2] -= 90;
+    AnglesToAxis( angles, ent.axis );
+  } else if (!isMirror) {
+    // 180 from portal is same as continuing the view angle but from another position
+    angles[1] += 180;
+    angles[2] -= 90;
     AnglesToAxis( angles, ent.axis );
   }
   ent.reType = RT_PORTALSURFACE;
+  ent.renderfx = RF_FIRST_PERSON;
   ent.frame = cent->currentState.number;
   ent.oldframe = cent->currentState.otherEntityNum;
   trap_R_AddRefEntityToScene(&ent);
