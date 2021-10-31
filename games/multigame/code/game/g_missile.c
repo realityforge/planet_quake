@@ -443,10 +443,10 @@ void G_MissileImpact( gentity_t *ent, trace_t *trace ) {
     vec3_t velocity, angles;
     ent->client = ent->parent->client;
     VectorCopy(trace->plane.normal, ent->movedir);
-    vectoangles( ent->movedir, angles );
+    vectoangles( trace->plane.normal, angles );
     AngleVectors ( angles, velocity, NULL, NULL );
     VectorNormalize( velocity );
-    VectorScale( velocity, 4, velocity );
+    VectorScale( velocity, 6, velocity );
     VectorAdd( ent->r.currentOrigin, velocity, ent->r.currentOrigin );
     if(ent->classname[7] == 'a') {
       DropPortalDestination( ent, qtrue );
