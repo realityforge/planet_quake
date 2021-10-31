@@ -428,7 +428,6 @@ static void PortalTouch( gentity_t *self, gentity_t *other, trace_t *trace) {
 //
 
 static void PortalEnable( gentity_t *self ) {
-  vec3_t dir;
   gentity_t	*target = NULL;
   gclient_t *client = &level.clients[self->r.ownerNum];
   
@@ -451,28 +450,32 @@ static void PortalEnable( gentity_t *self ) {
       vec3_t velocity, angles;
       ByteToDir( self->s.eventParm, angles );
       vectoangles( angles, angles );
-      AngleVectors (angles, velocity, NULL, NULL);
-      VectorNormalize(velocity);
-      VectorScale(velocity, AWAY_FROM_WALL, velocity);
-      VectorAdd(self->r.currentOrigin, velocity, target->pos1);
-    } else
+      AngleVectors ( angles, velocity, NULL, NULL );
+      VectorNormalize( velocity );
+      VectorScale( velocity, AWAY_FROM_WALL, velocity );
+      VectorAdd( self->r.currentOrigin, velocity, target->pos1 );
+      VectorCopy( self->r.currentOrigin, target->s.origin2 );
+    } else {
       VectorCopy( self->r.currentOrigin, target->pos1 );
+      VectorCopy( self->r.currentOrigin, target->s.origin2 );
+    }
   
     if(target->s.eventParm) {
       vec3_t velocity, angles;
       ByteToDir( target->s.eventParm, angles );
       vectoangles( angles, angles );
-      AngleVectors (angles, velocity, NULL, NULL);
-      VectorNormalize(velocity);
-      VectorScale(velocity, AWAY_FROM_WALL, velocity);
-      VectorAdd(target->r.currentOrigin, velocity, self->pos1);
-    } else
-      VectorCopy( target->r.currentOrigin,   self->pos1 );
+      AngleVectors ( angles, velocity, NULL, NULL );
+      VectorNormalize( velocity );
+      VectorScale( velocity, AWAY_FROM_WALL, velocity );
+      VectorAdd( target->r.currentOrigin, velocity, self->pos1 );
+      VectorCopy( target->r.currentOrigin, self->s.origin2 );
+    } else {
+      VectorCopy( target->r.currentOrigin, self->pos1 );
+      VectorCopy( target->r.currentOrigin, self->s.origin2 );
+    }
   
-    VectorCopy( target->r.currentOrigin, self->s.origin2 );
-    VectorCopy( self->r.currentOrigin,   target->s.origin2 );
-    VectorSubtract( target->s.origin, self->s.origin, dir );
-    VectorNormalize( dir );
+    //VectorSubtract( target->s.origin, self->s.origin, dir );
+    //VectorNormalize( dir );
     if ( target ) {
       // TODO: use eventParm to represent wall portal perpendicular vector
     	//ent->s.eventParm = DirToByte( dir );
