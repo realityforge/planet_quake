@@ -81,26 +81,66 @@ void TeleportPlayer_real( gentity_t *player, vec3_t origin, vec3_t angles, qbool
     VectorScale( player->client->ps.velocity, (g_speed.value * 1.25f), player->client->ps.velocity );
     SetClientViewAngle( player, angles );
   } else {
+#define PORTAL_EXTRA_SPEED 42.0f
     float normal = VectorNormalize(player->client->ps.velocity);
-    vec3_t angleView;
+    vec3_t angleView, angleVelocity;
     if(angles[0] != vec3_origin[0]
       || angles[1] != vec3_origin[1]
       || angles[2] != vec3_origin[2]) {
-      AngleVectors( angles, player->client->ps.velocity, NULL, NULL );
+			// the destination is a wall view
+			if(angles2[0] != vec3_origin[0]
+				|| angles2[1] != vec3_origin[1]
+				|| angles2[2] != vec3_origin[2]) {
+				// the source portal is also a wall view
+				// this only spits out at the angle of the destination portal
+				//   we want the velocity relative to the source portal
+				//   when the player comes out they appear to maintain the same jump angle
+        // change the direction of the velocity by the same angle so if you enter
+        //   while jumping at an angle, it doesn't reset the view straight forward,
+        //   A disappointing missing feature from Q3DM0
+        vectoangles(player->client->ps.velocity, angleVelocity);
+        VectorSubtract(angles2, angleVelocity, angleVelocity);
+        angleVelocity[1] -= 180; // for the other side of the portal?
+        VectorSubtract(angles, angleVelocity, angleVelocity);
+        AngleVectors( angleVelocity, player->client->ps.velocity, NULL, NULL );
+				VectorScale( player->client->ps.velocity, normal + PORTAL_EXTRA_SPEED, player->client->ps.velocity );
+        // change client view angle
+				VectorSubtract(player->client->ps.viewangles, angles2, angleView);
+				angleView[1] -= 180; // for the other side of the portal?
+				VectorSubtract(angles, angleView, angleView);
+				SetClientViewAngle( player, angleView );
+			} else {
+				// source is a free standing, destination is a wall
+				// free standing portals don't need angle calculation because 
+        //   viewangles is assumed, since the portal rotates to face the player
+        // get the angle relative to the velocity
+        vectoangles(player->client->ps.velocity, angleVelocity);
+        VectorSubtract(player->client->ps.viewangles, angleVelocity, angleView);
+        // change the velocity direction but maintain Z
+        angleVelocity[1] = angles[1];
+        AngleVectors( angleVelocity, player->client->ps.velocity, NULL, NULL );
+				VectorScale( player->client->ps.velocity, normal + PORTAL_EXTRA_SPEED, player->client->ps.velocity );
+        // add the angle to the new velocity
+        VectorAdd(angleView, angleVelocity, angleView);
+        SetClientViewAngle( player, angleView );
+			}
     } else {
-      AngleVectors( player->client->ps.viewangles, player->client->ps.velocity, NULL, NULL );
-    }
-#define PORTAL_EXTRA_SPEED 42.0f
-    VectorScale( player->client->ps.velocity, normal + PORTAL_EXTRA_SPEED, player->client->ps.velocity );
-    //player->client->ps.velocity[2] -= player->client->ps.gravity;
-    if(angles2[0] != vec3_origin[0]
-      || angles2[1] != vec3_origin[1]
-      || angles2[2] != vec3_origin[2]) {
-      VectorSubtract(angles2, player->client->ps.viewangles, angleView);
-      angleView[1] -= 180; // for the other side of the portal?
-      VectorSubtract(angles, angleView, angleView);
-      SetClientViewAngle( player, angleView );
-    }
+			if(angles2[0] != vec3_origin[0]
+				|| angles2[1] != vec3_origin[1]
+				|| angles2[2] != vec3_origin[2]) {
+				// source is a wall view and destination is a free standing,
+        //   only because that's what the camera client side does now?
+				// TODO: spit out at the original angle the portal was set using trDelta?
+				VectorScale( player->client->ps.velocity, normal + PORTAL_EXTRA_SPEED, player->client->ps.velocity );
+        SetClientViewAngle( player, player->client->ps.viewangles );
+			} else {
+        // stand-alone portal to stand-alone portal the player can move around
+        //   to see the the world from a different angle
+				// both are free standing portals, maintain same velocity and direction
+				VectorScale( player->client->ps.velocity, normal + PORTAL_EXTRA_SPEED, player->client->ps.velocity );
+        SetClientViewAngle( player, player->client->ps.viewangles );
+			}
+		}
   }
 	player->client->ps.pm_time = 160; // hold time
 	player->client->ps.pm_flags |= PMF_TIME_KNOCKBACK;
