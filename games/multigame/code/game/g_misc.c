@@ -55,6 +55,7 @@ TELEPORTERS
 
 =================================================================================
 */
+#define PORTAL_EXTRA_SPEED 42.0f // two times the size of hit box?
 
 void TeleportPlayer_real( gentity_t *player, vec3_t origin, vec3_t angles, qboolean personal, vec3_t angles2 ) {
 	gentity_t	*tent;
@@ -81,9 +82,12 @@ void TeleportPlayer_real( gentity_t *player, vec3_t origin, vec3_t angles, qbool
     VectorScale( player->client->ps.velocity, (g_speed.value * 1.25f), player->client->ps.velocity );
     SetClientViewAngle( player, angles );
   } else {
-#define PORTAL_EXTRA_SPEED 42.0f
-    float normal = VectorNormalize(player->client->ps.velocity);
     vec3_t angleView, angleVelocity;
+    float normal = VectorNormalize(player->client->ps.velocity);
+    if(normal < PORTAL_EXTRA_SPEED) {
+      Com_Printf("Player speed too low: %f\n", normal);
+      normal = PORTAL_EXTRA_SPEED;
+    }
     if(angles[0] != vec3_origin[0]
       || angles[1] != vec3_origin[1]
       || angles[2] != vec3_origin[2]) {
@@ -99,16 +103,18 @@ void TeleportPlayer_real( gentity_t *player, vec3_t origin, vec3_t angles, qbool
         //   while jumping at an angle, it doesn't reset the view straight forward,
         //   A disappointing missing feature from Q3DM0
         vectoangles(player->client->ps.velocity, angleVelocity);
+        VectorSubtract(player->client->ps.viewangles, angleVelocity, angleView);
         VectorSubtract(angles2, angleVelocity, angleVelocity);
         angleVelocity[1] -= 180; // for the other side of the portal?
         VectorSubtract(angles, angleVelocity, angleVelocity);
         AngleVectors( angleVelocity, player->client->ps.velocity, NULL, NULL );
-				VectorScale( player->client->ps.velocity, normal + PORTAL_EXTRA_SPEED, player->client->ps.velocity );
+				VectorScale( player->client->ps.velocity, normal, player->client->ps.velocity );
         // change client view angle
-				VectorSubtract(player->client->ps.viewangles, angles2, angleView);
-				angleView[1] -= 180; // for the other side of the portal?
-				VectorSubtract(angles, angleView, angleView);
-				SetClientViewAngle( player, angleView );
+        angleView[0] = player->client->ps.viewangles[0];
+        angleView[1] = angleView[1] + angleVelocity[1];
+        angleView[2] = player->client->ps.viewangles[2];
+        //VectorAdd(angleView, angleVelocity, angleView);
+        SetClientViewAngle( player, angleView );
 			} else {
 				// source is a free standing, destination is a wall
 				// free standing portals don't need angle calculation because 
@@ -119,7 +125,7 @@ void TeleportPlayer_real( gentity_t *player, vec3_t origin, vec3_t angles, qbool
         // change the velocity direction but maintain Z
         angleVelocity[1] = angles[1];
         AngleVectors( angleVelocity, player->client->ps.velocity, NULL, NULL );
-				VectorScale( player->client->ps.velocity, normal + PORTAL_EXTRA_SPEED, player->client->ps.velocity );
+				VectorScale( player->client->ps.velocity, normal, player->client->ps.velocity );
         // add the angle to the new velocity
         VectorAdd(angleView, angleVelocity, angleView);
         SetClientViewAngle( player, angleView );
@@ -131,13 +137,13 @@ void TeleportPlayer_real( gentity_t *player, vec3_t origin, vec3_t angles, qbool
 				// source is a wall view and destination is a free standing,
         //   only because that's what the camera client side does now?
 				// TODO: spit out at the original angle the portal was set using trDelta?
-				VectorScale( player->client->ps.velocity, normal + PORTAL_EXTRA_SPEED, player->client->ps.velocity );
+				VectorScale( player->client->ps.velocity, normal, player->client->ps.velocity );
         SetClientViewAngle( player, player->client->ps.viewangles );
 			} else {
         // stand-alone portal to stand-alone portal the player can move around
         //   to see the the world from a different angle
 				// both are free standing portals, maintain same velocity and direction
-				VectorScale( player->client->ps.velocity, normal + PORTAL_EXTRA_SPEED, player->client->ps.velocity );
+				VectorScale( player->client->ps.velocity, normal, player->client->ps.velocity );
         SetClientViewAngle( player, player->client->ps.viewangles );
 			}
 		}
@@ -412,8 +418,8 @@ static void PortalDie (gentity_t *self, gentity_t *inflictor, gentity_t *attacke
 
 
 static void PortalTouch( gentity_t *self, gentity_t *other, trace_t *trace) {
-	//vec3_t		vec;
-	//int       len;
+	vec3_t		vel;
+	float     len;
 	gentity_t	*destination;
 	gclient_t *client = &level.clients[self->r.ownerNum];
 
@@ -429,10 +435,11 @@ static void PortalTouch( gentity_t *self, gentity_t *other, trace_t *trace) {
   //len = VectorNormalize(vec);
   //if(len > 64) {
 
-  if(level.time - other->client->lastPortal < 1 * 1000
+  if(level.time - other->client->lastPortal < 1 * 100
     // keep track of the exit point so we don't switch back and 
     //   forth a ton before there is time to move out of the way, 
-    && self == other->client->lastPortalEnt 
+    || (level.time - other->client->lastPortal < 1 * 1000
+      && self == other->client->lastPortalEnt)
   ) {
     //Com_Printf("portal too soon\n");
     return;
@@ -462,9 +469,22 @@ static void PortalTouch( gentity_t *self, gentity_t *other, trace_t *trace) {
   } else {
     destination = client->portalSource;
   }
-  client->lastPortalEnt = destination;
+  other->client->lastPortalEnt = destination;
 
   if( self->pos1[0] || self->pos1[1] || self->pos1[2] ) {
+    // if velocity is less than PORTAL_EXTRA_SPEED add it towards the portal
+    //   velocity is required in the next step TeleportPlayer_real, so
+    //   it appears the player is always stepping through a portal
+    //   instead of partly in between
+    VectorCopy(other->client->ps.velocity, vel);
+    len = VectorNormalize(vel);
+    if(len < PORTAL_EXTRA_SPEED) {
+      VectorSubtract(other->r.currentOrigin, self->r.currentOrigin, vel);
+      VectorNormalize(vel);
+      VectorScale( vel, -PORTAL_EXTRA_SPEED, vel );
+      VectorAdd(other->client->ps.velocity, vel, other->client->ps.velocity);
+    }
+
     if(destination->s.eventParm) {
       vec3_t angles;
       ByteToDir( destination->s.eventParm, angles );
@@ -508,6 +528,7 @@ static void PortalEnable( gentity_t *self ) {
   gentity_t	*target = NULL;
   gclient_t *client = &level.clients[self->r.ownerNum];
   
+  self->s.pos.trType = TR_STATIONARY;
 	self->touch = PortalTouch;
 	self->think = PortalDestroy;
 	self->nextthink = level.time + 2 * 60 * 1000;
@@ -562,12 +583,13 @@ static void PortalEnable( gentity_t *self ) {
   }
 }
 
-static vec3_t	range = { 32, 32, 32 };
-//static vec3_t	range = { 160, 160, 208 };
-#define PORTAL_TIMEOUT 100
+static vec3_t	PORTAL_SIZE = { 32, 32, 32 }; // only affects trigger, not physics
+//static vec3_t	PORTAL_SIZE = { 160, 160, 208 };
+#define PORTAL_TIMEOUT 1000
 void DropPortalDestination( gentity_t *player, qboolean isWall ) {
 	gentity_t	*ent;
-	vec3_t		snapped;
+	vec3_t		snapped, vel;
+  int       len;
 
   if(player->client->portalDestination) {
     G_FreeEntity(player->client->portalDestination);
@@ -580,18 +602,41 @@ void DropPortalDestination( gentity_t *player, qboolean isWall ) {
 
 	VectorCopy( player->r.currentOrigin, snapped );
   if(!isWall) {
+    VectorCopy(player->client->ps.velocity, vel);
+    len = VectorNormalize(vel);
+    // TODO: make this and velocity change optional
+    if(len < PORTAL_EXTRA_SPEED) {
+      AngleVectors(player->client->ps.viewangles, vel, NULL, NULL);
+      VectorScale( vel, PORTAL_EXTRA_SPEED, vel );
+      VectorAdd(player->client->ps.velocity, vel, player->client->ps.velocity);
+    } else {
+      VectorScale( vel, PORTAL_EXTRA_SPEED, vel );
+    }
+    VectorAdd(snapped, vel, snapped);
     snapped[2] += 32; // TODO: mipoint?
   }
 	SnapVector( snapped );
 	G_SetOrigin( ent, snapped );
   VectorCopy( ent->r.currentOrigin, ent->s.origin2 );
-  VectorSubtract( vec3_origin, range, ent->r.mins );
-	VectorAdd( vec3_origin, range, ent->r.maxs );
+  VectorSubtract( vec3_origin, PORTAL_SIZE, ent->r.mins );
+	VectorAdd( vec3_origin, PORTAL_SIZE, ent->r.maxs );
 	//VectorCopy( player->r.mins, ent->r.mins );
 	//VectorCopy( player->r.maxs, ent->r.maxs );
 
 	ent->classname = "hi_portal destination";
-	ent->s.pos.trType = TR_STATIONARY;
+  // give it time to settle
+  //if(isWall) {
+  ent->s.pos.trType = TR_STATIONARY;
+  //} else {
+  /*
+    ent->s.pos.trTime = level.time - 50; // MISSILE_PRESTEP_TIME;
+    ent->s.pos.trType = TR_GRAVITY;
+    ent->s.eFlags = EF_BOUNCE;
+    VectorCopy( player->r.currentOrigin, ent->s.pos.trBase );
+    VectorScale( player->client->ps.velocity, PORTAL_EXTRA_SPEED, ent->s.pos.trDelta );
+    SnapVector( ent->s.pos.trDelta );
+  */
+  //}
   ent->s.eType = ET_TELEPORT_TRIGGER;
   ent->r.svFlags = SVF_PORTAL | SVF_BROADCAST;
   ent->clipmask = CONTENTS_TRIGGER;
@@ -626,7 +671,8 @@ void DropPortalDestination( gentity_t *player, qboolean isWall ) {
 
 void DropPortalSource( gentity_t *player, qboolean isWall ) {
 	gentity_t	*ent;
-	vec3_t		snapped;
+	vec3_t		snapped, vel;
+  int       len;
 
   if(player->client->portalSource) {
     G_FreeEntity(player->client->portalSource);
@@ -639,18 +685,45 @@ void DropPortalSource( gentity_t *player, qboolean isWall ) {
 
 	VectorCopy( player->r.currentOrigin, snapped );
   if(!isWall) {
+    // always place portal a little bit in front of out current velocity so
+    //   angle can be detected when spitting player out, never zero
+    VectorCopy(player->client->ps.velocity, vel);
+    len = VectorNormalize(vel);
+    // TODO: make this and velocity change optional
+    if(len < PORTAL_EXTRA_SPEED) {
+      AngleVectors(player->client->ps.viewangles, vel, NULL, NULL);
+      VectorScale( vel, PORTAL_EXTRA_SPEED, vel );
+      VectorAdd(player->client->ps.velocity, vel, player->client->ps.velocity);
+    } else {
+      VectorScale( vel, PORTAL_EXTRA_SPEED, vel );
+    }
+    VectorAdd(snapped, vel, snapped);
+    // TODO: portal should be gravity based for 
+    //   1/2 second to fall to ground otherwise mid air
     snapped[2] += 32; // TODO: mipoint?
   }
+
 	SnapVector( snapped );
 	G_SetOrigin( ent, snapped );
   VectorCopy( ent->r.currentOrigin, ent->s.origin2 );
-  VectorSubtract( vec3_origin, range, ent->r.mins );
-	VectorAdd( vec3_origin, range, ent->r.maxs );
+  VectorSubtract( vec3_origin, PORTAL_SIZE, ent->r.mins );
+	VectorAdd( vec3_origin, PORTAL_SIZE, ent->r.maxs );
 	//VectorCopy( player->r.mins, ent->r.mins );
 	//VectorCopy( player->r.maxs, ent->r.maxs );
 
 	ent->classname = "hi_portal source";
-	ent->s.pos.trType = TR_STATIONARY;
+  //if(isWall) {
+  ent->s.pos.trType = TR_STATIONARY;
+  //} else {
+  /*
+    ent->s.pos.trTime = level.time - 50; // MISSILE_PRESTEP_TIME;
+    ent->s.pos.trType = TR_GRAVITY;
+    ent->s.eFlags = EF_BOUNCE;
+    VectorCopy( player->r.currentOrigin, ent->s.pos.trBase );
+    VectorScale( player->client->ps.velocity, PORTAL_EXTRA_SPEED, ent->s.pos.trDelta );
+    SnapVector( ent->s.pos.trDelta );
+  */
+  //}
   ent->s.eType = ET_TELEPORT_TRIGGER;
   ent->r.svFlags = SVF_PORTAL | SVF_BROADCAST;
   ent->clipmask = CONTENTS_TRIGGER;
