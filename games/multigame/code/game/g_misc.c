@@ -606,7 +606,9 @@ void DropPortalDestination( gentity_t *player, qboolean isWall ) {
     len = VectorNormalize(vel);
     // TODO: make this and velocity change optional
     if(len < PORTAL_EXTRA_SPEED) {
+      // use view angles if they are standing still
       AngleVectors(player->client->ps.viewangles, vel, NULL, NULL);
+      VectorNormalize(vel);
       VectorScale( vel, PORTAL_EXTRA_SPEED, vel );
       VectorAdd(player->client->ps.velocity, vel, player->client->ps.velocity);
     } else {
@@ -691,7 +693,9 @@ void DropPortalSource( gentity_t *player, qboolean isWall ) {
     len = VectorNormalize(vel);
     // TODO: make this and velocity change optional
     if(len < PORTAL_EXTRA_SPEED) {
+      // use view angles if they are standing still
       AngleVectors(player->client->ps.viewangles, vel, NULL, NULL);
+      VectorNormalize(vel);
       VectorScale( vel, PORTAL_EXTRA_SPEED, vel );
       VectorAdd(player->client->ps.velocity, vel, player->client->ps.velocity);
     } else {

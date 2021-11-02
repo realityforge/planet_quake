@@ -10,7 +10,7 @@ The following features I've added to baseq3a without affecting the networking pr
   * Configurable vote options based on roles.
   * Opening a web page from a map trigger.
   * Freezing a player like freeze tag. TODO: referee only, add freezing to game dynamics. TODO: treat frozen player like spectator.
-  * More configurable physics cvars.
+  * More configureable physics cvars.
   * Power-up item timers.
   * Damage plum for showing hit damage near players.
   * Armor piercing rails
@@ -36,14 +36,15 @@ The following features I've added to baseq3a without affecting the networking pr
   * Cluster grenades.
   * Homing rockets.
   * Spread-fire power-up.
-  * Server-side instagib gameplay.
-  * Bots can spawn-camp, where they use spawn points as objectives for moving around. This was necessary for instagib because items are removed from the map.
-  * More modes of death - ring out takes a point away from the person who falls into the void and gives a point to the last person that did knock-back damage to the player that died. Void death detection if someone fall a distance and then was killed by a world trigger. And from-the-grave death when a grenade goes off an kills another player after the person was already killed.
+  * Server-side insta-gib gameplay.
+  * Bots can spawn-camp, where they use spawn points as objectives for moving around. This was necessary for insta-gib because items are removed from the map.
+  * More modes of death - ring out takes a point away from the person who falls into the void and gives a point to the last person that did knock-back damage to the player that died. "Void death" detection if someone fall a distance and then was killed by a world trigger. "from the grave" mode of death - when a grenade goes off an kills another player, after the person was already killed.
   * 60 different runes with colors, icons, and abilities from the original Rune Quake. TODO: implement runes.
+  * Portals with nice camera angles. Portal power-up can be placed anywhere, ground, mid-air, under water. Portal gun can replace the BFG with left and right click to place a portal on walls.
 
 ## TODO
 
-  * Fix portal gun. Looking through a standing portal has a weird repetative effect because of depth write or sorting or something. Turn off depth in shader or skip entity in tr_main.c? Measure/cache midpoint of portal model and use on floor and wall alignment. Fix corners by tracing in server for edges. Add NOPORTAL surfaceParm. Still take falling damage for landing on a portal. Ceiling and floor infinite fall doesn't work. Projectiles through portals. Face wall portals like 5 degrees towards player away from original angle.
+  * Fix portal gun. Looking through a standing portal has a weird repetitive effect because of depth write or sorting or something. Turn off depth in shader or skip entity in tr_main.c? Measure/cache midpoint of portal model and use on floor and wall alignment. Fix corners by tracing in server for edges. Add NOPORTAL surfaceParm. Still take falling damage for landing on a portal. Projectiles through portals. Face wall portals like 5 degrees towards player away from original angle. Rotate towards player on X axis, but cameras stop working when angles[0] is set.
   * Infinite haste, how is this different than g_speed? Applies to only one player.
   * Boots that can climb steep slopes. 
   * Jump velocity as a part of anti-gravity boots. 

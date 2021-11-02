@@ -765,7 +765,11 @@ static void CG_PersonalPortal(const centity_t *cent) {
   VectorClear(angles);
   VectorSubtract( cg.refdef.vieworg, cent->lerpOrigin, vec );
   len = VectorNormalize( vec );
+  // this makes the portals all white :(, but it tracks perfectly
+  // too bad free-standing portals are hard to use from top and bottom
+  //angles[0] = -atan2( vec[2] * Q_rsqrt(vec[1] * vec[1] + vec[0] * vec[0]), 1 ) * 180.0f / M_PI;
   angles[1] = atan2(vec[1] / vec[0], 1) * 180.0f / M_PI;
+  //angles[2] = cg.refdef.viewaxis[2][2];
   if((cent->lerpOrigin[0] > cg.refdef.vieworg[0] && vec[1] / vec[0] > 0)
     || (cent->lerpOrigin[1] < cg.refdef.vieworg[1] && vec[1] / vec[0] < 0)){
     angles[1] = 270 + (angles[1] - 90);
@@ -775,6 +779,7 @@ static void CG_PersonalPortal(const centity_t *cent) {
   // add portal model
   memset (&ent, 0, sizeof(ent));
 
+  // angles used below for camera direction
   if( cent->currentState.eventParm ) {
 #define AWAY_FROM_WALL 8.0f
     // is wall portal
@@ -829,7 +834,8 @@ static void CG_PersonalPortal(const centity_t *cent) {
     AnglesToAxis( angles, ent.axis );
   } else if (!isMirror) {
     // 180 from portal is same as continuing the view angle but from another position
-    angles[1] += 180;
+    //angles[0] += 180;
+    angles[1] -= 180;
     angles[2] -= 90;
     AnglesToAxis( angles, ent.axis );
   }
