@@ -794,6 +794,12 @@ void ClientEvents( gentity_t *ent, int oldEventSequence ) {
   			G_StartKamikaze( ent );
   			break;
 
+  		case HI_INVULNERABILITY:		// invulnerability
+  			ent->client->invulnerabilityTime = level.time + 10000;
+  			break;
+#endif
+
+#ifdef USE_PORTALS
   		case HI_PORTAL:		// portal
   			if( ent->client->portalID ) {
   				DropPortalSource( ent, qfalse );
@@ -802,10 +808,7 @@ void ClientEvents( gentity_t *ent, int oldEventSequence ) {
   				DropPortalDestination( ent, qfalse );
   			}
   			break;
-  		case HI_INVULNERABILITY:		// invulnerability
-  			ent->client->invulnerabilityTime = level.time + 10000;
-  			break;
-  #endif
+#endif
 
   		default:
   			break;
@@ -1135,7 +1138,9 @@ void ClientThink_real( gentity_t *ent ) {
 
 	VectorCopy( client->ps.origin, client->oldOrigin );
 
+#ifdef USE_PORTALS
 	G_ListPortals( ent, sources, destinations, sourcesAngles, destinationsAngles );
+#endif
 
 #ifdef MISSIONPACK
 		if (level.intermissionQueued != 0 && g_singlePlayer.integer) {

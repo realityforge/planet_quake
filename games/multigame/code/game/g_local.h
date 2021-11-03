@@ -356,13 +356,15 @@ struct gclient_s {
 
 #ifdef MISSIONPACK
 	gentity_t	*persistantPowerup;
-	int			portalID;
+	int			ammoTimes[WP_NUM_WEAPONS];
+	int			invulnerabilityTime;
+#endif
+#ifdef USE_PORTALS
   gentity_t *portalDestination;
   gentity_t *portalSource;
   int       lastPortal;
   gentity_t *lastPortalEnt;
-	int			ammoTimes[WP_NUM_WEAPONS];
-	int			invulnerabilityTime;
+	int			portalID;
 #endif
 
 	char		*areabits;
@@ -480,7 +482,7 @@ typedef struct {
 	gentity_t	*locationHead;			// head of the location list
 	int			bodyQueIndex;			// dead bodies
 	gentity_t	*bodyQue[BODY_QUEUE_SIZE];
-#ifdef MISSIONPACK
+#ifdef USE_PORTALS
 	int			portalSequence;
 #endif
 

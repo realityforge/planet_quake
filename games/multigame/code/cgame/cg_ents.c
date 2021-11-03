@@ -597,9 +597,9 @@ static void CG_Missile( centity_t *cent ) {
 #ifdef USE_PORTALS
   if(cent->currentState.weapon == WP_BFG
     && cg_portalsEnabled.integer) {
-    if(cent->currentState.powerups) {
+    if(cent->currentState.powerups & (1 << 4)) {
       ent.customShader = cgs.media.blueBFG;
-    } else {
+    } else if(cent->currentState.powerups & (1 << 5)) {
       ent.customShader = cgs.media.redBFG;
     }
   }
@@ -754,6 +754,8 @@ void CG_Beam( const centity_t *cent ) {
 }
 
 
+#ifdef USE_PORTALS
+#define AWAY_FROM_WALL 8.0f
 static void CG_PersonalPortal(const centity_t *cent) {
   vec3_t          angles, vec, velocity;
   refEntity_t			ent;
@@ -767,21 +769,20 @@ static void CG_PersonalPortal(const centity_t *cent) {
   len = VectorNormalize( vec );
   // this makes the portals all white :(, but it tracks perfectly
   // too bad free-standing portals are hard to use from top and bottom
-  //angles[0] = -atan2( vec[2] * Q_rsqrt(vec[1] * vec[1] + vec[0] * vec[0]), 1 ) * 180.0f / M_PI;
+  angles[0] = -atan2( vec[2] * Q_rsqrt(vec[1] * vec[1] + vec[0] * vec[0]), 1 ) * 180.0f / M_PI;
   angles[1] = atan2(vec[1] / vec[0], 1) * 180.0f / M_PI;
   //angles[2] = cg.refdef.viewaxis[2][2];
   if((cent->lerpOrigin[0] > cg.refdef.vieworg[0] && vec[1] / vec[0] > 0)
     || (cent->lerpOrigin[1] < cg.refdef.vieworg[1] && vec[1] / vec[0] < 0)){
     angles[1] = 270 + (angles[1] - 90);
   }
-  //Com_Printf("angles: %f - %f\n", angles[1], vec[1] / vec[0]);
+  //Com_Printf("angles %i: %f - %f\n", cent->currentState.number, angles[1], vec[1] / vec[0]);
 
   // add portal model
   memset (&ent, 0, sizeof(ent));
 
   // angles used below for camera direction
   if( cent->currentState.eventParm ) {
-#define AWAY_FROM_WALL 8.0f
     // is wall portal
     ByteToDir( cent->currentState.eventParm, ent.axis[0] );
     vectoangles( ent.axis[0], angles );
@@ -824,28 +825,46 @@ static void CG_PersonalPortal(const centity_t *cent) {
     isMirror = qtrue;
     //Com_Printf("mirror!\n");
   } else {
+		isMirror = qfalse;
     //ent.oldorigin[2] += 32;
   }
   target = &cg_entities[cent->currentState.otherEntityNum];
   if( target->currentState.eventParm ) {
+		// if it is a wall portal
     ByteToDir( target->currentState.eventParm, ent.axis[0] );
     vectoangles( ent.axis[0], angles );
-    angles[2] -= 90;
+    //angles[2] = 0;
     AnglesToAxis( angles, ent.axis );
   } else if (!isMirror) {
+		// TODO: camera bobbing might actually be cool for free standing portals
     // 180 from portal is same as continuing the view angle but from another position
-    //angles[0] += 180;
-    angles[1] -= 180;
-    angles[2] -= 90;
-    AnglesToAxis( angles, ent.axis );
+    //angles[0] = 0;
+    //angles[1] = -atan2(vec[0] / vec[1], 1) * 180.0f / M_PI;
+		//angles[1] -= 180;
+    //angles[2] -= 90;
+		//PerpendicularVector(angles, angles);
+    AnglesToAxis( cent->lerpAngles, ent.axis );
   }
+	/*
+	// TODO: move portal camera closer to midpoint
+	// TODO: use origin and origin2 for positioning, 
+	//   or trBase and trDelta to match server/player positioning
+	if (!isMirror) {
+		if(target->currentState.eventParm == 0) {
+			ent.oldorigin[2] += 32;
+		}
+		if(cent->currentState.eventParm == 0) {
+			ent.origin[2] += 32;
+		}
+	}
+	*/
   ent.reType = RT_PORTALSURFACE;
-  ent.renderfx = RF_FIRST_PERSON;
+  //ent.renderfx = RF_FIRST_PERSON;
   ent.frame = cent->currentState.number;
   ent.oldframe = cent->currentState.otherEntityNum;
   trap_R_AddRefEntityToScene(&ent);
 }
-
+#endif
 
 
 /*
@@ -1218,8 +1237,14 @@ static void CG_AddCEntity( centity_t *cent ) {
 	case ET_PUSH_TRIGGER:
     break;
 	case ET_TELEPORT_TRIGGER:
-    if(cent->currentState.modelindex)
+#ifdef USE_PORTALS
+    if(cent->currentState.modelindex
+		//	&& cent->currentState.clientNum
+			&& (cent->currentState.powerups & ((1 << 4) | (1 << 5)))
+		) {
       CG_PersonalPortal( cent );
+		}
+#endif
 		break;
 	case ET_GENERAL:
 		CG_General( cent );

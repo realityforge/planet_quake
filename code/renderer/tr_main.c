@@ -794,6 +794,7 @@ static qboolean R_GetPortalOrientations( const drawSurf_t *drawSurf, int entityN
 
 		d = DotProduct( e->e.origin, originalPlane.normal ) - originalPlane.dist;
 		if ( d > 64 || d < -64) {
+//			Com_Printf("too far\n");
 			continue;
 		}
 
@@ -1575,7 +1576,7 @@ void R_AddEntitySurfaces( void ) {
       || (ent->e.oldframe && ent->e.oldframe == tr.viewParms.portalEntity))
     ) {
       //Com_Printf("skipping portal %i\n", ent->e.reType);
-      continue;
+      //continue;
     }
 
 		//

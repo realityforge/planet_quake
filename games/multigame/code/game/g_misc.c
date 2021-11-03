@@ -84,6 +84,8 @@ void TeleportPlayer_real( gentity_t *player, vec3_t origin, vec3_t angles, qbool
   } else {
     vec3_t angleView, angleVelocity;
     float normal = VectorNormalize(player->client->ps.velocity);
+    VectorCopy(vec3_origin, angleView);
+    VectorCopy(vec3_origin, angleVelocity);
     if(normal < PORTAL_EXTRA_SPEED) {
       Com_Printf("Player speed too low: %f\n", normal);
       normal = PORTAL_EXTRA_SPEED;
@@ -105,12 +107,13 @@ void TeleportPlayer_real( gentity_t *player, vec3_t origin, vec3_t angles, qbool
         vectoangles(player->client->ps.velocity, angleVelocity);
         VectorSubtract(player->client->ps.viewangles, angleVelocity, angleView);
         VectorSubtract(angles2, angleVelocity, angleVelocity);
-        angleVelocity[1] -= 180; // for the other side of the portal?
-        VectorSubtract(angles, angleVelocity, angleVelocity);
+        //angleVelocity[1] -= 180; // for the other side of the portal?
+        VectorAdd(angles, angleVelocity, angleVelocity);
         AngleVectors( angleVelocity, player->client->ps.velocity, NULL, NULL );
 				VectorScale( player->client->ps.velocity, normal, player->client->ps.velocity );
         // change client view angle
         angleView[0] = player->client->ps.viewangles[0];
+        //angleView[0] = angleView[0] + angleVelocity[0];
         angleView[1] = angleView[1] + angleVelocity[1];
         angleView[2] = player->client->ps.viewangles[2];
         //VectorAdd(angleView, angleVelocity, angleView);
@@ -389,7 +392,7 @@ void SP_shooter_grenade( gentity_t *ent ) {
 }
 
 
-#ifdef MISSIONPACK
+#ifdef USE_PORTALS
 void PortalDestroy( gentity_t *self ) {
   gclient_t *client;
   client = &level.clients[self->r.ownerNum];
@@ -481,8 +484,8 @@ static void PortalTouch( gentity_t *self, gentity_t *other, trace_t *trace) {
     if(len < PORTAL_EXTRA_SPEED) {
       VectorSubtract(other->r.currentOrigin, self->r.currentOrigin, vel);
       VectorNormalize(vel);
-      VectorScale( vel, -PORTAL_EXTRA_SPEED, vel );
-      VectorAdd(other->client->ps.velocity, vel, other->client->ps.velocity);
+      //VectorScale( vel, -PORTAL_EXTRA_SPEED, vel );
+      //VectorAdd(other->client->ps.velocity, vel, other->client->ps.velocity);
     }
 
     if(destination->s.eventParm) {
@@ -571,13 +574,7 @@ static void PortalEnable( gentity_t *self ) {
       VectorCopy( target->r.currentOrigin, self->pos1 );
       VectorCopy( target->r.currentOrigin, self->s.origin2 );
     }
-  
-    //VectorSubtract( target->s.origin, self->s.origin, dir );
-    //VectorNormalize( dir );
-    if ( target ) {
-      // TODO: use eventParm to represent wall portal perpendicular vector
-    	//ent->s.eventParm = DirToByte( dir );
-  	}
+
     self->s.otherEntityNum = target->s.number;
     target->s.otherEntityNum = self->s.number;
   }
@@ -585,7 +582,7 @@ static void PortalEnable( gentity_t *self ) {
 
 static vec3_t	PORTAL_SIZE = { 32, 32, 32 }; // only affects trigger, not physics
 //static vec3_t	PORTAL_SIZE = { 160, 160, 208 };
-#define PORTAL_TIMEOUT 1000
+#define PORTAL_TIMEOUT 100
 void DropPortalDestination( gentity_t *player, qboolean isWall ) {
 	gentity_t	*ent;
 	vec3_t		snapped, vel;
@@ -599,15 +596,15 @@ void DropPortalDestination( gentity_t *player, qboolean isWall ) {
 	// create the portal destination
 	ent = G_Spawn();
 	ent->s.modelindex = G_ModelIndex( "models/portal/portal_blue.md3" );
-
 	VectorCopy( player->r.currentOrigin, snapped );
   if(!isWall) {
     VectorCopy(player->client->ps.velocity, vel);
     len = VectorNormalize(vel);
     // TODO: make this and velocity change optional
     if(len < PORTAL_EXTRA_SPEED) {
-      // use view angles if they are standing still
       AngleVectors(player->client->ps.viewangles, vel, NULL, NULL);
+      // was thinking to use this initial trajectory to "pull" the portal downwards, angle-wise
+      //VectorCopy( player->client->ps.viewangles, ent->s.pos.trDelta );
       VectorNormalize(vel);
       VectorScale( vel, PORTAL_EXTRA_SPEED, vel );
       VectorAdd(player->client->ps.velocity, vel, player->client->ps.velocity);
@@ -616,6 +613,11 @@ void DropPortalDestination( gentity_t *player, qboolean isWall ) {
     }
     VectorAdd(snapped, vel, snapped);
     snapped[2] += 32; // TODO: mipoint?
+  } else {
+    // use the angle it was shot at, player is the projectile
+    // was thinking to use this initial trajectory to "pull" the portal downwards, angle-wise
+    //VectorCopy( player->s.pos.trDelta, ent->s.pos.trDelta );
+    //vectoangles(ent->s.pos.trDelta, ent->s.angles);
   }
 	SnapVector( snapped );
 	G_SetOrigin( ent, snapped );
@@ -650,10 +652,11 @@ void DropPortalDestination( gentity_t *player, qboolean isWall ) {
   }
 	ent->health = 200;
 	ent->die = PortalDie;
+  ent->s.powerups = 1 << 5;
 
   // copied from misc_portal
   ent->r.ownerNum = player->client->ps.clientNum;
-	ent->s.clientNum = 0;
+	ent->s.clientNum = player->client->ps.clientNum;
 
   // TODO: angles not used because model rotates?
 	//VectorCopy( player->s.apos.trBase, ent->s.angles );
@@ -718,6 +721,7 @@ void DropPortalSource( gentity_t *player, qboolean isWall ) {
 	ent->classname = "hi_portal source";
   //if(isWall) {
   ent->s.pos.trType = TR_STATIONARY;
+  VectorCopy( player->s.pos.trDelta, ent->s.pos.trDelta );
   //} else {
   /*
     ent->s.pos.trTime = level.time - 50; // MISSILE_PRESTEP_TIME;
@@ -735,15 +739,20 @@ void DropPortalSource( gentity_t *player, qboolean isWall ) {
 	ent->takedamage = qtrue;
   if(isWall) {
     ent->damage = GIB_HEALTH;
-    ent->s.eventParm = DirToByte( player->movedir );
+    //player->movedir[2] = 90;
+    ent->s.eventParm = DirToByte( player->movedir );  // trace->plane.normal in g_missile.c
+  } else {
+    // TODO: use s.powerups = (1 << 3) to indicate wall or free standing portal
+    //ent->damage = GIB_HEALTH;
+    //ent->s.eventParm = DirToByte( player->r.currentAngles );  // trace->plane.normal in g_missile.c
   }
 	ent->health = 200;
 	ent->die = PortalDie;
-  ent->s.powerups = 1;
+  ent->s.powerups = 1 << 4;
 
   // copied from misc_portal
   ent->r.ownerNum = player->client->ps.clientNum;
-	ent->s.clientNum = 0;
+	ent->s.clientNum = player->client->ps.clientNum;
   // end misc_portal
 
   player->client->portalSource = ent;
