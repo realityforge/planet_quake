@@ -276,22 +276,6 @@ static void Bullet_Fire( gentity_t *ent, float spread, int damage ) {
 }
 
 
-#ifdef USE_PORTALS
-/*
-======================================================================
-
-PORTAL
-
-======================================================================
-*/
-
-static void Portal_Fire( gentity_t *ent, qboolean altFire ) {
-	fire_portal( ent, muzzle, forward, altFire );
-//	VectorAdd( m->s.pos.trDelta, ent->client->ps.velocity, m->s.pos.trDelta );	// "real" physics
-}
-#endif
-
-
 /*
 ======================================================================
 
@@ -406,7 +390,8 @@ static void ShotgunPattern( const vec3_t origin, const vec3_t origin2, int seed,
 	G_DoTimeShiftFor( ent );
 
 	// generate the "random" spread pattern
-	for ( i = 0 ; i < DEFAULT_SHOTGUN_COUNT ; i++ ) {
+	for ( i = 0 ; i < DEFAULT_SHOTGUN_COUNT ; i++ ) 
+	{
 		r = Q_crandom( &seed ) * DEFAULT_SHOTGUN_SPREAD * 16;
 		u = Q_crandom( &seed ) * DEFAULT_SHOTGUN_SPREAD * 16;
 		VectorMA( origin, ( 8192.0 * 16.0 ), forward, end );
@@ -629,20 +614,20 @@ void weapon_railgun_fire( gentity_t *ent ) {
 	G_DoTimeShiftFor( ent );
 
 	// trace only against the solids, so the railgun will go through people
-#ifdef USE_BOUNCE_RAIL
-  bounce = 0; //Luc: start off with no bounces
-#endif
 	unlinked = 0;
 	hits = 0;
 	passent = ent->s.number;
   i = 0;
 
 #ifdef USE_BOUNCE_RAIL
+  bounce = 0; //Luc: start off with no bounces
   //Luc:
   do {
     if (bounce) {
-      G_BounceProjectile( muzzle , trace.endpos , trace.plane.normal, end); //This sets the new angles for the bounce
-      VectorCopy (trace.endpos , muzzle); //copy the end position as the new muzzle
+			// This sets the new angles for the bounce
+      G_BounceProjectile( muzzle , trace.endpos , trace.plane.normal, end);
+			// copy the end position as the new muzzle
+      VectorCopy (trace.endpos , muzzle);
     }
 #endif
 	do {
@@ -759,6 +744,7 @@ void weapon_railgun_fire( gentity_t *ent ) {
 	// move origin a bit to come closer to the drawn gun muzzle
 	VectorMA( tent->s.origin2, 4, right, tent->s.origin2 );
 	VectorMA( tent->s.origin2, -1, up, tent->s.origin2 );
+	tent->s.powerups = bounce;
 
 	SnapVector( tent->s.origin2 );
 
@@ -775,7 +761,9 @@ void weapon_railgun_fire( gentity_t *ent ) {
 
 #ifdef USE_INVULN_RAILS
   //send the effect to everyone since it tunnels through walls
-  tent->r.svFlags |= SVF_BROADCAST;
+	if(g_railThruWalls.integer) {
+		tent->r.svFlags |= SVF_BROADCAST;
+	}
 #endif
 
 	// give the shooter a reward sound if they have made two railgun hits in a row
@@ -797,7 +785,7 @@ void weapon_railgun_fire( gentity_t *ent ) {
 	}
 #ifdef USE_BOUNCE_RAIL//Luc: Add a bounce, so it'll bounce only 4 times
 bounce++;
-} while (bounce <= MAX_RAIL_BOUNCE);
+} while (wp_railBounce.integer && bounce <= MAX_RAIL_BOUNCE);
 #endif
 }
 
@@ -1037,6 +1025,7 @@ void weapon_proxlauncher_fire (gentity_t *ent) {
 //======================================================================
 
 #ifdef USE_LASER_SIGHT
+#define LASER_THINK_TIME 50
 /*
 ============
 Laser Sight Stuff
@@ -1082,7 +1071,7 @@ void Laser_Think( gentity_t *self )	{
 	trap_LinkEntity(self);
 
 	//Prep next move
-	self->nextthink = level.time + 50;
+	self->nextthink = level.time + LASER_THINK_TIME;
 }
 
 void Laser_Gen( gentity_t *ent, int type )	{
@@ -1100,7 +1089,7 @@ void Laser_Gen( gentity_t *ent, int type )	{
 
 	las = G_Spawn();
 
-	las->nextthink = level.time + 50;
+	las->nextthink = level.time + LASER_THINK_TIME;
 	las->think = Laser_Think;
 	las->r.ownerNum = ent->s.number;
 	las->parent = ent;
@@ -1170,7 +1159,10 @@ gentity_t *ThrowWeapon( gentity_t *ent ) {
 	if( client->ps.weapon == WP_GAUNTLET
 		|| client->ps.weapon == WP_MACHINEGUN
 		|| client->ps.weapon == WP_GRAPPLING_HOOK
-		|| ( ucmd->buttons & BUTTON_ATTACK ))
+		|| ( ucmd->buttons & BUTTON_ATTACK )
+		// TODO: just make it disappear in mode where it affects speed
+		|| client->ps.ammo[client->ps.weapon] == INFINITE
+		|| client->ps.weapon == WP_NONE)
 		return NULL;
 
 
@@ -1334,7 +1326,7 @@ void FireWeapon( gentity_t *ent
       && !g_altPortal.integer // do both ends with right click, reset each time
 #endif
     ) {
-      Portal_Fire(ent, altFire);
+			fire_portal( ent, muzzle, forward, altFire );
     } else
 #endif
 		BFG_Fire( ent );

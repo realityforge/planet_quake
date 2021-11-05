@@ -757,7 +757,7 @@ void CG_Beam( const centity_t *cent ) {
 #ifdef USE_PORTALS
 #define AWAY_FROM_WALL 8.0f
 static void CG_PersonalPortal(const centity_t *cent) {
-  vec3_t          angles, vec, velocity;
+  vec3_t          angles, angles2, vec, velocity;
   refEntity_t			ent;
   float           len;
   qboolean        isMirror;
@@ -767,8 +767,7 @@ static void CG_PersonalPortal(const centity_t *cent) {
   VectorClear(angles);
   VectorSubtract( cg.refdef.vieworg, cent->lerpOrigin, vec );
   len = VectorNormalize( vec );
-  // this makes the portals all white :(, but it tracks perfectly
-  // too bad free-standing portals are hard to use from top and bottom
+  // tracks player position on 2 axis to make it always look like someone can fit through it
   angles[0] = -atan2( vec[2] * Q_rsqrt(vec[1] * vec[1] + vec[0] * vec[0]), 1 ) * 180.0f / M_PI;
   angles[1] = atan2(vec[1] / vec[0], 1) * 180.0f / M_PI;
   //angles[2] = cg.refdef.viewaxis[2][2];
@@ -784,12 +783,12 @@ static void CG_PersonalPortal(const centity_t *cent) {
   // angles used below for camera direction
   if( cent->currentState.eventParm ) {
     // is wall portal
-    ByteToDir( cent->currentState.eventParm, ent.axis[0] );
-    vectoangles( ent.axis[0], angles );
+    ByteToDir( cent->currentState.eventParm, angles2 );
+    vectoangles( angles2, angles );
+    AnglesToAxis( angles, ent.axis );
     AngleVectors ( angles, velocity, NULL, NULL );
     VectorNormalize( velocity );
     VectorScale( velocity, AWAY_FROM_WALL, velocity );
-    AnglesToAxis( angles, ent.axis );
     VectorSubtract( cent->lerpOrigin, velocity, ent.origin );
   } else {
     AnglesToAxis( angles, ent.axis );
@@ -831,33 +830,21 @@ static void CG_PersonalPortal(const centity_t *cent) {
   target = &cg_entities[cent->currentState.otherEntityNum];
   if( target->currentState.eventParm ) {
 		// if it is a wall portal
-    ByteToDir( target->currentState.eventParm, ent.axis[0] );
-    vectoangles( ent.axis[0], angles );
-    //angles[2] = 0;
-    AnglesToAxis( angles, ent.axis );
+    ByteToDir( target->currentState.eventParm, angles2 );
+    vectoangles( angles2, angles2 );
+    //angles[2] = -90;
+    AnglesToAxis( angles2, ent.axis );
   } else if (!isMirror) {
 		// TODO: camera bobbing might actually be cool for free standing portals
     // 180 from portal is same as continuing the view angle but from another position
-    //angles[0] = 0;
-    //angles[1] = -atan2(vec[0] / vec[1], 1) * 180.0f / M_PI;
+    VectorCopy(cent->lerpAngles, angles2);
+		//angles[0] = 0;
+    angles2[1] = angles[1] - 180;
 		//angles[1] -= 180;
-    //angles[2] -= 90;
+    angles2[2] = -90;
 		//PerpendicularVector(angles, angles);
-    AnglesToAxis( cent->lerpAngles, ent.axis );
+    AnglesToAxis( angles2, ent.axis );
   }
-	/*
-	// TODO: move portal camera closer to midpoint
-	// TODO: use origin and origin2 for positioning, 
-	//   or trBase and trDelta to match server/player positioning
-	if (!isMirror) {
-		if(target->currentState.eventParm == 0) {
-			ent.oldorigin[2] += 32;
-		}
-		if(cent->currentState.eventParm == 0) {
-			ent.origin[2] += 32;
-		}
-	}
-	*/
   ent.reType = RT_PORTALSURFACE;
   //ent.renderfx = RF_FIRST_PERSON;
   ent.frame = cent->currentState.number;

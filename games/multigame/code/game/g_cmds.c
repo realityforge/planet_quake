@@ -1925,12 +1925,30 @@ void Cmd_DropAmmo_f(gentity_t *ent) {
   // drop ammo for current weapon, total / default pack size
   gitem_t *item;
   int i = ent->s.weapon;
+	if(ent->client->ps.ammo[i] == INFINITE)
+		return;
   item = BG_FindItemForAmmo(i);
   if(floor(ent->client->ps.ammo[i] / item->quantity) > 1) {
     dropWeapon( ent, item, 0, FL_DROPPED_ITEM | FL_THROWN_ITEM );
     ent->client->ps.ammo[i] -= item->quantity;
     return;
   }
+}
+#endif
+
+
+#ifdef USE_HEALTH_DROP
+void Cmd_DropHealth_f(gentity_t *ent) {
+  gitem_t *item;
+	// TODO: infinite version of health 999 like DOOM?
+	//if(ent->client->ps.ammo[i] == INFINITE)
+	//	return;
+	item = BG_FindItemForHealth(25);
+	if(floor(ent->health / item->quantity) > 1) {
+		dropWeapon( ent, item, 0, FL_DROPPED_ITEM | FL_THROWN_ITEM );
+		ent->health -= item->quantity;
+		return;
+	}
 }
 #endif
 
@@ -2026,7 +2044,8 @@ void Cmd_Drop_f( gentity_t *ent ) {
     gitem_t *item;
     int i = ent->s.weapon;
     item = BG_FindItemForAmmo(i);
-    if(floor(ent->client->ps.ammo[i] / item->quantity) > 1) {
+    if(ent->client->ps.ammo[i] != INFINITE
+			&& floor(ent->client->ps.ammo[i] / item->quantity) > 1) {
       dropWeapon( ent, item, 0, FL_DROPPED_ITEM | FL_THROWN_ITEM );
       ent->client->ps.ammo[i] -= item->quantity;
       return;
@@ -2035,6 +2054,7 @@ void Cmd_Drop_f( gentity_t *ent ) {
 #endif
   // TODO: fix weapon switch animation
   drop = ThrowWeapon( ent );
+#ifdef USE_HEALTH_DROP
   if(!drop && g_dropWeapon.integer & 64) {
     gitem_t *item;
     item = BG_FindItemForHealth(25);
@@ -2044,6 +2064,7 @@ void Cmd_Drop_f( gentity_t *ent ) {
       return;
     }
   }
+#endif
 }
 #endif
 
@@ -2344,9 +2365,13 @@ void ClientCommand( int clientNum ) {
   else if (Q_stricmp (cmd, "dropitem") == 0)
     Cmd_DropItem_f( ent );
 #endif
-#ifdef USE_AMMO_DROP
+#ifdef USE_AMMO_DROP // for heavys
   else if (Q_stricmp (cmd, "dropammo") == 0)
     Cmd_DropAmmo_f( ent );
+#endif
+#ifdef USE_HEALTH_DROP // for medics
+	else if (Q_stricmp (cmd, "drophealth") == 0)
+		Cmd_DropHealth_f( ent );
 #endif
 #ifdef USE_BOUNCE_CMD
   else if (Q_stricmp (cmd, "rbounce") == 0)

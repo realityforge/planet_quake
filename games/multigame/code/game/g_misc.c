@@ -106,8 +106,8 @@ void TeleportPlayer_real( gentity_t *player, vec3_t origin, vec3_t angles, qbool
         //   A disappointing missing feature from Q3DM0
         vectoangles(player->client->ps.velocity, angleVelocity);
         VectorSubtract(player->client->ps.viewangles, angleVelocity, angleView);
-        VectorSubtract(angles2, angleVelocity, angleVelocity);
-        //angleVelocity[1] -= 180; // for the other side of the portal?
+        VectorSubtract(angleVelocity, angles2, angleVelocity);
+        angleVelocity[1] -= 180; // for the other side of the portal?
         VectorAdd(angles, angleVelocity, angleVelocity);
         AngleVectors( angleVelocity, player->client->ps.velocity, NULL, NULL );
 				VectorScale( player->client->ps.velocity, normal, player->client->ps.velocity );

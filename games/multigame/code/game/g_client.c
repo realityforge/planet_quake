@@ -851,6 +851,7 @@ const char *ClientConnect( int clientNum, qboolean firstTime, qboolean isBot ) {
 		client->sess.spectatorClient = clientNum;
 	}
   ent->r.svFlags |= SVF_BROADCAST;
+	ent->r.svFlags |= SVF_PORTAL; // so all entities from their location are sent to client
   ent->r.svFlags &= ~SVF_SINGLECLIENT;
 	ent->inuse = qtrue;
 

@@ -44,14 +44,16 @@ The following features I've added to baseq3a without affecting the networking pr
 
 ## TODO
 
-  * Fix portal gun. Looking through a standing portal has a weird repetitive effect because of depth write or sorting or something. Turn off depth in shader or skip entity in tr_main.c? Measure/cache midpoint of portal model and use on floor and wall alignment. Fix corners by tracing in server for edges. Add NOPORTAL surfaceParm. Still take falling damage for landing on a portal. Projectiles through portals. Face wall portals like 5 degrees towards player away from original angle. Rotate towards player on X axis, but cameras stop working when angles[0] is set.
+  * Fix portal gun. Looking through a standing portal has a weird repetitive effect because of depth write or sorting or something. Turn off depth in shader or skip entity in tr_main.c? Measure/cache midpoint of portal model and use on floor and wall alignment. Fix corners by tracing in server for edges. Add NOPORTAL surfaceParm. Still take falling damage for landing on a portal. Projectiles through portals. Face wall portals like 5 degrees towards player away from original angle. No falling damage while holding the portal gun.
   * Infinite haste, how is this different than g_speed? Applies to only one player.
   * Boots that can climb steep slopes. 
   * Jump velocity as a part of anti-gravity boots. 
   * Power-ups cover entire body or just the gun setting from server and client setting. 
   * Add player state to UI QVM so multiple cursors can be shared, and players can see map and game configuration.
+  * Add walk on walls, better movement than trem.
+  * Live-action minimap
+  * Ricochet mode where damage only applies after projectile bounces/splash damage
+  * Showing enemy health and armor about their head like an RPG
   * Extra UI menus with multiQVM, for voting on maps and bitcoin setup, Instant replay, consolidate all VM UIs scoreboard/postgame/HUD/menus in to 1 UI system, replace the menu address with an API call.
   * Many mod support, compiling and playing lots of different game types, capture the flag with 3+ teams
   * Campaign mode, playing older engine content and playing as enemy characters, new AI for old enemies
-  * New weapons mod that includes guns from every game, weapon switching is controlled by new EV_ events, that count the number of alternate weapon modes, and also count the number of classes. 
-  e.g. EV_WEAPON_RESET + EV_WEAPON_COUNT + EV_WEAPON_COUNT would translate to the second mode for the current weapon, this would occur right after a EV_WEAPON_CHANGE event. So the cgame and qagame can match states without having to modify the number of bits used to describe the weapon 0-10. Similarly, an entire weapon class can be swapped out with a EV_CLASS_RESET + EV_CLASS_COUNT + EV_CLASS_COUNT would switch to the 2nd class of weapons. Both ends, cgame, and qagame have a known list of available weapons, and adding a "counter" instead of taking up bits, means we don't have to change the network model to accomodate more models/weapons/effects.  Same thing can be done for powerups/projectiles.

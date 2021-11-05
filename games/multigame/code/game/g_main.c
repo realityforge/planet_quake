@@ -105,16 +105,22 @@ vmCvar_t  wp_grenadeCycle;
 vmCvar_t  wp_grenadeDamage;
 vmCvar_t  wp_grenadeSplash;
 vmCvar_t  wp_grenadeRadius;
+vmCvar_t  wp_grenadeSpeed;
+vmCvar_t  wp_grenadeTime;
 
 vmCvar_t  wp_rocketCycle;
 vmCvar_t  wp_rocketDamage;
 vmCvar_t  wp_rocketSplash;
 vmCvar_t  wp_rocketRadius;
+vmCvar_t  wp_rocketSpeed;
+vmCvar_t  wp_rocketTime;
 
 vmCvar_t  wp_plasmaCycle;
 vmCvar_t  wp_plasmaDamage;
 vmCvar_t  wp_plasmaSplash;
 vmCvar_t  wp_plasmaRadius;
+vmCvar_t  wp_plasmaSpeed;
+vmCvar_t  wp_plasmaTime;
 
 vmCvar_t  wp_railCycle;
 vmCvar_t  wp_railDamage;
@@ -123,21 +129,29 @@ vmCvar_t  wp_bfgCycle;
 vmCvar_t  wp_bfgDamage;
 vmCvar_t  wp_bfgSplash;
 vmCvar_t  wp_bfgRadius;
+vmCvar_t  wp_bfgSpeed;
+vmCvar_t  wp_bfgTime;
+
 #ifdef USE_GRAPPLE
 vmCvar_t  wp_grappleEnable;
 vmCvar_t  wp_grapplePull;
-vmCvar_t  wp_grappleSpeed;
 vmCvar_t  wp_grappleCycle;
 vmCvar_t  wp_grappleDamage;
+vmCvar_t  wp_grappleSpeed;
+vmCvar_t  wp_grappleTime;
 #endif
 #ifdef MISSIONPACK
 vmCvar_t  wp_nailCycle;
 vmCvar_t  wp_nailDamage;
+vmCvar_t	wp_nailSpeed;
+vmCvar_t  wp_nailTime;
 
 vmCvar_t  wp_proxCycle;
 vmCvar_t  wp_proxDamage;
 vmCvar_t  wp_proxSplash;
 vmCvar_t  wp_proxRadius;
+vmCvar_t  wp_proxSpeed;
+vmCvar_t  wp_proxTime;
 
 vmCvar_t  wp_chainCycle;
 vmCvar_t  wp_chainDamage;
@@ -177,6 +191,8 @@ vmCvar_t	wp_rocketHoming;
 #endif
 #ifdef USE_BOUNCE_RPG
 vmCvar_t	wp_rocketBounce;
+vmCvar_t  wp_plasmaBounce;
+vmCvar_t  wp_bfgBounce;
 #endif
 #ifdef USE_BOUNCE_RAIL
 vmCvar_t  wp_railBounce;
@@ -189,6 +205,9 @@ vmCvar_t  wp_rocketAccel;
 #endif
 #ifdef USE_CLOAK_CMD
 vmCvar_t	g_enableCloak;
+#endif
+#ifdef USE_CLUSTER_GRENADES
+vmCvar_t	g_clusterGrenades;
 #endif
 #ifdef USE_VORTEX_GRENADES
 vmCvar_t	g_vortexGrenades;
@@ -326,16 +345,22 @@ static cvarTable_t gameCvarTable[] = {
   { &wp_grenadeDamage,     "wp_grenadeDamage",     "100",  CVAR_ARCHIVE },
   { &wp_grenadeSplash,     "wp_grenadeSplash",     "100",  CVAR_ARCHIVE },
   { &wp_grenadeRadius,     "wp_grenadeRadius",     "150",  CVAR_ARCHIVE },
+  { &wp_grenadeSpeed,      "wp_grenadeSpeed",      "700",  CVAR_ARCHIVE },
+  { &wp_grenadeTime,       "wp_grenadeTime",       "2.5",  CVAR_ARCHIVE },
 
   { &wp_rocketCycle,       "wp_rocketCycle",       "800",  CVAR_ARCHIVE | CVAR_SERVERINFO },
   { &wp_rocketDamage,      "wp_rocketDamage",      "100",  CVAR_ARCHIVE },
   { &wp_rocketSplash,      "wp_rocketSplash",      "100",  CVAR_ARCHIVE },
   { &wp_rocketRadius,      "wp_rocketRadius",      "120",  CVAR_ARCHIVE },
+  { &wp_rocketSpeed,       "wp_rocketSpeed",       "900",  CVAR_ARCHIVE },
+  { &wp_rocketTime,        "wp_rocketTime",        "15",   CVAR_ARCHIVE },
 
   { &wp_plasmaCycle,       "wp_plasmaCycle",       "100",  CVAR_ARCHIVE | CVAR_SERVERINFO },
   { &wp_plasmaDamage,      "wp_plasmaDamage",      "20",   CVAR_ARCHIVE },
   { &wp_plasmaSplash,      "wp_plasmaSplash",      "15",   CVAR_ARCHIVE },
   { &wp_plasmaRadius,      "wp_plasmaRadius",      "20",   CVAR_ARCHIVE },
+  { &wp_plasmaSpeed,       "wp_plasmaSpeed",       "2000", CVAR_ARCHIVE },
+  { &wp_plasmaTime,        "wp_plasmaTime",        "10.0", CVAR_ARCHIVE },
 
   { &wp_railCycle,         "wp_railCycle",         "1500", CVAR_ARCHIVE | CVAR_SERVERINFO },
   { &wp_railDamage,        "wp_railDamage",        "100",  CVAR_ARCHIVE },
@@ -344,24 +369,31 @@ static cvarTable_t gameCvarTable[] = {
   { &wp_bfgDamage,         "wp_bfgDamage",         "100",  CVAR_ARCHIVE },
   { &wp_bfgSplash,         "wp_bfgSplash",         "100",  CVAR_ARCHIVE },
   { &wp_bfgRadius,         "wp_bfgRadius",         "120",  CVAR_ARCHIVE },
+  { &wp_bfgSpeed,          "wp_bfgSpeed",          "2000", CVAR_ARCHIVE },
+  { &wp_bfgTime,           "wp_bfgTime",           "10",   CVAR_ARCHIVE },
 
 #ifdef USE_GRAPPLE
-  { &wp_grappleEnable,     "wp_grappleEnable", "1", CVAR_ARCHIVE, 0, qfalse },
-  { &wp_grapplePull,       "wp_grapplePull", "700", CVAR_ARCHIVE | CVAR_SERVERINFO, 0, qfalse },
-  { &wp_grappleSpeed,      "wp_grappleSpeed", "2000", CVAR_ARCHIVE, 0, qfalse },
-  { &wp_grappleCycle,      "wp_grappleCycle",      "400",  CVAR_ARCHIVE | CVAR_SERVERINFO },
-  { &wp_grappleDamage,     "wp_grappleDamage",     "300",  CVAR_ARCHIVE },
+  { &wp_grappleEnable,     "wp_grappleEnable", "1",    CVAR_ARCHIVE, 0, qfalse },
+  { &wp_grapplePull,       "wp_grapplePull",   "700",  CVAR_ARCHIVE | CVAR_SERVERINFO, 0, qfalse },
+  { &wp_grappleCycle,      "wp_grappleCycle",  "400",  CVAR_ARCHIVE | CVAR_SERVERINFO },
+  { &wp_grappleDamage,     "wp_grappleDamage", "300",  CVAR_ARCHIVE },
+  { &wp_grappleSpeed,      "wp_grappleSpeed",  "2000", CVAR_ARCHIVE, 0, qfalse },
+  { &wp_grappleTime,       "wp_grappleDamage", "10.0",   CVAR_ARCHIVE },
 #endif
 
 #ifdef MISSIONPACK
 
   { &wp_nailCycle,         "wp_nailCycle",         "1000", CVAR_ARCHIVE | CVAR_SERVERINFO },
   { &wp_nailDamage,        "wp_nailDamage",        "20",   CVAR_ARCHIVE },
+  { &wp_nailSpeed,         "wp_nailSpeed",         "555",  CVAR_ARCHIVE },
+  { &wp_nailTime,          "wp_nailTime",          "10.0", CVAR_ARCHIVE },
   // doesn't have a hit damage, only sticks and splashes
   { &wp_proxCycle,         "wp_proxCycle",         "800",  CVAR_ARCHIVE | CVAR_SERVERINFO },
   { &wp_proxDamage,        "wp_proxDamage",        "0",    CVAR_ARCHIVE },
   { &wp_proxSplash,        "wp_proxSplash",        "100",  CVAR_ARCHIVE },
   { &wp_proxRadius,        "wp_proxRadius",        "150",  CVAR_ARCHIVE },
+  { &wp_proxSpeed,         "wp_proxSpeed",         "700",  CVAR_ARCHIVE },
+  { &wp_proxTime,          "wp_proxTime",          "3.0",  CVAR_ARCHIVE },
 
   { &wp_chainCycle,        "wp_chainCycle",        "30",   CVAR_ARCHIVE | CVAR_SERVERINFO },
   { &wp_chainDamage,       "wp_chainDamage",       "7",    CVAR_ARCHIVE },
@@ -418,6 +450,8 @@ static cvarTable_t gameCvarTable[] = {
   { &wp_rocketHoming, "wp_rocketHoming", "1", CVAR_ARCHIVE, 0, qfalse },
 #endif
 #ifdef USE_BOUNCE_RPG
+  { &wp_bfgBounce, "wp_bfgBounce", "1", CVAR_ARCHIVE, 0, qfalse },
+  { &wp_plasmaBounce, "wp_plasmaBounce", "1", CVAR_ARCHIVE, 0, qfalse },
   { &wp_rocketBounce, "wp_rocketBounce", "1", CVAR_ARCHIVE, 0, qfalse },
 #endif
 #ifdef USE_BOUNCE_RAIL
@@ -427,7 +461,10 @@ static cvarTable_t gameCvarTable[] = {
   { &g_enableCloak, "g_enableCloak", "1", CVAR_ARCHIVE, 0, qfalse },
 #endif
 #ifdef USE_VORTEX_GRENADES
-  { &g_vortexGrenades, "g_vortexGrenades", "1", CVAR_ARCHIVE, 0, qfalse },
+  { &g_clusterGrenades, "g_clusterGrenades", "0", CVAR_ARCHIVE, 0, qfalse },
+#endif
+#ifdef USE_VORTEX_GRENADES
+  { &g_vortexGrenades, "g_vortexGrenades", "0", CVAR_ARCHIVE, 0, qfalse },
 #endif
 #ifdef USE_VULN_RPG
   { &wp_rocketVuln, "wp_rocketVuln", "1", CVAR_ARCHIVE, 0, qfalse },
