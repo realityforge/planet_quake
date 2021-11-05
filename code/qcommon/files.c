@@ -5297,31 +5297,44 @@ void Com_GamedirModified(char *oldValue, char *newValue, cvar_t *cv) {
   
 }
 
-
-#ifdef USE_LIVE_RELOAD
-int FS_NotifyChange(const char *localPath, void (*cb)( void )) {
+#if defined(USE_MEMORY_MAPS) || defined(USE_LIVE_RELOAD)
+// give up the real path in the case of needed the path on the file system,
+//   like monitoring for live reload changes, and building .map files
+char *FS_RealPath(const char *localPath) {
   fileHandle_t file;
-  int Wd = 0;
-  if(!localPath[0]) {
-    return 0;
-  }
-  FS_FOpenFileRead(localPath, &file, qtrue);
+	FILE *temp;
+	char *netpath;
+	FS_FOpenFileRead(localPath, &file, qtrue);
   if(fsh[file].zipFile) {
-    qvmWd = Sys_NotifyChange(fsh[file].pak->pakFilename, cb);
+    return fsh[file].pak->pakFilename;
   } else {
     searchpath_t *search;
     for ( search = fs_searchpaths ; search ; search = search->next ) {
       if ( search->dir && search->policy != DIR_DENY ) {
-        FILE *temp;
-        char *netpath = FS_BuildOSPath( search->dir->path, search->dir->gamedir, fsh[file].name );
+        netpath = FS_BuildOSPath( search->dir->path, search->dir->gamedir, fsh[file].name );
         if((temp = Sys_FOpen( netpath, "rb" ))) {
-          qvmWd = Sys_NotifyChange(netpath, cb);
-          break;
+          fclose(temp);
+          return netpath;
         }
       }
     }
   }
-  return Wd;
+	return NULL;
+}
+#endif
+
+
+#ifdef USE_LIVE_RELOAD
+int FS_NotifyChange(const char *localPath, void (*cb)( void )) {
+  char *netpath;
+  if(!localPath[0]) {
+    return 0;
+  }
+	netpath = FS_RealPath(localPath);
+	if(!netpath) {
+		return 0;
+	}
+  return Sys_NotifyChange(netpath, cb);
 }
 #endif
 

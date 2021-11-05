@@ -6,6 +6,7 @@
 #include "../qcommon/cm_public.h"
 #include "../game/bg_public.h"
 
+char *FS_RealPath(const char *localPath);
 
 static char stroke[MAX_QPATH] = "";
 
@@ -1420,13 +1421,14 @@ static int SV_MakeMaze( void ) {
 
 
 // TODO: wall is just a square platform
-static char *SV_MakePlatform(vec3_t p1, vec3_t p2, vec3_t p3, vec3_t p4) {
-	static char plat[4096];
+//static char *SV_MakePlatform(vec3_t p1, vec3_t p2, vec3_t p3, vec3_t p4) {
+//	static char plat[4096];
 	// TODO: make nice with edges like Edge of Oblivion on quake 3 space maps
-	return plat;
-}
+//	return plat;
+//}
 
 
+/*
 static void SV_FlipHorizontal(vec3_t *flip) {
   int temp0 = flip[0][0];
   int temp1 = flip[1][0];
@@ -1442,6 +1444,7 @@ static void SV_FlipHorizontal(vec3_t *flip) {
   flip[3][2] = temp0;
 }
 
+
 static void SV_FlipVertical(vec3_t *flip) {
   int temp0 = flip[0][1];
   int temp3 = flip[3][1];
@@ -1456,6 +1459,7 @@ static void SV_FlipVertical(vec3_t *flip) {
   flip[1][2] = temp0;
   flip[2][2] = temp3;
 }
+*/
 
 
 static int SV_MakeAtlantis() {
@@ -1770,7 +1774,7 @@ otherwise teleporter goes into void
 static int SV_MakeChutesAndLadders() {
 	vec3_t  vs[2];
   int offset = 0;
-	int rampWidth = 150;
+	//int rampWidth = 150;
 	int cellHeight = 6000;
 	int totalWidth = 12000;
 	int totalHeight = 12000;
@@ -1942,7 +1946,7 @@ static int SV_MakeChutesAndLadders() {
   platStack[1][2] = 0;
   platStack[1][3] = pyramidSize;
   vec3_t *rampStack = Z_Malloc(totalPlatforms * 12 * sizeof(vec3_t));
-  int numRamps = 0;
+  //int numRamps = 0;
   qboolean *platSides = Z_Malloc(totalPlatforms * 4 * sizeof(qboolean));
   memset(platSides, qfalse, totalPlatforms * sizeof(qboolean[4]));
 
@@ -2004,12 +2008,14 @@ static int SV_MakeChutesAndLadders() {
   }
 
   // top, right, bottom, left like CSS
+	/*
   int sideOffsets[4][2] = {
     {0, 1},
     {1, 0},
     {0, -1},
     {-1, 0}
   };
+	*/
 
   for(int i = 0; i < numPlatforms; i++) {
     // connect every platform to one other platform, 
@@ -3075,11 +3081,10 @@ int SV_MakeMap( char *memoryMap ) {
 	char *mapPath;
   fileHandle_t mapfile;
 	int length = 0;
-	qboolean hasLightmaps = qfalse;
 
-	if(!sv_bspRebuild->integer
-		&& (length = FS_FOpenFileRead( va("maps/%s.bsp", memoryMap), NULL, qtrue )) > -1) {
-		return length;
+	// early exit unless we force rebuilding
+	if(!sv_bspRebuild->integer && FS_RealPath( va("maps/%s.bsp", memoryMap) )) {
+		return 1;
 	}
 
 	if(Q_stricmp(memoryMap, "megamaze") == 0) {
@@ -3103,47 +3108,66 @@ int SV_MakeMap( char *memoryMap ) {
 		FS_FCloseFile( mapfile );
 		mapPath = FS_BuildOSPath( Cvar_VariableString("fs_homepath"), 
     Cvar_VariableString("fs_game"), va("maps/%s.map", memoryMap) );
-	} else {
-		// check for .map file
-		if((length = FS_FOpenFileRead( va("maps/%s.map", memoryMap), NULL, qtrue )) > -1) {
-			// TODO: copy to home directory?
-			// TODO: need an API to get exact paths?
-			if(FS_FileExists(va("maps/%s.map", memoryMap))) {
-				mapPath = FS_BuildOSPath( Cvar_VariableString("fs_homepath"), 
-				Cvar_VariableString("fs_game"), va("maps/%s.map", memoryMap) );
-			} else {
-				mapPath = FS_BuildOSPath( Cvar_VariableString("fs_basepath"), 
-				Cvar_VariableString("fs_game"), va("maps/%s.map", memoryMap) );
-			}
-		// TODO: detect prior formats and decompile it to .map
-		// TODO: compare file time with BSP
-		// TODO: check if lightmap exists and compare with BSP time
-		} else {
-			return 0;
-		}
 	}
+
+	// TODO: use virtual_fs to load .map from pk3, more of a q3map2 problem
+	// TODO: detect prior formats and decompile it to .map
+	// TODO: compare file time with BSP
+	// TODO: check if lightmap exists and compare with BSP time
+	// TODO: copy to home directory?
+	// TODO: need an API to get exact paths?
 
   //gamedir = Cvar_VariableString( "fs_game" );
 	//basegame = Cvar_VariableString( "fs_basegame" );
-  Cvar_Set( "buildingMap", memoryMap );
-  char *compileMap[] = {
-    "q3map2",
-    "-v",
-    "-fs_basepath",
-    (char *)Cvar_VariableString("fs_basepath"),
-    "-game",
-    "quake3",
-    "-meta",
-    "-patchmeta",
-    mapPath
-  };
-	Q3MAP2Main(ARRAY_LEN(compileMap), compileMap);
+	// if there is no map file for it, try to make one!
+	mapPath = FS_RealPath( va("maps/%s.bsp", memoryMap) );
+	if(sv_bspMap->integer && mapPath
+		// don't do it if we already extracted
+		//&& FS_RealPath( va("maps/%s_converted.map", memoryMap) )
+	) {
+		// someone extracted the bsp file intentionally?
+		Cvar_Set( "buildingMap", memoryMap );
+		char *compileMap[] = {
+			"q3map2",
+			"-v",
+			"-fs_basepath",
+			(char *)Cvar_VariableString("fs_basepath"),
+			"-game",
+			"quake3",
+			"-convert",
+			"-keeplights",
+			"-format",
+			"map",
+			// "-readmap", // TODO: use for normalizing mbspc bsp2map convertions
+			mapPath
+		};
+		Q3MAP2Main(ARRAY_LEN(compileMap), compileMap);
+		Cvar_Set( "buildingMap", "" );
+	} else if (!mapPath) {
+		// no bsp file, try to make one, check for .map file
+		mapPath = FS_RealPath( va("maps/%s.map", memoryMap) );
+		if(sv_bspRebuild->integer && mapPath) {
+			Cvar_Set( "buildingMap", memoryMap );
+			char *compileMap[] = {
+				"q3map2",
+				"-v",
+				"-fs_basepath",
+				(char *)Cvar_VariableString("fs_basepath"),
+				"-game",
+				"quake3",
+				"-meta",
+		    //"-patchmeta",
+				"-keeplights",
+				mapPath
+			};
+			Q3MAP2Main(ARRAY_LEN(compileMap), compileMap);
+		}
+	}
 
 	if(sv_bspLight->integer
 		&& (length = FS_FOpenFileRead( va("maps/%s/lm_0000.tga", memoryMap), NULL, qtrue )) == -1) {
 		// then we can decide not to update LM?
-		char *bspPath = FS_BuildOSPath( Cvar_VariableString("fs_homepath"), 
-			Cvar_VariableString("fs_game"), va("maps/%s.bsp", memoryMap) );
+		char *bspPath = FS_RealPath( va("maps/%s.bsp", memoryMap) );
 		char *compileLight[] = {
 			"q3map2",
 			"-light",
@@ -3152,6 +3176,7 @@ int SV_MakeMap( char *memoryMap ) {
 			(char *)Cvar_VariableString("fs_basepath"),
 			"-game",
 			"quake3",
+			"-keeplights",
 			"-faster",
 			"-cheap",
 			"-bounce",
