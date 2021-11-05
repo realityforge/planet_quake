@@ -25,6 +25,8 @@ This project derives from https://github.com/ec-/Quake3e and https://github.com/
 
 To see a live demo, check out https://quake.games
 
+Demo videos https://www.youtube.com/channel/UCPaZDuwY1sJOb5l-QHm9mDw
+
 The feature list has become so long that I needed separate readme files to describe each piece. This list will only have a short, truncated description with links to the other read-mes.
 
 More on what makes WebAssembly [difficult to build here](./docs/quakejs.md).

@@ -1078,6 +1078,14 @@ void SV_Init( void )
   SV_InitBanCheats();
 #endif
 
+#ifdef USE_MEMORY_MAPS
+	sv_memoryMaps = Cvar_Get( "sv_memoryMaps", "1", CVAR_ARCHIVE );
+	sv_bspLight = Cvar_Get( "sv_bspLight", "1", CVAR_ARCHIVE );
+	sv_bspAAS = Cvar_Get( "sv_bspAAS", "0", CVAR_ARCHIVE );
+	sv_bspRebuild = Cvar_Get( "sv_bspRebuild", "1", CVAR_ARCHIVE );
+
+#endif
+
 #ifdef USE_BANS
 	sv_banFile = Cvar_Get("sv_banFile", "serverbans.dat", CVAR_ARCHIVE);
 #endif

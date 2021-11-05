@@ -101,6 +101,10 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 //   allow players to teleport with key bindings, in any mod. You can also
 //   set your starting position using sv_teleStartPos, it can be named or xyz
 #define USE_ENGINE_TELE 1
+// build maps in memory with randomly or procedurally generated parts
+// make external lightmaps for lazy updating
+//
+#define USE_MEMORY_MAPS 1
 // 
 #endif
 

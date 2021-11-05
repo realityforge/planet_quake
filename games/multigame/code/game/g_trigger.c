@@ -297,7 +297,18 @@ Spectator teleporters are not normally placed in the editor, but are created
 automatically near doors to allow spectators to move through them
 */
 void SP_trigger_teleport( gentity_t *self ) {
+	char *s;
+	int arena;
 	InitTrigger (self);
+
+	G_SpawnString( "target", "", &s );
+	if(!self->target) {
+		G_SpawnInt("arena", "0", &arena);
+		if(arena) {
+			G_Printf ("Filling in arena_%i\n", arena);
+			self->target = va("arena_%i", arena);
+		}
+	}
 
 	// unlike other triggers, we need to send this one to the client
 	// unless is a spectator trigger

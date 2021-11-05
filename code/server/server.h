@@ -571,6 +571,13 @@ extern  char    *svUncheats[128];
 void SV_InitBanCheats( void );
 #endif
 
+#ifdef USE_MEMORY_MAPS
+extern  cvar_t *sv_memoryMaps;
+extern  cvar_t *sv_bspLight;
+extern  cvar_t *sv_bspAAS;
+extern  cvar_t *sv_bspRebuild;
+#endif
+
 
 #ifdef USE_PERSIST_CLIENT
 extern  cvar_t  *sv_clSessions;

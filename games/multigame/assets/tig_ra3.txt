@@ -1,0 +1,160 @@
+-----------------------------------------------------
+!delete all tig_beta levels to stop texture problems!
+-----------------------------------------------------
+
+date: 18 mar 2001.
+Quake3Arena RA3 level.
+
+====================================================
+title:            Certain Ruin
+file:             tig_ra3.pk3, tig_ra3.bsp
+author:           Tigger-oN 
+email address:    tigger@ebom.org
+URL:              http://planetquake.com/lvl
+
+description:      4 arenas in total
+                  
+====================================================
+play information
+
+tourney:          no
+deathmatch:       no
+CTF:              no
+RA3:              Yes, 4 Arenas
+Bot File (aas):   no
+
+new sounds:       yes - all free to use
+new graphics:     a heap;
+                   * modified idsoftware ones
+                   * modified HFX ones by evil_liar
+                   * a few Mr.cleaN ones
+                   * a few g1zmo ones
+new music:        no
+
+how to start      start quake3
+                  start the ra3 mod (arena)
+                  type \devmap tig_ra3
+                  type \noclip (to fly around)
+
+                  or start a RA3 server and type 
+                  map tig_ra3
+                  then join the server :]
+
+====================================================
+info
+
+About 6 months in development working on it between 
+..::LvL updates. The Clan Arena is targeted at small
+matches between 2 and 8 people. The other arenas a 
+good for 1on1 and 2on2 games
+
+====================================================
+construction
+
+base:           none.
+editors:        Q3Radiant and GtkRadinat
+                 http://www.qeradiant.com/
+
+other progs:    Q3 Build by
+                 Sagnor <sagnor@endorproductions.com>
+                 AzrKnight <azrknight@endorproductions.com> 
+                  http://q3build.gamedesign.net
+
+                PakScape v0.11 by Peter Engstrom 
+
+                Also Notepad and Photoshop
+
+know bugs:      'Succulent Subversion' can be a little 
+                 slow due to the fog, most people should 
+                 not have any problems however.
+
+                'Flat Ground' can be a little slow on 
+                 some low end set-ups. The reason is the 
+                 lightmap is so big :[
+
+                The out side curves on 'Stolen Goods' 
+                 have 'gaps' on the medium curve 
+                 setting. This is more of a Q3A 
+                 bug/feature than a mapping error. 
+
+                A door/button sound is heard when you 
+                 shoot the *gong* on 'Quiet Times'. 
+                 There is no 'silent' shootable triggers 
+                 at all in Q3A, so this was the best I 
+                 could come up with. Not really a bug 
+                 more like a limitation of Q3A entities
+
+build time:     between work and LvL updates over the 
+                 last 6 months
+
+compile:        see tig_ra3_compile.txt for info and 
+                 notes.
+
+====================================================
+thanx to ...
+
+* Mandog for incredible support throughout the 
+   construction of the level, for the use of her 
+   skyboxes and everyday wonderfulness :]
+
+* SgtGhost for running planetquake.com/mahq and great 
+   support and in-depth feedback.
+
+* Budda for incredible feedback and essay skills :]
+
+* nakedape for support and feedback
+
+* Binaryshi and Bauul for some great feedback early on
+
+* Karloff for trying to find a fix for the *gong* 
+   sound trigger on 'Quiet Times'
+
+* cin for hassling me to get it out!
+
+* Techx, MEet-CEes, weasel, Dagwit, tlg|BulleT, 
+   GONNAKILLYA! and others for great support and 
+   feedback
+
+and all the other ppl that have given their feedback 
+along the way
+
+====================================================
+extra special thanx to ...
+
+* evil_lair for all the great work he puts into his 
+   textures used throughout the arenas. 
+   Check out www.planetquake.com/hfx
+
+* Natestah for the use of the plant md3's and vine 
+   texture that I used as a base for mine
+
+* Mr.cleaN of the use of a the jump pad textures
+   (which I end up changing after feedback)
+
+* rungy for the great waterfall .md3
+   www.quake3mods.net/rungy/
+
+* Todd Gantzler for the 'multiplants', very nice!
+
+* g1zm0 for a few textures and support
+
+====================================================
+Distribution / Copyright / Permissions 
+
+Copyright (c) 2000 ray, Tigger-oN, tigger@ebom.org
+All rights reserved.
+
+Quake III Arena is a registered trademark of 
+id Software, Inc.
+
+This level may be electronically distributed only at 
+NO CHARGE to the recipient in its current state, MUST 
+include this .txt file, and may NOT be modified IN 
+ANY WAY. UNDER NO CIRCUMSTANCES IS THIS LEVEL TO BE 
+DISTRIBUTED ON CD-ROM WITHOUT PRIOR WRITTEN PERMISSION.
+
+This level can NOT be used on ANY commercial 
+multi-player server without the explicit written 
+consent of Tigger-oN.
+
+====================================================

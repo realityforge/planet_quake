@@ -1,0 +1,13 @@
+------------------------------------------------18.mar.2001------
+The Mistyvalley and Overcast env maps used in tig_ra3 where
+developed and designed by Mandog (mandog@ebom.org) and are free
+to use. I request that you do **NOT** use the same folder 
+structure however. So copy the images to your own /env/yourmap/ 
+folder. This will stop any conflicts between levels.
+
+Mandog would also love to hear from you if you used her textures. 
+Just send an email to mandog@ebom.org
+
+Thanx!
+
+Tigger-oN

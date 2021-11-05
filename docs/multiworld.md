@@ -1,5 +1,5 @@
 
-When I started on multiworld, I originally wanted to "split-up" Quake 2 maps, because they are large. As kind of a manual forced culling, and then stream the maps in mid game, where it would load 2 areas nearby, and as you move to the next area, a further area would load.
+When I started on multiworld (Sep 30, 2019), I originally wanted to "split-up" Quake 2 maps, because they are large. As kind of a manual forced culling, and then stream the maps in mid game, where it would load 2 areas nearby, and as you move to the next area, a further area would load.
 
 When I started researching Cyrax' multiview protocol, it dawned on me that this was the perfect match for loading multiple QVMs at the same time. It's just CPU cycles right? For my proof-of-concept, I changed about 3,000 lines of code, made all the replacements to turn every reference to a VM into an array of VMs. Since then, I've reversed all of my changes, and now this uses a few small pre-compiler templates to achieve the same goal, making it only about 300 lines of code changed from master. It is also mostly additions, so there should be no trouble merging future updates from master Q3e.
 

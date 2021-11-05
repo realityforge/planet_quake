@@ -451,3 +451,30 @@ void SP_target_location( gentity_t *self ){
 
 	G_SetOrigin( self, self->s.origin );
 }
+
+char target_execs[10][MAX_QPATH]; // max of 10 level change entities per level
+int num_target_execs=0;
+
+void target_use_exec( gentity_t *self, gentity_t *other, gentity_t *activator ) {
+	//char buf[MAX_QPATH];
+	//char *nx= target_execs[self->health];
+
+	G_Printf("using exec: %s", self->message);
+	if((self->spawnflags & 4)) {
+		trap_SendServerCommand( -1, va("%s", self->message ));
+		return;
+	}
+	trap_SendConsoleCommand( EXEC_APPEND, va("%s\n", self->message ) );
+}
+
+void SP_target_exec( gentity_t *self ) {
+	char *buf;
+	char *nx=target_execs[num_target_execs];
+
+	self->health=num_target_execs;
+	G_SpawnString( "message", "print no command", &buf);
+	G_Printf("mapCommand (%d): %s\n",num_target_execs,buf);
+	Com_sprintf(nx,sizeof(target_execs[0]),"%s",buf);
+	self->use = target_use_exec;
+	num_target_execs++;
+} 

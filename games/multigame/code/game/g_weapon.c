@@ -482,6 +482,13 @@ GRENADE LAUNCHER
 void weapon_grenadelauncher_fire (gentity_t *ent) {
 	gentity_t	*m;
 
+#ifdef USE_WEAPON_SPREAD
+  //Hal9000 spreadfire
+  if ( ent->items[ITEM_PW_MIN + PW_SPREAD] ) {
+		SpreadFire_Powerup(ent, fire_grenade);
+		return;
+	}
+#endif
 	// extra vertical velocity
 	forward[2] += 0.2f;
 	VectorNormalize( forward );
@@ -490,11 +497,6 @@ void weapon_grenadelauncher_fire (gentity_t *ent) {
 	m->damage *= s_quadFactor;
 	m->splashDamage *= s_quadFactor;
 
-#ifdef USE_WEAPON_SPREAD
-  //Hal9000 spreadfire
-  if ( ent->items[ITEM_PW_MIN + PW_SPREAD] )
-		SpreadFire_Powerup(ent, fire_grenade);
-#endif
 //	VectorAdd( m->s.pos.trDelta, ent->client->ps.velocity, m->s.pos.trDelta );	// "real" physics
 }
 

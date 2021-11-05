@@ -185,6 +185,15 @@ Now that we don't have teleport destination pads, this is just
 an info_notnull
 */
 void SP_misc_teleporter_dest( gentity_t *ent ) {
+	char *s;
+	int arena;
+	G_SpawnString( "targetname", "", &s );
+	if(!ent->targetname) {
+		G_SpawnInt("arena", "0", &arena);
+		if(arena) {
+			ent->targetname = va("arena_%i", arena);
+		}
+	}
 }
 
 

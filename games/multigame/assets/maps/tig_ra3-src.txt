@@ -1,0 +1,49 @@
+Date: 22.Sep.02
+What: RA3 Level (Quake 3 Arena Mod level)
+
+========================================================================
+title:          Certain Ruin
+file:           tig_ra3-src.map
+author:         Tigger-oN
+email address:  tigger@onemoremonkey.com
+URL:            http://ray.onemoremonkey.com/
+description:    A Rocket Arena 3 level consisting of 4 small arena. Each 
+                 arena is unquie is some way and style.
+
+========================================================================
+ Conditions of use of tig_ra3-src.map
+
+'tig_ra3-src.map' is released to the public by Tigger-oN under 
+the ..::LvL Open Game Source License. You are free to use 
+'tig_ra3-src.map' as a base for any thing you wish or can imagine. 
+The following is all I ask for in return:
+
+1, You must state in a text file, included with in any distribution 
+medium of your new creation that 'tig_ra3-src.map by Tigger-oN 
+was used in the creation of [insert the name of your creation here], 
+released under the ..::LvL Open Game Source License'.
+
+2, You can NOT call your new creation 'Certian Ruin' or 'tig_ra3' as 
+this is the title of the original released work.
+
+3, You can only use tig_ra3-src.map at your own risk. Any damage, 
+good or bad caused by tig_ra3-src.map is your problem.
+
+4, 'tig_ra3-src.map' may be distributed by any means so long as this 
+text file is included.
+
+
+========================================================================
+ About the ..::LvL Open Game Source License 
+
+The ..::LvL Open Game Source License (OGSL) has been set-up to encourage
+creators of game add-ons and content to release their source files 
+publicly for use and modification. OGSL requires the creators of new 
+content to recognise the original Author(s) work while giving the 
+creator full freedom.
+
+For more information about OGSL, including a blank template visit:
+http://lvl.sourceforge.net/lvl-ogsl.php
+
+
+

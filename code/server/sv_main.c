@@ -145,6 +145,13 @@ cvar_t  *sv_banCheats;
 char    *svUncheats[128];
 #endif
 
+#ifdef USE_MEMORY_MAPS
+cvar_t *sv_memoryMaps;
+cvar_t *sv_bspLight;
+cvar_t *sv_bspAAS;
+cvar_t *sv_bspRebuild;
+#endif
+
 #ifndef BUILD_SLIM_CLIENT
 /*
 =============================================================================

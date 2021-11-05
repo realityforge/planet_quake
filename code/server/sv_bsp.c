@@ -3072,13 +3072,15 @@ void SV_SpliceBSP(void) {
 extern int Q3MAP2Main( int argc, char **argv );
 
 int SV_MakeMap( char *memoryMap ) {
-	int length = 0;
+	char *mapPath;
   fileHandle_t mapfile;
+	int length = 0;
+	qboolean hasLightmaps = qfalse;
 
-  if((length = FS_FOpenFileRead( va("maps/%s.bsp", memoryMap), &mapfile, qtrue )) > -1) {
-    FS_FCloseFile(mapfile);
-    return length;
-  }
+	if(!sv_bspRebuild->integer
+		&& (length = FS_FOpenFileRead( va("maps/%s.bsp", memoryMap), NULL, qtrue )) > -1) {
+		return length;
+	}
 
 	if(Q_stricmp(memoryMap, "megamaze") == 0) {
 		length = SV_MakeMaze();
@@ -3091,23 +3093,39 @@ int SV_MakeMap( char *memoryMap ) {
 	} else if (Q_stricmp(memoryMap, "megalantis") == 0) {
 		length = SV_MakeAtlantis();
 	} else if (Q_stricmp(memoryMap, "test") == 0) {
-    goto skipgenerate;
-	} else {
-    return 0;
-  }
+	}
   
-  // TODO: overwrite if make-time is greater than 1 min?
+	if(length) {
+		// TODO: overwrite if make-time is greater than 1 min?
+		// always writes to home directory
+		mapfile = FS_FOpenFileWrite( va("maps/%s.map", memoryMap) );
+		FS_Write( output, length, mapfile );    // overwritten later
+		FS_FCloseFile( mapfile );
+		mapPath = FS_BuildOSPath( Cvar_VariableString("fs_homepath"), 
+    Cvar_VariableString("fs_game"), va("maps/%s.map", memoryMap) );
+	} else {
+		// check for .map file
+		if((length = FS_FOpenFileRead( va("maps/%s.map", memoryMap), NULL, qtrue )) > -1) {
+			// TODO: copy to home directory?
+			// TODO: need an API to get exact paths?
+			if(FS_FileExists(va("maps/%s.map", memoryMap))) {
+				mapPath = FS_BuildOSPath( Cvar_VariableString("fs_homepath"), 
+				Cvar_VariableString("fs_game"), va("maps/%s.map", memoryMap) );
+			} else {
+				mapPath = FS_BuildOSPath( Cvar_VariableString("fs_basepath"), 
+				Cvar_VariableString("fs_game"), va("maps/%s.map", memoryMap) );
+			}
+		// TODO: detect prior formats and decompile it to .map
+		// TODO: compare file time with BSP
+		// TODO: check if lightmap exists and compare with BSP time
+		} else {
+			return 0;
+		}
+	}
 
-	mapfile = FS_FOpenFileWrite( va("maps/%s.map", memoryMap) );
-	FS_Write( output, length, mapfile );    // overwritten later
-	FS_FCloseFile( mapfile );
-
-skipgenerate:
   //gamedir = Cvar_VariableString( "fs_game" );
 	//basegame = Cvar_VariableString( "fs_basegame" );
   Cvar_Set( "buildingMap", memoryMap );
-  char *mapPath = FS_BuildOSPath( Cvar_VariableString("fs_homepath"), 
-    Cvar_VariableString("fs_game"), va("maps/%s.map", memoryMap) );
   char *compileMap[] = {
     "q3map2",
     "-v",
@@ -3121,24 +3139,34 @@ skipgenerate:
   };
 	Q3MAP2Main(ARRAY_LEN(compileMap), compileMap);
 
-/*
-  char *bspPath = FS_BuildOSPath( Cvar_VariableString("fs_homepath"), 
-    Cvar_VariableString("fs_game"), va("maps/%s.bsp", memoryMap) );
-  char *compileLight[] = {
-    "q3map2",
-    "-light",
-    "-fs_basepath",
-    (char *)Cvar_VariableString("fs_basepath"),
-    "-game",
-    "quake3",
-    "-faster",
-    "-cheap",
-    "-bounce",
-    "1",
-    bspPath
-  };
-  Q3MAP2Main(ARRAY_LEN(compileLight), compileLight);
-*/
+	if(sv_bspLight->integer
+		&& (length = FS_FOpenFileRead( va("maps/%s/lm_0000.tga", memoryMap), NULL, qtrue )) == -1) {
+		// then we can decide not to update LM?
+		char *bspPath = FS_BuildOSPath( Cvar_VariableString("fs_homepath"), 
+			Cvar_VariableString("fs_game"), va("maps/%s.bsp", memoryMap) );
+		char *compileLight[] = {
+			"q3map2",
+			"-light",
+			"-external",
+			"-fs_basepath",
+			(char *)Cvar_VariableString("fs_basepath"),
+			"-game",
+			"quake3",
+			"-faster",
+			"-cheap",
+			"-bounce",
+			// TODO: one room at a time, and update in between bounces
+			"2", 
+			bspPath
+		};
+		Q3MAP2Main(ARRAY_LEN(compileLight), compileLight);
+	}
+
+	// TODO: generate AAS file for bots, missing, or updated maps
+	if(sv_bspAAS->integer
+		&& (length = FS_FOpenFileRead( va("maps/%s.aas", memoryMap), NULL, qtrue )) == -1) {
+		
+	}
 
   Cvar_Set( "buildingMap", "" );
 	return length;
