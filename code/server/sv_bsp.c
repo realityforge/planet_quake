@@ -3169,18 +3169,18 @@ void SV_SpliceBSP(const char *memoryMap, const char *altName) {
 				// copy entire entity
 				Q_strncpyz(&output[offset], &buffer[entityStartPos], count - entityStartPos + 1);
 				offset += strlen(&output[offset]);
-				strcpy(&output[offset], "\n");
-				offset += 1;
+				strcpy(&output[offset], "\n}\n");
+				offset += 3;
 				countEntities++;
 			}
-			if(depth == 2 && isWorldspawn)
-				Com_Printf("end brush: %i\n", offset);
+			//if(depth == 2 && isWorldspawn)
+			//	Com_Printf("end brush: %i\n", offset);
 			if(depth == 2 && isWorldspawn && isInside) {
 				// copy brushes out of worldspawn
 				Q_strncpyz(&output[offset], &buffer[brushStartPos], count - brushStartPos + 1);
 				offset += strlen(&output[offset]);
-				strcpy(&output[offset], "\n");
-				offset += 1;
+				strcpy(&output[offset], "\n}\n");
+				offset += 3;
 				brushC++;
 			}
 			//if(depth == 3) patchStartPos = count;
@@ -3242,27 +3242,32 @@ void SV_SpliceBSP(const char *memoryMap, const char *altName) {
 		else if (!isInside && (depth == 2 || depth == 3)) {
 			if(buffer[count] == '\n') {
 				countPoints = 0;
+				isNumeric = qfalse;
 				vertIsInside = qfalse;
 			} else if (isNumeric 
 				&& (buffer[count] == ' ' || buffer[count] == '\t'
 				|| buffer[count] == '(' || buffer[count] == ')')) {
 				// if it is outside mins and maxs, ignore it
 				int pointsPerLine = (depth == 2 ? 3 : 5);
-				if(countPoints % pointsPerLine == 0) {
-					vertIsInside = qfalse;
-				}
 				if(countPoints < (depth == 2 ? 9 : 15) && countPoints % pointsPerLine < 3) {
-					//Com_Printf("checking point: %s\n", count - tokenStartPos);
-					/*
 					Q_strncpyz(buf, buffer+tokenStartPos, sizeof(buf));
 					buf[count - tokenStartPos] = '\0';
 					float point = atof(buf);
+					if(buffer[tokenStartPos-1] == '-')
+						point = -point;
+					//if(count - tokenStartPos > 1)
+					//	Com_Printf("checking point: %f >= %f <= %f\n", 
+					//		point, mins[countPoints % pointsPerLine], maxs[countPoints % pointsPerLine]);
 					// skip until the end of the entity
-					if(point >= mins[countPoints % pointsPerLine] 
-						&& point <= maxs[countPoints % pointsPerLine]) {
+					if(countPoints % pointsPerLine == 0) {
 						vertIsInside = qtrue;
 					}
-					*/
+					if(point >= mins[countPoints % pointsPerLine] 
+						&& point <= maxs[countPoints % pointsPerLine]) {
+					} else {
+						// 1 of 3 not inside means vert is outside
+						vertIsInside = qfalse;
+					}
 				}
 				tokenStartPos = 0;
 				countPoints++;
@@ -3271,9 +3276,13 @@ void SV_SpliceBSP(const char *memoryMap, const char *altName) {
 					isInside = qtrue;
 				}
 				isNumeric = qfalse;
-			} else if (!tokenStartPos && buffer[count] >= '0' && buffer[count] <= '9') {
-				tokenStartPos = count;
+			} else if (buffer[count] >= '0' && buffer[count] <= '9') {
+				if(!isNumeric)
+					tokenStartPos = count;
 				isNumeric = qtrue;
+			} else {
+				tokenStartPos = 0;
+				isNumeric = qfalse;
 			}
 		}
 		count++;
@@ -3281,7 +3290,7 @@ void SV_SpliceBSP(const char *memoryMap, const char *altName) {
 
 	// always writes to home directory
 	mapfile = FS_FOpenFileWrite(altName);
-	FS_Write( output, offset+1, mapfile );    // overwritten later
+	FS_Write( output, offset, mapfile );    // overwritten later
 	FS_FCloseFile( mapfile );
 	// reset cmd string, TODO: not sure why this should matter for map name from SV_Map_f
 	Cmd_TokenizeString(cmd);
