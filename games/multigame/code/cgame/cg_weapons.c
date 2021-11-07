@@ -612,10 +612,12 @@ void CG_RegisterWeapon( int weaponNum ) {
 		return;
 	}
 
+#if 0
   if(weaponNum >= MAX_WEAPONS) {
     CG_RegisterWeapon2(weaponNum);
     return;
   }
+#endif
 
 	memset( weaponInfo, 0, sizeof( *weaponInfo ) );
 	weaponInfo->registered = qtrue;
@@ -1411,8 +1413,11 @@ void CG_AddPlayerWeapon( refEntity_t *parent, playerState_t *ps, centity_t *cent
 	}
 
 	// add the flash
-	if ( ( weaponNum == WP_LIGHTNING || weaponNum == WP_GAUNTLET || weaponNum == WP_GRAPPLING_HOOK )
-		&& ( nonPredictedCent->currentState.eFlags & EF_FIRING ) ) 
+	if ( ( weaponNum == WP_LIGHTNING || weaponNum == WP_GAUNTLET 
+#ifdef USE_GRAPPLE
+	|| weaponNum == WP_GRAPPLING_HOOK 
+#endif
+	) && ( nonPredictedCent->currentState.eFlags & EF_FIRING ) ) 
 	{
 		// continuous flash
 	} else {

@@ -10,7 +10,7 @@ char *FS_RealPath(const char *localPath);
 
 static char stroke[MAX_QPATH] = "";
 
-static char output[4096 * 512] = "";
+static char output[2 * 1024 * 1024] = ""; // 2MB TODO: make alloc and optional
 static int brushC = 0;
 
 static qboolean isOverlapping(vec2_t l1, vec2_t r1, vec2_t l2, vec2_t r2);
@@ -365,7 +365,7 @@ static int SV_MakeHypercube( void ) {
 	vs[1][0] = vs[1][1] = vs[1][2] = 2000;
 
 	brushC = 0;
-	output[0] = '\0';
+	memset(output, 0, sizeof(output));
 	strcpy(output, "// Game: Quake 3\n"
 		"// Format: Quake3 (legacy)\n"
 		"// entity 0\n"
@@ -805,7 +805,7 @@ static int SV_MakeMaze( void ) {
 	vs[1][0] = vs[1][1] = vs[1][2] = 2000;
 
 	brushC = 0;
-	output[0] = '\0';
+	memset(output, 0, sizeof(output));
 	strcpy(output, "// Game: Quake 3\n"
 		"// Format: Quake3 (legacy)\n"
 		"// entity 0\n"
@@ -1480,7 +1480,7 @@ static int SV_MakeAtlantis() {
 	vs[1][2] = +cellHeight;
 
 	brushC = 0;
-	output[0] = '\0';
+	memset(output, 0, sizeof(output));
 	strcpy(output, "// Game: Quake 3\n"
 		"// Format: Quake3 (legacy)\n"
 		"// entity 0\n"
@@ -1792,7 +1792,7 @@ static int SV_MakeChutesAndLadders() {
 	vs[1][2] = +cellHeight;
 
 	brushC = 0;
-	output[0] = '\0';
+	memset(output, 0, sizeof(output));
 	strcpy(output, "// Game: Quake 3\n"
 		"// Format: Quake3 (legacy)\n"
 		"// entity 0\n"
@@ -2686,7 +2686,7 @@ static int SV_MakeMonacoF1() {
   int POINTS_PER = POINTS_SEG * POINTS_SEG;
 
 	brushC = 0;
-	output[0] = '\0';
+	memset(output, 0, sizeof(output));
 	strcpy(output, "// Game: Quake 3\n"
 		"// Format: Quake3 (legacy)\n"
 		"// entity 0\n"
@@ -3070,17 +3070,232 @@ static int SV_MakeMonacoF1() {
 
 
 // slice up a BSP and resave it without recompiling.
-void SV_SpliceBSP(void) {
-  
+void SV_SpliceBSP(const char *memoryMap, const char *altName) {
+	vec3_t mins, maxs;
+  fileHandle_t mapfile;
+	char cmd[MAX_CMD_LINE];
+	char buf[MAX_TOKEN_CHARS];
+	const char *buffer = NULL;
+  int offset = 0;
+	int length = 0;
+	int depth = 0;
+	int count = 0;
+	int countEntities = 0;
+	int countPoints = 0;
+	int tokenStartPos = 0;
+	int brushStartPos = 0;
+	int patchStartPos = 0;
+	int entityStartPos = 0;
+	qboolean isNumeric = qfalse;
+	qboolean isWorldspawn = qfalse;
+	qboolean isKey = qfalse;
+	qboolean isValue = qfalse;
+	qboolean isOrigin = qfalse;
+	qboolean isLocation = qfalse;
+	qboolean isClassname = qfalse;
+	qboolean ignoreLine = qfalse;
+	qboolean isInside = qfalse; // trying to prove at least 1 point is inside the bounds
+	qboolean vertIsInside = qfalse;
+	//qboolean isPatch = qfalse;
+
+	brushC = 0;
+	memset(output, 0, sizeof(output));
+	strcpy(&output[offset], "// Game: Quake 3\n"
+		"// Format: Quake3 (legacy)\n"
+		"// entity 0\n"
+		"{\n"
+		"\"classname\" \"worldspawn\"\n");
+	offset += strlen(&output[offset]);
+
+  length = FS_ReadFile(va("maps/%s.map", memoryMap), (void **)&buffer);
+
+	Q_strncpyz(cmd, Cmd_ArgsFrom(0), sizeof(cmd));
+
+	// parse mins and maxs from option
+	Cmd_TokenizeString(sv_bspSplice->string);
+	mins[0] = atof(Cmd_Argv(0));
+	mins[1] = atof(Cmd_Argv(1));
+	mins[2] = atof(Cmd_Argv(2));
+	maxs[0] = atof(Cmd_Argv(3));
+	maxs[1] = atof(Cmd_Argv(4));
+	maxs[2] = atof(Cmd_Argv(5));
+	Com_Printf("Splicing BSP from %f %f %f to %f %f %f\n", mins[0], mins[1], mins[2], maxs[0], maxs[1], maxs[2]);
+	Cmd_Clear();
+
+	// read every brush and entity origin
+	while(1) {
+		if(count >= length) break;
+		// ignore comments
+		if(buffer[count] == '/' && buffer[count+1] == '/') {
+			ignoreLine = qtrue;
+			count++;
+			continue;
+		}
+		if(buffer[count] == '\n') ignoreLine = qfalse;
+		if(ignoreLine) {
+			count++;
+			continue;
+		}
+
+		// first curls are entities
+		//   second curls are brushes
+		if(buffer[count] == '{') {
+			depth++;
+			if(depth == 1) {
+				isWorldspawn = qfalse;
+				isLocation = qfalse;
+				entityStartPos = count;
+				isInside = qfalse;
+			}
+			if(depth == 2) {
+				brushStartPos = count;
+				tokenStartPos = 0;
+				//Com_Printf("beginning brush: %i\n", count);
+				if(isWorldspawn) {
+					isInside = qfalse;
+				}
+			}
+			if(depth == 3) {
+				patchStartPos = count;
+				tokenStartPos = 0;
+			}
+		}
+		if(buffer[count] == '}') {
+			if(depth == 1 && isWorldspawn) {
+				strcpy(&output[offset], "\n}\n");
+				offset += 3;
+			}
+			if(depth == 1 && !isWorldspawn && isInside) {
+				// copy entire entity
+				Q_strncpyz(&output[offset], &buffer[entityStartPos], count - entityStartPos + 1);
+				offset += strlen(&output[offset]);
+				strcpy(&output[offset], "\n");
+				offset += 1;
+				countEntities++;
+			}
+			if(depth == 2 && isWorldspawn)
+				Com_Printf("end brush: %i\n", offset);
+			if(depth == 2 && isWorldspawn && isInside) {
+				// copy brushes out of worldspawn
+				Q_strncpyz(&output[offset], &buffer[brushStartPos], count - brushStartPos + 1);
+				offset += strlen(&output[offset]);
+				strcpy(&output[offset], "\n");
+				offset += 1;
+				brushC++;
+			}
+			//if(depth == 3) patchStartPos = count;
+			depth--;
+		}
+		if(depth == 1) {
+			if(!isKey && !isValue && buffer[count] == '"') {
+				if(isClassname || isOrigin) isValue = qtrue;
+				else isKey = qtrue;
+				tokenStartPos = count+1;
+			} else if (isKey && buffer[count] == '"') {
+				if(!Q_stricmpn(&buffer[tokenStartPos], "classname", 9)) {
+					isClassname = qtrue;
+				} else if(!Q_stricmpn(&buffer[tokenStartPos], "origin", 6)) {
+					isOrigin = qtrue;
+				//} else if(!Q_stricmpn(&buffer[tokenStartPos], "location", )) {
+				//	isLocation = qtrue;
+				} else {
+					//Q_strncpyz(buf, buffer+tokenStartPos, sizeof(buf));
+					//buf[count - tokenStartPos] = '\0';
+					//Com_Printf("WARNING: unknown key \"%s\"\n", buf);
+				}
+				isKey = qfalse;
+			} else if (isValue && buffer[count] == '"') {
+				isValue = qfalse;
+				if(isClassname) {
+					if(!Q_stricmpn(buffer+tokenStartPos, "worldspawn", 10)) {
+						isWorldspawn = qtrue;
+					} else if(!Q_stricmpn(buffer+tokenStartPos, "target_location", 14)) {
+						isLocation = qtrue;
+					} else {
+						//Com_Printf("");
+					}
+					isClassname = qfalse;
+				} else if (isOrigin) {
+					vec3_t origin;
+					// check if model/entity origin is close enough to bounds
+					Q_strncpyz(buf, buffer+tokenStartPos, sizeof(buf));
+					buf[count - tokenStartPos] = '\0';
+					Cmd_TokenizeString(buf);
+					origin[0] = atof(Cmd_Argv(0));
+					origin[1] = atof(Cmd_Argv(1));
+					origin[2] = atof(Cmd_Argv(2));
+					if(origin[0] >= mins[0] && origin[0] <= maxs[0] &&
+					   origin[1] >= mins[1] && origin[1] <= maxs[1] &&
+					   origin[2] >= mins[2] && origin[2] <= maxs[2]) {
+						isInside = qtrue;
+					}
+					Cmd_Clear();
+					isOrigin = qfalse;
+				}
+			} else if (!isKey && !isValue && (buffer[count] == '\t' || buffer[count] == ' ')) {
+				// ignore whitespace in between
+			} else {
+
+			}
+		}
+		// tokenize first 9/15 numbers but only use first 3 of each 5
+		else if (!isInside && (depth == 2 || depth == 3)) {
+			if(buffer[count] == '\n') {
+				countPoints = 0;
+				vertIsInside = qfalse;
+			} else if (isNumeric 
+				&& (buffer[count] == ' ' || buffer[count] == '\t'
+				|| buffer[count] == '(' || buffer[count] == ')')) {
+				// if it is outside mins and maxs, ignore it
+				int pointsPerLine = (depth == 2 ? 3 : 5);
+				if(countPoints % pointsPerLine == 0) {
+					vertIsInside = qfalse;
+				}
+				if(countPoints < (depth == 2 ? 9 : 15) && countPoints % pointsPerLine < 3) {
+					//Com_Printf("checking point: %s\n", count - tokenStartPos);
+					/*
+					Q_strncpyz(buf, buffer+tokenStartPos, sizeof(buf));
+					buf[count - tokenStartPos] = '\0';
+					float point = atof(buf);
+					// skip until the end of the entity
+					if(point >= mins[countPoints % pointsPerLine] 
+						&& point <= maxs[countPoints % pointsPerLine]) {
+						vertIsInside = qtrue;
+					}
+					*/
+				}
+				tokenStartPos = 0;
+				countPoints++;
+				// check at least 3 vertexes
+				if(vertIsInside && countPoints % pointsPerLine == 0) {
+					isInside = qtrue;
+				}
+				isNumeric = qfalse;
+			} else if (!tokenStartPos && buffer[count] >= '0' && buffer[count] <= '9') {
+				tokenStartPos = count;
+				isNumeric = qtrue;
+			}
+		}
+		count++;
+	}
+
+	// always writes to home directory
+	mapfile = FS_FOpenFileWrite(altName);
+	FS_Write( output, offset+1, mapfile );    // overwritten later
+	FS_FCloseFile( mapfile );
+	// reset cmd string, TODO: not sure why this should matter for map name from SV_Map_f
+	Cmd_TokenizeString(cmd);
 }
 
 
 extern int Q3MAP2Main( int argc, char **argv );
 
-int SV_MakeMap( char *memoryMap ) {
+int SV_MakeMap( char *map ) {
+	char memoryMap[MAX_QPATH];
 	char *mapPath;
   fileHandle_t mapfile;
 	int length = 0;
+	Q_strncpyz( memoryMap, map, sizeof(memoryMap) );
 
 	// early exit unless we force rebuilding
 	if(!sv_bspRebuild->integer && FS_RealPath( va("maps/%s.bsp", memoryMap) )) {
@@ -3123,7 +3338,7 @@ int SV_MakeMap( char *memoryMap ) {
 	mapPath = FS_RealPath( va("maps/%s.bsp", memoryMap) );
 	if(sv_bspMap->integer && mapPath
 		// don't do it if we already extracted
-		//&& FS_RealPath( va("maps/%s_converted.map", memoryMap) )
+		// && FS_RealPath( va("maps/%s_converted.map", memoryMap) )
 	) {
 		// someone extracted the bsp file intentionally?
 		Cvar_Set( "buildingMap", memoryMap );
@@ -3138,13 +3353,19 @@ int SV_MakeMap( char *memoryMap ) {
 			"-keeplights",
 			"-format",
 			"map",
-			// "-readmap", // TODO: use for normalizing mbspc bsp2map convertions
+			// "-readmap", // TODO: use for normalizing mbspc bsp2map conversions
 			mapPath
 		};
 		Q3MAP2Main(ARRAY_LEN(compileMap), compileMap);
 		Cvar_Set( "buildingMap", "" );
-	} else if (!mapPath) {
-		// no bsp file, try to make one, check for .map file
+	}
+	
+	if(sv_bspSplice->string[0] != '\0') {
+		SV_SpliceBSP(memoryMap, va("maps/%s_spliced.map", memoryMap));
+	}
+	
+	if (!mapPath) {
+		// no bsp file exists, try to make one, check for .map file
 		mapPath = FS_RealPath( va("maps/%s.map", memoryMap) );
 		if(sv_bspRebuild->integer && mapPath) {
 			Cvar_Set( "buildingMap", memoryMap );
@@ -3156,7 +3377,7 @@ int SV_MakeMap( char *memoryMap ) {
 				"-game",
 				"quake3",
 				"-meta",
-		    //"-patchmeta",
+		    "-patchmeta",
 				"-keeplights",
 				mapPath
 			};
@@ -3176,9 +3397,11 @@ int SV_MakeMap( char *memoryMap ) {
 			(char *)Cvar_VariableString("fs_basepath"),
 			"-game",
 			"quake3",
-			"-keeplights",
 			"-faster",
 			"-cheap",
+			//"-patchshadows",
+			//"-gridsize",
+			//"512.0 512.0 512.0",
 			"-bounce",
 			// TODO: one room at a time, and update in between bounces
 			"2", 

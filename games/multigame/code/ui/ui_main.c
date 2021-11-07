@@ -920,6 +920,7 @@ qboolean Load_Menu(int handle) {
 			return qtrue;
 		}
 
+Com_Printf("load menu: %s\n", token.string);
 		UI_ParseMenu(token.string); 
 	}
 	return qfalse;

@@ -398,6 +398,7 @@ void G_MissileImpact( gentity_t *ent, trace_t *trace ) {
 	}
 #endif
 
+#ifdef USE_GRAPPLE
   if( ent->s.weapon == WP_GRAPPLING_HOOK ) {
 		gentity_t *nent;
 		vec3_t v;
@@ -440,6 +441,7 @@ void G_MissileImpact( gentity_t *ent, trace_t *trace ) {
 
 		return;
 	}
+#endif
 
 #ifdef USE_PORTALS
 #define AWAY_FROM_WALL 16.0f

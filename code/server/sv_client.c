@@ -2489,31 +2489,215 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
 	}
 }
 
+
+qboolean SV_FindLocation(char *loc, vec3_t newOrigin, vec3_t angles) {
+#define MAX_NUN_SPAWNS 64
+	vec3_t origin;
+	vec3_t delta;
+	vec3_t spawnPoints[MAX_NUN_SPAWNS];
+	char buf[MAX_TOKEN_CHARS];
+	char nearest[MAX_TOKEN_CHARS];
+	char message[MAX_TOKEN_CHARS];
+	const char *buffer = CM_EntityString();
+	int len, i;
+ 	int depth = 0;
+	int count = 0;
+	int countSpawns = 0;
+	int tokenStartPos = 0;
+	float nearestLocation = 999999.0f;
+	qboolean isWorldspawn = qfalse;
+	qboolean isKey = qfalse;
+	qboolean isMessage = qfalse;
+	qboolean isValue = qfalse;
+	qboolean isOrigin = qfalse;
+	qboolean isLocation = qfalse;
+	qboolean isClassname = qfalse;
+	qboolean ignoreLine = qfalse;
+	qboolean isPlayerStart = qfalse;
+	qboolean isFound = qfalse;
+
+	// read every brush and entity origin
+	while(1) {
+		if(buffer[count] == '\0') break;
+		// ignore comments
+		if(buffer[count] == '/' && buffer[count+1] == '/') {
+			ignoreLine = qtrue;
+			count++;
+			continue;
+		}
+		if(buffer[count] == '\n') ignoreLine = qfalse;
+		if(ignoreLine) {
+			count++;
+			continue;
+		}
+
+		// first curls are entities
+		//   second curls are brushes
+		if(buffer[count] == '{') {
+			depth++;
+			if(depth == 1) {
+				isPlayerStart = qfalse;
+				isLocation = qfalse;
+				isWorldspawn = qfalse;
+				message[0] = '\0';
+			}
+		}
+		if(buffer[count] == '}') {
+			if(depth == 1 && !isWorldspawn) {
+				// TODO: if target matches loc, return origin and angles
+				// TODO: check if spawn is shortest distance to target
+				if(isLocation) {
+					VectorSubtract(newOrigin, origin, delta);
+					len = VectorNormalize(delta);
+					if(len < nearestLocation) {
+						nearestLocation = len;
+						strcpy(nearest, message);
+					}
+					if(loc[0] != '\0' && !Q_stricmp(loc, message)) {
+						isFound = qtrue;
+						VectorCopy(origin, newOrigin);
+					}
+					//Com_Printf("%s\n", message);
+				} else if (isPlayerStart && countSpawns < MAX_NUN_SPAWNS) { // tig_ra3 uses more spawn points than that
+					VectorCopy(origin, spawnPoints[countSpawns]);
+					countSpawns++;
+				}
+			}
+			depth--;
+		}
+		if(depth == 1) {
+			if(!isKey && !isValue && buffer[count] == '"') {
+				if(isClassname || isOrigin || isMessage) isValue = qtrue;
+				else isKey = qtrue;
+				tokenStartPos = count+1;
+			} else if (isKey && buffer[count] == '"') {
+				if(!Q_stricmpn(&buffer[tokenStartPos], "classname", 9)) {
+					isClassname = qtrue;
+				} else if(!Q_stricmpn(&buffer[tokenStartPos], "origin", 6)) {
+					isOrigin = qtrue;
+				} else if(!Q_stricmpn(&buffer[tokenStartPos], "message", 7)) {
+					isMessage = qtrue;
+				} else {
+					//Q_strncpyz(buf, buffer+tokenStartPos, sizeof(buf));
+					//buf[count - tokenStartPos] = '\0';
+					//Com_Printf("WARNING: unknown key \"%s\"\n", buf);
+				}
+				isKey = qfalse;
+			} else if (isValue && buffer[count] == '"') {
+				isValue = qfalse;
+				if(isClassname) {
+					if(!Q_stricmpn(buffer+tokenStartPos, "worldspawn", 10)) {
+						isWorldspawn = qtrue;
+					} else if(!Q_stricmpn(buffer+tokenStartPos, "target_location", 14)) {
+						isLocation = qtrue;
+					} else if(!Q_stricmpn(buffer+tokenStartPos, "info_player_start", 16)
+						|| !Q_stricmpn(buffer+tokenStartPos, "info_player_deathmatch", 22)) {
+						isPlayerStart = qtrue;
+					}
+					isClassname = qfalse;
+				} else if (isOrigin) {
+					// check if model/entity origin is close enough to bounds
+					Q_strncpyz(buf, buffer+tokenStartPos, sizeof(buf));
+					buf[count - tokenStartPos] = '\0';
+					Cmd_TokenizeString(buf);
+					origin[0] = atof(Cmd_Argv(0));
+					origin[1] = atof(Cmd_Argv(1));
+					origin[2] = atof(Cmd_Argv(2));
+					Cmd_Clear();
+					isOrigin = qfalse;
+				} else if (isMessage) {
+					Q_strncpyz(message, buffer+tokenStartPos, sizeof(message));
+					message[count - tokenStartPos] = '\0';
+					isMessage = qfalse;
+				}
+			} else if (!isKey && !isValue && (buffer[count] == '\t' || buffer[count] == ' ')) {
+				// ignore whitespace in between
+			} else {
+
+			}
+		}
+		count++;
+	}
+
+	if(loc[0] == '\0') {
+		Com_Printf("Current location:\n");
+		Com_Printf("%s\n", nearest);
+		return qfalse;
+	}
+
+	if(isFound) {
+		nearestLocation = 999999.0f;
+		for(i = 0; i < countSpawns; i++) {
+			VectorSubtract(newOrigin, spawnPoints[i], delta);
+			len = VectorNormalize(delta);
+			if(len < nearestLocation) {
+				nearestLocation = len;
+				VectorCopy(spawnPoints[i], origin);
+			}
+		}
+		VectorCopy(origin, newOrigin);
+		Com_Printf("teleporter found: %f, %f, %f\n", newOrigin[0], newOrigin[1], newOrigin[2]);
+		return qtrue;
+	}
+
+	return qfalse;
+}
+
+
+// Teleporting from a to b in the same map
 void SV_Tele_f( client_t *client ) {
+	char cmd[MAX_CMD_LINE];
 	int i, clientNum;
   float scale, speed;
 	vec3_t newOrigin = {0.0, 0.0, 0.0}, wishvel, forward, right, up;
 	char *userOrigin[3];
 	playerState_t	*ps;
   qboolean anyRelative;
+	int count;
 
 	if(!client) return;
+	clientNum = client - svs.clients;
+#ifdef USE_MULTIVM_SERVER
+	gvmi = client->gameWorld;
+	CM_SwitchMap(gameWorlds[gvmi]);
+	SV_SetAASgvm(gvmi);
+#endif
+	ps = SV_GameClientNum( clientNum );
 
+	count = Cmd_Argc();
 	userOrigin[0] = Cmd_Argv(1);
 	userOrigin[1] = Cmd_Argv(2);
 	userOrigin[2] = Cmd_Argv(3);
 
-	if(userOrigin[0][0] != '\0'
-    || userOrigin[1][0] != '\0'
-	  || userOrigin[2][0] != '\0') {
+	Q_strncpyz(cmd, Cmd_ArgsFrom(0), sizeof(cmd));
 
-		clientNum = client - svs.clients;
+	// TODO: need to check a named list of teleporter locations on map
+	// select closest spawn point to named target_location
+	VectorCopy(ps->origin, newOrigin);
+	if(SV_FindLocation(Cmd_ArgsFrom(1), newOrigin, forward)) {
+		// TODO: setclientangles forward
 #ifdef USE_MULTIVM_SERVER
-		gvmi = client->gameWorld;
+		SV_Teleport(client, client->gameWorld, MOVEORIGIN, &newOrigin);
+		gvmi = 0;
+		CM_SwitchMap(gameWorlds[gvmi]);
+		SV_SetAASgvm(gvmi);
+#else
+    SV_Teleport(client, 0, MOVEORIGIN, &newOrigin);
+#endif
+		return;
+	} else if(count != 4) {
+		Com_Printf("Usage: tele <x> <y> <z>\nOr: tele <location>\n");
+#ifdef USE_MULTIVM_SERVER
+		gvmi = 0;
 		CM_SwitchMap(gameWorlds[gvmi]);
 		SV_SetAASgvm(gvmi);
 #endif
-		ps = SV_GameClientNum( clientNum );
+		return;
+	}
+
+	if(userOrigin[0][0] != '\0'
+    || userOrigin[1][0] != '\0'
+	  || userOrigin[2][0] != '\0') {
 
     anyRelative = qfalse;
     for(i = 0; i < 3; i++) {
@@ -2587,6 +2771,7 @@ void SV_Tele_f( client_t *client ) {
 
 
 #ifdef USE_MULTIVM_SERVER
+// The kind of teleports that changes which world we are in
 void SV_Game_f( client_t *client ) {
 	int worldC, count = 0, i;
 	char *world, *userOrigin;

@@ -746,14 +746,13 @@ void weapon_railgun_fire( gentity_t *ent ) {
 	// move origin a bit to come closer to the drawn gun muzzle
 	VectorMA( tent->s.origin2, 4, right, tent->s.origin2 );
 	VectorMA( tent->s.origin2, -1, up, tent->s.origin2 );
-	tent->s.powerups = bounce;
 
 	SnapVector( tent->s.origin2 );
 
 	// no explosion at end if SURF_NOIMPACT, but still make the trail
 	if ( trace.surfaceFlags & SURF_NOIMPACT ) {
 #ifdef USE_BOUNCE_RAIL
-    bounce = MAX_RAIL_BOUNCE; //Luc: If hit sky, max out bounces so wont bounce again
+   bounce = MAX_RAIL_BOUNCE; //Luc: If hit sky, max out bounces so wont bounce again
 #endif
 		tent->s.eventParm = 255;	// don't make the explosion at the end
 	} else {
@@ -786,12 +785,14 @@ void weapon_railgun_fire( gentity_t *ent ) {
 		ent->client->accuracy_hits++;
 	}
 #ifdef USE_BOUNCE_RAIL//Luc: Add a bounce, so it'll bounce only 4 times
-bounce++;
+	tent->s.powerups = bounce;
+	bounce++;
 } while (wp_railBounce.integer && bounce <= MAX_RAIL_BOUNCE);
 #endif
 }
 
 
+#ifdef USE_GRAPPLE
 /*
 ======================================================================
 
@@ -839,6 +840,7 @@ void Weapon_HookThink (gentity_t *ent)
 
 	VectorCopy( ent->r.currentOrigin, ent->parent->client->ps.grapplePoint);
 }
+#endif
 
 
 /*
@@ -1160,7 +1162,9 @@ gentity_t *ThrowWeapon( gentity_t *ent ) {
 
 	if( client->ps.weapon == WP_GAUNTLET
 		|| client->ps.weapon == WP_MACHINEGUN
+#ifdef USE_GRAPPLE
 		|| client->ps.weapon == WP_GRAPPLING_HOOK
+#endif
 		|| ( ucmd->buttons & BUTTON_ATTACK )
 		// TODO: just make it disappear in mode where it affects speed
 		|| client->ps.ammo[client->ps.weapon] == INFINITE
@@ -1266,7 +1270,10 @@ void FireWeapon( gentity_t *ent
 #endif
 
 	// track shots taken for accuracy tracking.  Grapple is not a weapon and gauntet is just not tracked
-	if( ent->s.weapon != WP_GRAPPLING_HOOK && ent->s.weapon != WP_GAUNTLET ) {
+#ifdef USE_GRAPPLE
+	if( ent->s.weapon != WP_GRAPPLING_HOOK )
+#endif
+	if( ent->s.weapon != WP_GAUNTLET ) {
 #ifdef MISSIONPACK
 		if( ent->s.weapon == WP_NAILGUN ) {
 			ent->client->accuracy_shots += NUM_NAILSHOTS;
@@ -1333,9 +1340,11 @@ void FireWeapon( gentity_t *ent
 #endif
 		BFG_Fire( ent );
 		break;
+#ifdef USE_GRAPPLE
 	case WP_GRAPPLING_HOOK:
 		Weapon_GrapplingHook_Fire( ent );
 		break;
+#endif
 #ifdef USE_FLAME_THROWER
   case WP_FLAME_THROWER :
     Weapon_fire_flame( ent );

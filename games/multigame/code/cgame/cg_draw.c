@@ -177,10 +177,11 @@ void CG_Text_Paint(float x, float y, float scale, vec4_t color, const char *text
 	  trap_R_SetColor( NULL );
   }
 }
-
-
 #endif
 
+
+
+#if !defined(MISSIONPACK) || defined(USE_ADVANCED_HUD)
 /*
 ==============
 CG_DrawField
@@ -241,6 +242,7 @@ static void CG_DrawField (int x, int y, int width, int value) {
 		l--;
 	}
 }
+#endif
 
 
 /*
@@ -447,6 +449,8 @@ void CG_DrawFlagModel( float x, float y, float w, float h, int team, qboolean fo
 	}
 }
 
+
+#if !defined(MISSIONPACK) || defined(USE_ADVANCED_HUD)
 /*
 ================
 CG_DrawStatusBarHead
@@ -513,6 +517,7 @@ CG_DrawStatusBarFlag
 static void CG_DrawStatusBarFlag( float x, int team ) {
 	CG_DrawFlagModel( x, cgs.screenYmax + 1 - ICON_SIZE, ICON_SIZE, ICON_SIZE, team, qfalse );
 }
+#endif
 
 
 /*
@@ -543,6 +548,7 @@ void CG_DrawTeamBackground( int x, int y, int w, int h, float alpha, int team )
 }
 
 
+#if !defined(MISSIONPACK) || defined(USE_ADVANCED_HUD)
 /*
 ================
 CG_DrawStatusBar
@@ -736,6 +742,7 @@ static void CG_DrawStatusBar( void ) {
 	}
 #endif
 }
+#endif
 
 
 /*

@@ -151,6 +151,7 @@ cvar_t *sv_bspLight;
 cvar_t *sv_bspAAS;
 cvar_t *sv_bspRebuild;
 cvar_t *sv_bspMap;
+cvar_t *sv_bspSplice;
 #endif
 
 #ifndef BUILD_SLIM_CLIENT

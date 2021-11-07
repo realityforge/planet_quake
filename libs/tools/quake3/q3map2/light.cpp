@@ -1682,6 +1682,7 @@ void SetupGrid( void ){
 			gridSize[ j++ % 3 ] += 16.0f;
 		}
 	}
+	gridSize[ 0 ] = gridSize[ 1 ] = gridSize[ 2 ] = 512.0f;
 
 	/* print it */
 	Sys_Printf( "Grid size = { %1.0f, %1.0f, %1.0f }\n", gridSize[ 0 ], gridSize[ 1 ], gridSize[ 2 ] );

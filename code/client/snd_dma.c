@@ -1594,7 +1594,7 @@ qboolean S_Base_Init( soundInterface_t *si ) {
 	if ( r ) {
 		s_soundStarted = qtrue;
 		s_soundMuted = qtrue;
-//		s_numSfx = 0;
+		s_numSfx = 0;
 
 		Com_Memset( sfxHash, 0, sizeof( sfxHash ) );
 

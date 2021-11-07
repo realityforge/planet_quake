@@ -114,9 +114,11 @@ tryagain:
 		MAKERGB( pi->flashDlightColor, 1, 0.7f, 1 );
 		break;
 
+#ifdef USE_GRAPPLE
 	case WP_GRAPPLING_HOOK:
 		MAKERGB( pi->flashDlightColor, 0.6f, 0.6f, 1 );
 		break;
+#endif
 
 	default:
 		MAKERGB( pi->flashDlightColor, 1, 1, 1 );

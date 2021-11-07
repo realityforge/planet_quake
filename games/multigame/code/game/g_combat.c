@@ -79,9 +79,12 @@ void TossClientItems( gentity_t *self ) {
 	// weapon that isn't the mg or gauntlet.  Without this, a client
 	// can pick up a weapon, be killed, and not drop the weapon because
 	// their weapon change hasn't completed yet and they are still holding the MG.
-	if ( weapon == WP_MACHINEGUN || weapon == WP_GRAPPLING_HOOK 
+	if ( weapon == WP_MACHINEGUN 
+#ifdef USE_GRAPPLE
+		|| weapon == WP_GRAPPLING_HOOK 
+#endif
 #ifdef USE_FLAME_THROWER
-    || weapon == WP_FLAME_THROWER
+		|| weapon == WP_FLAME_THROWER
 #endif
   ) {
 		if ( self->client->ps.weaponstate == WEAPON_DROPPING ) {
@@ -92,7 +95,10 @@ void TossClientItems( gentity_t *self ) {
 		}
 	}
 
-	if ( weapon > WP_MACHINEGUN && weapon != WP_GRAPPLING_HOOK 
+	if ( weapon > WP_MACHINEGUN 
+#ifdef USE_GRAPPLE
+		&& weapon != WP_GRAPPLING_HOOK 
+#endif
 #ifdef USE_INSTAGIB
     // don't drop anything in instagib mode
     && !g_instagib.integer
@@ -529,9 +535,11 @@ void player_die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int
 	// check for a player that almost brought in cubes
 	CheckAlmostScored( self, attacker );
 
+#ifdef USE_GRAPPLE
 	if (self->client && self->client->hook) {
 		Weapon_HookFree(self->client->hook);
 	}
+#endif
 #ifdef MISSIONPACK
 	if ((self->client->ps.eFlags & EF_TICKING) && self->activator) {
 		self->client->ps.eFlags &= ~EF_TICKING;

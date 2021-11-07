@@ -577,6 +577,7 @@ extern  cvar_t *sv_bspLight;
 extern  cvar_t *sv_bspAAS;
 extern  cvar_t *sv_bspRebuild;
 extern  cvar_t *sv_bspMap;
+extern  cvar_t *sv_bspSplice;
 #endif
 
 

@@ -496,9 +496,11 @@ static void Controls_UpdateModel( int anim ) {
 		s_controls.playerWeapon = WP_BFG;
 		break;
 
+#ifdef USE_GRAPPLE
 	case ANIM_WEAPON10:
 		s_controls.playerWeapon = WP_GRAPPLING_HOOK;
 		break;
+#endif
 
 	case ANIM_ATTACK:
 		s_controls.playerTorso = TORSO_ATTACK;

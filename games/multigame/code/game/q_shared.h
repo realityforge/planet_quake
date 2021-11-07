@@ -141,7 +141,7 @@
 
 //=============================================================
 
-#define BUILD_EXPERIMENTAL 1
+//#define BUILD_EXPERIMENTAL 1
 
 #ifdef BUILD_EXPERIMENTAL
 // compile damage plums every time someone gets hit

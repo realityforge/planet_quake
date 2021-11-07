@@ -169,6 +169,7 @@ gitem_t bg_itemlist2[] = {
 		/* sounds */ ""
 	},
 
+#ifdef USE_GRAPPLE
 	/*QUAKED weapon_grapplinghook (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
 	 */
 	{
@@ -184,6 +185,7 @@ gitem_t bg_itemlist2[] = {
 		/* precache */ "",
 		/* sounds */ ""
 	},
+#endif
 
   /*QUAKED weapon_nailgun (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
 	 */
@@ -410,6 +412,7 @@ void CG_RegisterWeapon2( int weaponNum )
 		weaponInfo->lfx = 0; //  no effect
 		break;
 
+#ifdef USE_GRAPPLE
 	case WP_GRAPPLING_HOOK:
 		MAKERGB( weaponInfo->flashDlightColor, 0.6f, 0.6f, 1.0f );
 		weaponInfo->missileModel = trap_R_RegisterModel( "baseoa/models/ammo/hook/hook.md3" );
@@ -424,6 +427,7 @@ void CG_RegisterWeapon2( int weaponNum )
 		//cgs.media.lightningShader = trap_R_RegisterShader( "baseoa/lightningBoltNew");
 		weaponInfo->lfx = 0; //  no effect
 		break;
+#endif
 
 //#ifdef MISSIONPACK
 	case WP_CHAINGUN:

@@ -29,7 +29,7 @@ USE_REFEREE_CMDS       = 1
 
 USE_ENGINE_TELE        = 1
 USE_DIDYOUMEAN         = 1
-USE_LIVE_RELOAD        = 1
+USE_LIVE_RELOAD        = 0
 USE_BSP1               = 0
 USE_ASYNCHRONOUS       = 0
 USE_DEMO_SERVER        = 0

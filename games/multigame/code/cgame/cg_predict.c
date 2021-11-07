@@ -321,7 +321,11 @@ static void CG_AddArmor( const gitem_t *item, int quantity ) {
 
 static void CG_AddAmmo( int weapon, int count )
 {
-	if ( weapon == WP_GAUNTLET || weapon == WP_GRAPPLING_HOOK ) {
+	if ( weapon == WP_GAUNTLET 
+#ifdef USE_GRAPPLE
+		|| weapon == WP_GRAPPLING_HOOK 
+#endif
+	) {
 		cg.predictedPlayerState.ammo[weapon] = -1;
 	} else {
 		cg.predictedPlayerState.ammo[weapon] += count;

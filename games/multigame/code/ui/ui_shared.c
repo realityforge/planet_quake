@@ -5634,8 +5634,8 @@ void Menu_PaintAll() {
 }
 
 void Menu_Reset() {
-  Com_Printf("menu reset\n");
-	menuCount = 0;
+//  Com_Printf("menu reset\n");
+//	menuCount = 0;
 }
 
 displayContextDef_t *Display_GetContext() {

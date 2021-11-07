@@ -1083,6 +1083,7 @@ void SV_Init( void )
 	sv_bspLight = Cvar_Get( "sv_bspLight", "0", CVAR_TEMP );
 	sv_bspAAS = Cvar_Get( "sv_bspAAS", "0", CVAR_TEMP );
 	sv_bspMap = Cvar_Get( "sv_bspMap", "0", CVAR_TEMP );
+	sv_bspSplice = Cvar_Get( "sv_bspSplice", "", CVAR_TEMP );
 	sv_bspRebuild = Cvar_Get( "sv_bspRebuild", "0", CVAR_TEMP );
 #endif
 

@@ -126,7 +126,6 @@ endif
 CGOBJ_  = $(B)/$(MOD)/cgame/cg_main.o \
           $(B)/$(MOD)/cgame/bg_lib.o \
           $(B)/$(MOD)/cgame/bg_misc.o \
-					$(B)/$(MOD)/cgame/bg_misc2.o \
           $(B)/$(MOD)/cgame/bg_pmove.o \
           $(B)/$(MOD)/cgame/bg_slidemove.o \
           $(B)/$(MOD)/cgame/cg_consolecmds.o \
@@ -145,10 +144,10 @@ CGOBJ_  = $(B)/$(MOD)/cgame/cg_main.o \
           $(B)/$(MOD)/cgame/cg_servercmds.o \
           $(B)/$(MOD)/cgame/cg_snapshot.o \
           $(B)/$(MOD)/cgame/cg_view.o \
-          $(B)/$(MOD)/cgame/cg_weapons.o \
-          $(B)/$(MOD)/cgame/cg_shared.o
+          $(B)/$(MOD)/cgame/cg_weapons.o
 ifeq ($(MISSIONPACK),1)
-CGOBJ_ += $(B)/$(MOD)/cgame/cg_newdraw.o
+CGOBJ_ += $(B)/$(MOD)/cgame/cg_newdraw.o \
+          $(B)/$(MOD)/cgame/cg_shared.o
 endif
 
 ifneq ($(BUILD_CLIENT),1)

@@ -706,21 +706,17 @@ static void CL_KeyDownEvent( int key, unsigned time, int fingerId )
 #endif
 				}
 #endif
-        if(
+        
 #ifdef USE_ASYNCHRONOUS
-          FS_Initialized()
-#else
-          qtrue
+        if(FS_Initialized())
 #endif
-          ) {
-          if(uivm) {
-  				  VM_Call( uivm, 1, UI_SET_ACTIVE_MENU, UIMENU_MAIN );
-          } else {
-            cls.uiStarted = qtrue;
-        		CL_InitUI(qfalse);
-            VM_Call( uivm, 1, UI_SET_ACTIVE_MENU, UIMENU_MAIN );
-          }
-        }
+				if(uivm) {
+					VM_Call( uivm, 1, UI_SET_ACTIVE_MENU, UIMENU_MAIN );
+				} else {
+					cls.uiStarted = qtrue;
+					CL_InitUI(qfalse);
+					VM_Call( uivm, 1, UI_SET_ACTIVE_MENU, UIMENU_MAIN );
+				}
 			}
 			return;
 		}
