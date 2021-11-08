@@ -3096,7 +3096,7 @@ void SV_SpliceBSP(const char *memoryMap, const char *altName) {
 	qboolean ignoreLine = qfalse;
 	qboolean isInside = qfalse; // trying to prove at least 1 point is inside the bounds
 	qboolean vertIsInside = qfalse;
-	//qboolean isPatch = qfalse;
+	qboolean isPatch = qfalse;
 
 	brushC = 0;
 	memset(output, 0, sizeof(output));
@@ -3104,10 +3104,15 @@ void SV_SpliceBSP(const char *memoryMap, const char *altName) {
 		"// Format: Quake3 (legacy)\n"
 		"// entity 0\n"
 		"{\n"
-		"\"classname\" \"worldspawn\"\n");
+		"\"classname\" \"worldspawn\"\n"
+		"\"_keepLights\" \"1\"\n"
+		"\"_ambient\" \"10\"\n"
+		"\"gridsize\" \"512.0 512.0 512.0\"\n"
+	);
+	// TODO: filter out the keys from above below where it's copied to the output
 	offset += strlen(&output[offset]);
 
-  length = FS_ReadFile(va("maps/%s.map", memoryMap), (void **)&buffer);
+  length = FS_ReadFile(memoryMap, (void **)&buffer);
 
 	Q_strncpyz(cmd, Cmd_ArgsFrom(0), sizeof(cmd));
 
@@ -3150,6 +3155,7 @@ void SV_SpliceBSP(const char *memoryMap, const char *altName) {
 			if(depth == 2) {
 				brushStartPos = count;
 				tokenStartPos = 0;
+				isPatch = qfalse;
 				//Com_Printf("beginning brush: %i\n", count);
 				if(isWorldspawn) {
 					isInside = qfalse;
@@ -3158,6 +3164,21 @@ void SV_SpliceBSP(const char *memoryMap, const char *altName) {
 			if(depth == 3) {
 				patchStartPos = count;
 				tokenStartPos = 0;
+				if(isPatch) {
+					// skip next 2 lines is the texture and alignment
+					if(strstr(&buffer[count], "\n") - &buffer[count] <= 2) {
+						count += strstr(&buffer[count], "\n") - &buffer[count];
+						count++;
+					}
+					if(strstr(&buffer[count], "\n") - &buffer[count] <= 2) {
+						count += strstr(&buffer[count], "\n") - &buffer[count];
+						count++;
+					}
+					Com_Printf("patch: %.*s\n", (int)(strstr(&buffer[count], "\n") - &buffer[count]), &buffer[count]);
+					count += strstr(&buffer[count], "\n") - &buffer[count];
+					count++;
+					count += strstr(&buffer[count], "\n") - &buffer[count];
+				}
 			}
 		}
 		if(buffer[count] == '}') {
@@ -3192,6 +3213,13 @@ void SV_SpliceBSP(const char *memoryMap, const char *altName) {
 				else isKey = qtrue;
 				tokenStartPos = count+1;
 			} else if (isKey && buffer[count] == '"') {
+				if(isWorldspawn) {
+					Q_strncpyz(&output[offset+1], &buffer[tokenStartPos], count - tokenStartPos + 1);
+					output[offset] = '"';
+					output[offset+(count - tokenStartPos)+1] = '"';
+					output[offset+(count - tokenStartPos)+2] = ' ';
+					offset += strlen(&output[offset]);
+				}
 				if(!Q_stricmpn(&buffer[tokenStartPos], "classname", 9)) {
 					isClassname = qtrue;
 				} else if(!Q_stricmpn(&buffer[tokenStartPos], "origin", 6)) {
@@ -3205,7 +3233,13 @@ void SV_SpliceBSP(const char *memoryMap, const char *altName) {
 				}
 				isKey = qfalse;
 			} else if (isValue && buffer[count] == '"') {
-				isValue = qfalse;
+				if(isWorldspawn) {
+					Q_strncpyz(&output[offset+1], &buffer[tokenStartPos], count - tokenStartPos + 1);
+					output[offset] = '"';
+					output[offset+(count - tokenStartPos)+1] = '"';
+					output[offset+(count - tokenStartPos)+2] = ' ';
+					offset += strlen(&output[offset]);
+				}
 				if(isClassname) {
 					if(!Q_stricmpn(buffer+tokenStartPos, "worldspawn", 10)) {
 						isWorldspawn = qtrue;
@@ -3232,8 +3266,13 @@ void SV_SpliceBSP(const char *memoryMap, const char *altName) {
 					Cmd_Clear();
 					isOrigin = qfalse;
 				}
-			} else if (!isKey && !isValue && (buffer[count] == '\t' || buffer[count] == ' ')) {
+				isValue = qfalse;
+			} else if (!isKey && !isValue && buffer[count] == '\n') {
 				// ignore whitespace in between
+				if(output[offset] != '\n') {
+					output[offset] = '\n';
+					offset++;
+				}
 			} else {
 
 			}
@@ -3276,10 +3315,14 @@ void SV_SpliceBSP(const char *memoryMap, const char *altName) {
 					isInside = qtrue;
 				}
 				isNumeric = qfalse;
-			} else if (buffer[count] >= '0' && buffer[count] <= '9') {
+			} else if ((buffer[count] >= '0' && buffer[count] <= '9')
+				|| (isNumeric && (buffer[count] == '-' || buffer[count] == '.'))) {
 				if(!isNumeric)
 					tokenStartPos = count;
 				isNumeric = qtrue;
+			} else if (Q_stricmpn(&buffer[count], "patchdef2", 9) == 0) {
+				count += 9;
+				isPatch = qtrue;
 			} else {
 				tokenStartPos = 0;
 				isNumeric = qfalse;
@@ -3299,12 +3342,13 @@ void SV_SpliceBSP(const char *memoryMap, const char *altName) {
 
 extern int Q3MAP2Main( int argc, char **argv );
 
-int SV_MakeMap( char *map ) {
-	char memoryMap[MAX_QPATH];
+int SV_MakeMap( const char **map ) {
+	static char memoryMap[MAX_QPATH];
 	char *mapPath;
+	char *bspPath;
   fileHandle_t mapfile;
 	int length = 0;
-	Q_strncpyz( memoryMap, map, sizeof(memoryMap) );
+	Q_strncpyz( memoryMap, *map, sizeof(memoryMap) );
 
 	// early exit unless we force rebuilding
 	if(!sv_bspRebuild->integer && FS_RealPath( va("maps/%s.bsp", memoryMap) )) {
@@ -3370,8 +3414,19 @@ int SV_MakeMap( char *map ) {
 	}
 	
 	if(sv_bspSplice->string[0] != '\0') {
-		SV_SpliceBSP(memoryMap, va("maps/%s_spliced.map", memoryMap));
+		if(sv_bspMap->integer && mapPath) {
+			SV_SpliceBSP(va("maps/%s_converted.map", memoryMap), va("maps/%s_spliced.map", memoryMap));
+		} else {
+			SV_SpliceBSP(va("maps/%s.map", memoryMap), va("maps/%s_spliced.map", memoryMap));
+		}
+		// force the rest to rebuild the bsp
+		// TODO: make optional to spawn in the spliced map
+		Q_strncpyz( memoryMap, va("%s_spliced", memoryMap), sizeof(memoryMap) );
+		*map = memoryMap;
+		mapPath = NULL;
 	}
+
+	// TODO: add levelshot camera location
 	
 	if (!mapPath) {
 		// no bsp file exists, try to make one, check for .map file
@@ -3386,7 +3441,7 @@ int SV_MakeMap( char *map ) {
 				"-game",
 				"quake3",
 				"-meta",
-		    "-patchmeta",
+		    //"-patchmeta", // makes compile  much slower
 				"-keeplights",
 				mapPath
 			};
@@ -3395,28 +3450,63 @@ int SV_MakeMap( char *map ) {
 	}
 
 	if(sv_bspLight->integer
-		&& (length = FS_FOpenFileRead( va("maps/%s/lm_0000.tga", memoryMap), NULL, qtrue )) == -1) {
+		&& ((length = FS_FOpenFileRead( va("maps/%s/lm_0000.tga", memoryMap), NULL, qtrue )) == -1
+		|| sv_bspSplice->string[0] != '\0') // always light spliced maps
+	) {
 		// then we can decide not to update LM?
-		char *bspPath = FS_RealPath( va("maps/%s.bsp", memoryMap) );
-		char *compileLight[] = {
-			"q3map2",
-			"-light",
-			"-external",
-			"-fs_basepath",
-			(char *)Cvar_VariableString("fs_basepath"),
-			"-game",
-			"quake3",
-			"-faster",
-			"-cheap",
-			//"-patchshadows",
-			//"-gridsize",
-			//"512.0 512.0 512.0",
-			"-bounce",
-			// TODO: one room at a time, and update in between bounces
-			"2", 
-			bspPath
-		};
-		Q3MAP2Main(ARRAY_LEN(compileLight), compileLight);
+		bspPath = FS_RealPath( va("maps/%s.bsp", memoryMap) );
+		if(sv_bspLight->integer == 1) {
+			char *compileLight[] = {
+				"q3map2",
+				"-light",
+				"-external",
+				"-fs_basepath",
+				(char *)Cvar_VariableString("fs_basepath"),
+				"-game",
+				"quake3",
+				"-faster",
+				"-cheap",
+				//"-patchshadows",
+				//"-gridsize",
+				//"512.0 512.0 512.0",
+				//"-bounce",
+				//"2", // really decent lighting, but not fast enough
+				"-bounce",
+				"0",
+				// TODO: one room at a time, and update in between bounces
+				// testing samples that didn't affect speed
+				"-bouncegrid",
+				"-cheapgrid",
+				"-trisoup",
+				"-notrace",
+				"-samplesize",
+				"64",
+				bspPath
+			};
+			Q3MAP2Main(ARRAY_LEN(compileLight), compileLight);
+		} else if(sv_bspLight->integer == 2) {
+			char *compileLight[] = {
+				"q3map2",
+				"-light",
+				"-external",
+				"-fs_basepath",
+				(char *)Cvar_VariableString("fs_basepath"),
+				"-game",
+				"quake3",
+				"-fast",
+				//"-patchshadows",
+				//"-gridsize",
+				//"512.0 512.0 512.0",
+				"-bounce",
+				"2", // really decent lighting, but not fast enough
+				"-bouncegrid",
+				"-trisoup",
+				"-samplesize",
+				"16",
+				bspPath
+			};
+			Q3MAP2Main(ARRAY_LEN(compileLight), compileLight);
+		}
 	}
 
 	// TODO: generate AAS file for bots, missing, or updated maps

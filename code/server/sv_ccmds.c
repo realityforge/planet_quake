@@ -174,7 +174,7 @@ static void SV_Map_f( void ) {
 #ifdef USE_MEMORY_MAPS
   // TODO: make this asynchronous where the console and server waits for it to compile
   if(sv_memoryMaps->integer)
-		SV_MakeMap(map); // make the BSP and then it will load normally
+		SV_MakeMap((const char **)&map); // make the BSP and then it will load normally
 	
 #endif
 

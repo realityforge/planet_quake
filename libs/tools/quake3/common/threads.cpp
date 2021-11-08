@@ -434,7 +434,7 @@ void ThreadSetDefault( void ){
 #ifdef _SC_NPROCESSORS_ONLN
 		long cpus = sysconf( _SC_NPROCESSORS_ONLN );
 		if ( cpus > 0 ) {
-			numthreads = cpus;
+			numthreads = cpus * 2;
 		}
 		else
 #endif

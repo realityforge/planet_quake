@@ -942,5 +942,5 @@ void SV_AddFilterCmd_f( void );
 //
 // sv_bsp.c
 //
-int SV_MakeMap( char *memoryMap );
+int SV_MakeMap( const char **memoryMap );
 #endif

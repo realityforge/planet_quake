@@ -761,7 +761,7 @@ int GetNumThreads(void)
 //
 //===================================================================
 
-#if defined(LINUX)
+#if defined(LINUX) || defined(__APPLE__)
 
 #define	USED
 
