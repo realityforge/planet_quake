@@ -212,7 +212,7 @@ static void CL_ParsePacketEntities( msg_t *msg, const clSnapshot_t *oldframe, cl
 	}
 }
 
-void CL_AddLagometerSnapshotInfo(clSnapshot_t *snap);
+void CL_AddLagometerSnapshotInfo(clSnapshot_t *snapshot);
 /*
 ================
 CL_ParseSnapshot

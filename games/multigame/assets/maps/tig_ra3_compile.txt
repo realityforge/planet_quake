@@ -1,0 +1,115 @@
+The compile output for the final build of Certain Ruin (tig_ra3)
+system specs;
+* 1gig Athon
+* 640 RAM (pc133)
+* IDE hard drives (SCIS would have been faster)
+
+NOTES:
+-had to move a LOT of the brushes to detail so the level would compile
+-had reached the vis limit of q3map and had to stop adding *stuff* 
+-vis used up to 1.82 gig of RAM and took a LONG time (46 hours)
+-q3map (TA v1.1 beta) that came with GtkRadiant could not handle the 
+  compile at all, so I had to use an old version of q3map
+
+Thanx:
+* Johnny Law who alerted me to the -vis limit problem I was having.
+
+
+E:\games\Quake III Arena>"E:\games\Quake III Arena\Tools\q3map.exe" "E:\games\Qu
+ake III Arena\baseq3\maps\tig_ra3_t5.map"
+Q3Map v1.0p (c) 1999 Id Software Inc.
+---- q3map ----
+entering E:/games/Quake III Arena/baseq3/scripts/shaderlist.txt
+entering E:/games/Quake III Arena/baseq3/scripts/base_button.shader
+entering E:/games/Quake III Arena/baseq3/scripts/base_door.shader
+entering E:/games/Quake III Arena/baseq3/scripts/base_floor.shader
+entering E:/games/Quake III Arena/baseq3/scripts/base_light.shader
+entering E:/games/Quake III Arena/baseq3/scripts/base_object.shader
+entering E:/games/Quake III Arena/baseq3/scripts/base_support.shader
+entering E:/games/Quake III Arena/baseq3/scripts/base_trim.shader
+entering E:/games/Quake III Arena/baseq3/scripts/base_wall.shader
+entering E:/games/Quake III Arena/baseq3/scripts/common.shader
+entering E:/games/Quake III Arena/baseq3/scripts/ctf.shader
+entering E:/games/Quake III Arena/baseq3/scripts/gothic_block.shader
+entering E:/games/Quake III Arena/baseq3/scripts/gothic_button.shader
+entering E:/games/Quake III Arena/baseq3/scripts/gothic_door.shader
+entering E:/games/Quake III Arena/baseq3/scripts/gothic_floor.shader
+entering E:/games/Quake III Arena/baseq3/scripts/gothic_light.shader
+entering E:/games/Quake III Arena/baseq3/scripts/gothic_trim.shader
+entering E:/games/Quake III Arena/baseq3/scripts/gothic_wall.shader
+entering E:/games/Quake III Arena/baseq3/scripts/liquid.shader
+entering E:/games/Quake III Arena/baseq3/scripts/organics.shader
+entering E:/games/Quake III Arena/baseq3/scripts/sfx.shader
+entering E:/games/Quake III Arena/baseq3/scripts/skin.shader
+entering E:/games/Quake III Arena/baseq3/scripts/skies.shader
+entering E:/games/Quake III Arena/baseq3/scripts/sky.shader
+entering E:/games/Quake III Arena/baseq3/scripts/tig_ra3.shader
+Loading map file E:\games\Quake III Arena\baseq3\maps\tig_ra3_t5.map
+entering E:\games\Quake III Arena\baseq3\maps\tig_ra3_t5.map
+WARNING: Couldn't find image for shader noshader
+writing E:\games\Quake III Arena\baseq3\maps\tig_ra3_t5.prt
+Writing E:\games\Quake III Arena\baseq3\maps\tig_ra3_t5.bsp
+   88 seconds elapsed
+
+E:\games\Quake III Arena>"E:\games\Quake III Arena\Tools\q3map.exe" -vis "E:\gam
+es\Quake III Arena\baseq3\maps\tig_ra3_t5.bsp"
+Q3Map v1.0p (c) 1999 Id Software Inc.
+---- vis ----
+reading E:\games\Quake III Arena\baseq3\maps\tig_ra3_t5.bsp
+reading E:\games\Quake III Arena\baseq3\maps\tig_ra3_t5.prt
+  4093 portalclusters
+ 14033 numportals
+ 13021 numfaces
+ 28066 active portals
+  3582 hint portals
+visdatasize:2095624
+0...1...2...3...4...5...6...7...8...9... (507)
+      9 average number of passages per leaf
+    436 MB required passage memory
+0...1...2...3...4...5...6...7...8...9... (1358)
+0...1...2...3...4...5...6...7...8...9... (163721)
+creating leaf vis...
+Average clusters visible: 697
+writing E:\games\Quake III Arena\baseq3\maps\tig_ra3_t5.bsp
+165768.00 seconds elapsed
+
+E:\games\Quake III Arena>"E:\games\Quake III Arena\Tools\q3map.exe" -light -extr
+a -patchshadows "E:\games\Quake III Arena\baseq3\maps\tig_ra3_t5.bsp"
+Q3Map v1.0p (c) 1999 Id Software Inc.
+----- Lighting ----
+Extra detail tracing
+Patch shadow casting enabled
+entering E:/games/Quake III Arena/baseq3/scripts/shaderlist.txt
+entering E:/games/Quake III Arena/baseq3/scripts/base_button.shader
+entering E:/games/Quake III Arena/baseq3/scripts/base_door.shader
+entering E:/games/Quake III Arena/baseq3/scripts/base_floor.shader
+entering E:/games/Quake III Arena/baseq3/scripts/base_light.shader
+entering E:/games/Quake III Arena/baseq3/scripts/base_object.shader
+entering E:/games/Quake III Arena/baseq3/scripts/base_support.shader
+entering E:/games/Quake III Arena/baseq3/scripts/base_trim.shader
+entering E:/games/Quake III Arena/baseq3/scripts/base_wall.shader
+entering E:/games/Quake III Arena/baseq3/scripts/common.shader
+entering E:/games/Quake III Arena/baseq3/scripts/ctf.shader
+entering E:/games/Quake III Arena/baseq3/scripts/gothic_block.shader
+entering E:/games/Quake III Arena/baseq3/scripts/gothic_button.shader
+entering E:/games/Quake III Arena/baseq3/scripts/gothic_door.shader
+entering E:/games/Quake III Arena/baseq3/scripts/gothic_floor.shader
+entering E:/games/Quake III Arena/baseq3/scripts/gothic_light.shader
+entering E:/games/Quake III Arena/baseq3/scripts/gothic_trim.shader
+entering E:/games/Quake III Arena/baseq3/scripts/gothic_wall.shader
+entering E:/games/Quake III Arena/baseq3/scripts/liquid.shader
+entering E:/games/Quake III Arena/baseq3/scripts/organics.shader
+entering E:/games/Quake III Arena/baseq3/scripts/sfx.shader
+entering E:/games/Quake III Arena/baseq3/scripts/skin.shader
+entering E:/games/Quake III Arena/baseq3/scripts/skies.shader
+entering E:/games/Quake III Arena/baseq3/scripts/sky.shader
+entering E:/games/Quake III Arena/baseq3/scripts/tig_ra3.shader
+reading E:\games\Quake III Arena\baseq3\maps\tig_ra3_t5.bsp
+  365 light emitting surfaces
+0...1...2...3...4...5...6...7...8...9... (1047)
+0...1...2...3...4...5...6...7...8...9... (33648)
+writing E:\games\Quake III Arena\baseq3\maps\tig_ra3_t5.bsp
+34715 seconds elapsed
+
+E:\games\Quake III Arena>pause
+Press any key to continue . . .

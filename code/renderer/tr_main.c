@@ -1121,11 +1121,14 @@ static qboolean R_MirrorViewBySurface( const drawSurf_t *drawSurf, int entityNum
 	orientation_t	surface, camera;
 	qboolean		isMirror;
 
+	// yes recursively mirror - Brian Cullinan
 	// don't recursively mirror
-	if ( tr.viewParms.portalView != PV_NONE ) {
+#ifdef THIS_IS_A_SLOW_COMPUTER
+	if ( tr.viewParms.portalView >= PV_NONE ) {
 		ri.Printf( PRINT_DEVELOPER, "WARNING: recursive mirror/portal found\n" );
 		return qfalse;
 	}
+#endif
 
 	if ( r_noportals->integer > 1 /*|| r_fastsky->integer == 1 */ ) {
 		return qfalse;
@@ -1152,7 +1155,14 @@ static qboolean R_MirrorViewBySurface( const drawSurf_t *drawSurf, int entityNum
 		newParms.pvsOrigin, &newParms.portalView, &newParms.portalEntity) ) {
 		return qfalse;		// bad portal, no portalentity
 	}
-  
+
+	if(oldParms.portalView + 1 == PV_MIRROR || oldParms.portalView + 1 == PV_COUNT)
+		return qfalse;
+	if(oldParms.portalView >= PV_PORTAL && oldParms.portalView < PV_MIRROR)
+		newParms.portalView = oldParms.portalView + 1;
+	else if(oldParms.portalView >= PV_MIRROR && oldParms.portalView < PV_COUNT)
+		newParms.portalView = oldParms.portalView + 1;
+
 #ifdef USE_PMLIGHT
 	// create dedicated set for each view
 	if ( r_numdlights + oldParms.num_dlights <= ARRAY_LEN( backEndData->dlights ) ) {

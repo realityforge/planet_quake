@@ -445,7 +445,7 @@ void G_MissileImpact( gentity_t *ent, trace_t *trace ) {
 
 #ifdef USE_PORTALS
 #define AWAY_FROM_WALL 16.0f
-  if(g_portalsEnabled.integer && ent->s.weapon == WP_BFG) {
+  if(wp_portalEnable.integer && ent->s.weapon == WP_BFG) {
     vec3_t velocity, angles;
     ent->client = ent->parent->client;
     VectorCopy(trace->plane.normal, ent->movedir);

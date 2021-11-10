@@ -68,7 +68,7 @@ extern	int		c_pmove;
 
 
 #ifdef USE_PORTALS
-#define g_portalsEnabled cg_portalsEnabled
+#define wp_portalEnable cgwp_portalEnable
 #define g_altPortal cg_altPortal
 #endif
 
@@ -125,7 +125,7 @@ extern vmCvar_t  g_wallWalk;
 #endif
 
 #ifdef USE_PORTALS
-extern vmCvar_t  g_portalsEnabled;
+extern vmCvar_t  wp_portalEnable;
 extern vmCvar_t  g_altPortal;
 #endif
 

@@ -2472,6 +2472,7 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
 	//memcpy(&ps->persistant, &oldps.persistant, sizeof(ps->persistant));
 
 	// Move Teleporter Res entity to follow player anywhere
+	/*
 	for(i = 0; i < sv.num_entities; i++) {
 		ent = SV_GentityNum(i);
 		if(ent->s.clientNum == clientNum 
@@ -2487,6 +2488,7 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
 			memcpy(&ent->r.s, &ent->s, sizeof(ent->s));
 		}
 	}
+	*/
 }
 
 

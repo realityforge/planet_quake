@@ -719,16 +719,16 @@ typedef struct {
 
 lagometer_t		lagometer;
 
-void CL_AddLagometerSnapshotInfo(clSnapshot_t *snap) {
-  if ( !snap ) {
+void CL_AddLagometerSnapshotInfo(clSnapshot_t *snapshot) {
+  if ( !snapshot ) {
 		lagometer.snapshotSamples[ lagometer.snapshotCount & ( LAG_SAMPLES - 1) ] = -1;
 		lagometer.snapshotCount++;
 		return;
 	}
 
 	// add this snapshot's info
-	lagometer.snapshotSamples[ lagometer.snapshotCount & ( LAG_SAMPLES - 1) ] = snap->ping;
-	lagometer.snapshotFlags[ lagometer.snapshotCount & ( LAG_SAMPLES - 1) ] = snap->snapFlags;
+	lagometer.snapshotSamples[ lagometer.snapshotCount & ( LAG_SAMPLES - 1) ] = snapshot->ping;
+	lagometer.snapshotFlags[ lagometer.snapshotCount & ( LAG_SAMPLES - 1) ] = snapshot->snapFlags;
 	lagometer.snapshotCount++;
 }
 
@@ -752,7 +752,11 @@ static void CL_CalculatePing( int ms ) {
 		cls.meanPing /= count;
 	}
 
+#ifdef USE_MULTIVM_CLIENT
+	offset = cl.serverTimes[0] - cl.snapWorlds[0].serverTime;
+#else
 	offset = cl.serverTime - cl.snap.serverTime;
+#endif
 	lagometer.frameSamples[ lagometer.frameCount & ( LAG_SAMPLES - 1) ] = offset;
 	lagometer.frameCount++;
 }

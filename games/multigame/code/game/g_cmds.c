@@ -302,7 +302,7 @@ void Cmd_Give_f( gentity_t *ent )
 #ifdef USE_RUNES
     char	arg[MAX_TOKEN_CHARS];
     trap_Argv( 1, arg, sizeof( arg ) );
-    if(	Q_stricmp(arg, "rune") == 0) {
+    if(	Q_stricmp(arg, "rune") == 0 ) {
       name = ConcatArgs(2);
       it = BG_FindItemForRune(atoi(name));
       if(!it) {
@@ -316,6 +316,7 @@ void Cmd_Give_f( gentity_t *ent )
 #endif
 		it = BG_FindItem (name);
 		if (!it) {
+			Com_Printf ("Unknown item: %s\n", name);
 			return;
 		}
 

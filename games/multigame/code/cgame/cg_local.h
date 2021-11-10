@@ -1340,7 +1340,7 @@ extern	vmCvar_t	  cg_gravity;
 extern	vmCvar_t	  cg_wallWalk;
 #endif
 #ifdef USE_PORTALS
-extern  vmCvar_t    cg_portalsEnabled;
+extern  vmCvar_t    cgwp_portalEnable;
 extern  vmCvar_t    cg_altPortal;
 #endif
 #ifdef USE_GRAPPLE

@@ -17,6 +17,31 @@
 //
 // ------------------------------------------------------18.mar.2001----
 
+// TODO: add a remap texture into the map file for this :(
+textures/gothic_door/door02_i_ornate5_fin
+{
+	portal
+	surfaceparm nolightmap
+  surfaceparm nomarks
+  surfaceparm nodamage
+
+	qer_editorimage textures/gothic_door/door02_i_ornate5_fin.tga
+	//{
+	//	map $lightmap
+	//	rgbgen identity      
+	//}
+	
+	{
+		map textures/gothic_door/door02_i_ornate5_fin.tga
+		blendfunc GL_SRC_ALPHA GL_ONE
+		//blendFunc GL_DST_COLOR GL_SRC_ALPHA
+		//rgbGen identity
+		//alphaGen lightingSpecular
+    alphagen portal 1024
+  	depthWrite
+	}
+}
+
 //graphic originaly from t8dm5 by Mr.cleaN
 textures/tig_ra3/t8dm5_goop_bounce2
 {
@@ -272,10 +297,10 @@ textures/tig_ra3/tig_ra3_skybox01
 	qer_editorimage textures/tig_ra3/overcast_bk
 	surfaceparm noimpact
 	surfaceparm nolightmap
+	surfaceparm sky
 	q3map_globaltexture
 	q3map_lightsubdivide 256
 	q3map_surfacelight 60
-	surfaceparm sky
 	q3map_sun 0.6 0.6 0.6 100 82 45
 	skyparms env/tig_ra3/overcast - -
 }
@@ -285,15 +310,22 @@ textures/tig_ra3/tig_ra3_skybox02
 	qer_editorimage textures/tig_ra3/mistyvalley_bk
 	surfaceparm noimpact
 	surfaceparm nolightmap
+	surfaceparm sky
 	q3map_globaltexture
 	q3map_lightsubdivide 256
-	q3map_surfacelight 60
-	surfaceparm sky
+	//q3map_surfacelight 60
 	//q3map_sun 0.6 0.6 0.6 100 120 45
-	q3map_sun 0.6 0.6 0.6 100 85 32
+	//q3map_sun 0.6 0.6 0.6 100 85 32
+	q3map_surfacelight 400
+	q3map_sun	1.0 0.4 0.0 100	45 45
+	//q3map_sun 0.9 0.5 0.3 100 90 90
 	skyparms env/tig_ra3/mistyvalley - -
+	{
+		map $whiteimage
+		rgbGen const ( 1.0 0.0 0.0 )
+		blendFunc add
+	}
 }
-
 
 textures/tig_ra3/tig_spiderweb4
 {

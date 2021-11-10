@@ -226,8 +226,9 @@ void locateCamera( gentity_t *ent ) {
 
 	owner = G_PickTarget( ent->target );
 	if ( !owner ) {
-		G_Printf( "Couldn't find target for misc_partal_surface\n" );
-		G_FreeEntity( ent );
+    ent->nextthink = level.time + 500;
+		//G_Printf( "Couldn't find target for misc_partal_surface\n" );
+		//G_FreeEntity( ent );
 		return;
 	}
 	ent->r.ownerNum = owner->s.number;

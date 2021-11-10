@@ -1994,6 +1994,46 @@ static qboolean ParseShader( const char **text )
       shader.allowCompress = qfalse;
       continue;
     }
+		// TODO: rewrite these to use everything until the end of the line
+    else if ( !Q_stricmp( token, "dpoffsetmapping" )
+      || !Q_stricmp(token, "dp_refract")) {
+      COM_ParseExt( text, qfalse );
+      token = COM_ParseExt( text, qfalse );
+      if(!Q_stricmp(token, "4")) {
+      } else {
+        COM_ParseExt( text, qfalse );
+        COM_ParseExt( text, qfalse );
+      }
+      continue;
+    }
+    else if ( !Q_stricmp( token, "dpglossexponentmod" )
+      || !Q_stricmp(token, "dpglossintensitymod")) {
+      COM_ParseExt( text, qfalse );
+      continue;
+    }
+    else if ( !Q_stricmp( token, "dp_camera" )
+      || !Q_stricmp(token, "nolightmap")) {
+      continue;
+    }
+    else if (!Q_stricmp(token, "xon_nowarn")) {
+      COM_ParseExt( text, qfalse );
+    }
+    else if (!Q_stricmp(token, "dpreflectcube")) {
+      COM_ParseExt( text, qfalse );
+    }
+    else if (!Q_stricmp(token, "dp_water")) {
+      COM_ParseExt( text, qfalse );
+      COM_ParseExt( text, qfalse );
+      COM_ParseExt( text, qfalse );
+      COM_ParseExt( text, qfalse );
+      COM_ParseExt( text, qfalse );
+      COM_ParseExt( text, qfalse );
+      COM_ParseExt( text, qfalse );
+      COM_ParseExt( text, qfalse );
+      COM_ParseExt( text, qfalse );
+      COM_ParseExt( text, qfalse );
+      COM_ParseExt( text, qfalse );
+    }
 		else
 		{
 			ri.Printf( PRINT_WARNING, "WARNING: unknown general shader parameter '%s' in '%s'\n", token, shader.name );

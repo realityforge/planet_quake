@@ -1330,7 +1330,7 @@ void FireWeapon( gentity_t *ent
 		break;
 	case WP_BFG:
 #ifdef USE_PORTALS
-    if(g_portalsEnabled.integer
+    if(wp_portalEnable.integer
 #ifdef USE_ALT_FIRE
       && !g_altPortal.integer // do both ends with right click, reset each time
 #endif

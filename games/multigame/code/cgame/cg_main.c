@@ -258,7 +258,7 @@ vmCvar_t	cg_gravity;
 vmCvar_t	cg_wallWalk;
 #endif
 #ifdef USE_PORTALS
-vmCvar_t  cg_portalsEnabled;
+vmCvar_t  cgwp_portalEnable;
 vmCvar_t  cg_altPortal;
 #endif
 #ifdef USE_GRAPPLE
@@ -404,7 +404,7 @@ static const cvarTable_t cvarTable[] = {
   { &cg_gunCenter, "cg_gunCenter", "1", CVAR_ARCHIVE },
 #endif
 #ifdef USE_PORTALS
-  { &cg_portalsEnabled,  "g_portalsEnabled", "1", CVAR_SERVERINFO },
+  { &cgwp_portalEnable,  "wp_portalEnable", "1", CVAR_SERVERINFO },
   { &cg_altPortal,       "g_altPortal", "0", CVAR_SERVERINFO },
 #endif
 #ifdef USE_GRAPPLE

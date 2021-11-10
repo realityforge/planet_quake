@@ -3198,6 +3198,8 @@ void SV_SpliceBSP(const char *memoryMap, const char *altName) {
 			//	Com_Printf("end brush: %i\n", offset);
 			if(depth == 2 && isWorldspawn && isInside) {
 				// copy brushes out of worldspawn
+				Q_strncpyz(&output[offset], va("// brush %i\n", brushC), 13);
+				offset += strlen(&output[offset]);
 				Q_strncpyz(&output[offset], &buffer[brushStartPos], count - brushStartPos + 1);
 				offset += strlen(&output[offset]);
 				strcpy(&output[offset], "\n}\n");
@@ -3402,6 +3404,8 @@ int SV_MakeMap( const char **map ) {
 			(char *)Cvar_VariableString("fs_basepath"),
 			"-game",
 			"quake3",
+			"-fs_game",
+			(char *)FS_GetCurrentGameDir(),
 			"-convert",
 			"-keeplights",
 			"-format",
@@ -3426,6 +3430,9 @@ int SV_MakeMap( const char **map ) {
 		mapPath = NULL;
 	}
 
+	// TODO: sv_bspScale that resizes a map like backyard/kitchen/billiardroom/etc
+	//   into small regular size rooms, and opposite, making small maps giant
+
 	// TODO: add levelshot camera location
 	
 	if (!mapPath) {
@@ -3440,6 +3447,8 @@ int SV_MakeMap( const char **map ) {
 				(char *)Cvar_VariableString("fs_basepath"),
 				"-game",
 				"quake3",
+				"-fs_game",
+				(char *)FS_GetCurrentGameDir(),
 				"-meta",
 		    //"-patchmeta", // makes compile  much slower
 				"-keeplights",
@@ -3464,6 +3473,8 @@ int SV_MakeMap( const char **map ) {
 				(char *)Cvar_VariableString("fs_basepath"),
 				"-game",
 				"quake3",
+				"-fs_game",
+				(char *)FS_GetCurrentGameDir(),
 				"-faster",
 				"-cheap",
 				//"-patchshadows",
@@ -3475,12 +3486,12 @@ int SV_MakeMap( const char **map ) {
 				"0",
 				// TODO: one room at a time, and update in between bounces
 				// testing samples that didn't affect speed
-				"-bouncegrid",
-				"-cheapgrid",
-				"-trisoup",
+				//"-bouncegrid",
+				//"-cheapgrid",
+				//"-trisoup",
 				"-notrace",
 				"-samplesize",
-				"64",
+				"128",
 				bspPath
 			};
 			Q3MAP2Main(ARRAY_LEN(compileLight), compileLight);
@@ -3493,16 +3504,18 @@ int SV_MakeMap( const char **map ) {
 				(char *)Cvar_VariableString("fs_basepath"),
 				"-game",
 				"quake3",
+				"-fs_game",
+				(char *)FS_GetCurrentGameDir(),
 				"-fast",
-				//"-patchshadows",
+				"-patchshadows",
 				//"-gridsize",
 				//"512.0 512.0 512.0",
 				"-bounce",
 				"2", // really decent lighting, but not fast enough
-				"-bouncegrid",
-				"-trisoup",
+				//"-bouncegrid",
+				//"-trisoup",
 				"-samplesize",
-				"16",
+				"8",
 				bspPath
 			};
 			Q3MAP2Main(ARRAY_LEN(compileLight), compileLight);

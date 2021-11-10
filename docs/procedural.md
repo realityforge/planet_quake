@@ -29,8 +29,19 @@ Atlantis arena, will be a special kind of water based map where players must swi
 
   * fix skybox detection for new splicing tool
   * use cut out tongue or slicing tool to make a new map with teleporters in between
+  * Recompile every map with new lightmaps and higher res/upscaled images
+  * Connect every map in one giant universe, after removing ceilings (for birds eye), simplifying geometry, and stretching walls slightly outwards (multiply every Z point/total Z as a factor of growth between ceiling and floor so all the walls slant outwards)
+  * Recompile skyboxes with different colors (q3map_skylight) like based on time of day, to make it feel more realistic and melancholic like you've lost a whole day in the game even if you've only been playing an hour. Might need GauGAN
   * Connect virtual-fs for image loading
   * Create voxelized model on server aka "destructible model" and stream to client, replace using z-index?
+  * Use destruction and voxelization on Quake 2 remake where player has to return to previous levels in ruins
   * Add checksum to skip download, also minimize download screen 
   * Remove dependency on client side changes by building a temporary pk3 on the server with zlib (or whatever) and allowing legacy clients to download from that
   * Fix multithreading so console can respond and cancel map generations like a process list/print queue, use this feature for faster map development.
+  * Geometry scaling.
+  * Change color of team models, bases, lights, fogs, flags, etc.
+  * Save space and rendering by only storing half of the BSP file, then switching the shaders and rendering it twice for each side with a "warp zone" in between the colors.
+  * Option to turn on and off carrying flags through portals.
+  * Switch lava and acid or color of void for space maps, light all white maps.
+  * Optional skybox per map setting to replace skybox and "look and feel".
+  * Need a way to edit .map file in engine that feels more natural, possible using laser sight, ruler, sketchup style alignment, turn off mouse capture unless pressing shift or right click

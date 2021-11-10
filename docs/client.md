@@ -13,6 +13,7 @@
 
 ## TODOs
 
+  * Fix Xonotic map shaders by ignoring an entire line after an unsupported parameter?
   * LOD (level of detail) based compression, loading different levels of detail in models and shaders, distance based mipmaps
   * Socks5 based cUrl downloads for downloading over the proxy and avoid content access controls
   * Brotli compression for game content from server UDP downloads
@@ -21,5 +22,6 @@
   * Many BSP formats (Quake 1, Quake 2, Quake 4, Doom 1, Doom 2, Doom 3, Hexen maps) support and cross compatibility with other game content like Call of Duty, Half-Life, and Savage XR
   * move console background image API to server-side with console instead of mod side like in e+/freon.
   * Fix r_fbo and add pixel buffer objects for recordings. Send PBO to a worker thread to encode to VPX-wasm for live streaming.
+  * Something wrong with r_fbo causing driver crash. Need it for hall of mirrors effect for portals.
   * Make all game code entry points asynchronous with engine to run all QVMs in web workers/pthreads. Pause VM for async calls between engine and VM.
   * Allow different VMs on file system by using more search directories and Pure server calls for filtering.

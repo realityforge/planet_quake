@@ -1198,10 +1198,10 @@ if(g_hotBFG.integer) {
 }
 #endif
 #ifdef USE_PORTALS
-  if(g_portalsEnabled.integer && !g_hotBFG.integer) {
+  if(wp_portalEnable.integer && !g_hotBFG.integer) {
     // in alt-fire mode, both ends reset with right click
     // otherwise, use BFG left and right click for both ends
-    client->ps.stats[STAT_WEAPONS] = ( 1 << WP_BFG );
+    client->ps.stats[STAT_WEAPONS] |= ( 1 << WP_BFG );
     client->ps.ammo[WP_BFG] = INFINITE;  
   }
 #endif

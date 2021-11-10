@@ -948,7 +948,7 @@ extern vmCvar_t  wp_flameRadius;
 #endif
 
 #ifdef USE_PORTALS
-extern vmCvar_t  g_portalsEnabled;
+extern vmCvar_t  wp_portalEnable;
 #ifdef USE_ALT_FIRE
 extern vmCvar_t  g_altPortal;
 #endif

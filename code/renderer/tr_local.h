@@ -544,7 +544,25 @@ typedef struct {
 typedef enum {
 	PV_NONE = 0,
 	PV_PORTAL, // this view is through a portal
+	PV_PORTAL1,
+	PV_PORTAL2,
+	PV_PORTAL3,
+	PV_PORTAL4,
+	PV_PORTAL5,
+	PV_PORTAL6,
+	PV_PORTAL7,
+	PV_PORTAL8,
+	PV_PORTAL9,
 	PV_MIRROR, // portal + inverted face culling
+	PV_MIRROR1,
+	PV_MIRROR2,
+	PV_MIRROR3,
+	PV_MIRROR4,
+	PV_MIRROR5,
+	PV_MIRROR6,
+	PV_MIRROR7,
+	PV_MIRROR8,
+	PV_MIRROR9,
 	PV_COUNT
 } portalView_t;
 
@@ -611,7 +629,8 @@ typedef struct litSurf_s {
 } litSurf_t;
 #endif
 
-#define	MAX_FACE_POINTS		64
+#define	MAX_FACE_POINTS		256 // for Xonotic and ET maps
+//#define	MAX_FACE_POINTS		64
 
 #define	MAX_PATCH_SIZE		32			// max dimensions of a patch mesh in map file
 #define	MAX_GRID_SIZE		65			// max dimensions of a grid mesh in memory

@@ -86,6 +86,10 @@ void X_DMG_Init( void )
 
 void X_DMG_ParseSnapshotDamage( void )
 {
+#ifdef USE_MULTIVM_CLIENT
+	int igs = clientGames[cgvmi];
+#endif
+
   if(clc.isMultiGame) {
     return;
   }

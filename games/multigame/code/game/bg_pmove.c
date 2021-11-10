@@ -1817,7 +1817,7 @@ static void PM_Weapon( void ) {
 		break;
 	case WP_BFG:
 #ifdef USE_PORTALS
-    if(g_portalsEnabled.integer) {
+    if(wp_portalEnable.integer) {
       addTime = 1000;
     } else
 #endif
@@ -1851,7 +1851,7 @@ static void PM_Weapon( void ) {
   // Hypo: simple alt-fire example
   if (pm->cmd.buttons & BUTTON_ALT_ATTACK) {
 #ifdef USE_PORTALS
-    if(g_portalsEnabled.integer
+    if(wp_portalEnable.integer
       && pm->ps->weapon == WP_BFG) {
       // do nothing to speed
     } else

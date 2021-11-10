@@ -44,17 +44,24 @@ The following features I've added to baseq3a without affecting the networking pr
 
 ## TODO
 
-  * Fix portal gun. Looking through a standing portal has a weird repetitive effect because of depth write or sorting or something. Turn off depth in shader or skip entity in tr_main.c? Measure/cache midpoint of portal model and use on floor and wall alignment. Fix corners by tracing in server for edges. Add NOPORTAL surfaceParm. Still take falling damage for landing on a portal. Projectiles through portals. Face wall portals like 5 degrees towards player away from original angle. No falling damage while holding the portal gun.
+  * Finish Tig_RA3 demo. Finish portal features below, like interpolation, and seeing one portal surface through another portal, projectiles (distance from origin). Share entities between multiple server qagame QVMs, possibly through the engine itself or a new API call for game/g_*.c  Indicate clientWorld number to camera system in tr_main.c; multiworld portals.  Add `world` game commands when using inter-dimensional teleporters, and set the `sv_mvWorld` designation for managed cameras. Finish multiworld TODOs like not crashing after 10 maps and cvars. 
+  * Rocket Arena maps. Place white return teleporters for arena 0 on player_start positions and going through a portal counts as a vote to white arena to play in. Or use drop command to drop portal connects and in RA mode return to arena 0. Always spawn in arena 0 during intermission until voted, or remove guns from arena 0 and repawn in voted arena.
+  * Shoot portal gun twice to fill a specific area of space on the wall for the portal, generating a new portal model to fit the surface. The portal stretches to cover an entire wall. 3 kinds of portals. Shoot again and the portal goes back to small and round. Maximize at an optional 50 x 50 = 2500 area. Somehow visualize morphing from sphere to whole wall.
+  * Optional for portals to be for 1 individual player, or any player can go through any players portal. NODRAW and SINGLECLIENT flags to be set.
+  * Fix portal gun.  Use teleporter location to draw entities in relative locations on the other side of the jump.  Use a special flag on teleport to tell it where to interpolate for other players even though EF_TELEPORT_BIT is used, just follow velocity backwards one frame on personal teleporters. Looking through a standing portal has a weird repetitive effect because of depth write or sorting or something. Turn off depth in shader or skip entity in tr_main.c? Measure/cache midpoint of portal model and use on floor and wall alignment. Fix corners by tracing in server for edges. Add NOPORTAL surfaceParm. Still take falling damage for landing on a portal. Projectiles through portals. Face wall portals like 5 degrees towards player away from original angle. No falling damage while holding the portal gun.
+  * Teach bots to use portals.
+  * Add features to support other map types like Xonotic (warp zones are just automatically centered cameras with some fancy distortion shaders, Quake 1 did not normally have the camera feature) and QueToo (map format?) and Smokin' Guns probably added a surface parm.
   * Add tracer rounds, ammo clip sized packs for reloading, etc.
   * Infinite haste, how is this different than g_speed? Applies to only one player.
   * Boots that can climb steep slopes. 
   * Jump velocity as a part of anti-gravity boots. 
   * Power-ups cover entire body or just the gun setting from server and client setting. 
   * Add player state to UI QVM so multiple cursors can be shared, and players can see map and game configuration.
-  * Add walk on walls, better movement than trem.
-  * Live-action minimap
+  * Add walk on walls, better movement than Trem.
+  * Live-action minimap, using procedurally generated mini maps, draw small players top-down and glowing like quad damage.
   * Ricochet mode where damage only applies after projectile bounces/splash damage
   * Showing enemy health and armor above their head like an RPG
   * Extra UI menus with multiQVM, for voting on maps and bitcoin setup, Instant replay, consolidate all VM UIs scoreboard/postgame/HUD/menus in to 1 UI system, replace the menu address with an API call.
   * Many mod support, compiling and playing lots of different game types, capture the flag with 3+ teams
   * Campaign mode, playing older engine content and playing as enemy characters, new AI for old enemies
+  * Keep away, where one team has to kill the flag carrier and return they flag to score.

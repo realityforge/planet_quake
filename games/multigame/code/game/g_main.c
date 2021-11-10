@@ -165,7 +165,7 @@ vmCvar_t  wp_flameRadius;
 #endif // USE_WEAPON_VARS
 
 #if defined(USE_PORTALS)
-vmCvar_t  g_portalsEnabled;
+vmCvar_t  wp_portalEnable;
 #if defined(USE_ALT_FIRE)
 vmCvar_t  g_altPortal;
 #endif
@@ -373,12 +373,16 @@ static cvarTable_t gameCvarTable[] = {
   { &wp_bfgTime,           "wp_bfgTime",           "10",   CVAR_ARCHIVE },
 
 #ifdef USE_GRAPPLE
-  { &wp_grappleEnable,     "wp_grappleEnable", "1",    CVAR_ARCHIVE, 0, qfalse },
+  { &wp_grappleEnable,     "wp_grappleEnable", "0",    CVAR_ARCHIVE, 0, qfalse },
   { &wp_grapplePull,       "wp_grapplePull",   "700",  CVAR_ARCHIVE | CVAR_SERVERINFO, 0, qfalse },
   { &wp_grappleCycle,      "wp_grappleCycle",  "400",  CVAR_ARCHIVE | CVAR_SERVERINFO },
   { &wp_grappleDamage,     "wp_grappleDamage", "300",  CVAR_ARCHIVE },
   { &wp_grappleSpeed,      "wp_grappleSpeed",  "2000", CVAR_ARCHIVE, 0, qfalse },
   { &wp_grappleTime,       "wp_grappleDamage", "10.0",   CVAR_ARCHIVE },
+
+#ifdef USE_ALT_FIRE
+  { &g_altGrapple,         "g_altGrapple",     "0",  CVAR_ARCHIVE | CVAR_SERVERINFO },
+#endif
 #endif
 
 #ifdef MISSIONPACK
@@ -410,15 +414,12 @@ static cvarTable_t gameCvarTable[] = {
 
 
 #ifdef USE_PORTALS
-  { &g_portalsEnabled,     "g_portalsEnabled",     "1",  CVAR_ARCHIVE | CVAR_SERVERINFO },
+  { &wp_portalEnable,     "wp_portalEnable",     "0",  CVAR_ARCHIVE | CVAR_SERVERINFO },
 #ifdef USE_ALT_FIRE
   { &g_altPortal,          "g_altPortal",     "0",  CVAR_ARCHIVE | CVAR_SERVERINFO },
 #endif
 #endif
 
-#if defined(USE_ALT_FIRE) && defined(USE_GRAPPLE)
-  { &g_altGrapple,         "g_altGrapple",     "1",  CVAR_ARCHIVE | CVAR_SERVERINFO },
-#endif
 
 #ifdef USE_PHYSICS_VARS
 #ifdef MISSIONPACK
@@ -481,16 +482,16 @@ static cvarTable_t gameCvarTable[] = {
 #endif
 
 #ifdef USE_TRINITY
-  { &g_unholyTrinity, "g_unholyTrinity", "1", CVAR_ARCHIVE, 0, qfalse },
+  { &g_unholyTrinity, "g_unholyTrinity", "0", CVAR_ARCHIVE, 0, qfalse },
 #endif
 #ifdef USE_INSTAGIB
-  { &g_instagib, "g_instagib", "1", CVAR_ARCHIVE, 0, qfalse },
+  { &g_instagib, "g_instagib", "0", CVAR_ARCHIVE, 0, qfalse },
 #endif
 #ifdef USE_HOTRPG
-  { &g_hotRockets, "g_hotRockets", "1", CVAR_ARCHIVE, 0, qfalse },
+  { &g_hotRockets, "g_hotRockets", "0", CVAR_ARCHIVE, 0, qfalse },
 #endif
 #ifdef USE_HOTBFG
-  { &g_hotBFG, "g_hotBFG", "1", CVAR_ARCHIVE, 0, qfalse },
+  { &g_hotBFG, "g_hotBFG", "0", CVAR_ARCHIVE, 0, qfalse },
 #endif
 
 #ifdef USE_WEAPON_ORDER

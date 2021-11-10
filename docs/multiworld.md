@@ -19,6 +19,8 @@ Finally, I want to use multiworld for streaming game content to clients. Where t
 
 ## TODO
 
+  * Connect `scores` commands from all games so players show in the same game. Connect player scores/powerups/health/stats/etc from world to world using SV_RestoreClient?
+  * Fix multiworld cvar system is severly broken.
   * Filesystem switching mask so multiple mods can be loaded at the same time
   * "demoMap" surface parm which renders demos to an arbitrary surface
   * Use scripting in kiosk mode multiple demo files at once
