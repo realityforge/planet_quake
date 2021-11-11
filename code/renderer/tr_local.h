@@ -1344,6 +1344,13 @@ extern cvar_t	*r_lazyLoad;
 #endif
 extern  cvar_t  *r_paletteMode;
 
+#ifdef USE_MULTIVM_CLIENT
+extern float dvrXScale;
+extern float dvrYScale;
+extern float dvrXOffset;
+extern float dvrYOffset;
+#endif
+
 //====================================================================
 
 void R_SwapBuffers( int );
@@ -1445,9 +1452,15 @@ void		RE_UploadCinematic( int w, int h, int cols, int rows, byte *data, int clie
 void		RE_BeginFrame( stereoFrame_t stereoFrame );
 void		RE_BeginRegistration( glconfig_t *glconfig );
 void		RE_LoadWorldMap( const char *mapname );
+#ifdef USE_MULTIVM_CLIENT
+void		RE_SwitchWorld( int world );
+#endif
 void		RE_SetWorldVisData( const byte *vis );
 qhandle_t	RE_RegisterModel( const char *name );
 qhandle_t	RE_RegisterSkin( const char *name );
+#ifdef USE_MULTIVM_CLIENT
+void RE_SetDvrFrame( float x, float y, float width, float height );
+#endif
 
 qboolean	RE_GetEntityToken( char *buffer, int size );
 

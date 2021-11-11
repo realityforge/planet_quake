@@ -2346,10 +2346,10 @@ typedef enum {
 } origin_enum_t;
 
 void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, vec3_t *newOrigin ) {
-	int		clientNum, i;
+	int		clientNum; //, i;
 	int oldDelta[3];
 	sharedEntity_t *ent;
-	playerState_t	*ps, *rez, oldps;
+	playerState_t	*ps, oldps;
 	vec3_t newAngles;
 	//gentity_t *gent, oldEnt;
 	

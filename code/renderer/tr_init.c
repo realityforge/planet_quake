@@ -185,6 +185,13 @@ cvar_t	*r_lazyLoad;
 #endif
 cvar_t  *r_paletteMode;
 
+#ifdef USE_MULTIVM_CLIENT
+float dvrXScale = 1;
+float dvrYScale = 1;
+float dvrXOffset = 0;
+float dvrYOffset = 0;
+#endif
+
 static char gl_extensions[ 32768 ];
 
 #define GLE( ret, name, ... ) ret ( APIENTRY * q##name )( __VA_ARGS__ );
@@ -1842,6 +1849,19 @@ static void RE_EndRegistration( void ) {
 	//}
 }
 
+
+#ifdef USE_LAZY_MEMORY
+#ifdef USE_MULTIVM_CLIENT
+void RE_SetDvrFrame(float x, float y, float width, float height) {
+	dvrXScale = width;
+	dvrYScale = height;
+	dvrXOffset = x;
+	dvrYOffset = y;
+}
+#endif
+#endif
+
+
 static const cplane_t *RE_GetFrustum( void )
 {
 	return tr.viewParms.frustum;
@@ -1929,6 +1949,10 @@ refexport_t *GetRefAPI ( int apiVersion, refimport_t *rimp ) {
 #endif
 
 #ifdef USE_LAZY_MEMORY
+#ifdef USE_MULTIVM_CLIENT
+	re.SetDvrFrame = RE_SetDvrFrame;
+  re.SwitchWorld = RE_SwitchWorld;
+#endif
 	re.ReloadShaders = RE_ReloadShaders;
 #endif
 

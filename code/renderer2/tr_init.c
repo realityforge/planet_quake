@@ -222,10 +222,12 @@ cvar_t  *r_paletteMode;
 cvar_t  *r_seeThroughWalls;
 cvar_t	*r_zfar;
 
+#ifdef USE_MULTIVM_CLIENT
 float dvrXScale = 1;
 float dvrYScale = 1;
 float dvrXOffset = 0;
 float dvrYOffset = 0;
+#endif
 
 cvar_t  *r_inputShader;
 cvar_t  *r_cursorShader;

@@ -435,8 +435,12 @@ static void R_LoadLightmaps( const lump_t *l ) {
 	tr.lightmaps = ri.Hunk_Alloc( tr.numLightmaps * sizeof(image_t *), h_low );
 	for ( i = 0 ; i < tr.numLightmaps ; i++ ) {
 		maxIntensity = R_ProcessLightmap( image, buf + i * LIGHTMAP_SIZE * LIGHTMAP_SIZE * 3, maxIntensity );
+#ifdef USE_MULTIVM_CLIENT
+		s_worldData.lightmaps[i] = tr.lightmaps[i] = R_CreateImage(va("*lightmap_%d_%d", rwi, i), NULL, image, LIGHTMAP_SIZE, LIGHTMAP_SIZE, lightmapFlags | IMGFLAG_CLAMPTOEDGE );
+#else
 		tr.lightmaps[i] = R_CreateImage( va( "*lightmap%d", i ), NULL, image, LIGHTMAP_SIZE, LIGHTMAP_SIZE,
 			lightmapFlags | IMGFLAG_CLAMPTOEDGE );
+#endif
 	}
 
 	//if ( r_lightmap->integer == 2 )	{
@@ -2158,6 +2162,22 @@ static void R_LoadEntities( const lump_t *l ) {
 }
 
 
+#ifdef USE_LAZY_MEMORY
+#ifdef USE_MULTIVM_CLIENT
+void RE_SwitchWorld(int w) {
+  //ri.Printf( PRINT_ALL, "Switching renderers %i -> %i\n", rwi, w );
+	R_IssuePendingRenderCommands();
+	rwi = w;
+	tr.world = &s_worldData;
+	// reassign bmodels to same position as server entities
+	tr.numLightmaps = s_worldData.numLightmaps;
+	tr.lightmaps = s_worldData.lightmaps;
+	//GLSL_InitGPUShaders();
+}
+#endif
+#endif
+
+
 /*
 =================
 RE_GetEntityToken
@@ -2194,6 +2214,24 @@ void RE_LoadWorldMap( const char *name ) {
 	} buffer;
 	byte		*startMarker;
 
+#ifdef USE_MULTIVM_CLIENT
+	int j, empty = -1;
+	for(j = 0; j < MAX_NUM_WORLDS; j++) {
+		if ( !Q_stricmp( s_worldDatas[j].name, name ) ) {
+			// TODO: PRINT_DEVELOPER
+			ri.Printf( PRINT_ALL, "RE_LoadWorldMap( Already loaded %s )\n", name );
+#ifdef USE_LAZY_MEMORY
+			RE_SwitchWorld(j);
+#endif
+			return;
+		} else if (s_worldDatas[j].name[0] == '\0' && empty == -1) {
+			// load additional world in to next slot
+			empty = j;
+		}
+	}
+	rwi = empty;
+	// TODO: if (empty == -1) FreeOldestClipmap
+#else
 	if ( tr.worldMapLoaded ) {
 #ifdef USE_LAZY_MEMORY
   	ri.Printf( PRINT_WARNING, "ERROR: attempted to redundantly load world map\n" );
@@ -2201,6 +2239,7 @@ void RE_LoadWorldMap( const char *name ) {
 		ri.Error( ERR_DROP, "ERROR: attempted to redundantly load world map" );
 #endif
 	}
+#endif
 
 	// set default sun direction to be used if it isn't
 	// overridden by a shader
