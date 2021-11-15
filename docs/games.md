@@ -65,3 +65,5 @@ The following features I've added to baseq3a without affecting the networking pr
   * Many mod support, compiling and playing lots of different game types, capture the flag with 3+ teams
   * Campaign mode, playing older engine content and playing as enemy characters, new AI for old enemies
   * Keep away, where one team has to kill the flag carrier and return they flag to score.
+  * Add light coming from player to flashlight command so even if you're pointing at the sky it looks like a flashlight is on.
+  * Make "tech-demo" as an example of some game dynamic. Make a Matrix mod that loads the white loading program and jump simulation and UrT subway. Make a space to planet landing sequence with death modes. https://www.youtube.com/watch?v=sLqXFF8mlEU

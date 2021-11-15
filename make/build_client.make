@@ -52,7 +52,7 @@ endif
 QCOMMON          := cmd.o common.o cvar.o files.o history.o keys.o md4.o \
                     md5.o msg.o net_chan.o net_ip.o qrcodegen.o huffman.o \
                     huffman_static.o q_math.o q_shared.o puff.o \
-										cvar_descriptions.o cmd_descriptions.o
+										cvar_descriptions.o cmd_descriptions.o splines.o
 ifeq ($(USE_SYSTEM_ZLIB),0)
 QCOMMON          += unzip.o
 endif
@@ -145,13 +145,13 @@ endif
 VIDEO            :=
 # TODO static linking? have to switch to gnu++
 #ifeq ($(USE_CIN_VPX),1)
-#VIDEO    += webmdec.o
-#LIBS     += $(VPX_LIBS) $(VORBIS_LIBS) $(OPUS_LIBS)
-#INCLUDES += libs/libvpx-1.10 \
-            libs/libvorbis-1.3.7/include \
-            libs/opus-1.3.1/include \
-            libs/libogg-1.3.4/include \
-            libs/libvpx-1.10/third_party/libwebm
+#VIDEO           += webmdec.o
+#LIBS            += $(VPX_LIBS) $(VORBIS_LIBS) $(OPUS_LIBS)
+#INCLUDES        += libs/libvpx-1.10 \
+                    libs/libvorbis-1.3.7/include \
+                    libs/opus-1.3.1/include \
+                    libs/libogg-1.3.4/include \
+                    libs/libvpx-1.10/third_party/libwebm
 #endif
 
 ifeq ($(USE_VIDEO_XVID),1)
@@ -175,13 +175,13 @@ endif
 CFILES           := $(foreach dir,$(SOURCES), $(wildcard $(dir)/cl_*.c)) \
                     $(CLIPMAP) $(QCOMMON) $(SOUND) $(VIDEO) $(VM) \
                     $(CURL) $(SYSTEM)
-            
+
 ifneq ($(BUILD_SLIM_CLIENT),1)
 ifneq ($(USE_BOTLIB_DLOPEN),1)
 CFILES           += $(foreach dir,$(SOURCES), $(wildcard $(dir)/be_*.c)) \
                     $(foreach dir,$(SOURCES), $(wildcard $(dir)/l_*.c))
 endif
-#CFILES           += $(filter-out $(wildcard $(MOUNT_DIR)/server/sv_demo*.c),$(foreach dir,$(SOURCES), $(wildcard $(dir)/sv_*.c)))
+#CFILES          += $(filter-out $(wildcard $(MOUNT_DIR)/server/sv_demo*.c),$(foreach dir,$(SOURCES), $(wildcard $(dir)/sv_*.c)))
 CFILES           += $(foreach dir,$(SOURCES), $(wildcard $(dir)/sv_*.c))
 else
 CFILES           += $(MOUNT_DIR)/botlib/be_interface.c \
