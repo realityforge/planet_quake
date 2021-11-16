@@ -529,7 +529,7 @@ void parseSplines(const char *(*text), idSplineList *spline ) {
  
 	//Com_UngetToken();
 	//Com_MatchToken( text, "}" );
-	dirty = qtrue;
+	spline->dirty = qtrue;
 }
 
 void idSplineList::write(fileHandle_t file, const char *p) {
