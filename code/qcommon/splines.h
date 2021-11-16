@@ -38,13 +38,13 @@ static vec4_t red = {1, 0, 0, 1};
 //public:
 
 //virtual 
-void addPointXYZ(const float x, const float y, const float z) {}
+//void addPointXYZ(const float x, const float y, const float z);
 //virtual 
-void addPoint(const vec3_t v) {}
+//void addPoint(const vec3_t v);
 //virtual 
-void removePoint(int index) {}
+//void removePoint(int index);
 //virtual 
-vec3_t *getPoint(int index) { return NULL; }
+vec3_t *getPoint(int index);
 
 //protected:
 //static int *selectedPoints;
@@ -160,9 +160,12 @@ void drawSelection() {
 typedef struct {
 	char name[MAX_QPATH];
 	vec3_t *controlPoints;
+	int    numControlPoints;
 	vec3_t *splinePoints;
+	int    numSplinePoints;
 	double *splineTime;
 	vec3_t *selected;
+	int    numSelected;
 	vec3_t pathColor, segmentColor, controlColor, activeColor;
 	float granularity;
 	qboolean editMode;
@@ -180,35 +183,29 @@ idSplineList *initSplineList(const char *p) {
 	return result;
 }
 
-void clearControl() {
-	for (int i = 0; i < controlPoints.Num(); i++) {
-		delete controlPoints[i];
-	}
-	controlPoints.Clear();
-}
-
-void clearSpline() {
-	for (int i = 0; i < splinePoints.Num(); i++) {
-		delete splinePoints[i];
-	}
-	splinePoints.Clear();
-}
-
 void parse(const char *(*text));
 void write(fileHandle_t file, const char *name);
 
-void clear() {
-	clearControl();
-	clearSpline();
-	splineTime.Clear();
-	selected = NULL;
-	dirty = true;
-	activeSegment = 0;
-	granularity = 0.025;
-	pathColor.set(1.0, 0.5, 0.0);
-	controlColor.set(0.7, 0.0, 1.0);
-	segmentColor.set(0.0, 0.0, 1.0);
-	activeColor.set(1.0, 0.0, 0.0);
+void clearSplineList(idSplineList *spline) {
+	Z_Free(spline->controlPoints);
+	Z_Free(spline->splinePoints);
+	Z_Free(spline->splineTime);
+	spline->selected = NULL;
+	spline->dirty = qtrue;
+	spline->activeSegment = 0;
+	spline->granularity = 0.025;
+	spline->pathColor[0] = 1.0;
+	spline->pathColor[1] = 0.5;
+	spline->pathColor[2] = 0.0;
+	spline->controlColor[0] = 0.7;
+	spline->controlColor[1] = 0.0;
+	spline->controlColor[2] = 1.0;
+	spline->segmentColor[0] = 0.0;
+	spline->segmentColor[1] = 0.0;
+	spline->segmentColor[2] = 1.0;
+	spline->activeColor[0] = 1.0;
+	spline->activeColor[1] = 0.0;
+	spline->activeColor[2] = 0.0;
 }
 
 void initPosition(long startTime, long totalTime);
@@ -216,25 +213,22 @@ const vec3_t *getPosition(long time);
 
 
 //	void draw(qboolean editMode);
-void addToRenderer();
+void addToRenderer( void );
 
-void setSelectedPoint(vec3_t *p);
-vec3_t *getSelectedPoint() {
-	return selected;
+void addPoint(const vec3_t v, idSplineList *spline) {
+	VectorCopy(v, spline->controlPoints[spline->numControlPoints]);
+	spline->numControlPoints++;
+	spline->dirty = qtrue;
 }
 
-void addPoint(const vec3_t &v) {
-	controlPoints.Append(new vec3_t(v));
-	dirty = qtrue;
+void addPointXYZ(float x, float y, float z, idSplineList *spline) {
+	addPoint((vec3_t){x, y, z}, spline);
+	spline->dirty = qtrue;
 }
 
-void addPoint(float x, float y, float z) {
-	controlPoints.Append(new vec3_t(x, y, z));
-	dirty = qtrue;
-}
+//void updateSelection(const vec3_t move);
 
-void updateSelection(const vec3_t &move);
-
+/*
 void startEdit() {
 	editMode = qtrue;
 }
@@ -256,36 +250,37 @@ float getGranularity() {
 int numPoints() {
 	return controlPoints.Num();
 }
+*/
 
-vec3_t *getPoint(int index) {
-	assert(index >= 0 && index < controlPoints.Num());
-	return controlPoints[index];
+vec3_t *getPoint(int index, idSplineList *spline) {
+	assert(index >= 0 && index < spline->numControlPoints);
+	return &spline->controlPoints[index];
 }
 
-vec3_t *getSegmentPoint(int index) {
-	assert(index >= 0 && index < splinePoints.Num());
-	return splinePoints[index];
+vec3_t *getSegmentPoint(int index, idSplineList *spline) {
+	assert(index >= 0 && index < spline->numSplinePoints);
+	return &spline->splinePoints[index];
 }
 
 
-void setSegmentTime(int index, int time) {
-	assert(index >= 0 && index < splinePoints.Num());
-	splineTime[index] = time;
+void setSegmentTime(int index, int time, idSplineList *spline) {
+	assert(index >= 0 && index < spline->numSplinePoints);
+	spline->splineTime[index] = time;
 }
 
-double getSegmentTime(int index) {
-	assert(index >= 0 && index < splinePoints.Num());
-	return splineTime[index];
+double getSegmentTime(int index, idSplineList *spline) {
+	assert(index >= 0 && index < spline->numSplinePoints);
+	return spline->splineTime[index];
 }
-void addSegmentTime(int index, int time) {
-	assert(index >= 0 && index < splinePoints.Num());
-	splineTime[index] += time;
+void addSegmentTime(int index, int time, idSplineList *spline) {
+	assert(index >= 0 && index < spline->numSplinePoints);
+	spline->splineTime[index] += time;
 }
 
-float totalDistance();
+float totalDistance( void );
 
-static vec3_t zero;
-
+/*
+TODO: call this crap directly on object, it's 1 fucking line
 int getActiveSegment() {
 	return activeSegment;
 }
@@ -298,14 +293,16 @@ void setActiveSegment(int i) {
 int numSegments() {
 	return splinePoints.Num();
 }
+*/
 
-void setColors(vec3_t &path, vec3_t &segment, vec3_t &control, vec3_t &active) {
-	pathColor = path;
-	segmentColor = segment;
-	controlColor = control;
-	activeColor = active;
+void setColors(vec3_t path, vec3_t segment, vec3_t control, vec3_t active, idSplineList *spline) {
+	VectorCopy(path, spline->pathColor);
+	VectorCopy(segment, spline->segmentColor);
+	VectorCopy(control, spline->controlColor);
+	VectorCopy(active, spline->activeColor);
 }
 
+/*
 const char *getName() {
 	return name.c_str();
 }
@@ -313,16 +310,17 @@ const char *getName() {
 void setName(const char *p) {
 	name = p;
 }
+*/
 
-qboolean validTime() {
-	if (dirty) {
+qboolean validTime(idSplineList *spline) {
+	if (spline->dirty) {
 		buildSpline();
 	}
-	// gcc doesn't allow static casting away from bools
-	// why?  I've no idea...
-	return (bool)(splineTime.Num() > 0 && splineTime.Num() == splinePoints.Num());
+	return spline->numSplinePoints > 0; // && spline->numSplinePoints == spline->numSplinePoints);
 }
 
+
+/*
 void setTime(long t) {
 	time = t;
 }
@@ -330,17 +328,22 @@ void setTime(long t) {
 void setBaseTime(long t) {
 	baseTime = t;
 }
+*/
 
 float calcSpline(int step, float tension);
+
+
 
 // time in milliseconds 
 // velocity where 1.0 equal rough walking speed
 typedef struct {
+/*
 idVelocity(long start, long duration, float s) {
 	startTime = start;
 	time = duration;
 	speed = s;
 }
+*/
 long	startTime;
 long	time;
 float	speed;
@@ -351,52 +354,54 @@ float	speed;
 // can either be a look at or origin position for a camera
 // 
 //class idCameraPosition : public idPointListInterface {
-//public:
-
-void clear() {
-	editMode = false;
-	for (int i = 0; i < velocities.Num(); i++) {
-		delete velocities[i];
-		velocities[i] = NULL;
-	}
-	velocities.Clear();
-}
-
-idCameraPosition(const char *p) {
-	name = p;
-}
-
-idCameraPosition() {
-	time = 0;
-	name = "position";
-}
-
-idCameraPosition(long t) {
-	time = t;
-}
-
-//virtual
-// ~idCameraPosition() {
-//	clear();
-//}
-
 
 // this can be done with RTTI syntax but i like the derived classes setting a type
 // makes serialization a bit easier to see
 //
 typedef enum {
-	FIXED = 0x00,
-	INTERPOLATED,
-	SPLINE,
+	CP_FIXED = 0x00,
+	CP_INTERPOLATED,
+	CP_SPLINE,
 	POSITION_COUNT
-} positionType;
+} positionType;
 
+//protected:
+typedef struct {
+	vec3_t *points;
+	int numPoints;
+	const char* positionStr[POSITION_COUNT];
+	long		startTime;
+	long		time;
+	positionType type;
+	char		name[MAX_QPATH];
+	qboolean	editMode;
+	idVelocity *velocities;
+	int numVelocities;
+	float		baseVelocity;
+} idCameraPosition;
 
-//virtual 
-void start(long t) {
-	startTime = t;
+//public:
+
+idCameraPosition *initCameraPosition(const char *p, long t) {
+	idCameraPosition *result = Z_Malloc(sizeof(idCameraPosition));
+	result->time = t;
+	if(!p[0])
+		memcpy(result->name, "position", sizeof(result->name));
+	else
+		memcpy(result->name, p, sizeof(result->name));
+	return result;
 }
 
+void clearPosition(idCameraPosition *pos) {
+	pos->editMode = qfalse;
+	for (int i = 0; i < pos->numVelocities; i++) {
+		Z_Free(pos->velocities);
+	}
+	pos->numVelocities = 0;
+}
+
+
+/*
 long getTime() {
 	return time;
 }
@@ -405,19 +410,22 @@ long getTime() {
 void setTime(long t) {
 	time = t;
 }
+*/
 
-float getVelocity(long t) {
-	long check = t - startTime;
-	for (int i = 0; i < velocities.Num(); i++) {
-		if (check >= velocities[i]->startTime && check <= velocities[i]->startTime + velocities[i]->time) {
-			return velocities[i]->speed;
+
+float getVelocity(long t, idCameraPosition *pos) {
+	long check = t - pos->startTime;
+	for (int i = 0; i < pos->numVelocities; i++) {
+		if (check >= pos->velocities[i]->startTime && check <= pos->velocities[i]->startTime + pos->velocities[i]->time) {
+			return pos->velocities[i]->speed;
 		}
 	}
-	return baseVelocity;
+	return pos->baseVelocity;
 }
 
-void addVelocity(long start, long duration, float speed) {
-	velocities.Append(new idVelocity(start, duration, speed));
+void addVelocity(long start, long duration, float speed, idCameraPosition *pos) {
+	pos->velocities[pos->numVelocities] = Z_Malloc(sizeof(idVelocity));
+	pos->numVelocities++;
 }
 
 //virtual 
@@ -435,6 +443,7 @@ void write(fileHandle_t file, const char *name);
 //virtual 
 qboolean parseToken(const char *key, const char *(*text));
 
+/*
 const char *getName() {
 	return name.c_str();
 }
@@ -442,15 +451,16 @@ const char *getName() {
 void setName(const char *p) {
 	name = p;
 }
+*/
 
 //virtual 
 void startEdit() {
-	editMode = true;
+	editMode = qtrue;
 }
 
 //virtual 
 void stopEdit() {
-	editMode = false;
+	editMode = qfalse;
 }
 
 //	virtual void draw() {};
@@ -464,39 +474,30 @@ void calcVelocity(float distance) {
 	baseVelocity = distance / secs;
 }
 
-//protected:
-typedef struct {
-	const char* positionStr[POSITION_COUNT];
-	long		startTime;
-	long		time;
-	positionType type;
-	char		name[MAX_QPATH];
-	qboolean	editMode;
-	idVelocity *velocities;
-	float		baseVelocity;
-} idCameraPosition;
 //};
 
 
 
 
 //class idFixedPosition : public idCameraPosition {
+//protected:
+typedef struct {
+	idCameraPosition *base;
+	vec3_t			     pos;
+} idFixedPosition;
+
+
 //public:
 
-void init() {
-	pos.Zero();
-	type = idCameraPosition::FIXED;
+idFixedPosition *initFixedPosition(vec3_t p) {
+	idFixedPosition *result = Z_Malloc(sizeof(idFixedPosition));
+	result->base = initCameraPosition("fixed", 0);
+	VectorClear(result->pos);
+	result->base->type = CP_FIXED;
+	return result;
 }
 
-idFixedPosition() : idCameraPosition() {
-	init();
-}
-
-idFixedPosition(vec3_t p) : idCameraPosition() {
-	init();
-	pos = p;
-}
-
+/*
 //virtual 
 void addPoint(const vec3_t &v) {
 	pos = v;
@@ -505,10 +506,6 @@ void addPoint(const vec3_t &v) {
 //virtual 
 void addPoint(const float x, const float y, const float z) {
 	pos.set(x, y, z);
-}
-
-
-~idFixedPosition() {
 }
 
 //virtual 
@@ -531,39 +528,42 @@ vec3_t *getPoint(int index) {
 	};
 	return &pos;
 }
+*/
+
+
 /*
 virtual void draw(qboolean editMode) {
 	glLabeledPoint(blue, pos, (editMode) ? 5 : 3, "Fixed point");
 }
 */
-//protected:
-vec3_t pos;
+
 //};
 
 
 
 
 //class idInterpolatedPosition : public idCameraPosition {
+
+//protected:
+typedef struct {
+	idCameraPosition *pos;
+	qboolean first;
+	vec3_t startPos;
+	vec3_t endPos;
+	long lastTime;
+	float distSoFar;
+} idInterpolatedPosition
+
 //public:
 
-void init() {
-	type = idCameraPosition::INTERPOLATED;
-	first = true;
-	startPos.Zero();
-	endPos.Zero();
-}
-
-idInterpolatedPosition() : idCameraPosition() {
-	init();
-}
-
-idInterpolatedPosition(vec3_t start, vec3_t end, long time) : idCameraPosition(time) {
-	init();
-	startPos = start;
-	endPos = end;
-}
-
-~idInterpolatedPosition() {
+idInterpolatedPosition *initInterpolatedPosition(vec3_t start, vec3_t end, long time) {
+	idInterpolatedPosition *result = Z_Malloc(sizeof(idInterpolatedPosition));
+	result->pos = initCameraPosition("interpolated", time);
+	result->post->type = CP_INTERPOLATED;
+	result->first = qtrue;
+	VectorClear(result->startPos);
+	VectorClear(result->endPos);
+	return result;
 }
 
 //virtual 
@@ -590,21 +590,21 @@ vec3_t *getPoint(int index) {
 void addPoint(const float x, const float y, const float z) {
 	if (first) {
 		startPos.set(x, y, z);
-		first = false;
+		first = qfalse;
 	} else {
 		endPos.set(x, y, z);
-		first = true;
+		first = qtrue;
 	}
 }
 
 //virtual 
-void addPoint(const vec3_t &v) {
+void addPoint(const vec3_t v) {
 	if (first) {
 		startPos = v;
-		first = false;
+		first = qfalse;
 	} else {
 		endPos = v;
-		first = true;
+		first = qtrue;
 	}
 }
 /*
@@ -618,46 +618,42 @@ virtual void draw(qboolean editMode) {
 }
 */
 //virtual 
-void start(long t) {
-	idCameraPosition::start(t);
-	lastTime = startTime;
-	distSoFar = 0.0;
-	vec3_t temp = startPos;
-	temp -= endPos;
-	calcVelocity(temp.Length());
+void startInterpolatedPosition(long t, idInterpolatedPosition *ip) {
+	vec3_t temp;
+	ip->pos->startTime = t;
+	ip->lastTime = ip->pos->startTime;
+	ip->distSoFar = 0.0;
+	VectorCopy(ip->startPos, temp);
+	VectorSubtract(ip->startPos, ip->endPos, temp);
+	calcVelocity(VectorNormalize(temp));
 }
 
-//protected:
-qboolean first;
-vec3_t startPos;
-vec3_t endPos;
-long lastTime;
-float distSoFar;
 //};
 
+
+
+
 //class idSplinePosition : public idCameraPosition {
+//protected:
+typedef struct {
+	idCameraPosition *pos;
+	idSplineList *target;
+} idSplinePosition;
+
 //public:
 
-void init() {
-	type = idCameraPosition::SPLINE;
-}
-
-idSplinePosition() : idCameraPosition() {
-	init();
-}
-
-idSplinePosition(long time) : idCameraPosition(time) {
-	init();
-}
-
-~idSplinePosition() {
+idSplinePosition *initSplinePosition(long time) {
+	idSplinePosition *result = Z_Malloc(sizeof(idSplinePosition));
+	result->pos = initCameraPosition("spline", time);
+	result->target = initSplineList("");
+	return result;
 }
 
 //virtual 
-void start(long t) {
-	idCameraPosition::start(t);
-	target.initPosition(t, time);
-	calcVelocity(target.totalDistance());
+void startSplinePosition(long t, idSplinePosition *sp) {
+	sp->pos->startTime = t;
+	sp->target.initPosition(t, time);
+	calcVelocity(sp->target.totalDistance());
 }
 
 //virtual 
@@ -699,62 +695,17 @@ void addPoint(const float x, const float y, const float z) {
 }
 */
 //virtual 
-void updateSelection(const vec3_t &move) {
+void updateSelection(const vec3_t move) {
 	idCameraPosition::updateSelection(move);
 	target.buildSpline();
 }
 
-//protected:
-idSplineList target;
 //};
 
 
 
 
 //class idCameraFOV {
-//public:
-
-idCameraFOV() {
-	time = 0;
-	fov = 90;
-}
-
-idCameraFOV(int v) {
-	time = 0;
-	fov = v;
-}
-
-idCameraFOV(int s, int e, long t) {
-	startFOV = s;
-	endFOV = e;
-	time = t;
-}
-
-
-//~idCameraFOV(){}
-
-void setFOV(float f) {
-	fov = f;
-}
-
-float getFOV(long t) {
-	if (time) {
-		assert(startTime);
-		float percent = t / startTime;
-		float temp = startFOV - endFOV;
-		temp *= percent;
-		fov = startFOV + temp;
-	}
-	return fov;
-}
-
-void start(long t) {
-	startTime = t;
-}
-
-void parse(const char *(*text));
-void write(fileHandle_t file, const char *name);
-
 //protected:
 typedef struct {
 	float fov;
@@ -763,6 +714,38 @@ typedef struct {
 	int startTime;
 	int time;
 } idCameraFOV;
+
+//public:
+
+idCameraFOV *initCameraFOV(int s, int e, long t, int v) {
+	idCameraFOV *result = Z_Malloc(sizeof(idCameraFOV));
+	result->startFOV = s;
+	result->endFOV = e;
+	result->time = t;
+	result->fov = v;
+	return result;
+}
+
+//~idCameraFOV(){}
+
+float getFOV(long t, idCameraFOV *fov) {
+	if (time) {
+		assert(fov->startTime);
+		float percent = t / fov->startTime;
+		float temp = fov->startFOV - fov->endFOV;
+		temp *= percent;
+		fov->fov = fov->startFOV + temp;
+	}
+	return fov->fov;
+}
+
+//void start(long t) {
+//	startTime = t;
+//}
+
+void parse(const char *(*text));
+void write(fileHandle_t file, const char *name);
+
 //};
 
 
@@ -820,6 +803,8 @@ const char *getParam() {
 	return paramStr.c_str();
 }
 
+
+/*
 long getTime() {
 	return time;
 }
@@ -838,48 +823,68 @@ void setTriggered(qboolean b) {
 qboolean getTriggered() {
 	return triggered;
 }
+*/
 
 
 
 //class idCameraDef {
+
+//protected:
+typedef struct {
+	char name[MAX_QPATH];
+	int currentCameraPosition;
+	vec3_t lastDirection;
+	qboolean cameraRunning;
+	idCameraPosition *cameraPosition;
+	int numCameraPositions;
+	idCameraPosition *targetPositions;
+	int numTargetPositions;
+	idCameraEvent *events;
+	int numEvents;
+	idCameraFOV *fov;
+	int activeTarget;
+	float totalTime;
+	float baseTime;
+	long startTime;
+
+	qboolean cameraEdit;
+	qboolean editMode;
+} idCameraDef;
+
 //public:
 
-void cameraClear() {
-	currentCameraPosition = 0;
-	cameraRunning = qfalse;
-	lastDirection.Zero();
-	baseTime = 30;
-	activeTarget = 0;
-	name = "camera01";
-	fov.setFOV(90);
+void clearCamera(idCameraDef *cam) {
+	cam->currentCameraPosition = 0;
+	cam->cameraRunning = qfalse;
+	VectorClear(cam->lastDirection);
+	cam->baseTime = 30;
+	cam->activeTarget = 0;
+	memcpy(cam->name, "camera01", sizeof(cam->name));
+	cam->fov->fov = 90;
 	int i;
-	for (i = 0; i < targetPositions.Num(); i++) {
-		delete targetPositions[i];
-	}
-	for (i = 0; i < events.Num(); i++) {
-		delete events[i];
-	}
-	delete cameraPosition;
-	cameraPosition = NULL;
-	events.Clear();
-	targetPositions.Clear();
+	Z_Free(cam->targetPositions);
+	cam->targetPositions = NULL;
+	Z_Free(cam->events);
+	cam->numEvents = 0;
+	Z_Free(cam->cameraPosition);
+	cam->cameraPosition = NULL;
 }
 
 
-idCameraPosition *startNewCamera(idCameraPosition::positionType type) {
-	clear();
-	if (type == idCameraPosition::SPLINE) {
-		cameraPosition = new idSplinePosition();
-	} else if (type == idCameraPosition::INTERPOLATED) {
-		cameraPosition = new idInterpolatedPosition();
+idCameraPosition *startNewCamera(positionType type, idCameraDef *cam) {
+	clearCamera(cam);
+	if (type == CP_SPLINE) {
+		cam->cameraPosition = initSplinePosition();
+	} else if (type == CP_INTERPOLATED) {
+		cam->cameraPosition = initInterpolatedPosition();
 	} else {
-		cameraPosition = new idFixedPosition();
+		cam->cameraPosition = initFixedPosition();
 	}
-	return cameraPosition;
+	return cam->cameraPosition;
 }
 
 
-void addEvent(idCameraEvent::eventType t, const char *param, long time);
+void addEvent(eventType t, const char *param, long time);
 void addEvent(idCameraEvent *event);
 static int sortEvents(const void *p1, const void *p2);
 
@@ -887,9 +892,9 @@ int numEvents() {
 	return events.Num();
 }
 
-idCameraEvent *getEvent(int index) {
-	assert(index >= 0 && index < events.Num());
-	return events[index];
+idCameraEvent *getEvent(int index, idCameraDef *cam) {
+	assert(index >= 0 && index < cam->numEvents);
+	return cam->events[index];
 }
 
 void parse(const char *(*text));
@@ -902,53 +907,49 @@ void buildCamera();
 //	return &cameraPosition;
 //}
 
-static idCameraPosition *newFromType(idCameraPosition::positionType t) {
+static idCameraPosition *newFromType(positionType t) {
 	switch (t) {
-		case idCameraPosition::FIXED : return new idFixedPosition();
-		case idCameraPosition::INTERPOLATED : return new idInterpolatedPosition();
-	case idCameraPosition::SPLINE : return new idSplinePosition();
+		case CP_FIXED : return initFixedPosition();
+		case CP_INTERPOLATED : return initInterpolatedPosition();
+	case CP_SPLINE : return initSplinePosition();
 	default:
 			break;
 	};
 	return NULL;
 }
 
-void addTarget(const char *name, idCameraPosition::positionType type);
+void addTarget(const char *name, positionType type);
 
-idCameraPosition *getActiveTarget() {
-	if (targetPositions.Num() == 0) {
-		addTarget(NULL, idCameraPosition::FIXED);
+idCameraPosition *getActiveTarget(idCameraDef *cam) {
+	if (cam->numTargetPositions == 0) {
+		addTarget(NULL, CP_FIXED);
 	}
-	return targetPositions[activeTarget];
+	return &cam->targetPositions[cam->activeTarget];
 }
 
-idCameraPosition *getActiveTarget(int index) {
-	if (targetPositions.Num() == 0) {
-		addTarget(NULL, idCameraPosition::FIXED);
-		return targetPositions[0];
+idCameraPosition *getActiveTarget(int index, idCameraDef *cam) {
+	if (cam->numTargetPositions == 0) {
+		addTarget(NULL, CP_FIXED);
+		return &cam->targetPositions[0];
 	}
-	return targetPositions[index];
+	return &cam->targetPositions[index];
 }
 
-int numTargets() {
-	return targetPositions.Num();
-}
-
-
-void setActiveTargetByName(const char *name) {
-	for (int i = 0; i < targetPositions.Num(); i++) {
-		if (Q_stricmp(name, targetPositions[i]->getName()) == 0) {
-			setActiveTarget(i);
+void setActiveTargetByName(const char *name, idCameraDef *cam) {
+	for (int i = 0; i < cam->numTargetPositions; i++) {
+		if (Q_stricmp(name, cam->targetPositions[i].name) == 0) {
+			setActiveTarget(i, cam);
 			return;
 		}
 	}
 }
 
-void setActiveTarget(int index) {
-	assert(index >= 0 && index < targetPositions.Num());
-	activeTarget = index;
+void setActiveTarget(int index, idCameraDef *cam) {
+	assert(index >= 0 && index < cam->numTargetPositions);
+	cam->activeTarget = index;
 }
 
+/*
 void setRunning(qboolean b) {
 	cameraRunning = b;
 }
@@ -969,9 +970,12 @@ void startCamera(long t);
 void stopCamera() {
 	cameraRunning = true;
 }
-void getActiveSegmentInfo(int segment, vec3_t &origin, vec3_t &direction, float *fv);
+*/
 
-qboolean getCameraInfo(long time, vec3_t &origin, vec3_t &direction, float *fv);
+
+void getActiveSegmentInfo(int segment, vec3_t origin, vec3_t direction, float *fv);
+
+qboolean getCameraInfo(long time, vec3_t origin, vec3_t direction, float *fv);
 qboolean getCameraInfo(long time, float *origin, float *direction, float *fv) {
 	vec3_t org, dir;
 	org[0] = origin[0];
@@ -994,10 +998,10 @@ qboolean getCameraInfo(long time, float *origin, float *direction, float *fv) {
                 // gcc doesn't allow casting away from bools
                 // why?  I've no idea...
 		if (cameraPosition) {
-			cameraPosition->draw((bool)((editMode || cameraRunning) && cameraEdit));
+			cameraPosition->draw((qboolean)((editMode || cameraRunning) && cameraEdit));
 			int count = targetPositions.Num();
 			for (int i = 0; i < count; i++) {
-				targetPositions[i]->draw((bool)((editMode || cameraRunning) && i == activeTarget && !cameraEdit));
+				targetPositions[i]->draw((qboolean)((editMode || cameraRunning) && i == activeTarget && !cameraEdit));
 			}
 		}
 	}
@@ -1025,45 +1029,46 @@ qboolean getCameraInfo(long time, float *origin, float *direction, float *fv) {
 		}
 	}
 */
-int numPoints() {
-	if (cameraEdit) {
-		return cameraPosition->numPoints();
+int numPoints(idCameraDef *cam) {
+	if (cam->cameraEdit) {
+		return cam->cameraPosition->numPoints();
 	}
-	return getActiveTarget()->numPoints();
+	return getActiveTarget(cam)->numPoints();
 }
 
-const vec3_t *getPoint(int index) {
-	if (cameraEdit) {
-		return cameraPosition->getPoint(index);
+const vec3_t *getPoint(int index, idCameraDef *cam) {
+	if (cam->cameraEdit) {
+		return cam->cameraPosition->getPoint(index);
 	}
-	return getActiveTarget()->getPoint(index);
+	return getActiveTarget(cam)->getPoint(index);
 }
 
-void stopEdit() {
-	editMode = qfalse;
-	if (cameraEdit) {
-		cameraPosition->stopEdit();
+void stopEdit(idCameraDef *cam) {
+	cam->editMode = qfalse;
+	if (cam->cameraEdit) {
+		cam->cameraPosition->stopEdit();
 	} else {
-		getActiveTarget()->stopEdit();
+		getActiveTarget(cam)->stopEdit();
 	}
 }
 
-void startEdit(qboolean camera) {
-	cameraEdit = camera;
+void startEdit(qboolean camera, idCameraDef *cam) {
+	cam->cameraEdit = camera;
 	if (camera) {
-		cameraPosition->startEdit();
-		for (int i = 0; i < targetPositions.Num(); i++) {
-			targetPositions[i]->stopEdit();
+		cam->cameraPosition->startEdit();
+		for (int i = 0; i < cam->numTargetPositions; i++) {
+			cam->targetPositions[i]->stopEdit();
 		}
 	} else {
-		getActiveTarget()->startEdit();
-		cameraPosition->stopEdit();
+		getActiveTarget(cam)->startEdit();
+		cam->cameraPosition->stopEdit();
 	}
-	editMode = qtrue;
+	cam->editMode = qtrue;
 }
 
 qboolean waitEvent(int index);
 
+/*
 const char *getName() {
 	return name.c_str();
 }
@@ -1078,25 +1083,8 @@ idCameraPosition *getPositionObj() {
 	}
 	return cameraPosition;
 }
+*/
 
-//protected:
-typedef struct {
-	char name[MAX_QPATH];
-	int currentCameraPosition;
-	vec3_t lastDirection;
-	qboolean cameraRunning;
-	idCameraPosition *cameraPosition;
-	idCameraPosition *targetPositions;
-	idCameraEvent *events;
-	idCameraFOV fov;
-	int activeTarget;
-	float totalTime;
-	float baseTime;
-	long startTime;
-
-	qboolean cameraEdit;
-	qboolean editMode;
-} idCameraDef;
 
 //};
 
