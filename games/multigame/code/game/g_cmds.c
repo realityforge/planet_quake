@@ -1295,7 +1295,23 @@ Cmd_Where_f
 ==================
 */
 void Cmd_Where_f( gentity_t *ent ) {
-	trap_SendServerCommand( ent-g_entities, va("print \"%s\n\"", vtos( ent->s.origin ) ) );
+	if ( ent->client && ent->client->sess.sessionTeam != TEAM_SPECTATOR )
+	{
+		trap_SendServerCommand( ent - g_entities, va( "print \"%s\n\"", vtos( ent->r.currentOrigin ) ) );
+	}
+	else if ( ent->client && ent->client->sess.sessionTeam == TEAM_SPECTATOR && (ent->client->ps.pm_flags & PMF_FOLLOW) )
+	{
+		trap_SendServerCommand( ent - g_entities, va( "print \"%s\n\"", vtos( ent->client->ps.origin ) ) );
+	}
+	//else if ( ent->client && ent->client->sess.sessionTeam != TEAM_SPECTATOR && (ent->client->ps.pm_flags & PMF_FOLLOW) && (ent->client->ps.pm_flags & PMF_LIMBO) )
+	//{
+	//	trap_SendServerCommand( ent - g_entities, va( "print \"%s\n\"", vtos( ent->client->ps.origin ) ) );
+	//}
+	else
+	{
+		trap_SendServerCommand( ent - g_entities, va( "print \"%s\n\"", vtos( ent->s.origin ) ) );
+	}
+	//trap_SendServerCommand( ent-g_entities, va("print \"%s\n\"", vtos( ent->s.origin ) ) );
 }
 
 static const char *voteCommands[] = {

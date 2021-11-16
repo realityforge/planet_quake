@@ -449,42 +449,43 @@ void setSelectedPoint(vec3_t *p, idSplineList *spline) {
 	}
 }
 
-const vec3_t *idSplineList::getPosition(long t) {
+const vec3_t *getPosition(long t, idSplineList *spline) {
 	static vec3_t interpolatedPos;
 	//static long lastTime = -1;
 
-	int count = splineTime.Num();
+	int count = spline->numSplinePoints;
 	if (count == 0) {
-		return vec3_origin;
+		return &vec3_origin;
 	}
 
-	Com_Printf("Time: %d\n", t);
-	assert(splineTime.Num() == splinePoints.Num());
+	Com_Printf("Time: %ld\n", t);
+	//assert(splineTime.Num() == splinePoints.Num());
 
-	while (activeSegment < count) {
-		if (splineTime[activeSegment] >= t) {
-			if (activeSegment > 0 && activeSegment < count - 1) {
-				double timeHi = splineTime[activeSegment + 1];
-				double timeLo = splineTime[activeSegment - 1];
+	while (spline->activeSegment < count) {
+		if (spline->splineTime[spline->activeSegment] >= t) {
+			if (spline->activeSegment > 0 && spline->activeSegment < count - 1) {
+				double timeHi = spline->splineTime[spline->activeSegment + 1];
+				double timeLo = spline->splineTime[spline->activeSegment - 1];
 				double percent = (timeHi - t) / (timeHi - timeLo); 
 				// pick two bounding points
-				vec3_t v1 = *splinePoints[activeSegment-1];
-				vec3_t v2 = *splinePoints[activeSegment+1];
-				v2 *= (1.0 - percent);
-				v1 *= percent;
-				v2 += v1;
-				interpolatedPos = v2;
+				vec3_t v1, v2;
+				VectorCopy(spline->splinePoints[spline->activeSegment - 1], v1);
+				VectorCopy(spline->splinePoints[spline->activeSegment + 1], v2);
+				VectorScale(v2, 1.0 - percent, v2);
+				VectorScale(v1, percent, v1);
+				VectorAdd(v2, v1, v2);
+				VectorCopy(v2, interpolatedPos);
 				return &interpolatedPos;
 			}
-			return splinePoints[activeSegment];
+			return &spline->splinePoints[spline->activeSegment];
 		} else {
-			activeSegment++;
+			spline->activeSegment++;
 		}
 	}
-	return splinePoints[count-1];
+	return &spline->splinePoints[count-1];
 }
 
-void idSplineList::parse(const char *(*text)  ) {
+void parseSplines(const char *(*text), idSplineList *spline ) {
 	const char *token;
 	//Com_MatchToken( text, "{" );
 	do {
@@ -523,12 +524,12 @@ void idSplineList::parse(const char *(*text)  ) {
 		// read the control point
 		vec3_t point;
 		Com_Parse1DMatrix( text, 3, point );
-		addPoint(point.x, point.y, point.z);
+		addPoint(point[0], point[1], point[2]);
 	} while (1);
  
 	//Com_UngetToken();
 	//Com_MatchToken( text, "}" );
-	dirty = true;
+	dirty = qtrue;
 }
 
 void idSplineList::write(fileHandle_t file, const char *p) {
