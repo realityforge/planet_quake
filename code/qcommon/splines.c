@@ -24,7 +24,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 //#include "qe3.h"
 
 #include "q_shared.h"
-#include "splines.h"
+//#include "splines.h"
 
 int FS_Write( const void *buffer, int len, fileHandle_t h );
 int FS_ReadFile( const char *qpath, void **buffer );
@@ -37,19 +37,131 @@ void FS_FCloseFile( fileHandle_t f );
 //#include "../qcommon/qcommon.h"
 //#include "../sys/sys_public.h"
 //#include "../game/game_entity.h"
+typedef enum {
+	EVENT_NA = 0x00,
+	EVENT_WAIT,
+	EVENT_TARGETWAIT,
+	EVENT_SPEED,
+	EVENT_TARGET,
+	EVENT_SNAPTARGET,
+	EVENT_FOV,
+	EVENT_SCRIPT,
+	EVENT_TRIGGER,
+	EVENT_STOP,
+	EVENT_COUNT
+} eventType;
+
+typedef enum {
+	CP_FIXED = 0x00,
+	CP_INTERPOLATED,
+	CP_SPLINE,
+	POSITION_COUNT
+} positionType;
+
+typedef struct {
+	char name[MAX_QPATH];
+	vec3_t *controlPoints;
+	int    numControlPoints;
+	vec3_t *splinePoints;
+	int    numSplinePoints;
+	double *splineTime;
+	vec3_t *selected;
+	int    numSelected;
+	vec3_t pathColor, segmentColor, controlColor, activeColor;
+	float granularity;
+	qboolean editMode;
+	qboolean dirty;
+	int activeSegment;
+	long baseTime;
+	long time;
+} idSplineList;
+
+typedef struct {
+	long	startTime;
+	long	time;
+	float	speed;
+} idVelocity;
+
+typedef struct {
+	vec3_t *points;
+	int numPoints;
+	const char* positionStr[POSITION_COUNT];
+	long		startTime;
+	long		time;
+	positionType type;
+	char		name[MAX_QPATH];
+	qboolean	editMode;
+	idVelocity **velocities;
+	int numVelocities;
+	float		baseVelocity;
+} idCameraPosition;
+
+typedef struct {
+	idCameraPosition *base;
+	vec3_t			     pos;
+} idFixedPosition;
+
+typedef struct {
+	idCameraPosition *pos;
+	qboolean first;
+	vec3_t startPos;
+	vec3_t endPos;
+	long lastTime;
+	float distSoFar;
+} idInterpolatedPosition;
+
+typedef struct {
+	idCameraPosition *pos;
+	idSplineList *target;
+} idSplinePosition;
+
+typedef struct {
+	float fov;
+	float startFOV;
+	float endFOV;
+	int startTime;
+	int time;
+} idCameraFOV;
+
+typedef struct {
+	eventType type;
+	char paramStr[MAX_QPATH];
+	long time;
+	qboolean triggered;
+} idCameraEvent;
+
+typedef struct {
+	char name[MAX_QPATH];
+	int currentCameraPosition;
+	vec3_t lastDirection;
+	qboolean cameraRunning;
+	idCameraPosition *cameraPosition;
+	int numCameraPositions;
+	idCameraPosition *targetPositions;
+	int numTargetPositions;
+	idCameraEvent *events;
+	int numEvents;
+	idCameraFOV *fov;
+	int activeTarget;
+	float totalTime;
+	float baseTime;
+	long startTime;
+
+	qboolean cameraEdit;
+	qboolean editMode;
+} idCameraDef;
 
 idCameraDef splineList;
 idCameraDef *g_splineList = &splineList;
 
-idVec3_t idSplineList::zero(0,0,0);
 /*
-void glLabeledPoint(idVec3_t &color, idVec3_t &point, float size, const char *label) {
+void glLabeledPoint(vec3_t &color, vec3_t &point, float size, const char *label) {
 	qglColor3fv(color);
 	qglPointSize(size);
 	qglBegin(GL_POINTS);
 	qglVertex3fv(point);
 	qglEnd();
-	idVec3_t v = point;
+	vec3_t v = point;
 	v.x += 1;
 	v.y += 1;
 	v.z += 1;
@@ -58,9 +170,9 @@ void glLabeledPoint(idVec3_t &color, idVec3_t &point, float size, const char *la
 }
 
 
-void glBox(idVec3_t &color, idVec3_t &point, float size) {
-	idVec3_t mins(point);
-	idVec3_t maxs(point);
+void glBox(vec3_t &color, vec3_t &point, float size) {
+	vec3_t mins(point);
+	vec3_t maxs(point);
 	mins[0] -= size;
 	mins[1] += size;
 	mins[2] -= size;
@@ -103,11 +215,11 @@ void splineDraw() {
 }
 
 
-//extern void D_DebugLine( const idVec3_t &color, const idVec3_t &start, const idVec3_t &end );
+//extern void D_DebugLine( const vec3_t &color, const vec3_t &start, const vec3_t &end );
 
-void debugLine(idVec3_t &color, float x, float y, float z, float x2, float y2, float z2) {
-	//idVec3_t from(x, y, z);
-	//idVec3_t to(x2, y2, z2);
+void debugLine(vec3_t &color, float x, float y, float z, float x2, float y2, float z2) {
+	//vec3_t from(x, y, z);
+	//vec3_t to(x2, y2, z2);
 	//D_DebugLine(color, from, to);
 }
 
@@ -118,9 +230,9 @@ void idSplineList::addToRenderer() {
 		return;
 	}
 
-	idVec3_t mins, maxs;
-	idVec3_t yellow(1.0, 1.0, 0);
-	idVec3_t white(1.0, 1.0, 1.0);
+	vec3_t mins, maxs;
+	vec3_t yellow(1.0, 1.0, 0);
+	vec3_t white(1.0, 1.0, 1.0);
         int i;
         
 	for(i = 0; i < controlPoints.Num(); i++) {
@@ -145,7 +257,7 @@ void idSplineList::addToRenderer() {
 	}
 
 	int step = 0;
-	idVec3_t step1;
+	vec3_t step1;
 	for(i = 3; i < controlPoints.Num(); i++) {
 		for (float tension = 0.0f; tension < 1.001f; tension += 0.1f) {
 			float x = 0;
@@ -171,23 +283,36 @@ void idSplineList::addToRenderer() {
 }
 */
 
-void idSplineList::buildSpline() {
+float calcSpline(int step, float tension) {
+	switch(step) {
+		case 0:	return (pow(1 - tension, 3)) / 6;
+		case 1:	return (3 * pow(tension, 3) - 6 * pow(tension, 2) + 4) / 6;
+		case 2:	return (-3 * pow(tension, 3) + 3 * pow(tension, 2) + 3 * tension + 1) / 6;
+		case 3:	return pow(tension, 3) / 6;
+	}
+	return 0.0;
+}
+
+void buildSpline(idSplineList *spline) {
 	//int start = Sys_Milliseconds();
-	clearSpline();
-	for(int i = 3; i < controlPoints.Num(); i++) {
-		for (float tension = 0.0f; tension < 1.001f; tension += granularity) {
+	spline->numSplinePoints = 0;
+	for(int i = 3; i < spline->numControlPoints; i++) {
+		for (float tension = 0.0f; tension < 1.001f; tension += spline->granularity) {
 			float x = 0;
 			float y = 0;
 			float z = 0;
 			for (int j = 0; j < 4; j++) {
-				x += controlPoints[i - (3 - j)]->x * calcSpline(j, tension);
-				y += controlPoints[i - (3 - j)]->y * calcSpline(j, tension);
-				z += controlPoints[i - (3 - j)]->z * calcSpline(j, tension);
+				x += spline->controlPoints[i - (3 - j)][0] * calcSpline(j, tension);
+				y += spline->controlPoints[i - (3 - j)][1] * calcSpline(j, tension);
+				z += spline->controlPoints[i - (3 - j)][2] * calcSpline(j, tension);
 			}
-			splinePoints.Append(new idVec3_t(x, y, z));
+			spline->splinePoints[spline->numSplinePoints][0] = x;
+			spline->splinePoints[spline->numSplinePoints][1] = y;
+			spline->splinePoints[spline->numSplinePoints][2] = z;
+			spline->numSplinePoints++;
 		}
 	}
-	dirty = false;
+	spline->dirty = qfalse;
 	//Com_Printf("Spline build took %f seconds\n", (float)(Sys_Milliseconds() - start) / 1000);
 }
 
@@ -249,102 +374,88 @@ void idSplineList::draw(bool editMode) {
 }
 */
 
-float idSplineList::totalDistance() {
+float totalDistance(idSplineList *spline) {
 
-	if (controlPoints.Num() == 0) {
+	if (spline->numControlPoints == 0) {
 		return 0.0;
 	}
 
-	if (dirty) {
-		buildSpline();
+	if (spline->dirty) {
+		buildSpline(spline);
 	}
 
 	float dist = 0.0;
-	idVec3_t temp;
-	int count = splinePoints.Num();
+	vec3_t temp;
+	int count = spline->numSplinePoints;
 	for(int i = 1; i < count; i++) {
-		temp = *splinePoints[i-1];
-		temp -= *splinePoints[i];
-		dist += temp.Length();
+		VectorCopy(spline->splinePoints[i-1], temp);
+		VectorSubtract(temp, spline->splinePoints[i], temp);
+		dist += VectorLength(temp);
 	}
 	return dist;
 }
 
-void idSplineList::initPosition(long bt, long totalTime) {
+void initPosition(long bt, long totalTime, idSplineList *spline) {
 
-	if (dirty) {
-		buildSpline();
+	if (spline->dirty) {
+		buildSpline(spline);
 	}
 
-	if (splinePoints.Num() == 0) {
+	if (spline->numSplinePoints == 0) {
 		return;
 	}
 
-	baseTime = bt;
-	time = totalTime;
+	spline->baseTime = bt;
+	spline->time = totalTime;
 
 	// calc distance to travel ( this will soon be broken into time segments )
-	splineTime.Clear();
-	splineTime.Append(bt);
-	double dist = totalDistance();
+	spline->splineTime[0] = bt;
+	double dist = totalDistance(spline);
 	double distSoFar = 0.0;
-	idVec3_t temp;
-	int count = splinePoints.Num();
+	vec3_t temp;
+	int count = spline->numSplinePoints;
 	//for(int i = 2; i < count - 1; i++) {
 	for(int i = 1; i < count; i++) {
-		temp = *splinePoints[i-1];
-		temp -= *splinePoints[i];
-		distSoFar += temp.Length();
+		VectorCopy(spline->splinePoints[i-1], temp);
+		VectorSubtract(temp, spline->splinePoints[i], temp);
+		distSoFar += VectorLength(temp);
 		double percent = distSoFar / dist;
 		percent *= totalTime;
-		splineTime.Append(percent + bt);
+		spline->splineTime[i] = percent + bt;
 	}
-	assert(splineTime.Num() == splinePoints.Num());
-	activeSegment = 0;
+	//assert(splineTime.Num() == splinePoints.Num());
+	spline->activeSegment = 0;
 }
 
 
-
-float idSplineList::calcSpline(int step, float tension) {
-	switch(step) {
-		case 0:	return (pow(1 - tension, 3)) / 6;
-		case 1:	return (3 * pow(tension, 3) - 6 * pow(tension, 2) + 4) / 6;
-		case 2:	return (-3 * pow(tension, 3) + 3 * pow(tension, 2) + 3 * tension + 1) / 6;
-		case 3:	return pow(tension, 3) / 6;
-	}
-	return 0.0;
-}
-
-
-
-void idSplineList::updateSelection(const idVec3_t &move) {
-	if (selected) {
-		dirty = true;
-		VectorAdd(*selected, move, *selected);
+void updateSelection(const vec3_t move, idSplineList *spline) {
+	if (spline->selected) {
+		spline->dirty = qtrue;
+		VectorAdd(*spline->selected, move, *spline->selected);
 	}
 }
 
 
-void idSplineList::setSelectedPoint(idVec3_t *p) {
+void setSelectedPoint(vec3_t *p, idSplineList *spline) {
 	if (p) {
-		p->Snap();
-		for(int i = 0; i < controlPoints.Num(); i++) {
-			if (*p == *controlPoints[i]) {
-				selected = controlPoints[i];
+		SnapVector(*p);
+		for(int i = 0; i < spline->numControlPoints; i++) {
+			if (!VectorCompare(*p, spline->controlPoints[i])) {
+				spline->selected = &spline->controlPoints[i];
 			}
 		}
 	} else {
-		selected = NULL;
+		spline->selected = NULL;
 	}
 }
 
-const idVec3_t *idSplineList::getPosition(long t) {
-	static idVec3_t interpolatedPos;
+const vec3_t *idSplineList::getPosition(long t) {
+	static vec3_t interpolatedPos;
 	//static long lastTime = -1;
 
 	int count = splineTime.Num();
 	if (count == 0) {
-		return &zero;
+		return vec3_origin;
 	}
 
 	Com_Printf("Time: %d\n", t);
@@ -357,8 +468,8 @@ const idVec3_t *idSplineList::getPosition(long t) {
 				double timeLo = splineTime[activeSegment - 1];
 				double percent = (timeHi - t) / (timeHi - timeLo); 
 				// pick two bounding points
-				idVec3_t v1 = *splinePoints[activeSegment-1];
-				idVec3_t v2 = *splinePoints[activeSegment+1];
+				vec3_t v1 = *splinePoints[activeSegment-1];
+				vec3_t v2 = *splinePoints[activeSegment+1];
 				v2 *= (1.0 - percent);
 				v1 *= percent;
 				v2 += v1;
@@ -410,7 +521,7 @@ void idSplineList::parse(const char *(*text)  ) {
 
 		Com_UngetToken();
 		// read the control point
-		idVec3_t point;
+		vec3_t point;
 		Com_Parse1DMatrix( text, 3, point );
 		addPoint(point.x, point.y, point.z);
 	} while (1);
@@ -437,7 +548,7 @@ void idSplineList::write(fileHandle_t file, const char *p) {
 }
 
 
-void idCameraDef::getActiveSegmentInfo(int segment, idVec3_t &origin, idVec3_t &direction, float *fov) {
+void idCameraDef::getActiveSegmentInfo(int segment, vec3_t &origin, vec3_t &direction, float *fov) {
 #if 0
 	if (!cameraSpline.validTime()) {
 		buildCamera();
@@ -452,7 +563,7 @@ void idCameraDef::getActiveSegmentInfo(int segment, idVec3_t &origin, idVec3_t &
 	origin = *cameraSpline.getSegmentPoint(segment);
 	
 
-	idVec3_t temp;
+	vec3_t temp;
 
 	int numTargets = getTargetSpline()->controlPoints.Num();
 	int count = cameraSpline.splineTime.Num();
@@ -473,7 +584,7 @@ void idCameraDef::getActiveSegmentInfo(int segment, idVec3_t &origin, idVec3_t &
 */
 }
 
-bool idCameraDef::getCameraInfo(long time, idVec3_t &origin, idVec3_t &direction, float *fv) {
+bool idCameraDef::getCameraInfo(long time, vec3_t &origin, vec3_t &direction, float *fv) {
 
 
 	if ((time - startTime) / 1000 > totalTime) {
@@ -507,7 +618,7 @@ bool idCameraDef::getCameraInfo(long time, idVec3_t &origin, idVec3_t &direction
 	
 	*fv = fov.getFOV(time);
 
-	idVec3_t temp = origin;
+	vec3_t temp = origin;
 
 	int numTargets = targetPositions.Num();
 	if (numTargets == 0) {
@@ -547,7 +658,7 @@ bool idCameraDef::waitEvent(int index) {
 #define NUM_CCELERATION_SEGS 10
 #define CELL_AMT 5
 
-void idCameraDef::buildCamera() {
+void buildCamera(idCameraDef *cam) {
 	int i;
 	//int lastSwitch = 0;
 	idList<float> waits;
@@ -863,8 +974,8 @@ const char *idCameraPosition::positionStr[] = {
 
 
 
-const idVec3_t *idInterpolatedPosition::getPosition(long t) { 
-	static idVec3_t interpolatedPos;
+const vec3_t *idInterpolatedPosition::getPosition(long t) { 
+	static vec3_t interpolatedPos;
 
 	float velocity = getVelocity(t);
 	float timePassed = t - lastTime;
@@ -875,7 +986,7 @@ const idVec3_t *idInterpolatedPosition::getPosition(long t) {
 
 	float distToTravel = timePassed *= velocity;
 
-	idVec3_t temp = startPos;
+	vec3_t temp = startPos;
 	temp -= endPos;
 	float distance = temp.Length();
 
@@ -891,8 +1002,8 @@ const idVec3_t *idInterpolatedPosition::getPosition(long t) {
 	// the following line does a straigt calc on percentage of time
 	// float percent = (float)(startTime + time - t) / time;
 
-	idVec3_t v1 = startPos;
-	idVec3_t v2 = endPos;
+	vec3_t v1 = startPos;
+	vec3_t v2 = endPos;
 	v1 *= (1.0 - percent);
 	v2 *= percent;
 	v1 += v2;
@@ -1215,7 +1326,7 @@ qboolean loadCamera(const char *name) {
 }
 
 qboolean getCameraInfo(int time, float *origin, float*angles) {
-	idVec3_t dir, org;
+	vec3_t dir, org;
 	org[0] = origin[0];
 	org[1] = origin[1];
 	org[2] = origin[2];

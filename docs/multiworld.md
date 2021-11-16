@@ -27,7 +27,7 @@ Finally, I want to use multiworld for streaming game content to clients. Where t
   * Add game options like switching maps at the end of round, moving around in other maps or moving to spectator or disconnecting. Options for transferring game stats between worlds.
   * Fix SAMEORIGIN spawn type location works but camera angles change.
   * Open multiple websocket ports connected to the same server, server accepts data from either socket but merges or ignores based on sequence just like normal UDP and deltas.
-  * Stop crash after loading 10 maps with use_lazy_memory. Fix in cm_load, vm_create, renderer2, clear old bots? sound uses FindOldest? 
+  * Stop crash after loading 10 maps with use_lazy_memory. Fix in cm_load, vm_create, renderer2, clear old bots? sound uses FindOldest? Multiworld hunking, so levels can be cleared individually?
   * Connect to multiple servers at the same time, closer with demo work
 
 
