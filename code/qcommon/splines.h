@@ -318,16 +318,6 @@ float calcSpline(int step, float tension);
 
 //public:
 
-idCameraPosition *initCameraPosition(const char *p, long t) {
-	idCameraPosition *result = Z_Malloc(sizeof(idCameraPosition));
-	result->time = t;
-	if(!p[0])
-		memcpy(result->name, "position", sizeof(result->name));
-	else
-		memcpy(result->name, p, sizeof(result->name));
-	return result;
-}
-
 void clearPosition(idCameraPosition *pos) {
 	pos->editMode = qfalse;
 	for (int i = 0; i < pos->numVelocities; i++) {
@@ -357,14 +347,6 @@ float getVelocity(long t, idCameraPosition *pos) {
 		}
 	}
 	return pos->baseVelocity;
-}
-
-void addVelocity(long start, long duration, float speed, idCameraPosition *pos) {
-	pos->velocities[pos->numVelocities] = Z_Malloc(sizeof(idVelocity));
-	pos->velocities[pos->numVelocities]->startTime = start;
-	pos->velocities[pos->numVelocities]->time = duration;
-	pos->velocities[pos->numVelocities]->speed = speed;
-	pos->numVelocities++;
 }
 
 //virtual 
@@ -424,14 +406,6 @@ void calcVelocity(float distance, idCameraPosition *pos) {
 
 //public:
 
-idFixedPosition *initFixedPosition(vec3_t p) {
-	idFixedPosition *result = Z_Malloc(sizeof(idFixedPosition));
-	result->base = initCameraPosition("fixed", 0);
-	VectorClear(result->pos);
-	result->base->type = CP_FIXED;
-	return result;
-}
-
 /*
 //virtual 
 void addPoint(const vec3_t &v) {
@@ -483,15 +457,6 @@ virtual void draw(qboolean editMode) {
 
 //public:
 
-idInterpolatedPosition *initInterpolatedPosition(vec3_t start, vec3_t end, long time) {
-	idInterpolatedPosition *result = Z_Malloc(sizeof(idInterpolatedPosition));
-	result->pos = initCameraPosition("interpolated", time);
-	result->pos->type = CP_INTERPOLATED;
-	result->first = qtrue;
-	VectorClear(result->startPos);
-	VectorClear(result->endPos);
-	return result;
-}
 
 /*
 //virtual 
@@ -568,13 +533,6 @@ void startInterpolatedPosition(long t, idInterpolatedPosition *ip) {
 
 //public:
 
-idSplinePosition *initSplinePosition(long time) {
-	idSplinePosition *result = Z_Malloc(sizeof(idSplinePosition));
-	result->pos = initCameraPosition("spline", time);
-	result->target = initSplineList("");
-	return result;
-}
-
 //virtual 
 void startSplinePosition(long t, idSplinePosition *sp) {
 	sp->pos->startTime = t;
@@ -648,17 +606,6 @@ idCameraFOV *initCameraFOV(int s, int e, long t, int v) {
 
 //~idCameraFOV(){}
 
-float getFOV(long t, idCameraFOV *fov) {
-	if (fov->time) {
-		assert(fov->startTime);
-		float percent = t / fov->startTime;
-		float temp = fov->startFOV - fov->endFOV;
-		temp *= percent;
-		fov->fov = fov->startFOV + temp;
-	}
-	return fov->fov;
-}
-
 //void start(long t) {
 //	startTime = t;
 //}
@@ -681,16 +628,6 @@ static const char* eventStr[EVENT_COUNT];
 
 //};
 
-idCameraEvent *initCameraEvent(eventType t, const char *param, long n) {
-	//paramStr = "";
-	//type = EVENT_NA;
-	//time = 0;
-	idCameraEvent *result = (void *)Z_Malloc(sizeof(idCameraEvent));
-	result->type = t;
-	memcpy(result->paramStr, param, MAX_QPATH);
-	result->time = n;
-	return result;
-}
 
 //~idCameraEvent() {};
 
@@ -736,22 +673,6 @@ qboolean getTriggered() {
 
 //public:
 
-void clearCamera(idCameraDef *cam) {
-	cam->currentCameraPosition = 0;
-	cam->cameraRunning = qfalse;
-	VectorClear(cam->lastDirection);
-	cam->baseTime = 30;
-	cam->activeTarget = 0;
-	memcpy(cam->name, "camera01", sizeof(cam->name));
-	cam->fov->fov = 90;
-	Z_Free(cam->targetPositions);
-	cam->targetPositions = NULL;
-	Z_Free(cam->events);
-	cam->numEvents = 0;
-	Z_Free(cam->cameraPosition);
-	cam->cameraPosition = NULL;
-}
-
 
 idCameraPosition *startNewCamera(positionType type, idCameraDef *cam) {
 	clearCamera(cam);
@@ -789,17 +710,6 @@ void buildCamera( idCameraDef *cam );
 //	return &cameraPosition;
 //}
 
-static idCameraPosition *newFromType(positionType t) {
-	switch (t) {
-		case CP_FIXED : return initFixedPosition(vec3_origin);
-		case CP_INTERPOLATED : return initInterpolatedPosition(vec3_origin, vec3_origin, 0);
-	  case CP_SPLINE : return initSplinePosition(0);
-	  default:
-			break;
-	};
-	return NULL;
-}
-
 void addTarget(const char *name, positionType type);
 
 /*
@@ -811,20 +721,6 @@ idCameraPosition *getActiveTarget(idCameraDef *cam) {
 }
 */
 
-
-void setActiveTarget(int index, idCameraDef *cam) {
-	assert(index >= 0 && index < cam->numTargetPositions);
-	cam->activeTarget = index;
-}
-
-void setActiveTargetByName(const char *name, idCameraDef *cam) {
-	for (int i = 0; i < cam->numTargetPositions; i++) {
-		if (Q_stricmp(name, cam->targetPositions[i].name) == 0) {
-			setActiveTarget(i, cam);
-			return;
-		}
-	}
-}
 
 /*
 void setRunning(qboolean b) {
