@@ -339,15 +339,6 @@ void setTime(long t) {
 */
 
 
-float getVelocity(long t, idCameraPosition *pos) {
-	long check = t - pos->startTime;
-	for (int i = 0; i < pos->numVelocities; i++) {
-		if (check >= pos->velocities[i]->startTime && check <= pos->velocities[i]->startTime + pos->velocities[i]->time) {
-			return pos->velocities[i]->speed;
-		}
-	}
-	return pos->baseVelocity;
-}
 
 //virtual 
 //const vec3_t *getPosition(long t) { 

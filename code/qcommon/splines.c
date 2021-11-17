@@ -977,10 +977,10 @@ static qboolean loadCamera(const char *filename, idCameraDef *cam) {
 	}
 
 	clearCamera(cam);
-	Com_BeginParseSession( filename );
+	COM_BeginParseSession( filename );
 	buf_p = buf;
 	parseCamera(&buf_p, cam);
-	Com_EndParseSession();
+	//COM_EndParseSession();
 	FS_FreeFile( buf );
 
 	return qtrue;
@@ -990,6 +990,9 @@ static void writeInterpolated(fileHandle_t file, const char *p, idInterpolatedPo
 static void writeFixed(fileHandle_t file, const char *p, idFixedPosition *pos);
 static void writeSpline(fileHandle_t file, const char *p, idSplinePosition *pos);
 static void writeEvent(fileHandle_t file, const char *name, idCameraEvent *event);
+static void writePosition(fileHandle_t file, const char *p, idCameraPosition *pos);
+static void writeFOV(fileHandle_t file, const char *p, idCameraFOV *fov);
+static void writeCamera(fileHandle_t file, idCameraDef *cam);
 
 const char *positionStr[] = {
 	"Fixed",
@@ -1002,7 +1005,7 @@ static void saveCamera(const char *filename, idCameraDef *cam) {
 	fileHandle_t file = FS_FOpenFileWrite(filename);
 	if (file) {
 		int i;
-		char *s = "cameraPathDef { \n"; 
+		const char *s = "cameraPathDef { \n"; 
 		FS_Write(s, strlen(s), file);
 		s = va("\ttime %f\n", cam->baseTime);
 		FS_Write(s, strlen(s), file);
@@ -1025,8 +1028,8 @@ static void saveCamera(const char *filename, idCameraDef *cam) {
 
 		for (i = 0; i < cam->numTargetPositions; i++) {
 			writePosition(file, 
-				va("target_%s", positionStr[cam->targetPositions[i]->type]), 
-				cam->targetPositions[i]);
+				va("target_%s", positionStr[cam->targetPositions[i].type]), 
+				&cam->targetPositions[i]);
 		}
 
 		for (i = 0; i < cam->numEvents; i++) {
@@ -1091,18 +1094,18 @@ static void parseEvent(const char *(*text), idCameraEvent *event ) {
 			}
 
 			*text = t;
-			const char *key = COM_ParseExt(text, qtrue);
-			const char *token = Com_Parse(text, qtrue);
+			const char *key = COM_ParseExt(text, qfalse);
+			const char *token = COM_ParseExt(text, qfalse);
 			if (Q_stricmp(key, "type") == 0) {
 				event->type = atoi(token);
 			} else if (Q_stricmp(key, "param") == 0) {
-				event->paramStr = token;
+				memcpy(event->paramStr, token, sizeof(event->paramStr));
 			} else if (Q_stricmp(key, "time") == 0) {
 				event->time = atoi(token);
 			}
 
 			t = *text;
-			token = Com_ParseExt(text);
+			token = COM_ParseExt(text, qfalse);
 		} while (1);
 
 		if ( !strcmp (token, "}") ) {
@@ -1116,23 +1119,32 @@ static void parseEvent(const char *(*text), idCameraEvent *event ) {
 }
 
 static void writeEvent(fileHandle_t file, const char *name, idCameraEvent *event) {
-	char *s = va("\t%s {\n", name);
+	const char *s = va("\t%s {\n", name);
 	FS_Write(s, strlen(s), file);
 	s = va("\t\ttype %d\n", event->type);
 	FS_Write(s, strlen(s), file);
 	s = va("\t\tparam %s\n", event->paramStr);
 	FS_Write(s, strlen(s), file);
-	s = va("\t\ttime %d\n", event->time);
+	s = va("\t\ttime %ld\n", event->time);
 	FS_Write(s, strlen(s), file);
 	s = "\t}\n";
 	FS_Write(s, strlen(s), file);
 }
 
+float getVelocity(long t, idCameraPosition *pos) {
+	long check = t - pos->startTime;
+	for (int i = 0; i < pos->numVelocities; i++) {
+		if (check >= pos->velocities[i]->startTime && check <= pos->velocities[i]->startTime + pos->velocities[i]->time) {
+			return pos->velocities[i]->speed;
+		}
+	}
+	return pos->baseVelocity;
+}
 
 static const vec3_t *getInterpolatedPosition(long t, idInterpolatedPosition *pos) { 
 	static vec3_t interpolatedPos;
 
-	float velocity = getVelocity(t);
+	float velocity = getVelocity(t, (idCameraPosition *)pos);
 	float timePassed = t - pos->lastTime;
 	pos->lastTime = t;
 
@@ -1142,7 +1154,7 @@ static const vec3_t *getInterpolatedPosition(long t, idInterpolatedPosition *pos
 	float distToTravel = timePassed *= velocity;
 
 	vec3_t temp;
-	VectorCopy(pos->lastPos, temp);
+	VectorCopy(pos->startPos, temp);
 	VectorSubtract(temp, pos->endPos, temp);
 	float distance = VectorLength(temp);
 
@@ -1158,12 +1170,14 @@ static const vec3_t *getInterpolatedPosition(long t, idInterpolatedPosition *pos
 	// the following line does a straigt calc on percentage of time
 	// float percent = (float)(startTime + time - t) / time;
 
-	vec3_t v1 = pos->startPos;
-	vec3_t v2 = pos->endPos;
-	v1 *= (1.0 - percent);
-	v2 *= percent;
-	v1 += v2;
-	interpolatedPos = v1;
+	vec3_t v1;
+	vec3_t v2;
+	VectorCopy(pos->startPos, v1);
+	VectorCopy(pos->endPos, v2);
+	VectorScale(v1, 1.0 - percent, v1);
+	VectorScale(v2, percent, v2);
+	VectorAdd(v1, v2, v1);
+	VectorCopy(v1, interpolatedPos);
 	return &interpolatedPos;
 }
 
@@ -1174,7 +1188,7 @@ static void parseFOV(const char *(*text), idCameraFOV *fov ) {
 	COM_MatchToken( text, "{" );
 	do {
 		t = *text;
-		token = Com_Parse( text );
+		token = COM_ParseExt( text, qfalse );
 	
 		if ( !token[0] ) {
 			break;
@@ -1191,20 +1205,20 @@ static void parseFOV(const char *(*text), idCameraFOV *fov ) {
 			}
 
 			*text = t; // UnParse
-			idStr key = Com_ParseOnLine(text);
-			const char *token = Com_Parse(text);
+			const char *key = COM_ParseExt(text, qfalse);
+			const char *token = COM_ParseExt(text, qfalse);
 			if (Q_stricmp(key, "fov") == 0) {
-				fov = atof(token);
+				fov->fov = atof(token);
 			} else if (Q_stricmp(key, "startFOV") == 0) {
-				startFOV = atof(token);
+				fov->startFOV = atof(token);
 			} else if (Q_stricmp(key, "endFOV") == 0) {
-				endFOV = atof(token);
+				fov->endFOV = atof(token);
 			} else if (Q_stricmp(key, "time") == 0) {
-				time = atoi(token);
+				fov->time = atoi(token);
 			}
 
 			t = *text;
-			token = Com_Parse(text);
+			token = COM_ParseExt(text, qfalse);
 		} while (1);
 
 		if ( !strcmp (token, "}") ) {
@@ -1219,33 +1233,30 @@ static void parseFOV(const char *(*text), idCameraFOV *fov ) {
 
 static qboolean parseToken(const char *key, const char *(*text), idCameraPosition *pos) {
 	const char *t = *text;
-	const char *token = COM_ParseExt(text);
+	const char *token = COM_ParseExt(text, qfalse);
 	if (Q_stricmp(key, "time") == 0) {
-		time = atol(token);
-		return true;
+		pos->time = atol(token);
+		return qtrue;
 	} else if (Q_stricmp(key, "type") == 0) {
-		type = static_cast<idCameraPosition::positionType>(atoi(token));
-		return true;
+		pos->type = atoi(token);
+		return qtrue;
 	} else if (Q_stricmp(key, "velocity") == 0) {
 		long t = atol(token);
-		token = Com_Parse(text);
+		token = COM_ParseExt(text, qfalse);
 		long d = atol(token);
-		token = Com_Parse(text);
+		token = COM_ParseExt(text, qfalse);
 		float s = atof(token);
-		addVelocity(t, d, s);
-		return true;
+		addVelocity(t, d, s, pos);
+		return qtrue;
 	} else if (Q_stricmp(key, "baseVelocity") == 0) {
-		baseVelocity = atof(token);
-		return true;
+		pos->baseVelocity = atof(token);
+		return qtrue;
 	} else if (Q_stricmp(key, "name") == 0) {
-		name = token;
-		return true;
-	} else if (Q_stricmp(key, "time") == 0) {
-		time = atoi(token);
-		return true;
+		memcpy(pos->name, token, sizeof(pos->name));
+		return qtrue;
 	}
 	*text = t; // UnParse
-	return false;
+	return qfalse;
 }
 
 
@@ -1253,10 +1264,10 @@ static qboolean parseToken(const char *key, const char *(*text), idCameraPositio
 static void parseFixed(const char *(*text), idFixedPosition *pos ) {
 	const char *token;
 	const char *t;
-	Com_MatchToken( text, "{" );
+	COM_MatchToken( text, "{" );
 	do {
 		t = *text;
-		token = Com_Parse( text );
+		token = COM_ParseExt( text, qfalse );
 	
 		if ( !token[0] ) {
 			break;
@@ -1273,18 +1284,18 @@ static void parseFixed(const char *(*text), idFixedPosition *pos ) {
 			}
 
 			*text = t; // UnParse
-			const char *key = Com_ParseExt(text, qfalse);
-			const char *token = Com_ParseExt(text, qfalse);
+			const char *key = COM_ParseExt(text, qfalse);
+			const char *token = COM_ParseExt(text, qfalse);
 			if (Q_stricmp(key, "pos") == 0) {
 				*text = t; // UnParse
-				Com_Parse1DMatrix( text, 3, pos );
+				Parse1DMatrix( text, 3, pos->pos );
 			} else {
 				*text = t; // UnParse
-				parseToken(key, text, pos);	
+				parseToken(key, text, (idCameraPosition *)pos);	
 			}
 
 			t = *text;
-			token = Com_Parse(text);
+			token = COM_ParseExt(text, qfalse);
 		} while (1);
 
 		if ( !strcmp (token, "}") ) {
@@ -1294,17 +1305,17 @@ static void parseFixed(const char *(*text), idFixedPosition *pos ) {
 	} while (1);
  
 	*text = t; // UnParse
-	Com_MatchToken( text, "}" );
+	COM_MatchToken( text, "}" );
 }
 
 static void parseInterpolated(const char *(*text), idInterpolatedPosition *pos ) {
 	const char *token;
 	const char *t;
 
-	Com_MatchToken( text, "{" );
+	COM_MatchToken( text, "{" );
 	do {
 		t = *text;
-		token = Com_Parse( text );
+		token = COM_ParseExt( text, qfalse );
 	
 		if ( !token[0] ) {
 			break;
@@ -1321,21 +1332,21 @@ static void parseInterpolated(const char *(*text), idInterpolatedPosition *pos )
 			}
 
 			*text = t; // UnParse
-			const char *key = Com_ParseOnLine(text);
-			const char *token = Com_Parse(text);
+			const char *key = COM_ParseExt(text, qfalse);
+			const char *token = COM_ParseExt(text, qfalse);
 			if (Q_stricmp(key, "startPos") == 0) {
 				*text = t; // UnParse
-				Com_Parse1DMatrix( text, 3, pos->startPos );
+				Parse1DMatrix( text, 3, pos->startPos );
 			} else if (Q_stricmp(key, "endPos") == 0) {
 				*text = t; // UnParse
-				Com_Parse1DMatrix( text, 3, pos->endPos );
+				Parse1DMatrix( text, 3, pos->endPos );
 			} else {
 				*text = t; // UnParse
 				parseToken(key, text, pos);	
 			}
 
 			t = *text;
-			token = Com_Parse(text);
+			token = COM_ParseExt(text, qfalse);
 		} while (1);
 
 		if ( !strcmp (token, "}") ) {
@@ -1345,17 +1356,17 @@ static void parseInterpolated(const char *(*text), idInterpolatedPosition *pos )
 	} while (1);
 
 	*text = t; // UnParse
-	Com_MatchToken( text, "}" );
+	COM_MatchToken( text, "}" );
 }
 
 
 static void parseSpline(const char *(*text), idSplinePosition *spline ) {
 	const char *token;
 	const char *t;
-	Com_MatchToken( text, "{" );
+	COM_MatchToken( text, "{" );
 	do {
 		t = *text;
-		token = Com_Parse( text );
+		token = COM_ParseExt( text, qfalse );
 	
 		if ( !token[0] ) {
 			break;
@@ -1372,8 +1383,8 @@ static void parseSpline(const char *(*text), idSplinePosition *spline ) {
 			}
 
 			*text = t; // UnParse
-			const char *key = Com_ParseExt(text);
-			const char *token = Com_ParseExt(text);
+			const char *key = COM_ParseExt(text);
+			const char *token = COM_ParseExt(text);
 			if (Q_stricmp(key.c_str(), "target") == 0) {
 				target.parse(text);
 			} else {
@@ -1382,7 +1393,7 @@ static void parseSpline(const char *(*text), idSplinePosition *spline ) {
 			}
 
 			t = *text;
-			token = Com_Parse(text);
+			token = COM_ParseExt(text, qfalse);
 		} while (1);
 
 		if ( !strcmp (token, "}") ) {
@@ -1392,7 +1403,7 @@ static void parseSpline(const char *(*text), idSplinePosition *spline ) {
 	} while (1);
 
 	*text = t; // UnParse
-	Com_MatchToken( text, "}" );
+	COM_MatchToken( text, "}" );
 }
 
 
@@ -1444,7 +1455,7 @@ static void writeFixed(fileHandle_t file, const char *p, idFixedPosition *pos) {
 	const char *s = va("\t%s {\n", p);
 	FS_Write(s, strlen(s), file);
 	writePosition(file, p, pos->base);
-	s = va("\t\tpos ( %f %f %f )\n", pos.x, pos.y, pos.z);
+	s = va("\t\tpos ( %f %f %f )\n", pos[0], pos[1], pos[2]);
 	FS_Write(s, strlen(s), file);
 	s = "\t}\n";
 	FS_Write(s, strlen(s), file);
@@ -1454,9 +1465,9 @@ static void writeInterpolated(fileHandle_t file, const char *p, idInterpolatedPo
 	idStr s = va("\t%s {\n", p);
 	FS_Write(s, strlen(s), file);
 	writePosition(file, p, pos->pos);
-	s = va("\t\tstartPos ( %f %f %f )\n", startPos.x, startPos.y, startPos.z);
+	s = va("\t\tstartPos ( %f %f %f )\n", startPos[0], startPos[1], startPos[2]);
 	FS_Write(s, strlen(s), file);
-	s = va("\t\tendPos ( %f %f %f )\n", endPos.x, endPos.y, endPos.z);
+	s = va("\t\tendPos ( %f %f %f )\n", endPos[0], endPos[1], endPos[2]);
 	FS_Write(s, strlen(s), file);
 	s = "\t}\n";
 	FS_Write(s, strlen(s), file);
