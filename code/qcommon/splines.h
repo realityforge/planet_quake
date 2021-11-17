@@ -196,17 +196,6 @@ const vec3_t *getPosition(long time, idSplineList *spline);
 //	void draw(qboolean editMode);
 void addToRenderer( void );
 
-void addPoint(const vec3_t v, idSplineList *spline) {
-	VectorCopy(v, spline->controlPoints[spline->numControlPoints]);
-	spline->numControlPoints++;
-	spline->dirty = qtrue;
-}
-
-void addPointXYZ(float x, float y, float z, idSplineList *spline) {
-	addPoint((vec3_t){x, y, z}, spline);
-	spline->dirty = qtrue;
-}
-
 //void updateSelection(const vec3_t move);
 
 /*
@@ -804,8 +793,8 @@ static idCameraPosition *newFromType(positionType t) {
 	switch (t) {
 		case CP_FIXED : return initFixedPosition(vec3_origin);
 		case CP_INTERPOLATED : return initInterpolatedPosition(vec3_origin, vec3_origin, 0);
-	case CP_SPLINE : return initSplinePosition(0);
-	default:
+	  case CP_SPLINE : return initSplinePosition(0);
+	  default:
 			break;
 	};
 	return NULL;
@@ -822,13 +811,6 @@ idCameraPosition *getActiveTarget(idCameraDef *cam) {
 }
 */
 
-idCameraPosition *getActiveTarget(idCameraDef *cam) {
-	if (cam->numTargetPositions == 0) {
-		addTarget(NULL, CP_FIXED);
-		return &cam->targetPositions[0];
-	}
-	return &cam->targetPositions[cam->activeTarget];
-}
 
 void setActiveTarget(int index, idCameraDef *cam) {
 	assert(index >= 0 && index < cam->numTargetPositions);

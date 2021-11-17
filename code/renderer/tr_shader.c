@@ -1994,45 +1994,70 @@ static qboolean ParseShader( const char **text )
       shader.allowCompress = qfalse;
       continue;
     }
-		// TODO: rewrite these to use everything until the end of the line
-    else if ( !Q_stricmp( token, "dpoffsetmapping" )
-      || !Q_stricmp(token, "dp_refract")) {
-      COM_ParseExt( text, qfalse );
+		else if (!Q_stricmp( token, "translucent" ) )
+		{
+			shader.contentFlags |= CONTENTS_TRANSLUCENT;
+			continue;
+		}
+		else if (!Q_stricmp( token, "twosided" ) )
+		{
+			shader.cullType = CT_TWO_SIDED;
+			continue;
+		}
+    // ydnar: implicit default mapping to eliminate redundant/incorrect explicit shader stages
+		else if ( !Q_stricmpn( token, "implicit", 8 ) ) {
+      if ( s >= MAX_SHADER_STAGES ) {
+				ri.Printf( PRINT_WARNING, "WARNING: too many stages in shader %s (max is %i)\n", shader.name, MAX_SHADER_STAGES );
+				return qfalse;
+			}
+
+			// set implicit mapping state
+			if ( !Q_stricmp( token, "implicitBlend" ) ) {
+				stages[s].stateBits &= GLS_DEPTHMASK_TRUE | GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA;
+				shader.cullType = CT_TWO_SIDED;
+			} else if ( !Q_stricmp( token, "implicitMask" ) )     {
+				stages[s].stateBits &= GLS_DEPTHMASK_TRUE | GLS_ATEST_GE_80;
+				shader.cullType = CT_TWO_SIDED;
+			} else    // "implicitMap"
+			{
+				stages[s].stateBits &= GLS_DEPTHMASK_TRUE;
+				shader.cullType = CT_FRONT_SIDED;
+			}
+      stages[s].active = qtrue;
+			s++;
+
+      // get image
       token = COM_ParseExt( text, qfalse );
-      if(!Q_stricmp(token, "4")) {
-      } else {
-        COM_ParseExt( text, qfalse );
-        COM_ParseExt( text, qfalse );
+      if ( token[ 0 ] != '\0' && token[ 0 ] != '-' ) {
+        const char	*stageText = va("\nmap %s\n}", token);
+        if ( !ParseStage( &stages[s], &stageText ) )
+        {
+          stages[s].active = qfalse;
+          continue;
+        }
+      } else
+      {
+        const char	*stageText = va("\nmap %s.tga\n}", shader.name);
+        if ( !ParseStage( &stages[s], &stageText ) )
+        {
+          stages[s].active = qfalse;
+          continue;
+        }
       }
-      continue;
-    }
-    else if ( !Q_stricmp( token, "dpglossexponentmod" )
-      || !Q_stricmp(token, "dpglossintensitymod")) {
-      COM_ParseExt( text, qfalse );
-      continue;
-    }
-    else if ( !Q_stricmp( token, "dp_camera" )
-      || !Q_stricmp(token, "nolightmap")) {
-      continue;
-    }
-    else if (!Q_stricmp(token, "xon_nowarn")) {
-      COM_ParseExt( text, qfalse );
-    }
-    else if (!Q_stricmp(token, "dpreflectcube")) {
-      COM_ParseExt( text, qfalse );
-    }
-    else if (!Q_stricmp(token, "dp_water")) {
-      COM_ParseExt( text, qfalse );
-      COM_ParseExt( text, qfalse );
-      COM_ParseExt( text, qfalse );
-      COM_ParseExt( text, qfalse );
-      COM_ParseExt( text, qfalse );
-      COM_ParseExt( text, qfalse );
-      COM_ParseExt( text, qfalse );
-      COM_ParseExt( text, qfalse );
-      COM_ParseExt( text, qfalse );
-      COM_ParseExt( text, qfalse );
-      COM_ParseExt( text, qfalse );
+      stages[s].active = qtrue;
+
+			continue;
+		}
+    else if ( !Q_stricmp( token, "dpoffsetmapping" )
+      || !Q_stricmp(token, "dp_refract")
+			|| !Q_stricmp(token, "dpglossexponentmod")
+      || !Q_stricmp(token, "dpglossintensitymod")
+			|| !Q_stricmp(token, "dp_camera")
+      || !Q_stricmp(token, "nolightmap")
+			|| !Q_stricmp(token, "xon_nowarn")
+		  || !Q_stricmp(token, "dpreflectcube")
+		  || !Q_stricmp(token, "dp_water")) {
+			SkipRestOfLine(text);
     }
 		else
 		{

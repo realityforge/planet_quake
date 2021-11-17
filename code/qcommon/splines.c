@@ -97,12 +97,12 @@ typedef struct {
 } idCameraPosition;
 
 typedef struct {
-	idCameraPosition *base;
+	idCameraPosition base;
 	vec3_t			     pos;
 } idFixedPosition;
 
 typedef struct {
-	idCameraPosition *pos;
+	idCameraPosition pos;
 	qboolean first;
 	vec3_t startPos;
 	vec3_t endPos;
@@ -111,7 +111,7 @@ typedef struct {
 } idInterpolatedPosition;
 
 typedef struct {
-	idCameraPosition *pos;
+	idCameraPosition pos;
 	idSplineList *target;
 } idSplinePosition;
 
@@ -293,7 +293,7 @@ float calcSpline(int step, float tension) {
 	return 0.0;
 }
 
-void buildSpline(idSplineList *spline) {
+static void buildSpline(idSplineList *spline) {
 	//int start = Sys_Milliseconds();
 	spline->numSplinePoints = 0;
 	for(int i = 3; i < spline->numControlPoints; i++) {
@@ -317,7 +317,7 @@ void buildSpline(idSplineList *spline) {
 }
 
 /*
-void idSplineList::draw(bool editMode) {
+void idSplineList::draw(qboolean editMode) {
 	int i;
 	vec4_t yellow(1, 1, 0, 1);
         
@@ -374,7 +374,7 @@ void idSplineList::draw(bool editMode) {
 }
 */
 
-float totalDistance(idSplineList *spline) {
+static float totalDistance(idSplineList *spline) {
 
 	if (spline->numControlPoints == 0) {
 		return 0.0;
@@ -395,7 +395,7 @@ float totalDistance(idSplineList *spline) {
 	return dist;
 }
 
-void initPosition(long bt, long totalTime, idSplineList *spline) {
+static void initPosition(long bt, long totalTime, idSplineList *spline) {
 
 	if (spline->dirty) {
 		buildSpline(spline);
@@ -428,7 +428,7 @@ void initPosition(long bt, long totalTime, idSplineList *spline) {
 }
 
 
-void updateSelection(const vec3_t move, idSplineList *spline) {
+static void updateSelection(const vec3_t move, idSplineList *spline) {
 	if (spline->selected) {
 		spline->dirty = qtrue;
 		VectorAdd(*spline->selected, move, *spline->selected);
@@ -436,7 +436,7 @@ void updateSelection(const vec3_t move, idSplineList *spline) {
 }
 
 
-void setSelectedPoint(vec3_t *p, idSplineList *spline) {
+static void setSelectedPoint(vec3_t *p, idSplineList *spline) {
 	if (p) {
 		SnapVector(*p);
 		for(int i = 0; i < spline->numControlPoints; i++) {
@@ -449,7 +449,7 @@ void setSelectedPoint(vec3_t *p, idSplineList *spline) {
 	}
 }
 
-const vec3_t *getPosition(long t, idSplineList *spline) {
+static const vec3_t *getPosition(long t, idSplineList *spline) {
 	static vec3_t interpolatedPos;
 	//static long lastTime = -1;
 
@@ -485,11 +485,24 @@ const vec3_t *getPosition(long t, idSplineList *spline) {
 	return &spline->splinePoints[count-1];
 }
 
-void parseSplines(const char *(*text), idSplineList *spline ) {
+static void addPoint(const vec3_t v, idSplineList *spline) {
+	VectorCopy(v, spline->controlPoints[spline->numControlPoints]);
+	spline->numControlPoints++;
+	spline->dirty = qtrue;
+}
+
+static void addPointXYZ(float x, float y, float z, idSplineList *spline) {
+	addPoint((vec3_t){x, y, z}, spline);
+	spline->dirty = qtrue;
+}
+
+static void parseSplines(const char *(*text), idSplineList *spline ) {
 	const char *token;
+	const char *t;
 	//Com_MatchToken( text, "{" );
 	do {
-		token = Com_Parse( text );
+		token = COM_ParseExt( text, qfalse );
+		t = *text;
 	
 		if ( !token[0] ) {
 			break;
@@ -504,15 +517,15 @@ void parseSplines(const char *(*text), idSplineList *spline ) {
 				break;
 			}
 
-			Com_UngetToken();
-			idStr key = Com_ParseOnLine(text);
-			const char *token = Com_Parse(text);
-			if (Q_stricmp(key.c_str(), "granularity") == 0) {
-				granularity = atof(token);
-			} else if (Q_stricmp(key.c_str(), "name") == 0) {
-				name = token;
+			*text = t;
+			const char *key = COM_ParseExt(text, qfalse);
+			const char *token = COM_ParseExt(text, qfalse);
+			if (Q_stricmp(key, "granularity") == 0) {
+				spline->granularity = atof(token);
+			} else if (Q_stricmp(key, "name") == 0) {
+				memcpy(spline->name, token, sizeof(spline->name));
 			}
-			token = Com_Parse(text);
+			token = COM_ParseExt(text, qfalse);
 
 		} while (1);
 
@@ -520,11 +533,11 @@ void parseSplines(const char *(*text), idSplineList *spline ) {
 			break;
 		}
 
-		Com_UngetToken();
+		*text = t;
 		// read the control point
 		vec3_t point;
-		Com_Parse1DMatrix( text, 3, point );
-		addPoint(point[0], point[1], point[2]);
+		Parse1DMatrix( text, 3, point );
+		addPointXYZ(point[0], point[1], point[2], spline);
 	} while (1);
  
 	//Com_UngetToken();
@@ -532,24 +545,24 @@ void parseSplines(const char *(*text), idSplineList *spline ) {
 	spline->dirty = qtrue;
 }
 
-void idSplineList::write(fileHandle_t file, const char *p) {
-	idStr s = va("\t\t%s {\n", p);
-	FS_Write(s.c_str(), s.length(), file);
+void writeSplines(fileHandle_t file, const char *p, idSplineList *spline) {
+	const char *s = va("\t\t%s {\n", p);
+	FS_Write(s, strlen(s), file);
 	//s = va("\t\tname %s\n", name.c_str());
 	//FS_Write(s.c_str(), s.length(), file);
-	s = va("\t\t\tgranularity %f\n", granularity);
-	FS_Write(s.c_str(), s.length(), file);
-	int count = controlPoints.Num();
+	s = va("\t\t\tgranularity %f\n", spline->granularity);
+	FS_Write(s, strlen(s), file);
+	int count = spline->numControlPoints;
 	for (int i = 0; i < count; i++) {
-		s = va("\t\t\t( %f %f %f )\n", controlPoints[i]->x, controlPoints[i]->y, controlPoints[i]->z);
-		FS_Write(s.c_str(), s.length(), file);
+		s = va("\t\t\t( %f %f %f )\n", spline->controlPoints[i][0], spline->controlPoints[i][1], spline->controlPoints[i][2]);
+		FS_Write(s, strlen(s), file);
 	}
 	s = "\t\t}\n";
-	FS_Write(s.c_str(), s.length(), file);
+	FS_Write(s, strlen(s), file);
 }
 
 
-void idCameraDef::getActiveSegmentInfo(int segment, vec3_t &origin, vec3_t &direction, float *fov) {
+void getActiveSegmentInfo(int segment, vec3_t origin, vec3_t direction, float *fov, idCameraDef *cam) {
 #if 0
 	if (!cameraSpline.validTime()) {
 		buildCamera();
@@ -585,43 +598,51 @@ void idCameraDef::getActiveSegmentInfo(int segment, vec3_t &origin, vec3_t &dire
 */
 }
 
-bool idCameraDef::getCameraInfo(long time, vec3_t &origin, vec3_t &direction, float *fv) {
+idCameraPosition *getActiveTarget(idCameraDef *cam) {
+	if (cam->numTargetPositions == 0) {
+		addTarget(NULL, CP_FIXED);
+		return &cam->targetPositions[0];
+	}
+	return &cam->targetPositions[cam->activeTarget];
+}
+
+qboolean getCameraInfo(long time, vec3_t origin, vec3_t direction, float *fv, idCameraDef *cam) {
 
 
-	if ((time - startTime) / 1000 > totalTime) {
-		return false;
+	if ((time - cam->startTime) / 1000 > cam->totalTime) {
+		return qfalse;
 	}
 
 
-	for (int i = 0; i < events.Num(); i++) {
-		if (time >= startTime + events[i]->getTime() && !events[i]->getTriggered()) {
-			events[i]->setTriggered(true);
-			if (events[i]->getType() == idCameraEvent::EVENT_TARGET) {
-				setActiveTargetByName(events[i]->getParam());
-				getActiveTarget()->start(startTime + events[i]->getTime());
+	for (int i = 0; i < cam->numEvents; i++) {
+		if (time >= cam->startTime + cam->events[i].time && !cam->events[i].triggered) {
+			cam->events[i]->triggered = qtrue;
+			if (cam->events[i]->type == EVENT_TARGET) {
+				setActiveTargetByName(cam->events[i]->param);
+				getActiveTarget(cam)->start(cam->startTime + cam->events[i]->time);
 				//Com_Printf("Triggered event switch to target: %s\n",events[i]->getParam());
-			} else if (events[i]->getType() == idCameraEvent::EVENT_TRIGGER) {
+			} else if (cam->events[i]->type == EVENT_TRIGGER) {
 				//idEntity *ent = NULL;
 				//ent = level.FindTarget( ent, events[i]->getParam());
 				//if (ent) {
 				//	ent->signal( SIG_TRIGGER );
 				//	ent->ProcessEvent( &EV_Activate, world );
 				//}
-			} else if (events[i]->getType() == idCameraEvent::EVENT_FOV) {
+			} else if (cam->events[i]->type == EVENT_FOV) {
 				//*fv = fov = atof(events[i]->getParam());
-			} else if (events[i]->getType() == idCameraEvent::EVENT_STOP) {
-				return false;
+			} else if (cam->events[i]->type == EVENT_STOP) {
+				return qfalse;
 			}
 		}
 	}
 
-	origin = *cameraPosition->getPosition(time);
+	origin = *cam->cameraPosition->getPosition(time);
 	
-	*fv = fov.getFOV(time);
+	*fv = cam->fov.getFOV(time);
 
-	vec3_t temp = origin;
+	VectorCopy(origin, temp);
 
-	int numTargets = targetPositions.Num();
+	int numTargets = cam->numTargetPositions;
 	if (numTargets == 0) {
 /*
 		// follow the path
@@ -636,17 +657,17 @@ bool idCameraDef::getCameraInfo(long time, vec3_t &origin, vec3_t &direction, fl
 		}
 */
 	} else {
-		temp = *getActiveTarget()->getPosition(time);
+		temp = *getActiveTarget(cam)->getPosition(time);
 	}
-	
-	temp -= origin;
-	temp.Normalize();
-	direction = temp;
 
-	return true;
+	VectorSubtract(temp, origin, temp);
+	VectorNormalize(temp);
+	VectorCopy(temp, direction);
+
+	return qtrue;
 }
 
-bool idCameraDef::waitEvent(int index) {
+qboolean idCameraDef::waitEvent(int index) {
 	//for (int i = 0; i < events.Num(); i++) {
 	//	if (events[i]->getSegment() == index && events[i]->getType() == idCameraEvent::EVENT_WAIT) {
 	//		return true;
@@ -1059,7 +1080,7 @@ void idCameraFOV::parse(const char *(*text)  ) {
 	Com_MatchToken( text, "}" );
 }
 
-bool idCameraPosition::parseToken(const char *key, const char *(*text)) {
+qboolean idCameraPosition::parseToken(const char *key, const char *(*text)) {
 	const char *token = Com_Parse(text);
 	if (Q_stricmp(key, "time") == 0) {
 		time = atol(token);
