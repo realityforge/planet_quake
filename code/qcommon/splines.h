@@ -381,11 +381,6 @@ const char *typeStr() {
 }
 */
 
-void calcVelocity(float distance, idCameraPosition *pos) {
-	float secs = (float)pos->time / 1000;
-	pos->baseVelocity = distance / secs;
-}
-
 //};
 
 
@@ -504,15 +499,7 @@ virtual void draw(qboolean editMode) {
 }
 */
 //virtual 
-void startInterpolatedPosition(long t, idInterpolatedPosition *ip) {
-	vec3_t temp;
-	ip->pos->startTime = t;
-	ip->lastTime = ip->pos->startTime;
-	ip->distSoFar = 0.0;
-	VectorCopy(ip->startPos, temp);
-	VectorSubtract(ip->startPos, ip->endPos, temp);
-	calcVelocity(VectorNormalize(temp), ip->pos);
-}
+
 
 //};
 
@@ -525,11 +512,6 @@ void startInterpolatedPosition(long t, idInterpolatedPosition *ip) {
 //public:
 
 //virtual 
-void startSplinePosition(long t, idSplinePosition *sp) {
-	sp->pos->startTime = t;
-	initPosition(t, sp->pos->time, sp->target);
-	calcVelocity(totalDistance(sp->target), sp->pos);
-}
 
 /*
 
@@ -739,23 +721,6 @@ void stopCamera() {
 
 void getActiveSegmentInfo(int segment, vec3_t origin, vec3_t direction, float *fv);
 
-qboolean getCameraInfo(long time, float *origin, float *direction, float *fv, idCameraDef *cam) {
-	vec3_t org, dir;
-	org[0] = origin[0];
-	org[1] = origin[1];
-	org[2] = origin[2];
-	dir[0] = direction[0];
-	dir[1] = direction[1];
-	dir[2] = direction[2];
-	qboolean b = cam->getCameraInfo(time, org, dir, fv);
-	origin[0] = org[0];
-	origin[1] = org[1];
-	origin[2] = org[2];
-	direction[0] = dir[0];
-	direction[1] = dir[1];
-	direction[2] = dir[2];
-	return b;
-}
 /*
 	void draw(qboolean editMode) {
                 // gcc doesn't allow casting away from bools
