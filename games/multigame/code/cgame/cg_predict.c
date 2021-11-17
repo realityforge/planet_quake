@@ -1213,12 +1213,22 @@ void CG_PredictPlayerState( void ) {
 		if ( cg_pmove.pmove_fixed ) {
 			cg_pmove.cmd.serverTime = ((cg_pmove.cmd.serverTime + cg_pmove.pmove_msec-1) / cg_pmove.pmove_msec) * cg_pmove.pmove_msec;
 		}
+		if (cgs.scrFadeAlphaCurrent) {
+			cg_pmove.cmd.buttons = 0;
+			cg_pmove.cmd.forwardmove = 0;
+			cg_pmove.cmd.rightmove = 0;
+			cg_pmove.cmd.upmove = 0;
+			if (cg_pmove.cmd.serverTime - cg.predictedPlayerState.commandTime > 1)
+				cg_pmove.cmd.serverTime = cg.predictedPlayerState.commandTime + 1;
+		}
+
 #if 0
 		if ( !cg_optimizePrediction.integer ) {
 			Pmove (&cg_pmove, cg_entities[cg.snap->ps.clientNum].items);
 		} else 
 #endif
-		if ( /*cg_optimizePrediction.integer && */ ( cmdNum >= predictCmd || ( stateIndex + 1 ) % NUM_SAVED_STATES == cg.stateHead ) ) {
+		if ( /*cg_optimizePrediction.integer && */ ( cmdNum >= predictCmd 
+			|| ( stateIndex + 1 ) % NUM_SAVED_STATES == cg.stateHead ) ) {
 
 			Pmove( &cg_pmove, cg_entities[cg.snap->ps.clientNum].items, 
         sources, destinations, sourcesAngles, destinationsAngles );

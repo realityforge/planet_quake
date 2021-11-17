@@ -165,11 +165,9 @@ typedef enum {
 	// 1.32
 	CG_FS_SEEK,
 
-/*
 	CG_LOADCAMERA,
 	CG_STARTCAMERA,
 	CG_GETCAMERAINFO,
-*/
 
 	CG_FLOOR = 107,
 	CG_CEIL,

@@ -659,20 +659,29 @@ static int CG_CalcViewValues( void ) {
 	CG_CalcVrect();
 
 	ps = &cg.predictedPlayerState;
-/*
+
 	if (cg.cameraMode) {
 		vec3_t origin, angles;
-		if (trap_getCameraInfo(cg.time, &origin, &angles)) {
+		float fov = 90;
+		if (trap_getCameraInfo(cg.time, &origin, &angles, &fov)) {
 			VectorCopy(origin, cg.refdef.vieworg);
 			angles[ROLL] = 0;
+			angles[PITCH] = -angles[PITCH];
 			VectorCopy(angles, cg.refdefViewAngles);
 			AnglesToAxis( cg.refdefViewAngles, cg.refdef.viewaxis );
 			return CG_CalcFov();
 		} else {
 			cg.cameraMode = qfalse;
+			CG_Fade(255, 0, 0);				// go black
+			CG_Fade(0, cg.time + 200, 1500);	// then fadeup
+			// 
+			// letterbox look
+			//
+			// TODO: https://web.archive.org/web/20140701154219/http://rfactory.org/singleEntities.html
+			// black_bars = 0;
 		}
 	}
-*/
+
 	// intermission view
 	if ( ps->pm_type == PM_INTERMISSION ) {
 		VectorCopy( ps->origin, cg.refdef.vieworg );

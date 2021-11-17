@@ -1022,6 +1022,11 @@ static void CG_ServerCommand( void ) {
 		return;
 	}
 
+	if ( !strcmp( cmd, "startCam" ) ) {
+		CG_StartCamera( CG_Argv(1), atoi(CG_Argv(2)) );
+		return;
+	}
+
 	if ( !strcmp( cmd, "cp" ) ) {
 		CG_CenterPrint( CG_Argv(1), SCREEN_HEIGHT * 0.30, BIGCHAR_WIDTH );
 		return;

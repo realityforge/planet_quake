@@ -938,6 +938,7 @@ static void startCamera_real(long t, idCameraDef *cam) {
 	buildCamera(cam);
 	cam->cameraPosition->time = t;
 	startPosition(t, cam->cameraPosition);
+	cam->fov->startTime = t;
 	//for (int i = 0; i < targetPositions.Num(); i++) {
 	//	targetPositions[i]->
 	//}
@@ -1560,17 +1561,17 @@ static void clearCamera(idCameraDef *cam) {
 
 qboolean loadCamera(const char *name) {
 	clearCamera(&camera);
-  return loadCamera_real(name, &camera);
+  return loadCamera_real(va("cameras/%s.cam", name), &camera);
 }
 
 
-qboolean getCameraInfo(int time, float *origin, float *angles) {
+qboolean getCameraInfo(int time, float *origin, float *angles, float *fov) {
 	vec3_t dir, org;
 	org[0] = origin[0];
 	org[1] = origin[1];
 	org[2] = origin[2];
-	float fov = 90;
-	if (getCameraInfo_real(time, org, dir, &fov, &camera)) {
+	//float fov = 90;
+	if (getCameraInfo_real(time, org, dir, fov, &camera)) {
 		origin[0] = org[0];
 		origin[1] = org[1];
 		origin[2] = org[2];

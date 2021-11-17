@@ -565,31 +565,6 @@ void updateSelection(const vec3_t move, idSplinePosition *sp) {
 
 
 
-//class idCameraFOV {
-//protected:
-
-idCameraFOV *initCameraFOV(int s, int e, long t, int v) {
-	idCameraFOV *result = Z_Malloc(sizeof(idCameraFOV));
-	result->startFOV = s;
-	result->endFOV = e;
-	result->time = t;
-	result->fov = v;
-	return result;
-}
-
-//~idCameraFOV(){}
-
-//void start(long t) {
-//	startTime = t;
-//}
-
-//void parse(const char *(*text));
-//void write(fileHandle_t file, const char *name);
-
-//};
-
-
-
 
 //class idCameraEvent {
 //public:
@@ -678,21 +653,6 @@ qboolean load(const char *filename);
 void save(const char *filename);
 
 void buildCamera( idCameraDef *cam );
-
-//idSplineList *getcameraPosition() {
-//	return &cameraPosition;
-//}
-
-void addTarget(const char *name, positionType type);
-
-/*
-idCameraPosition *getActiveTarget(idCameraDef *cam) {
-	if (cam->numTargetPositions == 0) {
-		addTarget(NULL, CP_FIXED);
-	}
-	return &cam->targetPositions[];
-}
-*/
 
 
 /*
