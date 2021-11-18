@@ -483,13 +483,10 @@ CG_StartCamera
 ==============
 */
 void CG_StartCamera( const char *name, qboolean startBlack ) {
-	char lname[MAX_QPATH];
-	COM_StripExtension(name, lname, MAX_QPATH);
-	Q_strcat( lname, sizeof(lname), ".camera" );
-	if (trap_loadCamera(va("cameras/%s", lname)))
+	if (trap_loadCamera(name))
 	{
 		cg.cameraMode = qtrue;
-     if(startBlack)
+		if(startBlack)
 		{
 			CG_Fade(255, 0, 0);	// go black
 			CG_Fade(0, cg.time, 1500);
@@ -500,7 +497,7 @@ void CG_StartCamera( const char *name, qboolean startBlack ) {
 		//black_bars=1;
 		trap_startCamera(cg.time);	// camera on in client
 	} else {
-		CG_Printf ("Unable to load camera %s\n",name);
+		CG_Printf ("Unable to load camera \"%s\"\n",name);
 	}
 }
 

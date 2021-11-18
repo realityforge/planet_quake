@@ -1,5 +1,5 @@
 cameraPathDef 
-{ 
+{
   time 7.500000
   camera_Interpolated
   {
@@ -29,7 +29,7 @@ cameraPathDef
     param "target1"
     time 0
   }
-  event 
+  event
   {
     type 1
     param "7"
@@ -37,6 +37,6 @@ cameraPathDef
   }
   fov
   {
-    fov 90.000000
+    fov 85.000000
   }
 }

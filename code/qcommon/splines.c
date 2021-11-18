@@ -78,7 +78,7 @@ typedef struct {
 	positionType type;
 	char		name[MAX_QPATH];
 	qboolean	editMode;
-	idVelocity **velocities;
+	idVelocity *velocities;
 	int numVelocities;
 	float		baseVelocity;
 } idCameraPosition;
@@ -128,7 +128,7 @@ typedef struct {
 	int numTargetPositions;
 	idCameraEvent *events;
 	int numEvents;
-	idCameraFOV *fov;
+	idCameraFOV fov;
 	int activeTarget;
 	float totalTime;
 	float baseTime;
@@ -138,6 +138,9 @@ typedef struct {
 	qboolean editMode;
 } idCameraDef;
 
+#define MAX_CAMERA_EVENTS 1024
+#define MAX_CAMERA_POSITIONS 1024
+#define MAX_CONTROL_POINTS 1024
 idCameraDef  splineList;
 idCameraDef *g_splineList = &splineList;
 idCameraDef  camera;
@@ -478,24 +481,30 @@ static const vec3_t *getSplinePosition(long t, idSplineList *spline) {
 	return &spline->splinePoints[count-1];
 }
 
+/*
 static void addPoint(const vec3_t v, idSplineList *spline) {
 	VectorCopy(v, spline->controlPoints[spline->numControlPoints]);
 	spline->numControlPoints++;
 	spline->dirty = qtrue;
 }
+*/
 
 static void addPointXYZ(float x, float y, float z, idSplineList *spline) {
-	addPoint((vec3_t){x, y, z}, spline);
+	spline->controlPoints[spline->numControlPoints][0] = x;
+	spline->controlPoints[spline->numControlPoints][1] = y;
+	spline->controlPoints[spline->numControlPoints][2] = z;
+	spline->numControlPoints++;
 	spline->dirty = qtrue;
 }
 
 static void parseSplines(const char *(*text), idSplineList *spline ) {
 	const char *token;
 	const char *t;
+
 	//COM_MatchToken( text, "{" );
 	do {
 		t = *text;
-		token = COM_ParseExt( text, qfalse );
+		token = COM_Parse(text);
 	
 		if ( !token[0] ) {
 			break;
@@ -511,17 +520,17 @@ static void parseSplines(const char *(*text), idSplineList *spline ) {
 			}
 
 			*text = t; // UnParse
-			const char *key = COM_ParseExt(text, qfalse);
-			const char *token = COM_ParseExt(text, qfalse);
+			const char *key = COM_Parse(text);
 			if (Q_stricmp(key, "granularity") == 0) {
+				token = COM_Parse(text);
 				spline->granularity = atof(token);
 			} else if (Q_stricmp(key, "name") == 0) {
+				token = COM_Parse(text);
 				memcpy(spline->name, token, sizeof(spline->name));
 			}
 
 			t = *text;
-			token = COM_ParseExt(text, qfalse);
-
+			token = COM_Parse(text);
 		} while (1);
 
 		if ( !Q_stricmp (token, "}") ) {
@@ -598,6 +607,8 @@ static idInterpolatedPosition *initInterpolatedPosition(vec3_t start, vec3_t end
 	idInterpolatedPosition *result = Z_Malloc(sizeof(idInterpolatedPosition));
 	result->pos.time = time;
 	result->pos.type = CP_INTERPOLATED;
+	result->pos.numVelocities = 0;
+	result->pos.velocities = Z_Malloc(sizeof(idVelocity) * MAX_CAMERA_EVENTS);
 	result->first = qtrue;
 	VectorClear(result->startPos);
 	VectorClear(result->endPos);
@@ -607,13 +618,18 @@ static idInterpolatedPosition *initInterpolatedPosition(vec3_t start, vec3_t end
 static idSplineList *initSplineList(const char *p) {
 	idSplineList *result = Z_Malloc(sizeof(idSplineList));
 	memcpy(result->name, p, sizeof(result->name));
+	result->controlPoints = Z_Malloc(sizeof(vec3_t) * MAX_CONTROL_POINTS);
+	result->numControlPoints = 0;
+	result->dirty = qtrue;
 	return result;
 }
 
 static idSplinePosition *initSplinePosition(long time) {
 	idSplinePosition *result = Z_Malloc(sizeof(idSplinePosition));
-	result->pos.time = time;
 	result->target = initSplineList("");
+	result->pos.time = time;
+	result->pos.numVelocities = 0;
+	result->pos.velocities = Z_Malloc(sizeof(idVelocity) * MAX_CAMERA_EVENTS);
 	return result;
 }
 
@@ -623,7 +639,9 @@ static idCameraPosition *newFromType(positionType t) {
 		{
 			idFixedPosition *pos = (idFixedPosition *)Z_Malloc(sizeof(idFixedPosition));
 			pos->base.type = CP_FIXED;
-			VectorCopy(vec3_origin, pos->pos);
+			VectorClear(pos->pos);
+			pos->base.numVelocities = 0;
+			pos->base.velocities = Z_Malloc(sizeof(idVelocity) * MAX_CAMERA_EVENTS);
 			return (idCameraPosition *)pos;
 		} 
 		case CP_INTERPOLATED : return (idCameraPosition *)initInterpolatedPosition(vec3_origin, vec3_origin, 0);
@@ -756,7 +774,7 @@ static qboolean getCameraInfo_real(long time, vec3_t origin, vec3_t direction, f
 		}
 	}
 
-	*fv = getFOV(time, cam->fov);
+	*fv = getFOV(time, &cam->fov);
 
 	VectorCopy(*getPosition(time, cam->cameraPosition), origin);
 	VectorCopy(origin, temp);
@@ -799,23 +817,19 @@ static qboolean getCameraInfo_real(long time, vec3_t origin, vec3_t direction, f
 #define CELL_AMT 5
 
 static void addVelocity(long start, long duration, float speed, idCameraPosition *pos) {
-	pos->velocities[pos->numVelocities] = Z_Malloc(sizeof(idVelocity));
-	pos->velocities[pos->numVelocities]->startTime = start;
-	pos->velocities[pos->numVelocities]->time = duration;
-	pos->velocities[pos->numVelocities]->speed = speed;
+	pos->velocities[pos->numVelocities].startTime = start;
+	pos->velocities[pos->numVelocities].time = duration;
+	pos->velocities[pos->numVelocities].speed = speed;
 	pos->numVelocities++;
 }
 
 static void buildCamera(idCameraDef *cam) {
 	int i;
 	//int lastSwitch = 0;
-	float *waits;
-	int *targets;
+	float waits[MAX_CAMERA_EVENTS];
+	int targets[MAX_CAMERA_EVENTS];
 	int numWaits = 0;
 	int numTargets = 0;
-
-	waits = Z_Malloc(sizeof(float) * com_maxSplines->integer);
-	targets = Z_Malloc(sizeof(int) * com_maxSplines->integer);
 
 	cam->totalTime = cam->baseTime;
 	cam->cameraPosition->time = cam->totalTime * 1000;
@@ -897,9 +911,6 @@ static void buildCamera(idCameraDef *cam) {
 		getActiveTarget(cam)->time = t;
 		timeSoFar += t;
 	}
-
-	Z_Free(waits);
-	Z_Free(targets);
 }
 
 static void calcVelocity(float distance, idCameraPosition *pos) {
@@ -938,7 +949,7 @@ static void startCamera_real(long t, idCameraDef *cam) {
 	buildCamera(cam);
 	cam->cameraPosition->time = t;
 	startPosition(t, cam->cameraPosition);
-	cam->fov->startTime = t;
+	cam->fov.startTime = t;
 	//for (int i = 0; i < targetPositions.Num(); i++) {
 	//	targetPositions[i]->
 	//}
@@ -958,8 +969,8 @@ static void parseCamera(const char *(*text), idCameraDef *cam ) {
 
 	do {
 		t = *text;
-		token = COM_ParseExt( text, qfalse );
-	
+		token = COM_Parse(text);
+
 		if ( !token[0] ) {
 			break;
 		}
@@ -968,7 +979,7 @@ static void parseCamera(const char *(*text), idCameraDef *cam ) {
 		}
 
 		if (Q_stricmp(token, "time") == 0) {
-			cam->baseTime = atof(COM_ParseExt(text, qfalse));
+			cam->baseTime = atof(COM_Parse(text));
 		}
 
 		if (Q_stricmp(token, "camera_fixed") == 0) {
@@ -1008,7 +1019,7 @@ static void parseCamera(const char *(*text), idCameraDef *cam ) {
 		}
 
 		if (Q_stricmp(token, "fov") == 0) {
-			parseFOV(text, cam->fov);
+			parseFOV(text, &cam->fov);
 		}
 
 		if (Q_stricmp(token, "event") == 0) {
@@ -1035,6 +1046,8 @@ static qboolean loadCamera_real(const char *filename, idCameraDef *cam) {
 	}
 
 	clearCamera(cam);
+	cam->targetPositions = Z_Malloc(sizeof(idCameraPosition) * MAX_CAMERA_POSITIONS);
+	cam->events = Z_Malloc(sizeof(idCameraEvent) * MAX_CAMERA_EVENTS);
 	COM_BeginParseSession( filename );
 	buf_p = buf;
 	parseCamera(&buf_p, cam);
@@ -1093,7 +1106,7 @@ static void saveCamera(const char *filename, idCameraDef *cam) {
 			writeEvent(file, "event", &cam->events[i]);
 		}
 
-		writeFOV(file, "fov", cam->fov);
+		writeFOV(file, "fov", &cam->fov);
 
 		s = "}\n";
 		FS_Write(s, strlen(s), file);
@@ -1137,7 +1150,7 @@ static void parseEvent(const char *(*text), idCameraEvent *event ) {
 	COM_MatchToken( text, "{" );
 	do {
 		t = *text;
-		token = COM_ParseExt( text, qfalse );
+		token = COM_Parse(text);
 	
 		if ( !token[0] ) {
 			break;
@@ -1153,19 +1166,21 @@ static void parseEvent(const char *(*text), idCameraEvent *event ) {
 				break;
 			}
 
-			*text = t;
-			const char *key = COM_ParseExt(text, qfalse);
-			const char *token = COM_ParseExt(text, qfalse);
+			*text = t; // UnParse
+			const char *key = COM_Parse(text);
 			if (Q_stricmp(key, "type") == 0) {
+				token = COM_Parse(text);
 				event->type = atoi(token);
 			} else if (Q_stricmp(key, "param") == 0) {
+				token = COM_Parse(text);
 				memcpy(event->paramStr, token, sizeof(event->paramStr));
 			} else if (Q_stricmp(key, "time") == 0) {
+				token = COM_Parse(text);
 				event->time = atoi(token);
 			}
 
 			t = *text;
-			token = COM_ParseExt(text, qfalse);
+			token = COM_Parse(text);
 		} while (1);
 
 		if ( !strcmp (token, "}") ) {
@@ -1194,8 +1209,9 @@ static void writeEvent(fileHandle_t file, const char *name, idCameraEvent *event
 static float getVelocity(long t, idCameraPosition *pos) {
 	long check = t - pos->startTime;
 	for (int i = 0; i < pos->numVelocities; i++) {
-		if (check >= pos->velocities[i]->startTime && check <= pos->velocities[i]->startTime + pos->velocities[i]->time) {
-			return pos->velocities[i]->speed;
+		if (check >= pos->velocities[i].startTime 
+			&& check <= pos->velocities[i].startTime + pos->velocities[i].time) {
+			return pos->velocities[i].speed;
 		}
 	}
 	return pos->baseVelocity;
@@ -1245,10 +1261,11 @@ static const vec3_t *getInterpolatedPosition(long t, idInterpolatedPosition *pos
 static void parseFOV(const char *(*text), idCameraFOV *fov ) {
 	const char *token;
 	const char *t;
+
 	COM_MatchToken( text, "{" );
 	do {
 		t = *text;
-		token = COM_ParseExt( text, qfalse );
+		token = COM_Parse(text);
 	
 		if ( !token[0] ) {
 			break;
@@ -1265,20 +1282,23 @@ static void parseFOV(const char *(*text), idCameraFOV *fov ) {
 			}
 
 			*text = t; // UnParse
-			const char *key = COM_ParseExt(text, qfalse);
-			const char *token = COM_ParseExt(text, qfalse);
+			const char *key = COM_Parse(text);
 			if (Q_stricmp(key, "fov") == 0) {
+				token = COM_Parse(text);
 				fov->fov = atof(token);
 			} else if (Q_stricmp(key, "startFOV") == 0) {
+				token = COM_Parse(text);
 				fov->startFOV = atof(token);
 			} else if (Q_stricmp(key, "endFOV") == 0) {
+				token = COM_Parse(text);
 				fov->endFOV = atof(token);
 			} else if (Q_stricmp(key, "time") == 0) {
+				token = COM_Parse(text);
 				fov->time = atoi(token);
 			}
 
 			t = *text;
-			token = COM_ParseExt(text, qfalse);
+			token = COM_Parse(text);
 		} while (1);
 
 		if ( !strcmp (token, "}") ) {
@@ -1293,25 +1313,31 @@ static void parseFOV(const char *(*text), idCameraFOV *fov ) {
 
 static qboolean parseToken(const char *key, const char *(*text), idCameraPosition *pos) {
 	const char *t = *text;
-	const char *token = COM_ParseExt(text, qfalse);
+	const char *token;
+
 	if (Q_stricmp(key, "time") == 0) {
+		token = COM_Parse(text);
 		pos->time = atol(token);
 		return qtrue;
 	} else if (Q_stricmp(key, "type") == 0) {
+		token = COM_Parse(text);
 		pos->type = atoi(token);
 		return qtrue;
 	} else if (Q_stricmp(key, "velocity") == 0) {
+		token = COM_Parse(text);
 		long t = atol(token);
-		token = COM_ParseExt(text, qfalse);
+		token = COM_Parse(text);
 		long d = atol(token);
-		token = COM_ParseExt(text, qfalse);
+		token = COM_Parse(text);
 		float s = atof(token);
 		addVelocity(t, d, s, pos);
 		return qtrue;
 	} else if (Q_stricmp(key, "baseVelocity") == 0) {
+		token = COM_Parse(text);
 		pos->baseVelocity = atof(token);
 		return qtrue;
 	} else if (Q_stricmp(key, "name") == 0) {
+		token = COM_Parse(text);
 		memcpy(pos->name, token, sizeof(pos->name));
 		return qtrue;
 	}
@@ -1324,10 +1350,11 @@ static qboolean parseToken(const char *key, const char *(*text), idCameraPositio
 static void parseFixed(const char *(*text), idFixedPosition *pos ) {
 	const char *token;
 	const char *t;
+
 	COM_MatchToken( text, "{" );
 	do {
 		t = *text;
-		token = COM_ParseExt( text, qfalse );
+		token = COM_Parse(text);
 	
 		if ( !token[0] ) {
 			break;
@@ -1344,18 +1371,15 @@ static void parseFixed(const char *(*text), idFixedPosition *pos ) {
 			}
 
 			*text = t; // UnParse
-			const char *key = COM_ParseExt(text, qfalse);
-			const char *token = COM_ParseExt(text, qfalse);
+			const char *key = COM_Parse(text);
 			if (Q_stricmp(key, "pos") == 0) {
-				*text = t; // UnParse
 				Parse1DMatrix( text, 3, pos->pos );
 			} else {
-				*text = t; // UnParse
 				parseToken(key, text, (idCameraPosition *)pos);	
 			}
 
 			t = *text;
-			token = COM_ParseExt(text, qfalse);
+			token = COM_Parse(text);
 		} while (1);
 
 		if ( !strcmp (token, "}") ) {
@@ -1375,7 +1399,7 @@ static void parseInterpolated(const char *(*text), idInterpolatedPosition *pos )
 	COM_MatchToken( text, "{" );
 	do {
 		t = *text;
-		token = COM_ParseExt( text, qfalse );
+		token = COM_Parse(text);
 	
 		if ( !token[0] ) {
 			break;
@@ -1392,21 +1416,17 @@ static void parseInterpolated(const char *(*text), idInterpolatedPosition *pos )
 			}
 
 			*text = t; // UnParse
-			const char *key = COM_ParseExt(text, qfalse);
-			const char *token = COM_ParseExt(text, qfalse);
+			const char *key = COM_Parse(text);
 			if (Q_stricmp(key, "startPos") == 0) {
-				*text = t; // UnParse
 				Parse1DMatrix( text, 3, pos->startPos );
 			} else if (Q_stricmp(key, "endPos") == 0) {
-				*text = t; // UnParse
 				Parse1DMatrix( text, 3, pos->endPos );
 			} else {
-				*text = t; // UnParse
 				parseToken(key, text, (idCameraPosition *)pos);	
 			}
 
 			t = *text;
-			token = COM_ParseExt(text, qfalse);
+			token = COM_Parse(text);
 		} while (1);
 
 		if ( !strcmp (token, "}") ) {
@@ -1423,11 +1443,12 @@ static void parseInterpolated(const char *(*text), idInterpolatedPosition *pos )
 static void parseSpline(const char *(*text), idSplinePosition *spline ) {
 	const char *token;
 	const char *t;
+
 	COM_MatchToken( text, "{" );
 	do {
 		t = *text;
-		token = COM_ParseExt( text, qfalse );
-	
+		token = COM_Parse(text);
+
 		if ( !token[0] ) {
 			break;
 		}
@@ -1443,17 +1464,15 @@ static void parseSpline(const char *(*text), idSplinePosition *spline ) {
 			}
 
 			*text = t; // UnParse
-			const char *key = COM_ParseExt(text, qfalse);
-			const char *token = COM_ParseExt(text, qfalse);
+			const char *key = COM_Parse(text);
 			if (Q_stricmp(key, "target") == 0) {
 				parseSplines(text, spline->target);
 			} else {
-				*text = t; // UnParse
 				parseToken(key, text, (idCameraPosition *)spline);	
 			}
 
 			t = *text;
-			token = COM_ParseExt(text, qfalse);
+			token = COM_Parse(text);
 		} while (1);
 
 		if ( !strcmp (token, "}") ) {
@@ -1504,9 +1523,9 @@ static void writePosition(fileHandle_t file, const char *p, idCameraPosition *po
 
 	for (int i = 0; i < pos->numVelocities; i++) {
 		s = va("\t\tvelocity %li %li %f\n", 
-			pos->velocities[i]->startTime, 
-			pos->velocities[i]->time, 
-			pos->velocities[i]->speed);
+			pos->velocities[i].startTime, 
+			pos->velocities[i].time, 
+			pos->velocities[i].speed);
 		FS_Write(s, strlen(s), file);
 	}
 }
@@ -1549,19 +1568,28 @@ static void clearCamera(idCameraDef *cam) {
 	cam->baseTime = 30;
 	cam->activeTarget = 0;
 	memcpy(cam->name, "camera01", sizeof(cam->name));
-	cam->fov->fov = 90;
-	Z_Free(cam->targetPositions);
+	cam->fov.fov = 90;
+
+	if(cam->targetPositions)
+		Z_Free(cam->targetPositions);
 	cam->targetPositions = NULL;
-	Z_Free(cam->events);
+	cam->numTargetPositions = 0;
+	if(cam->events)
+		Z_Free(cam->events);
 	cam->numEvents = 0;
-	Z_Free(cam->cameraPosition);
+	if(cam->cameraPosition)
+		Z_Free(cam->cameraPosition);
 	cam->cameraPosition = NULL;
+	cam->numCameraPositions = 0;
 }
 
 
 qboolean loadCamera(const char *name) {
+	char lname[MAX_QPATH];
+	COM_StripExtension(name, lname, MAX_QPATH);
+	Q_strcat( lname, sizeof(lname), ".cam" );
 	clearCamera(&camera);
-  return loadCamera_real(va("cameras/%s.cam", name), &camera);
+  return loadCamera_real(va("cameras/%s", lname), &camera);
 }
 
 
