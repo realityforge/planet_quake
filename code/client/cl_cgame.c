@@ -65,8 +65,9 @@ extern refdef_t views[MAX_NUM_VMS];
 #endif
 
 extern qboolean loadCamera(const char *name);
-extern void startCamera(int time);
-extern qboolean getCameraInfo(int time, vec3_t *origin, vec3_t *angles, float *fov);
+extern void startCamera(int camNum, int time);
+extern qboolean getCameraInfo(int camNum, int time, vec3_t *origin, vec3_t *angles, float *fov);
+extern void stopCamera(int camNum);
 
 /*
 ====================
@@ -1130,11 +1131,15 @@ static intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 		return loadCamera(VMA(1));
 
 	case CG_STARTCAMERA:
-		startCamera(args[1]);
+		startCamera(args[1], args[2]);
 		return 0;
 
 	case CG_GETCAMERAINFO:
-		return getCameraInfo(args[1], VMA(2), VMA(3), VMA(4));
+		return getCameraInfo(args[1], args[2], VMA(3), VMA(4), VMA(5));
+
+	case CG_STOPCAMERA:
+		stopCamera(args[1]);
+		return 0;
 
 	case CG_GET_ENTITY_TOKEN:
 		VM_CHECKBOUNDS( cgvm, args[1], args[2] );

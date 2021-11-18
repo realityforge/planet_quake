@@ -707,6 +707,7 @@ typedef struct {
 	int			nextOrbitTime;
 
 	qboolean cameraMode;		// if rendering from a loaded camera
+	int      currentCamera;
 
 	// development tool
 	refEntity_t		testModelEntity;
@@ -1760,6 +1761,7 @@ void CG_CheckChangedPredictableEvents( playerState_t *ps );
 //#define trap_SnapVector trapcg_SnapVector
 #define trap_loadCamera trapcg_loadCamera
 #define trap_startCamera trapcg_startCamera
+#define trap_stopCamera trapcg_stopCamera
 #define trap_getCameraInfo trapcg_getCameraInfo
 #define trap_GetEntityToken trapcg_GetEntityToken
 #define trap_GetValue trapcg_GetValue
@@ -1977,10 +1979,12 @@ void trap_CIN_SetExtents (int handle, int x, int y, int w, int h);
 void		trap_SnapVector( float *v );
 
 qboolean	trap_loadCamera(const char *name);
-void		trap_startCamera(int time);
-qboolean	trap_getCameraInfo(int time, vec3_t *origin, vec3_t *angles, float *fov);
+void		trap_startCamera(int camNum, int time);
+qboolean	trap_getCameraInfo(int camNum, int time, vec3_t *origin, vec3_t *angles, float *fov);
 void		CG_StartCamera(const char *name, qboolean startBlack );
 qboolean	trap_GetEntityToken( char *buffer, int bufferSize );
+void trap_stopCamera(int camNum);
+
 
 void	CG_ClearParticles (void);
 void	CG_AddParticles (void);

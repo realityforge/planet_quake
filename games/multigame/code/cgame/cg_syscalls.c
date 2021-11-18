@@ -410,12 +410,16 @@ qboolean trap_loadCamera( const char *name ) {
 	return syscall( CG_LOADCAMERA, name );
 }
 
-void trap_startCamera(int time) {
+void trap_startCamera(int camNum, int time) {
 	syscall(CG_STARTCAMERA, time);
 }
 
-qboolean trap_getCameraInfo( int time, vec3_t *origin, vec3_t *angles, float *fov) {
+qboolean trap_getCameraInfo( int camNum, int time, vec3_t *origin, vec3_t *angles, float *fov) {
 	return syscall( CG_GETCAMERAINFO, time, origin, angles, fov );
+}
+
+void trap_stopCamera(int camNum) {
+	syscall(CG_STOPCAMERA, camNum);
 }
 
 qboolean trap_GetEntityToken( char *buffer, int bufferSize ) {

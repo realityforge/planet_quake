@@ -483,9 +483,11 @@ CG_StartCamera
 ==============
 */
 void CG_StartCamera( const char *name, qboolean startBlack ) {
-	if (trap_loadCamera(name))
+	int cam;
+	if ((cam = trap_loadCamera(name)) >= 0)
 	{
 		cg.cameraMode = qtrue;
+		cg.currentCamera = cam;
 		if(startBlack)
 		{
 			CG_Fade(255, 0, 0);	// go black
@@ -495,7 +497,7 @@ void CG_StartCamera( const char *name, qboolean startBlack ) {
 		// letterbox look
 		//
 		//black_bars=1;
-		trap_startCamera(cg.time);	// camera on in client
+		trap_startCamera(cg.currentCamera, cg.time);	// camera on in client
 	} else {
 		CG_Printf ("Unable to load camera \"%s\"\n",name);
 	}

@@ -133,7 +133,7 @@ typedef struct {
 	float totalTime;
 	float baseTime;
 	long startTime;
-
+	int lastUsed;
 	qboolean cameraEdit;
 	qboolean editMode;
 } idCameraDef;
@@ -141,9 +141,10 @@ typedef struct {
 #define MAX_CAMERA_EVENTS 1024
 #define MAX_CAMERA_POSITIONS 1024
 #define MAX_CONTROL_POINTS 1024
+#define MAX_CAMERAS 8
 idCameraDef  splineList;
 idCameraDef *g_splineList = &splineList;
-idCameraDef  camera;
+idCameraDef  camera[MAX_CAMERAS];
 cvar_t      *com_maxSplines;
 
 /*
@@ -1584,22 +1585,46 @@ static void clearCamera(idCameraDef *cam) {
 }
 
 
-qboolean loadCamera(const char *name) {
+int loadCamera(const char *name) {
 	char lname[MAX_QPATH];
+	int i;
+	int oldest = -1;
+	int oldestTime = 0;
+	int now = Sys_Milliseconds();
+	for(i = 0; i < MAX_CAMERAS; i++) {
+		if(!Q_stricmp(camera[i].name, name)) {
+			break;
+		} else if (!camera[i].name[0]) {
+			break;
+		} else if (oldest == -1 || (now - camera[i].lastUsed) > oldestTime) {
+			oldest = i;
+			oldestTime = now - camera[i].lastUsed;
+		}
+	}
+	if(i == MAX_CAMERAS) {
+		i = oldest;
+	}
 	COM_StripExtension(name, lname, MAX_QPATH);
 	Q_strcat( lname, sizeof(lname), ".cam" );
-	clearCamera(&camera);
-  return loadCamera_real(va("cameras/%s", lname), &camera);
+	clearCamera(&camera[i]);
+  if(!loadCamera_real(va("cameras/%s", lname), &camera[i])) {
+		return -1;
+	} else {
+		camera[i].lastUsed = now;
+		return i;
+	}
 }
 
 
-qboolean getCameraInfo(int time, float *origin, float *angles, float *fov) {
+qboolean getCameraInfo(int camNum, int time, float *origin, float *angles, float *fov) {
 	vec3_t dir, org;
+	if(camNum >= MAX_CAMERAS)
+		return qfalse;
 	org[0] = origin[0];
 	org[1] = origin[1];
 	org[2] = origin[2];
 	//float fov = 90;
-	if (getCameraInfo_real(time, org, dir, fov, &camera)) {
+	if (getCameraInfo_real(time, org, dir, fov, &camera[camNum])) {
 		origin[0] = org[0];
 		origin[1] = org[1];
 		origin[2] = org[2];
@@ -1610,7 +1635,21 @@ qboolean getCameraInfo(int time, float *origin, float *angles, float *fov) {
 	return qfalse;
 }
 
-void startCamera(int time) {
-	startCamera_real(time, &camera);
+void startCamera(int camNum, int time) {
+	if(camNum >= MAX_CAMERAS)
+		return;
+	startCamera_real(time, &camera[camNum]);
+}
+
+void stopCamera(int camNum) {
+	if(camNum >= MAX_CAMERAS)
+		return;
+	if(camNum == -1) {
+		for(camNum = 0; camNum < MAX_CAMERAS; camNum++) {
+			camera[camNum].cameraRunning = qfalse;
+		}
+	} else {
+		camera[camNum].cameraRunning = qfalse;
+	}
 }
 

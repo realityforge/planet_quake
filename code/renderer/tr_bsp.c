@@ -432,13 +432,13 @@ static void R_LoadLightmaps( const lump_t *l ) {
 	// we are about to upload textures
 	//R_IssuePendingRenderCommands();
 
-	tr.lightmaps = ri.Hunk_Alloc( tr.numLightmaps * sizeof(image_t *), h_low );
+	s_worldData.lightmaps = tr.lightmaps = ri.Hunk_Alloc( tr.numLightmaps * sizeof(image_t *), h_low );
 	for ( i = 0 ; i < tr.numLightmaps ; i++ ) {
 		maxIntensity = R_ProcessLightmap( image, buf + i * LIGHTMAP_SIZE * LIGHTMAP_SIZE * 3, maxIntensity );
 #ifdef USE_MULTIVM_CLIENT
 		s_worldData.lightmaps[i] = tr.lightmaps[i] = R_CreateImage(va("*lightmap_%d_%d", rwi, i), NULL, image, LIGHTMAP_SIZE, LIGHTMAP_SIZE, lightmapFlags | IMGFLAG_CLAMPTOEDGE );
 #else
-		tr.lightmaps[i] = R_CreateImage( va( "*lightmap%d", i ), NULL, image, LIGHTMAP_SIZE, LIGHTMAP_SIZE,
+		s_worldData.lightmaps[i] = tr.lightmaps[i] = R_CreateImage( va( "*lightmap%d", i ), NULL, image, LIGHTMAP_SIZE, LIGHTMAP_SIZE,
 			lightmapFlags | IMGFLAG_CLAMPTOEDGE );
 #endif
 	}

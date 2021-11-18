@@ -663,7 +663,7 @@ static int CG_CalcViewValues( void ) {
 	if (cg.cameraMode) {
 		vec3_t origin, angles;
 		float fov = 90;
-		if (trap_getCameraInfo(cg.time, &origin, &angles, &fov)) {
+		if (trap_getCameraInfo(cg.currentCamera, cg.time, &origin, &angles, &fov)) {
 			VectorCopy(origin, cg.refdef.vieworg);
 			angles[ROLL] = 0;
 			angles[PITCH] = -angles[PITCH];
