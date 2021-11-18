@@ -236,8 +236,9 @@
 #define USE_HOTBFG 1
 // enable portal gun, requires modified client
 #define USE_PORTALS 1
-//
-
+// add single player features like earthquakes, player stopping, and animated models
+#define USE_SINGLEPLAYER 1
+// 
 #endif
 
 

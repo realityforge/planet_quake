@@ -149,6 +149,10 @@ void SP_target_location (gentity_t *ent);
 void SP_target_push (gentity_t *ent);
 void SP_target_exec (gentity_t *ent);
 
+#ifdef USE_SINGLEPLAYER
+void SP_target_earthquake (gentity_t *ent);
+void SP_target_player_stop (gentity_t *ent);
+#endif
 void SP_light (gentity_t *self);
 void SP_info_null (gentity_t *self);
 void SP_info_notnull (gentity_t *self);
@@ -230,6 +234,10 @@ spawn_t	spawns[] = {
 	{"target_push", SP_target_push},
 	{"target_exec", SP_target_exec},
 
+#ifdef USE_SINGLEPLAYER // entity
+	{"target_earthquake", SP_target_earthquake},
+	{"target_player_stop", SP_target_player_stop},
+#endif
 	{"light", SP_light},
 	{"path_corner", SP_path_corner},
 

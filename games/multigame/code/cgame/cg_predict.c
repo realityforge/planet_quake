@@ -9,6 +9,11 @@
 
 static	pmove_t		cg_pmove;
 
+#ifdef USE_SINGLEPLAYER // entity
+int player_stop = 0;
+int black_bars = 0;
+#endif
+
 static	int			cg_numSolidEntities;
 static	centity_t	*cg_solidEntities[MAX_ENTITIES_IN_SNAPSHOT];
 static	int			cg_numTriggerEntities;

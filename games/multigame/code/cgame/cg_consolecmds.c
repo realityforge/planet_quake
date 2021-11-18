@@ -496,7 +496,7 @@ void CG_StartCamera( const char *name, qboolean startBlack ) {
 		// 
 		// letterbox look
 		//
-		//black_bars=1;
+		black_bars = 1;
 		trap_startCamera(cg.currentCamera, cg.time);	// camera on in client
 	} else {
 		CG_Printf ("Unable to load camera \"%s\"\n",name);

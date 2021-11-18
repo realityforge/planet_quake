@@ -178,6 +178,11 @@ struct gentity_s {
 
 	gitem_t		*item;			// for bonus items
 
+
+#ifdef USE_SINGLEPLAYER // entity
+	int			stop_event;
+#endif
+
 	// team for spawn spot
 	team_t		fteam;
 

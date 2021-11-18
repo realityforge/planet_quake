@@ -677,8 +677,7 @@ static int CG_CalcViewValues( void ) {
 			// 
 			// letterbox look
 			//
-			// TODO: https://web.archive.org/web/20140701154219/http://rfactory.org/singleEntities.html
-			// black_bars = 0;
+			black_bars = 0;
 		}
 	}
 

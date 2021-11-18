@@ -1212,6 +1212,10 @@ typedef struct {
 
 #define MAX_CLASSES 2
 
+#ifdef USE_SINGLEPLAYER // entity
+extern	int player_stop;
+extern	int black_bars;
+#endif
 extern	cgs_t			cgs;
 extern	cg_t			cg;
 extern	centity_t		cg_entities[MAX_GENTITIES];
@@ -1584,6 +1588,9 @@ void	CG_AddLocalEntities( void );
 //
 // cg_effects.c
 //
+#ifdef USE_SINGLEPLAYER // entity
+void CG_BlackBars(void);
+#endif
 localEntity_t *CG_SmokePuff( const vec3_t p, 
 				   const vec3_t vel, 
 				   float radius,

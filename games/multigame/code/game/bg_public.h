@@ -581,6 +581,11 @@ typedef enum {
 	EV_LIGHTNINGBOLT,		// lightning bolt bounced of invulnerability sphere
 //#endif
 
+#ifdef USE_SINGLEPLAYER // entity
+	EV_PLAYERSTOP,
+	EV_EARTHQUAKE,
+#endif
+
 	EV_DEBUG_LINE,
 	EV_STOPLOOPINGSOUND,
 	EV_TAUNT,
