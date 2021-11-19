@@ -1054,7 +1054,7 @@ Com_Printf("global item pickup\n");
 
 #ifdef USE_SINGLEPLAYER // entity
 	case EV_PLAYERSTOP:
-		player_stop = cg.time+(es->eventParm&0x7F)*2000;
+		player_stop = cg.time + (es->eventParm & 0x7F) * 2000;
 		if (es->eventParm & 0x80) black_bars = 1;
 		break;
 #endif

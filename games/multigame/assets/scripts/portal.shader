@@ -22,14 +22,14 @@ textures/portal/portal_sfx_blue
   surfaceparm nomarks
   surfaceparm nodamage
 
-	{
+  {
 		map textures/portal/blue/portalfog.jpg
 		blendfunc GL_SRC_ALPHA GL_ONE
 		tcmod rotate .1 //.1
 		tcmod scroll .01 .03
     alphagen portal 1024
-  	depthWrite
-	}
+    depthWrite
+  }
 
 	{
 		map textures/portal/blue/portal_sfx1.tga

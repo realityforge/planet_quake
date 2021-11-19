@@ -231,20 +231,20 @@ void CG_ItemTimer(int client, const vec3_t origin, int startTime, int respawnTim
 	re.radius = TIMER_SIZE / 2;
 
   VectorSubtract( cg.refdef.vieworg, origin, re.origin );
-  len = VectorLengthSquared( re.origin );
+  len = VectorLength( re.origin );
 	VectorNormalize(re.origin);
 
 	// if the view would be "inside" the sprite, kill the sprite
 	// so it doesn't add too much overdraw
   // TODO: count up and count down
   // TODO: modifiable distance
-	if ( len <= 20*20 ) {
+	if ( len <= 20 ) {
     //Com_Printf("Too close:\n");
 		return;
-	} else if (len > 20*20 && len <= 30*1000) {
+	} else if (len > 20 && len <= 300) {
     re.shaderRGBA[3] = 0xff;
-  } else if (len > 30*1000 && len <= 40*1000) {
-    float scale = (40.0f*1000 - len)/(10.0f*1000);
+  } else if (len > 300 && len <= 500) {
+    float scale = (500 - len)/200;
     re.shaderRGBA[3] = 0xff * scale;
   } else {
     //Com_Printf("Too far away:\n");
@@ -272,6 +272,7 @@ void CG_ItemTimer(int client, const vec3_t origin, int startTime, int respawnTim
   for (i = 0; i < numsegs; i++) {
     re.rotation = 180.0f - (360.0f / (totalsegs * 2)) - (360.0f / totalsegs) * i;
     VectorMA(origin, (float) (0.5 - 1) * TIMER_SIZE, vec, re.origin);
+		re.origin[2] += TIMER_SIZE;
     re.customShader = lengthShader;
     // fade the last segment in gradually
     if(i == numsegs - 1) {
@@ -756,26 +757,27 @@ void CG_Beam( const centity_t *cent ) {
 
 #ifdef USE_PORTALS
 #define AWAY_FROM_WALL 8.0f
+
 static void CG_PersonalPortal(const centity_t *cent) {
-  vec3_t          angles, angles2, vec, velocity;
+  vec3_t		    angles, angles2, vec, velocity;
+	//vec3_t		    origin;
   refEntity_t			ent;
-  float           len;
   qboolean        isMirror;
   centity_t       *target;
+  //refdef_t		    refdef;
+	float           len;
+  //float           x = 0, y = 0, w = 640, h = 480;
 
   // always face portal towards player
-  VectorClear(angles);
   VectorSubtract( cg.refdef.vieworg, cent->lerpOrigin, vec );
   len = VectorNormalize( vec );
+  VectorClear(angles);
+
   // tracks player position on 2 axis to make it always look like someone can fit through it
-  angles[0] = -atan2( vec[2] * Q_rsqrt(vec[1] * vec[1] + vec[0] * vec[0]), 1 ) * 180.0f / M_PI;
-  angles[1] = atan2(vec[1] / vec[0], 1) * 180.0f / M_PI;
-  //angles[2] = cg.refdef.viewaxis[2][2];
-  if((cent->lerpOrigin[0] > cg.refdef.vieworg[0] && vec[1] / vec[0] > 0)
-    || (cent->lerpOrigin[1] < cg.refdef.vieworg[1] && vec[1] / vec[0] < 0)){
-    angles[1] = 270 + (angles[1] - 90);
-  }
-  //Com_Printf("angles %i: %f - %f\n", cent->currentState.number, angles[1], vec[1] / vec[0]);
+	angles[YAW] = -180;
+	angles[YAW] += cg.refdefViewAngles[YAW];
+	angles[PITCH] -= cg.refdefViewAngles[PITCH];
+	angles[ROLL] = 0;
 
   // add portal model
   memset (&ent, 0, sizeof(ent));
@@ -791,6 +793,8 @@ static void CG_PersonalPortal(const centity_t *cent) {
     VectorScale( velocity, AWAY_FROM_WALL, velocity );
     VectorSubtract( cent->lerpOrigin, velocity, ent.origin );
   } else {
+		// is standalone portal
+		AxisClear( ent.axis );
     AnglesToAxis( angles, ent.axis );
     VectorCopy( cent->lerpOrigin, ent.origin);
   }
@@ -800,11 +804,11 @@ static void CG_PersonalPortal(const centity_t *cent) {
     return;
   }
   ent.reType = RT_MODEL;
-  ent.renderfx = RF_FIRST_PERSON;
+	//ent.reType = RT_SPRITE;
+  ent.renderfx = RF_NOSHADOW | RF_FIRST_PERSON;
   ent.frame = cent->currentState.number;
   ent.oldframe = cent->currentState.otherEntityNum;
   trap_R_AddRefEntityToScene (&ent);
-
 
   // add portal camera view
   memset (&ent, 0, sizeof(ent));
@@ -822,10 +826,8 @@ static void CG_PersonalPortal(const centity_t *cent) {
   ) {
     // is mirror
     isMirror = qtrue;
-    //Com_Printf("mirror!\n");
   } else {
 		isMirror = qfalse;
-    //ent.oldorigin[2] += 32;
   }
   target = &cg_entities[cent->currentState.otherEntityNum];
   if( target->currentState.eventParm ) {
@@ -837,20 +839,37 @@ static void CG_PersonalPortal(const centity_t *cent) {
   } else if (!isMirror) {
 		// TODO: camera bobbing might actually be cool for free standing portals
     // 180 from portal is same as continuing the view angle but from another position
-    VectorCopy(cent->lerpAngles, angles2);
-		//angles[0] = 0;
-    angles2[1] = angles[1] - 180;
-		//angles[1] -= 180;
-    angles2[2] = -90;
-		//PerpendicularVector(angles, angles);
+		angles2[PITCH] = -angles[PITCH];
+    angles2[YAW] = angles[YAW] - 180;
+    angles2[ROLL] = -90;
     AnglesToAxis( angles2, ent.axis );
   }
   ent.reType = RT_PORTALSURFACE;
   //ent.renderfx = RF_FIRST_PERSON;
+	ent.radius = 12;
   ent.frame = cent->currentState.number;
   ent.oldframe = cent->currentState.otherEntityNum;
   trap_R_AddRefEntityToScene(&ent);
 }
+
+
+void CG_DrawPortals( void ) {
+	centity_t			*cent;
+	int num;
+	for ( num = 0 ; num < cg.snap->numEntities ; num++ ) {
+		cent = &cg_entities[ cg.snap->entities[ num ].number ];
+#ifdef USE_PORTALS
+    if(cent->currentState.eType == ET_TELEPORT_TRIGGER
+			&& cent->currentState.modelindex
+		//	&& cent->currentState.clientNum
+			&& (cent->currentState.powerups & ((1 << 4) | (1 << 5)))
+		) {
+      CG_PersonalPortal( cent );
+		}
+#endif
+	}
+}
+
 #endif
 
 
@@ -1195,6 +1214,7 @@ static void CG_LaserSight( centity_t *cent )  {
 
 	
 }
+
 #endif
 
 
@@ -1222,16 +1242,14 @@ static void CG_AddCEntity( centity_t *cent ) {
 		break;
 	case ET_INVISIBLE:
 	case ET_PUSH_TRIGGER:
-    break;
+		break;
 	case ET_TELEPORT_TRIGGER:
-#ifdef USE_PORTALS
-    if(cent->currentState.modelindex
+		if(cent->currentState.modelindex
 		//	&& cent->currentState.clientNum
 			&& (cent->currentState.powerups & ((1 << 4) | (1 << 5)))
 		) {
       CG_PersonalPortal( cent );
 		}
-#endif
 		break;
 	case ET_GENERAL:
 		CG_General( cent );
