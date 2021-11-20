@@ -3248,6 +3248,14 @@ shader_t *R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImag
 		}
 
 		image = R_FindImageFile( name, flags );
+#ifdef USE_LAZY_LOAD
+		// this indicates that it is lazily loading and it will be replaced when
+		// the image arrives
+		if(!mapShaders && r_lazyLoad->integer > 0 && (long)image == 1) {
+			shader.remappedShader = tr.defaultShader;
+			shader.defaultShader = qfalse;
+		} else
+#endif
 		if ( !image ) {
 			ri.Printf( PRINT_DEVELOPER, "Couldn't find image file for shader %s\n", name );
 			shader.defaultShader = qtrue;
@@ -3341,7 +3349,7 @@ qhandle_t RE_RegisterShaderLightMap( const char *name, int lightmapIndex ) {
 	// something calls RE_RegisterShader again with
 	// the same name, we don't try looking for it again
 	if ( sh->defaultShader ) {
-	//	return 0;
+		return 0;
 	}
 
 	return sh->index;
@@ -3380,7 +3388,7 @@ qhandle_t RE_RegisterShader( const char *name ) {
 	// something calls RE_RegisterShader again with
 	// the same name, we don't try looking for it again
 	if ( sh->defaultShader ) {
-	//	return 0;
+		return 0;
 	}
 
 	return sh->index;
@@ -3410,7 +3418,7 @@ qhandle_t RE_RegisterShaderNoMip( const char *name ) {
 	// something calls RE_RegisterShader again with
 	// the same name, we don't try looking for it again
 	if ( sh->defaultShader ) {
-	//	return 0;
+		return 0;
 	}
 
 	return sh->index;

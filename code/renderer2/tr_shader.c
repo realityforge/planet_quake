@@ -3973,7 +3973,9 @@ qhandle_t RE_RegisterShaderLightMap( const char *name, int lightmapIndex ) {
 	// something calls RE_RegisterShader again with
 	// the same name, we don't try looking for it again
 	if ( sh->defaultShader ) {
-	//	return 0;
+#ifndef USE_LAZY_LOAD
+		return 0;
+#endif
 	}
 
 	return sh->index;
@@ -4012,7 +4014,9 @@ qhandle_t RE_RegisterShader( const char *name ) {
 	// something calls RE_RegisterShader again with
 	// the same name, we don't try looking for it again
 	if ( sh->defaultShader ) {
-	//	return 0;
+#ifndef USE_LAZY_LOAD
+		return 0;
+#endif
 	}
 
 	return sh->index;
@@ -4042,7 +4046,9 @@ qhandle_t RE_RegisterShaderNoMip( const char *name ) {
 	// something calls RE_RegisterShader again with
 	// the same name, we don't try looking for it again
 	if ( sh->defaultShader ) {
-	//	return 0;
+#ifndef USE_LAZY_LOAD
+		return 0;
+#endif
 	}
 
 	return sh->index;

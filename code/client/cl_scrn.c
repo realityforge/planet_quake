@@ -582,127 +582,6 @@ void SCR_Done( void ) {
 	scr_initialized = qfalse;
 }
 
-//=======================================================
-
-/*
-==================
-SCR_DrawScreenField
-
-This will be called twice if rendering in stereo mode
-==================
-*/
-void SCR_DrawScreenField( stereoFrame_t stereoFrame ) {
-	qboolean uiFullscreen = qfalse;
-
-	re.BeginFrame( stereoFrame );
-
-	if(uivm) {
-		uiFullscreen = (uivm && VM_Call( uivm, 0, UI_IS_FULLSCREEN ));
-	}
-
-	// wide aspect ratio screens need to have the sides cleared
-	// unless they are displaying game renderings
-	if ( uiFullscreen || cls.state < CA_LOADING 
-#ifdef USE_RMLUI
-    || cls.rmlStarted
-#endif
-  ) {
-		if ( cls.glconfig.vidWidth * 480 > cls.glconfig.vidHeight * 640 ) {
-			re.SetColor( g_color_table[ ColorIndex( COLOR_BLACK ) ] );
-			re.DrawStretchPic( 0, 0, cls.glconfig.vidWidth, cls.glconfig.vidHeight, 0, 0, 0, 0, cls.whiteShader );
-			re.SetColor( NULL );
-		}
-	}
-
-	// if the menu is going to cover the entire screen, we
-	// don't need to render anything under it
-	if ( !uiFullscreen ) {
-		switch( cls.state ) {
-		default:
-			Com_Error( ERR_FATAL, "SCR_DrawScreenField: bad cls.state" );
-			break;
-		case CA_CINEMATIC:
-			SCR_DrawCinematic();
-			break;
-		case CA_DISCONNECTED:
-			// force menu up
-			//S_StopAllSounds();
-			if( uivm )
-				VM_Call( uivm, 1, UI_SET_ACTIVE_MENU, UIMENU_MAIN );
-			break;
-		case CA_CONNECTING:
-		case CA_CHALLENGING:
-		case CA_CONNECTED:
-			// connecting clients will only show the connection dialog
-			// refresh to update the time
-			if( uivm ) {
-				VM_Call( uivm, 1, UI_REFRESH, cls.realtime );
-				VM_Call( uivm, 1, UI_DRAW_CONNECT_SCREEN, qfalse );
-			}
-			break;
-		case CA_LOADING:
-		case CA_PRIMED:
-			// draw the game information screen and loading progress
-			if(cgvm
-#ifdef USE_ASYNCHRONOUS
-				// skip drawing until VM is ready
-				&& !VM_IsSuspended( cgvm )
-#endif
-			) {
-				CL_CGameRendering( stereoFrame );
-			}
-			// also draw the connection information, so it doesn't
-			// flash away too briefly on local or lan games
-			// refresh to update the time
-			if( uivm ) {
-				VM_Call( uivm, 1, UI_REFRESH, cls.realtime );
-				VM_Call( uivm, 1, UI_DRAW_CONNECT_SCREEN, qtrue );
-			}
-			break;
-		case CA_ACTIVE:
-			// always supply STEREO_CENTER as vieworg offset is now done by the engine.
-			if( cgvm
-#ifdef USE_ASYNCHRONOUS
-				// skip drawing until VM is ready
-				&& !VM_IsSuspended( cgvm )
-#endif
-			) {
-				CL_CGameRendering( stereoFrame );
-				SCR_DrawDemoRecording();
-			}
-#ifdef USE_VOIP
-			SCR_DrawVoipMeter();
-#endif
-			break;
-		}
-	}
-
-}
-
-
-#ifdef USE_MULTIVM_CLIENT
-// draw a box around the current view where keypresses and mouse input is being sent
-void SCR_DrawCurrentView( void ) {
-	float	yf, wf;
-	float xadjust = 0;
-	wf = SCREEN_WIDTH;
-	yf = SCREEN_HEIGHT;
-	SCR_AdjustFrom640( &xadjust, &yf, &wf, NULL );
-	re.SetColor( g_color_table[ ColorIndex( COLOR_RED ) ] );
-	
-	// TODO: duh re.SetDvrFrame(clientScreens[cgvmi][0], clientScreens[cgvmi][1], clientScreens[cgvmi][2], clientScreens[cgvmi][3]);
-	// TODO: draw a box around the edge of the screen but SetDvrFrame right before so its just the edge of the box
-  // top
-	re.DrawStretchPic( clientScreens[cgvmi][0] * wf, clientScreens[cgvmi][1] * yf, clientScreens[cgvmi][2] * wf, 2, 0, 0, 1, 1, cls.whiteShader );
-	// right
-	re.DrawStretchPic( clientScreens[cgvmi][2] * wf - 2, 0, 2, clientScreens[cgvmi][3] * yf, 0, 0, 1, 1, cls.whiteShader );
-	// bottom 
-	re.DrawStretchPic( clientScreens[cgvmi][0] * wf, clientScreens[cgvmi][3] * yf - 2, clientScreens[cgvmi][2] * wf, 2, 0, 0, 1, 1, cls.whiteShader );
-	// left
-	re.DrawStretchPic( clientScreens[cgvmi][0] * wf, clientScreens[cgvmi][1] * yf, 2, clientScreens[cgvmi][3] * yf, 0, 0, 1, 1, cls.whiteShader);
-}
-#endif
-
 
 #define	MAX_LAGOMETER_PING	900
 #define	MAX_LAGOMETER_RANGE	300
@@ -772,11 +651,6 @@ static void SCR_DrawLagometer( void ) {
 	float	ax, ay, aw, ah, mid, range;
 	int		color;
 	float	vscale;
-
-	//if ( !cl_lagometer->integer || clc.serverAddress.type == NA_LOOPBACK ) {
-		//CG_DrawDisconnect();
-	//	return;
-	//}
 
 	//
 	// draw the graph
@@ -937,6 +811,127 @@ static void SCR_DrawFPS( int t ) {
 	}
 }
 
+
+#ifdef USE_MULTIVM_CLIENT
+// draw a box around the current view where keypresses and mouse input is being sent
+void SCR_DrawCurrentView( void ) {
+	float	yf, wf;
+	float xadjust = 0;
+	wf = SCREEN_WIDTH;
+	yf = SCREEN_HEIGHT;
+	SCR_AdjustFrom640( &xadjust, &yf, &wf, NULL );
+	re.SetColor( g_color_table[ ColorIndex( COLOR_RED ) ] );
+	
+	// TODO: duh re.SetDvrFrame(clientScreens[cgvmi][0], clientScreens[cgvmi][1], clientScreens[cgvmi][2], clientScreens[cgvmi][3]);
+	// TODO: draw a box around the edge of the screen but SetDvrFrame right before so its just the edge of the box
+  // top
+	re.DrawStretchPic( clientScreens[cgvmi][0] * wf, clientScreens[cgvmi][1] * yf, clientScreens[cgvmi][2] * wf, 2, 0, 0, 1, 1, cls.whiteShader );
+	// right
+	re.DrawStretchPic( clientScreens[cgvmi][2] * wf - 2, 0, 2, clientScreens[cgvmi][3] * yf, 0, 0, 1, 1, cls.whiteShader );
+	// bottom 
+	re.DrawStretchPic( clientScreens[cgvmi][0] * wf, clientScreens[cgvmi][3] * yf - 2, clientScreens[cgvmi][2] * wf, 2, 0, 0, 1, 1, cls.whiteShader );
+	// left
+	re.DrawStretchPic( clientScreens[cgvmi][0] * wf, clientScreens[cgvmi][1] * yf, 2, clientScreens[cgvmi][3] * yf, 0, 0, 1, 1, cls.whiteShader);
+}
+#endif
+
+
+//=======================================================
+
+/*
+==================
+SCR_DrawScreenField
+
+This will be called twice if rendering in stereo mode
+==================
+*/
+void SCR_DrawScreenField( stereoFrame_t stereoFrame ) {
+	qboolean uiFullscreen = qfalse;
+
+	re.BeginFrame( stereoFrame );
+
+	if(uivm) {
+		uiFullscreen = (uivm && VM_Call( uivm, 0, UI_IS_FULLSCREEN ));
+	}
+
+	// wide aspect ratio screens need to have the sides cleared
+	// unless they are displaying game renderings
+	if ( uiFullscreen || cls.state <= CA_LOADING 
+#ifdef USE_RMLUI
+    || cls.rmlStarted
+#endif
+  ) {
+		if ( cls.glconfig.vidWidth * 480 > cls.glconfig.vidHeight * 640 ) {
+			re.SetColor( g_color_table[ ColorIndex( COLOR_BLACK ) ] );
+			re.DrawStretchPic( 0, 0, cls.glconfig.vidWidth, cls.glconfig.vidHeight, 0, 0, 0, 0, cls.whiteShader );
+			re.SetColor( NULL );
+		}
+	}
+
+	// if the menu is going to cover the entire screen, we
+	// don't need to render anything under it
+	if ( !uiFullscreen ) {
+		switch( cls.state ) {
+		default:
+			Com_Error( ERR_FATAL, "SCR_DrawScreenField: bad cls.state" );
+			break;
+		case CA_CINEMATIC:
+			SCR_DrawCinematic();
+			break;
+		case CA_DISCONNECTED:
+			// force menu up
+			//S_StopAllSounds();
+			if( uivm )
+				VM_Call( uivm, 1, UI_SET_ACTIVE_MENU, UIMENU_MAIN );
+			break;
+		case CA_CONNECTING:
+		case CA_CHALLENGING:
+		case CA_CONNECTED:
+			// connecting clients will only show the connection dialog
+			// refresh to update the time
+			if( uivm ) {
+				VM_Call( uivm, 1, UI_REFRESH, cls.realtime );
+				VM_Call( uivm, 1, UI_DRAW_CONNECT_SCREEN, qfalse );
+			}
+			break;
+		case CA_LOADING:
+		case CA_PRIMED:
+			// draw the game information screen and loading progress
+			if(cgvm
+#ifdef USE_ASYNCHRONOUS
+				// skip drawing until VM is ready
+				&& !VM_IsSuspended( cgvm )
+#endif
+			) {
+				CL_CGameRendering( stereoFrame );
+			}
+			// also draw the connection information, so it doesn't
+			// flash away too briefly on local or lan games
+			// refresh to update the time
+			if( uivm ) {
+				VM_Call( uivm, 1, UI_REFRESH, cls.realtime );
+				VM_Call( uivm, 1, UI_DRAW_CONNECT_SCREEN, qtrue );
+			}
+			break;
+		case CA_ACTIVE:
+			// always supply STEREO_CENTER as vieworg offset is now done by the engine.
+			if( cgvm
+#ifdef USE_ASYNCHRONOUS
+				// skip drawing until VM is ready
+				&& !VM_IsSuspended( cgvm )
+#endif
+			) {
+				CL_CGameRendering( stereoFrame );
+				SCR_DrawDemoRecording();
+			}
+#ifdef USE_VOIP
+			SCR_DrawVoipMeter();
+#endif
+			break;
+		}
+	}
+
+}
 
 
 /*

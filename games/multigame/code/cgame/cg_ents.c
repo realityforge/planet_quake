@@ -773,20 +773,14 @@ static void CG_PersonalPortal(const centity_t *cent) {
   len = VectorNormalize( vec );
   VectorClear(angles);
 
-  // tracks player position on 2 axis to make it always look like someone can fit through it
-	angles[YAW] = -180;
-	angles[YAW] += cg.refdefViewAngles[YAW];
-	angles[PITCH] -= cg.refdefViewAngles[PITCH];
-	angles[ROLL] = 0;
-
   // add portal model
   memset (&ent, 0, sizeof(ent));
 
   // angles used below for camera direction
   if( cent->currentState.eventParm ) {
     // is wall portal
-    ByteToDir( cent->currentState.eventParm, angles2 );
-    vectoangles( angles2, angles );
+    ByteToDir( cent->currentState.eventParm, angles );
+    vectoangles( angles, angles );
     AnglesToAxis( angles, ent.axis );
     AngleVectors ( angles, velocity, NULL, NULL );
     VectorNormalize( velocity );
@@ -794,6 +788,12 @@ static void CG_PersonalPortal(const centity_t *cent) {
     VectorSubtract( cent->lerpOrigin, velocity, ent.origin );
   } else {
 		// is standalone portal
+		// tracks player position on 2 axis to make it always look like someone can fit through it
+		angles[YAW] = -180;
+		angles[YAW] += cg.refdefViewAngles[YAW];
+		angles[PITCH] -= cg.refdefViewAngles[PITCH];
+		angles[ROLL] = 0;
+		SnapVector( angles );
 		AxisClear( ent.axis );
     AnglesToAxis( angles, ent.axis );
     VectorCopy( cent->lerpOrigin, ent.origin);
@@ -830,11 +830,14 @@ static void CG_PersonalPortal(const centity_t *cent) {
 		isMirror = qfalse;
   }
   target = &cg_entities[cent->currentState.otherEntityNum];
-  if( target->currentState.eventParm ) {
+  if( target->currentState.eventParm
+		|| cent->currentState.eventParm ) {
 		// if it is a wall portal
     ByteToDir( target->currentState.eventParm, angles2 );
     vectoangles( angles2, angles2 );
-    //angles[2] = -90;
+		angles2[PITCH] = 0;
+		//angles2[YAW] += angles[YAW];
+    angles2[ROLL] = -90;
     AnglesToAxis( angles2, ent.axis );
   } else if (!isMirror) {
 		// TODO: camera bobbing might actually be cool for free standing portals

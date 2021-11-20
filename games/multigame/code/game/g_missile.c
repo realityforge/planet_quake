@@ -937,10 +937,11 @@ gentity_t *fire_portal (gentity_t *self, vec3_t start, vec3_t dir, qboolean altF
   if(altFire) {
     Com_Printf("portal b\n");
     bolt->classname = "portal_b";
+    bolt->s.powerups = (1 << 5);
   } else {
     Com_Printf("portal a\n");
     bolt->classname = "portal_a";
-    bolt->s.powerups = 1;
+    bolt->s.powerups = (1 << 4);
   }
 	bolt->nextthink = level.time + 10000;
 	bolt->think = G_ExplodeMissile;

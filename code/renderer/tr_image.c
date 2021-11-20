@@ -926,7 +926,7 @@ static const char *R_LoadImage( const char *name, byte **pic, int *width, int *h
 #ifdef USE_LAZY_LOAD
 				if(checkOnly) {
 					if ( ri.FS_FOpenFileRead(localName, NULL, qfalse) > -1 ) {
-						return NULL;
+						return localName;
 					}
 				} else
 #endif
@@ -969,7 +969,7 @@ static const char *R_LoadImage( const char *name, byte **pic, int *width, int *h
 #ifdef USE_LAZY_LOAD
 		if(checkOnly) {
 			if ( ri.FS_FOpenFileRead(altName, NULL, qfalse) > -1 ) {
-				return NULL;
+				return localName;
 			}
 		} else 
 #endif
@@ -1018,8 +1018,12 @@ image_t	*R_FindImageFile( const char *name, imgFlags_t flags )
 
 #ifdef USE_LAZY_LOAD
 	if((flags & IMGFLAG_FORCELAZY) && name[0] != '*') {
-    R_LoadImage( name, &pic, &width, &height, qtrue );
-    /* if(pic == NULL && !(flags & IMGFLAG_PALETTE)) */ return NULL;
+    if(*R_LoadImage( name, &pic, &width, &height, qtrue ) != '\0') {
+			return (void *)1;
+		} else {
+			return NULL;
+		}
+    /* if(pic == NULL && !(flags & IMGFLAG_PALETTE)) */ 
 		//return R_FindPalette(name); // try to use palette in lazy loading mode as backup
   } /* else if ((flags & IMGFLAG_PALETTE) && r_paletteMode->integer 
     && name[0] != '*') {
