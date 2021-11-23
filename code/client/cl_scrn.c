@@ -615,19 +615,16 @@ static void CL_CalculatePing( int ms ) {
 	int count, i, v;
   int			offset;
 #ifdef USE_MULTIVM_CLIENT
-  //int igs = clientGames[cgvmi];
+  int igs = clientGames[cgvmi];
 #endif
-
 	cls.meanPing = 0;
 
 	for ( i = 0, count = 0; i < LAG_SAMPLES; i++ ) {
-
 		v = lagometer.snapshotSamples[i];
 		if ( v >= 0 ) {
 			cls.meanPing += v;
 			count++;
 		}
-
 	}
 
 	if ( count ) {
@@ -635,7 +632,7 @@ static void CL_CalculatePing( int ms ) {
 	}
 
 #ifdef USE_MULTIVM_CLIENT
-	offset = cl.serverTimes[0] - cl.snapWorlds[0].serverTime;
+	offset = cl.serverTimes[igs] - cl.snapWorlds[igs].serverTime;
 #else
 	offset = cl.serverTime - cl.snap.serverTime;
 #endif

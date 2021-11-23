@@ -910,6 +910,7 @@ void CL_WritePacket( void ) {
 	cl.outPackets[ packetNum ].p_realtime = cls.realtime;
 	cl.outPackets[ packetNum ].p_serverTime = oldcmd->serverTime;
 #ifdef USE_MULTIVM_CLIENT
+	//cl.outPackets[ packetNum ].p_serverTime = cl.serverTimes[igvm];
   cl.outPackets[ packetNum ].p_cmdNumber = cl.clCmdNumbers[igvm];
 #else
 	cl.outPackets[ packetNum ].p_cmdNumber = cl.cmdNumber;

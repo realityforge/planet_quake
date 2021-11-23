@@ -321,7 +321,6 @@ void CL_ParseSnapshot( msg_t *msg, qboolean multiview ) {
 
 		commandTime = 0;
 
-
 		if ( old && old->multiview ) {
 			Com_Memcpy( newSnap.clientMask, old->clientMask, sizeof( newSnap.clientMask ) );
 			newSnap.mergeMask = old->mergeMask;
@@ -447,12 +446,14 @@ void CL_ParseSnapshot( msg_t *msg, qboolean multiview ) {
 #endif
 			newSnap.clps[ clientNum ].valid = qtrue;
 
-			//if ( clientNum == clientWorlds[0] /* clc.clientNum */ ) {
+			if ( clientNum == clientWorlds[igs] /* clc.clientNum */ ) {
 				// copy data to primary playerstate
-				//Com_Memcpy( &newSnap.areamask, &newSnap.clps[ clientNum ].areamask, sizeof( newSnap.areamask ) );
-				//Com_Memcpy( &newSnap.ps, &newSnap.clps[ clientNum ].ps, sizeof( newSnap.ps ) );
-			//}
+				Com_Memcpy( &newSnap.areamask, &newSnap.clps[ clientNum ].areamask, sizeof( newSnap.areamask ) );
+				Com_Memcpy( &newSnap.ps, &newSnap.clps[ clientNum ].ps, sizeof( newSnap.ps ) );
+			}
 		} // for [all clients]
+
+		commandTime = newSnap.ps.commandTime;
 
 		// read packet entities
 		SHOWNET( msg, "packet entities" );
@@ -485,36 +486,36 @@ void CL_ParseSnapshot( msg_t *msg, qboolean multiview ) {
 		}
 #endif
 
-	// read areamask
-	newSnap.areabytes = MSG_ReadByte( msg );
-	
-	if ( newSnap.areabytes > sizeof(newSnap.areamask) )
-	{
-		Com_Error( ERR_DROP,"CL_ParseSnapshot: Invalid size %d for areamask", newSnap.areabytes );
-		return;
-	}
-	
-	MSG_ReadData( msg, &newSnap.areamask, newSnap.areabytes );
+		// read areamask
+		newSnap.areabytes = MSG_ReadByte( msg );
+		
+		if ( newSnap.areabytes > sizeof(newSnap.areamask) )
+		{
+			Com_Error( ERR_DROP,"CL_ParseSnapshot: Invalid size %d for areamask", newSnap.areabytes );
+			return;
+		}
+		
+		MSG_ReadData( msg, &newSnap.areamask, newSnap.areabytes );
 
-	// read playerinfo
-	SHOWNET( msg, "playerstate" );
-	if ( old ) {
-		MSG_ReadDeltaPlayerstate( msg, &old->ps, &newSnap.ps );
-	} else {
-		MSG_ReadDeltaPlayerstate( msg, NULL, &newSnap.ps );
-	}
+		// read playerinfo
+		SHOWNET( msg, "playerstate" );
+		if ( old ) {
+			MSG_ReadDeltaPlayerstate( msg, &old->ps, &newSnap.ps );
+		} else {
+			MSG_ReadDeltaPlayerstate( msg, NULL, &newSnap.ps );
+		}
 
-	commandTime = newSnap.ps.commandTime;
+		commandTime = newSnap.ps.commandTime;
 
-	// read packet entities
-	SHOWNET( msg, "packet entities" );
+		// read packet entities
+		SHOWNET( msg, "packet entities" );
 #ifdef USE_MULTIVM_CLIENT
-  CL_ParsePacketEntities( msg, old, &newSnap, igs );
+		CL_ParsePacketEntities( msg, old, &newSnap, igs );
 #else
-	CL_ParsePacketEntities( msg, old, &newSnap, 0 );
+		CL_ParsePacketEntities( msg, old, &newSnap, 0 );
 #endif
 
-  } // USE_MV !extended snapshot
+	} // USE_MV !extended snapshot
 
 	// if not valid, dump the entire thing now that it has
 	// been properly read
@@ -542,7 +543,6 @@ void CL_ParseSnapshot( msg_t *msg, qboolean multiview ) {
 	cl.snap = newSnap;
 	cl.snap.ping = 999;
 	// calculate ping time
-	Com_Printf("world: %i\n", cl.snap.world);
 	for ( i = 0 ; i < PACKET_BACKUP ; i++ ) {
 		packetNum = ( clc.netchan.outgoingSequence - 1 - i ) & PACKET_MASK;
 		if ( commandTime >= cl.outPackets[ packetNum ].p_serverTime ) {
