@@ -93,7 +93,9 @@ equ trap_FS_Seek			-90
 
 equ trap_loadCamera		-91
 equ trap_startCamera	-92
-equ trap_getCameraInfo	-93
+equ trap_stopCamera	-93
+equ trap_getCameraInfo	-94
+equ trap_R_AddPolyBufferToScene  -95
 
 equ	memset						-101
 equ	memcpy						-102

@@ -835,8 +835,8 @@ static void CG_PersonalPortal(const centity_t *cent) {
 		// if it is a wall portal
     ByteToDir( target->currentState.eventParm, angles2 );
     vectoangles( angles2, angles2 );
-		angles2[PITCH] = 0;
-		//angles2[YAW] += angles[YAW];
+		angles2[PITCH] = -angles[PITCH];
+		angles2[YAW] += angles[YAW];
     angles2[ROLL] = -90;
     AnglesToAxis( angles2, ent.axis );
   } else if (!isMirror) {

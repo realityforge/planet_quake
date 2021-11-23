@@ -542,6 +542,7 @@ void CL_ParseSnapshot( msg_t *msg, qboolean multiview ) {
 	cl.snap = newSnap;
 	cl.snap.ping = 999;
 	// calculate ping time
+	Com_Printf("world: %i\n", cl.snap.world);
 	for ( i = 0 ; i < PACKET_BACKUP ; i++ ) {
 		packetNum = ( clc.netchan.outgoingSequence - 1 - i ) & PACKET_MASK;
 		if ( commandTime >= cl.outPackets[ packetNum ].p_serverTime ) {

@@ -121,6 +121,8 @@ typedef struct {
 	void	(*VertexLighting)( qboolean allowed );
 	void	(*SyncRender)( void );
 
+	void ( *AddPolyBufferToScene )( polyBuffer_t* pPolyBuffer );
+
 #ifdef USE_LNBITS
 	qhandle_t  (*CreateShaderFromImageBytes)(const char* name, const byte *pic, int width, int height);
 #endif

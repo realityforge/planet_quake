@@ -228,7 +228,7 @@ void RE_RenderGeometry(void *vertices, int num_vertices, int* indices,
   if ( !tr.registered ) {
     return;
   }
-  if ( r_numpolyverts + num_vertices > max_polyverts || r_numindexes + num_indices > max_polyverts ) {
+  if ( r_numpolyverts + num_vertices > r_maxpolyverts->integer || r_numindexes + num_indices > r_maxpolyverts->integer ) {
     ri.Printf( PRINT_DEVELOPER, "WARNING: RE_AddPolyToScene: r_max_polyverts reached\n");
     return;
   }

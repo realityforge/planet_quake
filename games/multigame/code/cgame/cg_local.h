@@ -728,6 +728,13 @@ typedef struct {
 	int				followClient;
 
 	qboolean		skipDFshaders;
+	
+	vec2_t mapcoordsMins;
+	vec2_t mapcoordsMaxs;
+	vec2_t mapcoordsScale;
+	qboolean mapcoordsValid;
+
+
 } cg_t;
 
 
@@ -1123,6 +1130,7 @@ typedef struct {
 	int				timelimit;
 	int				maxclients;
 	char			mapname[MAX_QPATH];
+	char 			rawmapname[MAX_QPATH];
 	char			redTeam[MAX_QPATH];
 	char			blueTeam[MAX_QPATH];
 
@@ -1363,6 +1371,10 @@ extern  vmCvar_t    cg_weaponOrder;
 extern  vmCvar_t    cg_gunCenter;
 #endif
 
+extern  vmCvar_t  cg_atmosphere;
+extern  vmCvar_t  cg_atmosphericEffects;
+
+
 extern const char		*eventnames[EV_MAX];
 
 
@@ -1406,6 +1418,9 @@ void CG_TestModelPrevSkin_f (void);
 void CG_ZoomDown_f( void );
 void CG_ZoomUp_f( void );
 void CG_AddBufferedSound( sfxHandle_t sfx);
+
+qboolean CG_CullPoint( vec3_t pt );
+qboolean CG_CullPointAndRadius( const vec3_t pt, vec_t radius );
 
 void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demoPlayback );
 
@@ -1676,6 +1691,21 @@ void CG_TransitionPlayerState( playerState_t *ps, playerState_t *ops );
 void CG_CheckChangedPredictableEvents( playerState_t *ps );
 
 
+//
+// cg_atmospheric.c
+//
+void CG_GenerateTracemap( void );
+void CG_EffectParse( const char *effectstr );
+void CG_AddAtmosphericEffects( void );
+
+//
+// cg_polybus.c
+//
+
+polyBuffer_t* CG_PB_FindFreePolyBuffer( qhandle_t shader, int numVerts, int numIndicies );
+void CG_PB_ClearPolyBuffers( void );
+void CG_PB_RenderPolyBuffers( void );
+
 //===============================================
 
 //
@@ -1910,6 +1940,7 @@ void		trap_R_AddRefEntityToScene( const refEntity_t *re );
 // significant construction
 void		trap_R_AddPolyToScene( qhandle_t hShader , int numVerts, const polyVert_t *verts );
 void		trap_R_AddPolysToScene( qhandle_t hShader , int numVerts, const polyVert_t *verts, int numPolys );
+void    trap_R_AddPolyBufferToScene( polyBuffer_t* pPolyBuffer );
 void		trap_R_AddLightToScene( const vec3_t org, float intensity, float r, float g, float b );
 void		trap_R_AddAdditiveLightToScene( const vec3_t org, float intensity, float r, float g, float b );
 int			trap_R_LightForPoint( vec3_t point, vec3_t ambientLight, vec3_t directedLight, vec3_t lightDir );

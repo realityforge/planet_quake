@@ -939,6 +939,14 @@ static intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 #endif
 		re.AddPolyToScene( args[1], args[2], VMA(3), args[4] );
 		return 0;
+
+	case CG_R_ADDPOLYBUFFERTOSCENE:
+#ifdef USE_MULTIVM_CLIENT
+		if(clientScreens[cgvmi][0] > -1)
+#endif
+		re.AddPolyBufferToScene( VMA( 1 ) );
+		break;
+
 	case CG_R_LIGHTFORPOINT:
 #ifdef USE_MULTIVM_CLIENT
 		if(clientScreens[cgvmi][0] == -1)

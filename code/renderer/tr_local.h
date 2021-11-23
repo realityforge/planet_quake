@@ -612,6 +612,9 @@ typedef enum {
 	SF_FLARE,
 	SF_ENTITY,				// beams, rails, lightning, etc that can be determined by entity
 
+	SF_POLYBUFFER,
+	SF_DECAL,               // ydnar: decal surfaces
+
 	SF_NUM_SURFACE_TYPES,
 	SF_MAX = 0x7fffffff			// ensures that sizeof( surfaceType_t ) == sizeof( int )
 } surfaceType_t;
@@ -645,6 +648,11 @@ typedef struct srfPoly_s {
 	polyVert_t		*verts;
 } srfPoly_t;
 
+typedef struct srfPolyBuffer_s {
+	surfaceType_t surfaceType;
+	int fogIndex;
+	polyBuffer_t*   pPolyBuffer;
+} srfPolyBuffer_t;
 
 typedef struct srfFlare_s {
 	surfaceType_t	surfaceType;
@@ -784,7 +792,6 @@ typedef struct srfIQModel_s {
 	int		first_triangle, num_triangles;
 	int		first_influence, num_influences;
 } srfIQModel_t;
-
 
 extern	void (*rb_surfaceTable[SF_NUM_SURFACE_TYPES])(void *);
 
@@ -1344,6 +1351,10 @@ extern cvar_t	*r_lazyLoad;
 #endif
 extern  cvar_t  *r_paletteMode;
 
+extern  cvar_t	*r_maxpolys;
+extern  cvar_t	*r_maxpolyverts;
+extern  cvar_t	*r_maxpolybuffers;
+
 #ifdef USE_MULTIVM_CLIENT
 extern float dvrXScale;
 extern float dvrYScale;
@@ -1730,6 +1741,7 @@ void R_InitNextFrame( void );
 void RE_ClearScene( void );
 void RE_AddRefEntityToScene( const refEntity_t *ent, qboolean intShaderTime );
 void RE_AddPolyToScene( qhandle_t hShader , int numVerts, const polyVert_t *verts, int num );
+void RE_AddPolyBufferToScene( polyBuffer_t* pPolyBuffer );
 void RE_AddLightToScene( const vec3_t org, float intensity, float r, float g, float b );
 void RE_AddAdditiveLightToScene( const vec3_t org, float intensity, float r, float g, float b );
 void RE_AddLinearLightToScene( const vec3_t start, const vec3_t end, float intensity, float r, float g, float b );
@@ -1922,6 +1934,7 @@ typedef enum {
 // the main view, all the 3D icons, etc
 #define	MAX_POLYS		8192
 #define	MAX_POLYVERTS	32768
+#define MAX_POLYBUFFERS	256
 
 // all of the information needed by the back end must be
 // contained in a backEndData_t
@@ -1937,13 +1950,10 @@ typedef struct {
 	trRefEntity_t	entities[MAX_REFENTITIES];
 	srfPoly_t	*polys;//[MAX_POLYS];
 	polyVert_t	*polyVerts;//[MAX_POLYVERTS];
+	srfPolyBuffer_t *polybuffers; //[MAX_POLYS];
   int	*indexes;//[MAX_POLYVERTS];
 	renderCommandList_t	commands;
 } backEndData_t;
-
-extern	int		max_polys;
-extern	int		max_polyverts;
-extern	int		max_indexes;
 
 extern	backEndData_t	*backEndData;
 

@@ -614,6 +614,9 @@ void CL_AddLagometerSnapshotInfo(clSnapshot_t *snapshot) {
 static void CL_CalculatePing( int ms ) {
 	int count, i, v;
   int			offset;
+#ifdef USE_MULTIVM_CLIENT
+  //int igs = clientGames[cgvmi];
+#endif
 
 	cls.meanPing = 0;
 
@@ -947,6 +950,7 @@ void SCR_UpdateScreen( qboolean fromVM ) {
 	static int recursive;
 	static int framecount;
 	static int next_frametime;
+	qboolean first = qtrue;
 
 	if ( !scr_initialized )
 		return; // not initialized yet
@@ -995,8 +999,6 @@ void SCR_UpdateScreen( qboolean fromVM ) {
 		goto donewithupdate;
 	}
 
-  CL_CalculatePing(ms);
-
 	for(i = 0; i < MAX_NUM_VMS; i++) {
 #ifdef USE_MULTIVM_CLIENT
     cgvmi = i;
@@ -1010,6 +1012,11 @@ void SCR_UpdateScreen( qboolean fromVM ) {
 		//}
 		
 		if(!cgvm && !uivm) continue;
+
+		if(first) {
+			CL_CalculatePing(ms);
+		}
+		first = qfalse;
 
 #ifdef USE_MULTIVM_CLIENT
 		CM_SwitchMap(clientMaps[cgvmi]);

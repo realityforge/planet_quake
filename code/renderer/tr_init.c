@@ -173,10 +173,8 @@ cvar_t	*r_aviMotionJpegQuality;
 cvar_t	*r_screenshotJpegQuality;
 
 cvar_t	*r_maxpolys;
-int		max_polys;
 cvar_t	*r_maxpolyverts;
-int		max_polyverts;
-int   max_indexes;
+cvar_t	*r_maxpolybuffers;
 
 cvar_t	*r_developer;
 
@@ -1507,8 +1505,12 @@ static void R_Register( void )
 
 	r_subdivisions = ri.Cvar_Get( "r_subdivisions", "4", CVAR_ARCHIVE_ND | CVAR_LATCH );
 
-	r_maxpolys = ri.Cvar_Get( "r_maxpolys", XSTRING( MAX_POLYS ), CVAR_LATCH );
-	r_maxpolyverts = ri.Cvar_Get( "r_maxpolyverts", XSTRING( MAX_POLYVERTS ), CVAR_LATCH );
+	r_maxpolys = ri.Cvar_Get( "r_maxpolys", va("%d", MAX_POLYS), 0);
+	ri.Cvar_CheckRange( r_maxpolys, va("%d", MAX_POLYS), NULL, CV_INTEGER );
+	r_maxpolyverts = ri.Cvar_Get( "r_maxpolyverts", va("%d", MAX_POLYVERTS), 0);
+	ri.Cvar_CheckRange( r_maxpolyverts, va("%d", MAX_POLYVERTS), NULL, CV_INTEGER );
+	r_maxpolybuffers = ri.Cvar_Get( "r_maxpolybuffers", va("%d", MAX_POLYBUFFERS), 0);
+	ri.Cvar_CheckRange( r_maxpolybuffers, va("%d", MAX_POLYBUFFERS), NULL, CV_INTEGER );
 
 	//
 	// archived variables that can change at any time
@@ -1753,15 +1755,21 @@ void R_Init( void ) {
 
 	R_Register();
 
-	max_polys = r_maxpolys->integer;
-	max_polyverts = r_maxpolyverts->integer;
-  max_indexes = r_maxpolyverts->integer;
-
-	ptr = ri.Hunk_Alloc( sizeof( *backEndData ) + sizeof(srfPoly_t) * max_polys + sizeof(polyVert_t) * max_polyverts, h_low);
+	ptr = ri.Hunk_Alloc( sizeof( *backEndData ) 
+		+ sizeof(int) * r_maxpolyverts->integer
+		+ sizeof(srfPoly_t) * r_maxpolys->integer 
+		+ sizeof(polyVert_t) * r_maxpolyverts->integer 
+		+ sizeof(srfPolyBuffer_t) * r_maxpolybuffers->integer, h_low);
 	backEndData = (backEndData_t *) ptr;
-	backEndData->polys = (srfPoly_t *) ((char *) ptr + sizeof( *backEndData ));
-	backEndData->polyVerts = (polyVert_t *) ((char *) ptr + sizeof( *backEndData ) + sizeof(srfPoly_t) * max_polys);
-  backEndData->indexes = (int *) ((char *) ptr + sizeof( *backEndData ) + sizeof(int) * max_indexes);
+	ptr += sizeof( *backEndData );
+  backEndData->indexes = (int *) ((char *) ptr);
+	ptr += sizeof(int) * r_maxpolyverts->integer;
+	backEndData->polys = (srfPoly_t *) ((char *) ptr);
+	ptr += sizeof(srfPoly_t) * r_maxpolys->integer;
+	backEndData->polyVerts = (polyVert_t *) ((char *) ptr);
+	ptr += sizeof(polyVert_t) * r_maxpolyverts->integer;
+	backEndData->polybuffers = (srfPolyBuffer_t *) ((char *) ptr);
+	ptr += sizeof(srfPolyBuffer_t) * r_maxpolybuffers->integer;
 
 	R_InitNextFrame();
 
@@ -1941,6 +1949,8 @@ refexport_t *GetRefAPI ( int apiVersion, refimport_t *rimp ) {
 	re.GetConfig = RE_GetConfig;
 	re.VertexLighting = RE_VertexLighting;
 	re.SyncRender = RE_SyncRender;
+
+	re.AddPolyBufferToScene =   RE_AddPolyBufferToScene;
 
 #ifdef USE_RMLUI
   re.RegisterImage = RE_RegisterImage;

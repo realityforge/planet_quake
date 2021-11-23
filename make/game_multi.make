@@ -128,6 +128,8 @@ CGOBJ_  = $(B)/$(MOD)/cgame/cg_main.o \
           $(B)/$(MOD)/cgame/bg_misc.o \
           $(B)/$(MOD)/cgame/bg_pmove.o \
           $(B)/$(MOD)/cgame/bg_slidemove.o \
+          $(B)/$(MOD)/cgame/bg_tracemap.o \
+          $(B)/$(MOD)/cgame/cg_atmospheric.o \
           $(B)/$(MOD)/cgame/cg_consolecmds.o \
           $(B)/$(MOD)/cgame/cg_draw.o \
           $(B)/$(MOD)/cgame/cg_drawtools.o \
@@ -139,6 +141,7 @@ CGOBJ_  = $(B)/$(MOD)/cgame/cg_main.o \
           $(B)/$(MOD)/cgame/cg_marks.o \
           $(B)/$(MOD)/cgame/cg_players.o \
           $(B)/$(MOD)/cgame/cg_playerstate.o \
+          $(B)/$(MOD)/cgame/cg_polybus.o \
           $(B)/$(MOD)/cgame/cg_predict.o \
           $(B)/$(MOD)/cgame/cg_scoreboard.o \
           $(B)/$(MOD)/cgame/cg_servercmds.o \
@@ -197,6 +200,7 @@ QAOBJ_ += $(B)/$(MOD)/game/bg_lib.o \
           $(B)/$(MOD)/game/bg_misc.o \
           $(B)/$(MOD)/game/bg_pmove.o \
           $(B)/$(MOD)/game/bg_slidemove.o \
+          $(B)/$(MOD)/game/bg_tracemap.o \
           $(B)/$(MOD)/game/q_math.o \
           $(B)/$(MOD)/game/q_shared.o
 endif

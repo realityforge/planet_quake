@@ -977,7 +977,7 @@ void SV_Init( void )
 	sv_mvSyncMove = Cvar_Get("sv_mvSyncMove", "0", CVAR_ARCHIVE);
 	Cvar_CheckRange( sv_mvSyncMove, "0", "1", CV_INTEGER );
 	sv_mvOmnipresent = Cvar_Get("sv_mvOmnipresent", "0", CVAR_ARCHIVE);
-	Cvar_CheckRange( sv_mvOmnipresent, "0", "1", CV_INTEGER );
+	Cvar_CheckRange( sv_mvOmnipresent, "-1", "1", CV_INTEGER );
 #endif
 
 	sv_minRate = Cvar_Get ("sv_minRate", "0", CVAR_ARCHIVE_ND | CVAR_SERVERINFO );

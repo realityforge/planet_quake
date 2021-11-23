@@ -1512,7 +1512,11 @@ void R_Register( void )
 	r_screenshotJpegQuality = ri.Cvar_Get("r_screenshotJpegQuality", "90", CVAR_ARCHIVE);
 
 	r_maxpolys = ri.Cvar_Get( "r_maxpolys", va("%d", MAX_POLYS), 0);
+	ri.Cvar_CheckRange( r_maxpolys, va("%d", MAX_POLYS), NULL, CV_INTEGER );
 	r_maxpolyverts = ri.Cvar_Get( "r_maxpolyverts", va("%d", MAX_POLYVERTS), 0);
+	ri.Cvar_CheckRange( r_maxpolyverts, va("%d", MAX_POLYVERTS), NULL, CV_INTEGER );
+	r_maxpolybuffers = ri.Cvar_Get( "r_maxpolybuffers", va("%d", MAX_POLYBUFFERS), 0);
+	ri.Cvar_CheckRange( r_maxpolybuffers, va("%d", MAX_POLYBUFFERS), NULL, CV_INTEGER );
 
   r_developer = ri.Cvar_Get( "developer", "0", 0 );
 #ifdef USE_LAZY_LOAD
@@ -1633,18 +1637,22 @@ void R_Init( void ) {
 
 	R_Register();
 
-	max_polys = r_maxpolys->integer;
-	if (max_polys < MAX_POLYS)
-		max_polys = MAX_POLYS;
-
-	max_polyverts = r_maxpolyverts->integer;
-	if (max_polyverts < MAX_POLYVERTS)
-		max_polyverts = MAX_POLYVERTS;
-
-	ptr = ri.Hunk_Alloc( sizeof( *backEndData ) + sizeof(srfPoly_t) * max_polys + sizeof(polyVert_t) * max_polyverts, h_low);
+	ptr = ri.Hunk_Alloc( sizeof( *backEndData ) 
+		+ sizeof(int) * r_maxpolyverts->integer
+		+ sizeof(srfPoly_t) * r_maxpolys->integer 
+		+ sizeof(polyVert_t) * r_maxpolyverts->integer 
+		+ sizeof(srfPolyBuffer_t) * max_polybuffers, h_low);
 	backEndData = (backEndData_t *) ptr;
-	backEndData->polys = (srfPoly_t *) ((char *) ptr + sizeof( *backEndData ));
-	backEndData->polyVerts = (polyVert_t *) ((char *) ptr + sizeof( *backEndData ) + sizeof(srfPoly_t) * max_polys);
+	ptr += sizeof( *backEndData );
+  backEndData->indexes = (int *) ((char *) ptr);
+	ptr += sizeof(int) * r_maxpolyverts->integer;
+	backEndData->polys = (srfPoly_t *) ((char *) ptr);
+	ptr += sizeof(srfPoly_t) * r_maxpolys->integer;
+	backEndData->polyVerts = (polyVert_t *) ((char *) ptr);
+	ptr += sizeof(polyVert_t) * r_maxpolyverts->integer;
+	backEndData->polybuffers = (srfPolyBuffer_t *) ((char *) ptr);
+	ptr += sizeof(srfPolyBuffer_t) * r_maxpolybuffers->integer;
+
 	R_InitNextFrame();
 
 	InitOpenGL();

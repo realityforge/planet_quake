@@ -2348,7 +2348,7 @@ typedef enum {
 void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, vec3_t *newOrigin ) {
 	int		clientNum; //, i;
 	int oldDelta[3];
-	sharedEntity_t *ent;
+	sharedEntity_t *ent, *prevEnt;
 	playerState_t	*ps, oldps;
 	vec3_t newAngles;
 	//gentity_t *gent, oldEnt;
@@ -2405,6 +2405,7 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
 		SV_SetAASgvm(gvmi);
     if(sv_mvOmnipresent->integer == 0) {
       VM_Call( gvm, 1, GAME_CLIENT_DISCONNECT, clientNum );	// firstTime = qfalse
+			prevEnt = SV_GentityNum( clientNum );
     } else if (sv_mvOmnipresent->integer == -1) {
       SV_ExecuteClientCommand(client, "team spectator");
     }
@@ -2425,6 +2426,11 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
 			client->deltaMessage = -1;
 			client->lastSnapshotTime = svs.time - 9999; // generate a snapshot immediately
 			SV_SendClientSnapshot( client, qfalse );
+			if(sv_mvOmnipresent->integer == 0) {
+				// clear entity type so we know they are no longer present in this world
+				prevEnt->s.eType = 0; 
+				// also prevents server from sending snapshots from this world
+			}
 			client->state = CS_CONNECTED;
 			client->gamestateMessageNum = -1; // send a new gamestate
 			return;

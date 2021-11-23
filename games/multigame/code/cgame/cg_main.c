@@ -274,6 +274,11 @@ vmCvar_t  cg_weaponOrder;
 int cg_weaponsCount = -1; //WarZone
 #endif
 
+vmCvar_t  cg_developer;
+vmCvar_t  cg_atmosphere;
+vmCvar_t  cg_atmosphericEffects;
+int atmosphereModificationCount = -1;
+
 typedef struct {
 	vmCvar_t	*vmCvar;
 	const char	*cvarName;
@@ -343,6 +348,7 @@ static const cvarTable_t cvarTable[] = {
 	{ &cg_teamChatHeight, "cg_teamChatHeight", "0", CVAR_ARCHIVE  },
 	{ &cg_forceModel, "cg_forceModel", "0", CVAR_ARCHIVE  },
 	{ &cg_predictItems, "cg_predictItems", "1", CVAR_ARCHIVE },
+	{ &cg_developer, "developer", "", 0 },
 #ifdef MISSIONPACK
 	{ &cg_deferPlayers, "cg_deferPlayers", "0", CVAR_ARCHIVE },
 #else
@@ -434,6 +440,8 @@ static const cvarTable_t cvarTable[] = {
   { &cgwp_flameCycle, "wp_flameCycle", "40", CVAR_SERVERINFO },
 #endif
 #endif
+	{ &cg_atmosphere, "g_atmosphere", "", CVAR_SERVERINFO},
+	{ &cg_atmosphericEffects, "cg_atmosphericEffects", "1", CVAR_ARCHIVE },
 	{ &cg_smoothClients, "cg_smoothClients", "0", CVAR_USERINFO | CVAR_ARCHIVE},
 	{ &cg_cameraMode, "com_cameraMode", "0", CVAR_CHEAT},
 	{ &cg_noTaunt, "cg_noTaunt", "0", CVAR_ARCHIVE},
@@ -479,7 +487,7 @@ void CG_RegisterCvars( void ) {
 	enemyColorsModificationCount = cg_enemyColors.modificationCount;
 	teamModelModificationCount = cg_teamModel.modificationCount;
 	teamColorsModificationCount = cg_teamColors.modificationCount;
-
+	atmosphereModificationCount = cg_atmosphere.modificationCount;
 
 	trap_Cvar_Register(NULL, "model", DEFAULT_MODEL, CVAR_USERINFO | CVAR_ARCHIVE );
 	trap_Cvar_Register(NULL, "headmodel", DEFAULT_MODEL, CVAR_USERINFO | CVAR_ARCHIVE );
@@ -633,6 +641,11 @@ void CG_UpdateCvars( void ) {
     cg_weaponsCount = cg_weaponOrder.modificationCount; 
   } 
 #endif
+
+	if(atmosphereModificationCount != cg_atmosphere.modificationCount) {
+		atmosphereModificationCount = cg_atmosphere.modificationCount;
+		CG_EffectParse(cg_atmosphere.string);
+	}
 
 	// if model changed
 	if ( forceModelModificationCount != cg_forceModel.modificationCount 
