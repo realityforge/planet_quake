@@ -905,6 +905,9 @@ static intptr_t CL_CgameSystemCalls( intptr_t *args ) {
     //  X_DMG_PushDamageForDirectHit( args[1], VMA(2) );
 		return 0;
 	case CG_S_RESPATIALIZE:
+#ifdef USE_MULTIVM_CLIENT
+		if(clientScreens[cgvmi][0] > -1)
+#endif
 		S_Respatialize( args[1], VMA(2), VMA(3), args[4] );
 		return 0;
 	case CG_S_REGISTERSOUND:

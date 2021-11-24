@@ -1047,7 +1047,7 @@ void SCR_UpdateScreen( qboolean fromVM ) {
 	}
 
 #ifdef USE_MULTIVM_CLIENT
-  cgvmi = 0;
+  cgvmi = clc.currentView;
 	uivmi = 0;
   CM_SwitchMap(clientMaps[cgvmi]);
 #ifdef USE_LAZY_MEMORY

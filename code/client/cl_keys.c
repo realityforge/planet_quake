@@ -913,6 +913,9 @@ Called by the system for both key up and key down events
 */
 void CL_KeyEvent( int key, qboolean down, unsigned time, int finger )
 {
+#ifdef USE_MULTIVM_CLIENT
+	cgvmi = clc.currentView;
+#endif
 	if ( down )
 		CL_KeyDownEvent( key, time, finger );
 	else

@@ -371,13 +371,13 @@ CL_MouseEvent
 =================
 */
 #ifndef USE_ABS_MOUSE
-void CL_MouseEvent( int dx, int dy, int time ) {
+void CL_MouseEvent( int dx, int dy, int time )
 #else
-void CL_MouseEvent( int dx, int dy, int time, qboolean absolute ) {
+void CL_MouseEvent( int dx, int dy, int time, qboolean absolute ) 
 #endif
-;
+{
 #ifdef USE_MULTIVM_CLIENT
-	cgvmi = 0;
+	cgvmi = clc.currentView;
 	CM_SwitchMap(clientMaps[cgvmi]);
 #endif
 #ifdef USE_ABS_MOUSE
@@ -804,12 +804,15 @@ void CL_WritePacket( void ) {
 	for(int igvm = 0; igvm < MAX_NUM_VMS; igvm++) {
 		if(igvm > 0 && (!cgvmWorlds[igvm]
 			|| clientGames[igvm] == -1
-			|| clientWorlds[igvm] != clc.clientNum)) continue;
+			|| clientWorlds[igvm] != clc.clientNum)
+		) {
+			continue;
+		}
 		int igs = clientGames[igvm];
 		int oldCmdNum = cl.clCmdNumbers[igvm];
 		CL_CreateNewCommands(igvm);
-		if(igvm > 0) {
-      // TODO: choose which client to extract movement commands from, cl.currentView?
+		if(igvm != 0) {
+      // choose which client to extract movement commands from, cl.currentView?
 			cl.cmds[cl.clCmdNumbers[igvm] & CMD_MASK].forwardmove = 
 				cl.cmdWorlds[0][cl.clCmdNumbers[0] & CMD_MASK].forwardmove;
 			cl.cmds[cl.clCmdNumbers[igvm] & CMD_MASK].rightmove = 
