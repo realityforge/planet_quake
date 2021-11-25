@@ -490,7 +490,11 @@ static void SV_AddEntitiesVisibleFromPoint( const vec3_t origin, clientPVS_t *pv
 	// calculate the visible areas
 	pvs->areabytes = CM_WriteAreaBits( pvs->areabits, clientarea );
 
+#ifdef USE_MULTIVM_SERVER
+	clientpvs = CM_ClusterPVS (clientcluster, gameWorlds[gvmi]);
+#else
 	clientpvs = CM_ClusterPVS (clientcluster);
+#endif
 
 	for ( e = 0 ; e < svs.currFrame->count; e++ ) {
 		es = svs.currFrame->ents[ e ];

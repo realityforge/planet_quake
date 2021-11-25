@@ -750,7 +750,12 @@ Returns qtrue if it should be mirrored
 */
 static qboolean R_GetPortalOrientations( const drawSurf_t *drawSurf, int entityNum,
 							 orientation_t *surface, orientation_t *camera,
-							 vec3_t pvsOrigin, portalView_t *portalView, int *portalEntity ) {
+							 vec3_t pvsOrigin, portalView_t *portalView, 
+							 int *portalEntity
+#ifdef USE_MULTIVM_CLIENT
+							 , int *world 
+#endif
+							 ) {
 	int			i;
 	cplane_t	originalPlane, plane;
 	trRefEntity_t	*e;
@@ -831,10 +836,13 @@ static qboolean R_GetPortalOrientations( const drawSurf_t *drawSurf, int entityN
 
 		// optionally rotate
 
-		if(e->e.radius == 12) {
+#ifdef USE_MULTIVM_CLIENT
+		*world = (e->e.oldframe >> 8);
+#endif
+		if(e->e.oldframe & 12) { // special indication meaning portal and frames are entity nums not rotations
 			*portalEntity = e->e.frame;
 		} else 
-		if ( e->e.oldframe ) {
+		if ( e->e.oldframe & 1 ) {
 			// if a speed is specified
 			if ( e->e.frame ) {
 				// continuous rotate
@@ -1153,9 +1161,16 @@ static qboolean R_MirrorViewBySurface( const drawSurf_t *drawSurf, int entityNum
 	newParms = tr.viewParms;
 	newParms.portalView = PV_NONE;
   newParms.portalEntity = 0;
+#ifdef USE_MULTIVM_CLIENT
+	newParms.newWorld = 0;
+#endif
 
 	if ( !R_GetPortalOrientations( drawSurf, entityNum, &surface, &camera, 
-		newParms.pvsOrigin, &newParms.portalView, &newParms.portalEntity) ) {
+		newParms.pvsOrigin, &newParms.portalView, &newParms.portalEntity
+#ifdef USE_MULTIVM_CLIENT
+		, &newParms.newWorld
+#endif
+		) ) {
 		return qfalse;		// bad portal, no portalentity
 	}
 
@@ -1197,11 +1212,22 @@ static qboolean R_MirrorViewBySurface( const drawSurf_t *drawSurf, int entityNum
 	R_MirrorVector (oldParms.or.axis[2], &surface, &camera, newParms.or.axis[2]);
 
 	// OPTIMIZE: restrict the viewport on the mirrored view
+#ifdef USE_MULTIVM_CLIENT
+	if(newParms.newWorld != oldParms.newWorld) {
+		RE_SwitchWorld(newParms.newWorld);
+	}
+#endif
 
 	// render the mirror view
 	R_RenderView( &newParms );
 
 	tr.viewParms = oldParms;
+#ifdef USE_MULTIVM_CLIENT
+	// switch back
+	if(newParms.newWorld != oldParms.newWorld) {
+		RE_SwitchWorld(oldParms.newWorld);
+	}
+#endif
 
 	return qtrue;
 }
@@ -1709,6 +1735,9 @@ void R_RenderView( const viewParms_t *parms ) {
 	tr.viewParms = *parms;
 	tr.viewParms.frameSceneNum = tr.frameSceneNum;
 	tr.viewParms.frameCount = tr.frameCount;
+#ifdef USE_MULTIVM_CLIENT
+	tr.viewParms.newWorld = tr.world - s_worldDatas;
+#endif
 
 	firstDrawSurf = tr.refdef.numDrawSurfs;
 

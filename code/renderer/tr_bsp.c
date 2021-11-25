@@ -2165,10 +2165,11 @@ static void R_LoadEntities( const lump_t *l ) {
 #ifdef USE_LAZY_MEMORY
 #ifdef USE_MULTIVM_CLIENT
 void RE_SwitchWorld(int w) {
-  //ri.Printf( PRINT_ALL, "Switching renderers %i -> %i\n", rwi, w );
+	if(w != rwi)
+	  ri.Printf( PRINT_ALL, "Switching renderers %i -> %i\n", rwi, w );
 	R_IssuePendingRenderCommands();
 	rwi = w;
-	tr.world = &s_worldData;
+	tr.world = &s_worldDatas[rwi];
 	// reassign bmodels to same position as server entities
 	tr.numLightmaps = s_worldData.numLightmaps;
 	tr.lightmaps = s_worldData.lightmaps;

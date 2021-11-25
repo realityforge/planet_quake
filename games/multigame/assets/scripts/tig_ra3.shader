@@ -396,8 +396,12 @@ textures/tig_ra3/tig_ra3_a3
 	qer_editorimage textures/tig_ra3/tig_ra3_a3.tga
 	surfaceparm nolightmap
 	cull none
+	portal
 	{
 		map textures/tig_ra3/tig_ra3_a3.tga
+		blendfunc GL_SRC_ALPHA GL_ONE
+    alphagen portal 1024
+		depthWrite
 	}
 
 }

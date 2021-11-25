@@ -1099,7 +1099,7 @@ qboolean R_GetPortalOrientations( drawSurf_t *drawSurf, int entityNum,
 		VectorSubtract( vec3_origin, camera->axis[1], camera->axis[1] );
 
 		// optionally rotate
-		if ( e->e.oldframe ) {
+		if ( e->e.oldframe & 1 ) {
 			// if a speed is specified
 			if ( e->e.frame ) {
 				// continuous rotate

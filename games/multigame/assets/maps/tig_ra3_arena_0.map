@@ -16747,3 +16747,15 @@
 
 
 
+{
+"classname" "misc_portal_surface"
+"target" "tig_ra3_skycam_a3"
+"origin" "-3844 -1864 -1544"
+}
+{
+"classname" "misc_portal_camera"
+"targetname" "tig_ra3_skycam_a3"
+"origin" "1432 3432 1112"
+"angles" "-45 0 -90"
+"health" "1"
+}

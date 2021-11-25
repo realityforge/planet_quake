@@ -313,7 +313,11 @@ PVS
 ===============================================================================
 */
 
-byte	*CM_ClusterPVS (int cluster) {
+byte	*CM_ClusterPVS (int cluster
+#if defined(USE_MULTIVM_CLIENT) || defined(USE_MULTIVM_SERVER)
+	, int cmi
+#endif
+) {
 	if (cluster < 0 || cluster >= cm.numClusters || !cm.vised ) {
 		return cm.visibility;
 	}

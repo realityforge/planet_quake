@@ -849,9 +849,12 @@ static void CG_PersonalPortal(const centity_t *cent) {
   }
   ent.reType = RT_PORTALSURFACE;
   //ent.renderfx = RF_FIRST_PERSON;
-	ent.radius = 12;
+	//ent.radius = 12;
+	ent.skinNum |= cent->currentState.otherEntityNum;
+  //ent.oldframe = s1->powerups;
+  //ent.frame = s1->frame;		// rotation speed
   ent.frame = cent->currentState.number;
-  ent.oldframe = cent->currentState.otherEntityNum;
+  ent.oldframe = (cent->currentState.powerups & 0xF0) | 12;
   trap_R_AddRefEntityToScene(&ent);
 }
 

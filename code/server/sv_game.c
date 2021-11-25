@@ -187,7 +187,11 @@ qboolean SV_inPVS( const vec3_t p1, const vec3_t p2 )
 	leafnum = CM_PointLeafnum (p1);
 	cluster = CM_LeafCluster (leafnum);
 	area1 = CM_LeafArea (leafnum);
+#ifdef USE_MULTIVM_SERVER
+	mask = CM_ClusterPVS (cluster, gameWorlds[gvmi]);
+#else
 	mask = CM_ClusterPVS (cluster);
+#endif
 
 	leafnum = CM_PointLeafnum (p2);
 	cluster = CM_LeafCluster (leafnum);
@@ -215,7 +219,11 @@ static qboolean SV_inPVSIgnorePortals( const vec3_t p1, const vec3_t p2 )
 
 	leafnum = CM_PointLeafnum (p1);
 	cluster = CM_LeafCluster (leafnum);
+#ifdef USE_MULTIVM_SERVER
+	mask = CM_ClusterPVS (cluster, gameWorlds[gvmi]);
+#else
 	mask = CM_ClusterPVS (cluster);
+#endif
 
 	leafnum = CM_PointLeafnum (p2);
 	cluster = CM_LeafCluster (leafnum);

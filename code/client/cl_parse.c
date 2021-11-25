@@ -869,9 +869,11 @@ static void CL_ParseGamestate( msg_t *msg ) {
 	if(cl.snapWorlds[0].multiview) {
 		clc.currentView = cgvmi = igs = MSG_ReadByte( msg );
 	}
-	if(cgvmi == 0) {
+	if(cgvmi == 0 && !cgvmWorlds[0]) {
 		CL_ClearState();
 	}
+	memset(&cl.snapWorlds[cgvmi], 0, sizeof(cl.snapWorlds[cgvmi]));
+	memset(cl.snapshotWorlds[cgvmi], 0, sizeof(cl.snapshotWorlds[cgvmi]));
   Com_Printf("Received new gamestate: %i\n", cgvmi);    
 #endif
 

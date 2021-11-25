@@ -2284,12 +2284,19 @@ void SV_LoadVM( client_t *cl ) {
 		gameWorlds[gvmi] = previous;
 		CM_SwitchMap(gameWorlds[gvmi]);
 	} else {
+		FS_BypassPure();
+#ifdef USE_MEMORY_MAPS
+  // TODO: make this asynchronous where the console and server waits for it to compile
+		if(sv_memoryMaps->integer)
+			SV_MakeMap((const char **)&mapname); // make the BSP and then it will load normally	
+#endif
 		Sys_SetStatus( "Loading map %s", mapname );
     Cvar_Get( va("mapname_%i", gvmi), mapname, CVAR_TAGGED_SPECIFIC );
     Cvar_Set( va("mapname_%i", gvmi), mapname );
 		gameWorlds[gvmi] = CM_LoadMap( va( "maps/%s.bsp", mapname ), qfalse, &checksum );
 		Cvar_Set( va("sv_mapChecksum_%i", gvmi), va( "%i", checksum ) );
     Cvar_Get( va("sv_mapChecksum_%i", gvmi), "", CVAR_TAGGED_SPECIFIC );
+		FS_RestorePure();
 	}
   
   // settle the new map

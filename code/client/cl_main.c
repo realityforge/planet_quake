@@ -2871,7 +2871,11 @@ static void CL_DownloadsComplete( void ) {
 		CL_LoadVM_f();
 		Cmd_Clear();
 	} else {
-		cls.state = CA_ACTIVE;
+		cgvmi = clc.currentView;
+		Com_Printf("Using existing cgame VM: %i\n", cgvmi);
+		CM_SwitchMap(clientMaps[cgvmi]);
+		CL_InitCGame(cgvmi);
+		//cls.state = CA_ACTIVE;
 	}
 #else
 	clientGames[0] = 0;
@@ -4081,7 +4085,7 @@ void CL_Frame( int msec, int realMsec ) {
 	// decide on the serverTime to render
 #ifdef USE_MULTIVM_CLIENT
   for(int i = 0; i < MAX_NUM_VMS; i++) {
-    if(!cgvmWorlds[i]) continue;
+    if(!cgvmWorlds[i] || !cl.snapWorlds[i].valid) continue;
     cgvmi = i;
     CL_SetCGameTime();
   }
@@ -4356,6 +4360,18 @@ static void CL_SetScaling( float factor, int captureWidth, int captureHeight ) {
 	cls.captureHeight = captureHeight;
 }
 
+#if defined(USE_MULTIVM_CLIENT) || defined(USE_MULTIVM_SERVER)
+byte	*CL_CM_ClusterPVS (int cluster, int cmi)
+{
+	return CM_ClusterPVS(cluster, clientMaps[cgvmi]);
+}
+#else
+byte	*CL_CM_ClusterPVS (int cluster) {
+	return CM_ClusterPVS(cluster);
+}
+#endif
+
+
 
 /*
 ============
@@ -4436,7 +4452,7 @@ static void CL_InitRef( void ) {
 	rimp.Hunk_AllocateTempMemory = Hunk_AllocateTempMemory;
 	rimp.Hunk_FreeTempMemory = Hunk_FreeTempMemory;
 	
-	rimp.CM_ClusterPVS = CM_ClusterPVS;
+	rimp.CM_ClusterPVS = CL_CM_ClusterPVS;
 	rimp.CM_DrawDebugSurface = CM_DrawDebugSurface;
 
 	rimp.FS_ReadFile = FS_ReadFile;

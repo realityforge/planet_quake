@@ -572,6 +572,9 @@ typedef struct {
 	vec3_t		pvsOrigin;			// may be different than or.origin for portals
 	portalView_t portalView;
   int       portalEntity;
+#ifdef USE_MULTIVM_CLIENT
+	int       newWorld;  // switch to a different world when rendering a camera view
+#endif
 	int			frameSceneNum;		// copied from tr.frameSceneNum
 	int			frameCount;			// copied from tr.frameCount
 	cplane_t	portalPlane;		// clip anything behind this if mirroring
@@ -1119,7 +1122,12 @@ typedef struct {
 	qboolean				registered;		// cleared at shutdown, set at beginRegistration
   int							lastRegistrationTime;
 
+#ifdef USE_MULTIVM_CLIENT
+	int						visCounts[MAX_NUM_WORLDS];		// incremented every time a new vis cluster is entered
+#define visCount visCounts[rwi]
+#else
 	int						visCount;		// incremented every time a new vis cluster is entered
+#endif
 	int						frameCount;		// incremented every frame
 	int						sceneCount;		// incremented every scene
 	int						viewCount;		// incremented every view (twice a scene if portaled)
@@ -1171,7 +1179,12 @@ typedef struct {
 
 	trRefdef_t				refdef;
 
+#ifdef USE_MULTIVM_CLIENT
+	int						viewClusters[MAX_NUM_WORLDS];
+#define viewCluster viewClusters[rwi]
+#else
 	int						viewCluster;
+#endif
 #ifdef USE_PMLIGHT
 	dlight_t				*light;				// current light during R_RecursiveLightNode
 #endif

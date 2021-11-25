@@ -235,7 +235,7 @@ void locateCamera( gentity_t *ent ) {
 	owner = G_PickTarget( ent->target );
 	if ( !owner ) {
     ent->nextthink = level.time + 500;
-		//G_Printf( "Couldn't find target for misc_partal_surface\n" );
+		G_Printf( "Couldn't find target for misc_partal_surface\n" );
 		//G_FreeEntity( ent );
 		return;
 	}
@@ -256,6 +256,7 @@ void locateCamera( gentity_t *ent ) {
 	else {
 		//ent->s.powerups = 1;
 	}
+  ent->s.powerups |= (owner->health << 8);
 
 	// clientNum holds the rotate offset
 	ent->s.clientNum = owner->s.clientNum;
@@ -650,6 +651,7 @@ void DropPortalDestination( gentity_t *player, qboolean isWall ) {
 	ent->health = 200;
 	ent->die = PortalDie;
   ent->s.powerups = 1 << 5;
+  // TODO: player world from server somehow? ent->s.powerups |= 
 
   // copied from misc_portal
   ent->r.ownerNum = player->client->ps.clientNum;
