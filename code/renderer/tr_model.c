@@ -359,7 +359,8 @@ qhandle_t RE_RegisterModel( const char *name )
 #ifdef USE_LAZY_LOAD
 				if ( !updateModels ) {
 					if(ri.FS_FOpenFileRead(localName, NULL, qfalse)) {
-						hModel = 0;
+						ri.Cvar_Set("r_loadingModel", "");
+						return mod->index;
 					}
 				} else 
 #endif
@@ -405,7 +406,8 @@ qhandle_t RE_RegisterModel( const char *name )
 #ifdef USE_LAZY_LOAD
 		if ( !updateModels ) {
 			if(ri.FS_FOpenFileRead(altName, NULL, qfalse)) {
-				hModel = 0;
+				ri.Cvar_Set("r_loadingModel", "");
+				return mod->index;
 			}
 		} else 
 #endif
@@ -427,11 +429,8 @@ qhandle_t RE_RegisterModel( const char *name )
 
 #ifdef USE_LAZY_LOAD
 	ri.Cvar_Set("r_loadingModel", "");
-  // TODO: check for model existence on remote and return index
-  return mod->index;
-#else
-  return 0;
 #endif
+  return hModel;
 }
 
 #ifdef USE_LAZY_LOAD

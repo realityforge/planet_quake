@@ -2167,6 +2167,9 @@ static void R_LoadEntities( const lump_t *l ) {
 void RE_SwitchWorld(int w) {
 	if(w != rwi)
 	  ri.Printf( PRINT_ALL, "Switching renderers %i -> %i\n", rwi, w );
+	if(s_worldDatas[w].name[0] == '\0') {
+		return;
+	}
 	R_IssuePendingRenderCommands();
 	rwi = w;
 	tr.world = &s_worldDatas[rwi];

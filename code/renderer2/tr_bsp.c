@@ -2728,6 +2728,9 @@ void R_CalcVertexLightDirs( void )
 #ifdef USE_MULTIVM_CLIENT
 void RE_SwitchWorld(int w) {
   //ri.Printf( PRINT_ALL, "Switching renderers %i -> %i\n", rwi, w );
+	if(s_worldDatas[w].name[0] == '\0') {
+		return;
+	}
 	R_IssuePendingRenderCommands();
 	rwi = w;
 	tr.world = &s_worldData;

@@ -374,8 +374,12 @@ textures/tig_ra3/tig_ra3_a1
 	qer_editorimage textures/tig_ra3/tig_ra3_a1.tga
 	surfaceparm nolightmap
 	cull none
+//	portal
 	{
 		map textures/tig_ra3/tig_ra3_a1.tga
+		blendfunc GL_SRC_ALPHA GL_ONE
+//    alphagen portal 1024
+		depthWrite
 	}
 
 }
@@ -385,8 +389,12 @@ textures/tig_ra3/tig_ra3_a2
 	qer_editorimage textures/tig_ra3/tig_ra3_a2.tga
 	surfaceparm nolightmap
 	cull none
+	portal
 	{
 		map textures/tig_ra3/tig_ra3_a2.tga
+		blendfunc GL_SRC_ALPHA GL_ONE
+    alphagen portal 1024
+		depthWrite
 	}
 
 }
@@ -411,9 +419,14 @@ textures/tig_ra3/tig_ra3_a4
 	qer_editorimage textures/tig_ra3/tig_ra3_a4.tga
 	surfaceparm nolightmap
 	cull none
+//	portal
 	{
 		map textures/tig_ra3/tig_ra3_a4.tga
+		blendfunc GL_SRC_ALPHA GL_ONE
+//    alphagen portal 1024
+		depthWrite
 	}
+
 }
 
 //one texture does both sides

@@ -799,7 +799,7 @@ static qboolean R_GetPortalOrientations( const drawSurf_t *drawSurf, int entityN
 
 		d = DotProduct( e->e.origin, originalPlane.normal ) - originalPlane.dist;
 		if ( d > 64 || d < -64) {
-//			Com_Printf("too far\n");
+			Com_Printf("too far\n");
 			continue;
 		}
 
@@ -1213,8 +1213,13 @@ static qboolean R_MirrorViewBySurface( const drawSurf_t *drawSurf, int entityNum
 
 	// OPTIMIZE: restrict the viewport on the mirrored view
 #ifdef USE_MULTIVM_CLIENT
-	if(newParms.newWorld != oldParms.newWorld) {
+	if(newParms.newWorld != oldParms.newWorld
+		&& rwi != newParms.newWorld) {
 		RE_SwitchWorld(newParms.newWorld);
+		if(rwi != newParms.newWorld) {
+			// TODO: sucks to do all this math and the exit out, can't this happen earlier?
+			return qfalse; // world isn't loaded?
+		}
 	}
 #endif
 
@@ -1224,7 +1229,8 @@ static qboolean R_MirrorViewBySurface( const drawSurf_t *drawSurf, int entityNum
 	tr.viewParms = oldParms;
 #ifdef USE_MULTIVM_CLIENT
 	// switch back
-	if(newParms.newWorld != oldParms.newWorld) {
+	if(newParms.newWorld != oldParms.newWorld
+		&& rwi != oldParms.newWorld) {
 		RE_SwitchWorld(oldParms.newWorld);
 	}
 #endif

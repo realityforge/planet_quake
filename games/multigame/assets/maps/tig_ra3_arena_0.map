@@ -16747,15 +16747,24 @@
 
 
 
+
+
+
 {
 "classname" "misc_portal_surface"
-"target" "tig_ra3_skycam_a3"
-"origin" "-3844 -1864 -1544"
+"target" "tig_ra3_skycam_a2"
+"origin" "-3844 -2456 -1560"
 }
 {
 "classname" "misc_portal_camera"
-"targetname" "tig_ra3_skycam_a3"
-"origin" "1432 3432 1112"
-"angles" "-45 0 -90"
-"health" "1"
+"targetname" "tig_ra3_skycam_a2"
+"origin" "-1807 610 968"
+"target" "tig_ra3_dir_a2"
+"health" "2"
+"roll" "0"
+}
+{
+"classname" "info_notnull"
+"targetname" "tig_ra3_dir_a2"
+"origin" "-2830 756 600"
 }
