@@ -945,14 +945,15 @@ static qboolean IsMirror( const drawSurf_t *drawSurf, int entityNum,
 		ri.Trace( &trace, e->e.origin, NULL, NULL, end, ENTITYNUM_NONE, -1 );
 	#endif
 		VectorSubtract( trace.endpos, e->e.origin, vec );
-		Com_Printf("trace: %f, %f, %f - %f, %f, %f - %f\n", 
+		/*Com_Printf("trace: %f, %f, %f - %f, %f, %f - %f\n", 
 		trace.endpos[0],
 		trace.endpos[1],
 		trace.endpos[2],
 		mins[0],
 		mins[1],
 		mins[2],
-		VectorLength(vec));
+		VectorLength(vec));*/
+		// TODO: only use mins and maxs and cache this surface/entity matching somewhere
 		if ( VectorLength(vec) > 64 || trace.plane.dist != originalPlane.dist
 			|| !(trace.endpos[0] >= mins[0] && trace.endpos[0] <= maxs[0])
 			|| !(trace.endpos[1] >= mins[1] && trace.endpos[1] <= maxs[1])
@@ -977,11 +978,9 @@ static qboolean IsMirror( const drawSurf_t *drawSurf, int entityNum,
 		VectorMA( e->e.origin, -d, surface->axis[0], surface->origin );
 
 		*entity = e;
-		Com_Printf("plane found!\n");
 		return qfalse;
 	}
 
-	Com_Printf("plane not found!\n");
 	*entity = NULL;
 	// if we didn't locate a portal entity, don't render anything.
 	// We don't want to just treat it as a mirror, because without a
@@ -1623,7 +1622,6 @@ static void R_SortDrawSurfs( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 
 		// if the mirror was completely clipped away, we may need to check another surface
 		if ( R_MirrorViewBySurface( (drawSurfs+i), entityNum) ) {
-Com_Printf("portal: %i, %i\n", entityNum, i);
 			// this is a debug option to see exactly what is being mirrored
 			if ( r_portalOnly->integer ) {
 				return;

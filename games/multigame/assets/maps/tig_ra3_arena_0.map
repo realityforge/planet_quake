@@ -16748,6 +16748,26 @@
 
 
 
+{
+"classname" "misc_portal_surface"
+"target" "tig_ra3_skycam_a1"
+"origin" "-2760 -3076 -1576"
+}
+{
+"classname" "misc_portal_camera"
+"targetname" "tig_ra3_skycam_a1"
+"origin" "-232 168 696"
+"target" "tig_ra3_dir_a1"
+"health" "1"
+"roll" "0"
+}
+{
+"classname" "info_notnull"
+"targetname" "tig_ra3_dir_a1"
+"origin" "192 -232 156"
+}
+
+
 
 
 {
@@ -16767,4 +16787,46 @@
 "classname" "info_notnull"
 "targetname" "tig_ra3_dir_a2"
 "origin" "-2830 756 600"
+}
+
+
+
+
+{
+"classname" "misc_portal_surface"
+"target" "tig_ra3_skycam_a3"
+"origin" "-3844 -1864 -1544"
+}
+{
+"classname" "misc_portal_camera"
+"targetname" "tig_ra3_skycam_a3"
+"origin" "1432 3432 1112"
+"target" "tig_ra3_dir_a3"
+"health" "3"
+"roll" "180"
+}
+{
+"classname" "info_notnull"
+"targetname" "tig_ra3_dir_a3"
+"origin" "2112 2464 320"
+}
+
+
+{
+"classname" "misc_portal_surface"
+"target" "tig_ra3_skycam_a4"
+"origin" "-2728 -1212 -1576"
+}
+{
+"classname" "misc_portal_camera"
+"targetname" "tig_ra3_skycam_a4"
+"origin" "1536 -392 -2864"
+"target" "tig_ra3_dir_a4"
+"health" "4"
+"roll" "270"
+}
+{
+"classname" "info_notnull"
+"targetname" "tig_ra3_dir_a4"
+"origin" "2176 -1536 -3188"
 }
