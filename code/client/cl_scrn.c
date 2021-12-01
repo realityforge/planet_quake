@@ -1021,7 +1021,8 @@ void SCR_UpdateScreen( qboolean fromVM ) {
     if(!re.SwitchWorld) {
       Com_Error(ERR_FATAL, "WARNING: Renderer compiled without multiworld support!");
     } else {
-  		re.SwitchWorld(clientMaps[cgvmi]);
+			// TODO: limit secondary screens to 60 FPS using buffers
+			re.SwitchWorld(clientMaps[cgvmi]);
       re.SetDvrFrame(clientScreens[cgvmi][0], clientScreens[cgvmi][1], clientScreens[cgvmi][2], clientScreens[cgvmi][3]);
     }
 #endif

@@ -4365,9 +4365,17 @@ byte	*CL_CM_ClusterPVS (int cluster, int cmi)
 {
 	return CM_ClusterPVS(cluster, clientMaps[cgvmi]);
 }
+void	CL_CM_Trace( trace_t *results, const vec3_t start, const vec3_t mins, const vec3_t maxs, const vec3_t end, int passEntityNum, int contentmask, int cmi ) {
+	int prev = CM_SwitchMap(cmi);
+	CM_BoxTrace(results, start, end, mins, maxs, 0, contentmask, qfalse);
+	CM_SwitchMap(prev);
+}
 #else
 byte	*CL_CM_ClusterPVS (int cluster) {
 	return CM_ClusterPVS(cluster);
+}
+void	CL_CM_Trace( trace_t *results, const vec3_t start, const vec3_t mins, const vec3_t maxs, const vec3_t end, int passEntityNum, int contentmask ) {
+	return CM_BoxTrace(results, start, end, mins, maxs, 0, contentmask, qfalse);
 }
 #endif
 
@@ -4510,6 +4518,8 @@ static void CL_InitRef( void ) {
 	rimp.VK_GetInstanceProcAddr = VK_GetInstanceProcAddr;
 	rimp.VK_CreateSurface = VK_CreateSurface;
 #endif
+
+	rimp.Trace = CL_CM_Trace;
 
 #ifdef USE_LAZY_LOAD
 	rimp.FS_FOpenFileRead = FS_FOpenFileRead;

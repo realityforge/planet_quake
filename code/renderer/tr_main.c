@@ -760,7 +760,11 @@ static qboolean R_GetPortalOrientations( const drawSurf_t *drawSurf, int entityN
 	cplane_t	originalPlane, plane;
 	trRefEntity_t	*e;
 	float		d;
-	vec3_t		transformed;
+	vec3_t		transformed, vec, end;
+	trace_t		trace;
+	memset(&originalPlane, 0, sizeof(originalPlane));
+	memset(&plane, 0, sizeof(plane));
+	memset(&trace, 0, sizeof(trace));
 
 	// create plane axis for the portal we are seeing
 	R_PlaneForSurface( drawSurf->surface, &originalPlane );
@@ -797,11 +801,24 @@ static qboolean R_GetPortalOrientations( const drawSurf_t *drawSurf, int entityN
 			continue;
 		}
 
-		d = DotProduct( e->e.origin, originalPlane.normal ) - originalPlane.dist;
-		if ( d > 64 || d < -64) {
-			Com_Printf("too far\n");
+		if(*drawSurf->surface == SF_FACE) {
+			//d = DotProduct( e->e.origin, transformed ) - originalPlane.dist;
+			PerpendicularVector( transformed, transformed );
+		} else {
+			//d = DotProduct( e->e.origin, originalPlane.normal ) - originalPlane.dist;
+			PerpendicularVector( transformed, originalPlane.normal );
+		}
+		VectorMA( e->e.origin, -128, transformed, end );
+#ifdef USE_MULTIVM_CLIENT
+		ri.Trace( &trace, e->e.origin, NULL, NULL, end, ENTITYNUM_NONE, -1, rwi );
+#else
+		ri.Trace( &trace, e->e.origin, NULL, NULL, end, ENTITYNUM_NONE, -1 );
+#endif
+		VectorSubtract( trace.endpos, e->e.origin, vec );
+		if ( VectorLength(vec) > 64 || trace.plane.dist != originalPlane.dist ) {
 			continue;
 		}
+		Com_Printf("trace: %f, %f\n", trace.plane.dist, originalPlane.dist);
 
 		// get the pvsOrigin from the entity
 		VectorCopy( e->e.oldorigin, pvsOrigin );
@@ -1131,6 +1148,8 @@ static qboolean R_MirrorViewBySurface( const drawSurf_t *drawSurf, int entityNum
 	viewParms_t		oldParms;
 	orientation_t	surface, camera;
 	qboolean		isMirror;
+	memset(&surface, 0, sizeof(surface));
+	memset(&camera, 0, sizeof(camera));
 
 	// yes recursively mirror - Brian Cullinan
 	// don't recursively mirror
@@ -1544,6 +1563,7 @@ static void R_SortDrawSurfs( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 	// check for any pass through drawing, which
 	// may cause another view to be rendered first
 	for ( i = 0 ; i < numDrawSurfs ; i++ ) {
+		entityNum = 0;
 		R_DecomposeSort( (drawSurfs+i)->sort, &entityNum, &shader, &fogNum, &dlighted );
 
 		if ( shader->sort > SS_PORTAL ) {
@@ -1557,6 +1577,7 @@ static void R_SortDrawSurfs( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 
 		// if the mirror was completely clipped away, we may need to check another surface
 		if ( R_MirrorViewBySurface( (drawSurfs+i), entityNum) ) {
+Com_Printf("portal: %i, %i\n", entityNum, i);
 			// this is a debug option to see exactly what is being mirrored
 			if ( r_portalOnly->integer ) {
 				return;

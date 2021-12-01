@@ -1667,7 +1667,13 @@ static void R_Register( void )
 
 	r_flares = ri.Cvar_Get( "r_flares", "0", CVAR_ARCHIVE_ND | CVAR_LATCH );
 
+#ifdef USE_MULTIVM_CLIENT
+	// TODO: fbo is needed for showing lots of portals
+	// http://www.opengl-tutorial.org/intermediate-tutorials/tutorial-14-render-to-texture/
+	r_fbo = ri.Cvar_Get( "r_fbo", "1", CVAR_ARCHIVE_ND | CVAR_LATCH );
+#else
 	r_fbo = ri.Cvar_Get( "r_fbo", "0", CVAR_ARCHIVE_ND | CVAR_LATCH );
+#endif
 
 	r_ext_supersample = ri.Cvar_Get( "r_ext_supersample", "0", CVAR_ARCHIVE_ND | CVAR_LATCH );
 	ri.Cvar_CheckRange( r_ext_supersample, "0", "1", CV_INTEGER );

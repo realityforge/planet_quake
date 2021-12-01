@@ -834,6 +834,9 @@ static intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 		// We can't call Com_EventLoop here, a restart will crash and this _does_ happen
 		// if there is a map change while we are downloading at pk3.
 		// ZOID
+#ifdef USE_MULTIVM_CLIENT
+		if(clientScreens[cgvmi][0] > -1)
+#endif
 		SCR_UpdateScreen( qtrue );
 		return 0;
 	case CG_CM_LOADMAP:
@@ -868,6 +871,9 @@ static intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 		CM_TransformedBoxTrace( VMA(1), VMA(2), VMA(3), VMA(4), VMA(5), args[6], args[7], VMA(8), VMA(9), /*int capsule*/ qtrue );
 		return 0;
 	case CG_CM_MARKFRAGMENTS:
+#ifdef USE_MULTIVM_CLIENT
+		if(clientScreens[cgvmi][0] > -1)
+#endif
 		return re.MarkFragments( args[1], VMA(2), VMA(3), args[4], VMA(5), args[6], VMA(7) );
 	case CG_S_STARTSOUND:
 #ifdef USE_MULTIVM_CLIENT
@@ -933,9 +939,6 @@ static intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 		re.RegisterFont( VMA(1), args[2], VMA(3));
 		return 0;
 	case CG_R_CLEARSCENE:
-#ifdef USE_MULTIVM_CLIENT
-		if(clientScreens[cgvmi][0] > -1)
-#endif
 		re.ClearScene();
 		return 0;
 	case CG_R_ADDREFENTITYTOSCENE:
@@ -985,7 +988,7 @@ static intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 		re.AddAdditiveLightToScene( VMA(1), VMF(2), VMF(3), VMF(4), VMF(5) );
 		return 0;
 	case CG_R_RENDERSCENE:
-#ifdef USE_MULTIVM_CLIENT
+#if 0
     if(views[cgvmi].fov_x == 0) {
       memcpy(&views[cgvmi], VMA(1), sizeof(refdef_t));
       Com_Printf(
@@ -1006,7 +1009,10 @@ static intptr_t CL_CgameSystemCalls( intptr_t *args ) {
         views[cgvmi].width, views[cgvmi].height,
         views[cgvmi].time);
     }
-		if(clientScreens[cgvmi][0] > -1)
+#endif
+#ifdef USE_MULTIVM_CLIENT
+		if(clientScreens[cgvmi][0] == -1)
+			return 0;
 #endif
     X_DMG_DrawDamage((refdef_t*)VMA(1));
     tc_vis_render();
