@@ -738,6 +738,42 @@ static void R_PlaneForSurface( const surfaceType_t *surfType, cplane_t *plane ) 
 }
 
 
+#if 0
+static qboolean InsidePolygon(vec2_t *polygon,int N,vec2_t p)
+{
+  int counter = 0;
+  int i;
+  double xinters;
+  vec2_t p1,p2;
+
+  p1[0] = polygon[0][0];
+	p1[1] = polygon[0][1];
+  for (i=1;i<=N;i++) {
+    p2[0] = polygon[i % N][0];
+		p2[1] = polygon[i % N][1];
+    if (p[1] > MIN(p1[1],p2[1])) {
+      if (p[1] <= MAX(p1[1],p2[1])) {
+        if (p[0] <= MAX(p1[0],p2[0])) {
+          if (p1[1] != p2[1]) {
+            xinters = (p[1]-p1[1])*(p2[0]-p1[0])/(p2[1]-p1[1])+p1[0];
+            if (p1[0] == p2[0] || p[0] <= xinters)
+              counter++;
+          }
+        }
+      }
+    }
+    p1[0] = p2[0];
+    p1[1] = p2[1];
+  }
+
+  if (counter % 2 == 0)
+    return qfalse;
+  else
+    return qtrue;
+}
+#endif
+
+
 /*
 =================
 R_GetPortalOrientation
@@ -751,163 +787,81 @@ Returns qtrue if it should be mirrored
 static qboolean R_GetPortalOrientations( const drawSurf_t *drawSurf, int entityNum,
 							 orientation_t *surface, orientation_t *camera,
 							 vec3_t pvsOrigin, portalView_t *portalView, 
+							 trRefEntity_t *e, qboolean isMirror, 
 							 int *portalEntity
 #ifdef USE_MULTIVM_CLIENT
 							 , int *world 
 #endif
 							 ) {
-	int			i;
-	cplane_t	originalPlane, plane;
-	trRefEntity_t	*e;
 	float		d;
-	vec3_t		transformed, vec, end;
-	trace_t		trace;
-	memset(&originalPlane, 0, sizeof(originalPlane));
-	memset(&plane, 0, sizeof(plane));
-	memset(&trace, 0, sizeof(trace));
+	vec3_t		transformed;
 
-	// create plane axis for the portal we are seeing
-	R_PlaneForSurface( drawSurf->surface, &originalPlane );
+	// get the pvsOrigin from the entity
+	VectorCopy( e->e.oldorigin, pvsOrigin );
 
-	// rotate the plane if necessary
-	if ( entityNum != REFENTITYNUM_WORLD ) {
-		tr.currentEntityNum = entityNum;
-		tr.currentEntity = &tr.refdef.entities[entityNum];
+	if(isMirror) {
+		VectorCopy( surface->origin, camera->origin );
+		VectorSubtract( vec3_origin, surface->axis[0], camera->axis[0] );
+		VectorCopy( surface->axis[1], camera->axis[1] );
+		VectorCopy( surface->axis[2], camera->axis[2] );
 
-		// get the orientation of the entity
-		R_RotateForEntity( tr.currentEntity, &tr.viewParms, &tr.or );
-
-		// rotate the plane, but keep the non-rotated version for matching
-		// against the portalSurface entities
-		R_LocalNormalToWorld( originalPlane.normal, plane.normal );
-		plane.dist = originalPlane.dist + DotProduct( plane.normal, tr.or.origin );
-
-		// translate the original plane
-		originalPlane.dist = originalPlane.dist + DotProduct( originalPlane.normal, tr.or.origin );
-	} else {
-		plane = originalPlane;
+		*portalView = PV_MIRROR;
+		return qtrue;
 	}
 
-	VectorCopy( plane.normal, surface->axis[0] );
-	PerpendicularVector( surface->axis[1], surface->axis[0] );
-	CrossProduct( surface->axis[0], surface->axis[1], surface->axis[2] );
+	// now get the camera origin and orientation
+	VectorCopy( e->e.oldorigin, camera->origin );
+	AxisCopy( e->e.axis, camera->axis );
+	VectorSubtract( vec3_origin, camera->axis[0], camera->axis[0] );
+	VectorSubtract( vec3_origin, camera->axis[1], camera->axis[1] );
 
-	// locate the portal entity closest to this plane.
-	// origin will be the origin of the portal, origin2 will be
-	// the origin of the camera
-	for ( i = 0 ; i < tr.refdef.num_entities ; i++ ) {
-		e = &tr.refdef.entities[i];
-		if ( e->e.reType != RT_PORTALSURFACE ) {
-			continue;
-		}
-
-		if(*drawSurf->surface == SF_FACE) {
-			//d = DotProduct( e->e.origin, transformed ) - originalPlane.dist;
-			PerpendicularVector( transformed, transformed );
+#ifdef USE_MULTIVM_CLIENT
+	*world = (e->e.oldframe >> 8);
+	if(e->e.oldframe & 12) { // special indication meaning portal and frames are entity nums not rotations
+		*portalEntity = e->e.frame;
+	} else 
+#endif
+	// optionally rotate
+	if ( e->e.oldframe & 1 ) {
+		// if a speed is specified
+		if ( e->e.frame ) {
+			// continuous rotate
+			d = (tr.refdef.time/1000.0f) * e->e.frame;
+			VectorCopy( camera->axis[1], transformed );
+			RotatePointAroundVector( camera->axis[1], camera->axis[0], transformed, d );
+			CrossProduct( camera->axis[0], camera->axis[1], camera->axis[2] );
 		} else {
-			//d = DotProduct( e->e.origin, originalPlane.normal ) - originalPlane.dist;
-			PerpendicularVector( transformed, originalPlane.normal );
-		}
-		VectorMA( e->e.origin, -128, transformed, end );
-#ifdef USE_MULTIVM_CLIENT
-		ri.Trace( &trace, e->e.origin, NULL, NULL, end, ENTITYNUM_NONE, -1, rwi );
-#else
-		ri.Trace( &trace, e->e.origin, NULL, NULL, end, ENTITYNUM_NONE, -1 );
-#endif
-		VectorSubtract( trace.endpos, e->e.origin, vec );
-		if ( VectorLength(vec) > 64 || trace.plane.dist != originalPlane.dist ) {
-			continue;
-		}
-		Com_Printf("trace: %f, %f\n", trace.plane.dist, originalPlane.dist);
-
-		// get the pvsOrigin from the entity
-		VectorCopy( e->e.oldorigin, pvsOrigin );
-
-		// if the entity is just a mirror, don't use as a camera point
-		if ( e->e.oldorigin[0] == e->e.origin[0] && 
-			e->e.oldorigin[1] == e->e.origin[1] && 
-			e->e.oldorigin[2] == e->e.origin[2] ) {
-			VectorScale( plane.normal, plane.dist, surface->origin );
-			VectorCopy( surface->origin, camera->origin );
-			VectorSubtract( vec3_origin, surface->axis[0], camera->axis[0] );
-			VectorCopy( surface->axis[1], camera->axis[1] );
-			VectorCopy( surface->axis[2], camera->axis[2] );
-
-			*portalView = PV_MIRROR;
-			return qtrue;
-		}
-
-		// project the origin onto the surface plane to get
-		// an origin point we can rotate around
-		d = DotProduct( e->e.origin, plane.normal ) - plane.dist;
-		VectorMA( e->e.origin, -d, surface->axis[0], surface->origin );
-			
-		// now get the camera origin and orientation
-		VectorCopy( e->e.oldorigin, camera->origin );
-//Com_Printf("camera: %i - %f, %f, %f - %f, %f, %f\n", entityNum, 
-//  camera->origin[0], camera->origin[1], camera->origin[2],
-//  e->e.origin[0], e->e.origin[1], e->e.origin[2]);
-		AxisCopy( e->e.axis, camera->axis );
-		VectorSubtract( vec3_origin, camera->axis[0], camera->axis[0] );
-		VectorSubtract( vec3_origin, camera->axis[1], camera->axis[1] );
-
-		// optionally rotate
-
-#ifdef USE_MULTIVM_CLIENT
-		*world = (e->e.oldframe >> 8);
-#endif
-		if(e->e.oldframe & 12) { // special indication meaning portal and frames are entity nums not rotations
-			*portalEntity = e->e.frame;
-		} else 
-		if ( e->e.oldframe & 1 ) {
-			// if a speed is specified
-			if ( e->e.frame ) {
-				// continuous rotate
-				d = (tr.refdef.time/1000.0f) * e->e.frame;
-				VectorCopy( camera->axis[1], transformed );
-				RotatePointAroundVector( camera->axis[1], camera->axis[0], transformed, d );
-				CrossProduct( camera->axis[0], camera->axis[1], camera->axis[2] );
-			} else {
-				// bobbing rotate, with skinNum being the rotation offset
-				d = sin( tr.refdef.time * 0.003f );
-				d = e->e.skinNum + d * 4;
-				VectorCopy( camera->axis[1], transformed );
-				RotatePointAroundVector( camera->axis[1], camera->axis[0], transformed, d );
-				CrossProduct( camera->axis[0], camera->axis[1], camera->axis[2] );
-			}
-		}
-		else if ( e->e.skinNum ) {
-			d = e->e.skinNum;
+			// bobbing rotate, with skinNum being the rotation offset
+			d = sin( tr.refdef.time * 0.003f );
+			d = e->e.skinNum + d * 4;
 			VectorCopy( camera->axis[1], transformed );
 			RotatePointAroundVector( camera->axis[1], camera->axis[0], transformed, d );
 			CrossProduct( camera->axis[0], camera->axis[1], camera->axis[2] );
 		}
-
-		*portalView = PV_PORTAL;
-		return qtrue;
+	}
+	else if ( e->e.skinNum ) {
+		d = e->e.skinNum;
+		VectorCopy( camera->axis[1], transformed );
+		RotatePointAroundVector( camera->axis[1], camera->axis[0], transformed, d );
+		CrossProduct( camera->axis[0], camera->axis[1], camera->axis[2] );
 	}
 
-	// if we didn't locate a portal entity, don't render anything.
-	// We don't want to just treat it as a mirror, because without a
-	// portal entity the server won't have communicated a proper entity set
-	// in the snapshot
-
-	// unfortunately, with local movement prediction it is easily possible
-	// to see a surface before the server has communicated the matching
-	// portal surface entity, so we don't want to print anything here...
-
-	//ri.Printf( PRINT_ALL, "Portal surface without a portal entity\n" );
-
-	return qfalse;
+	*portalView = PV_PORTAL;
+	return qtrue;
 }
 
 
-static qboolean IsMirror( const drawSurf_t *drawSurf, int entityNum )
+static qboolean IsMirror( const drawSurf_t *drawSurf, int entityNum, 
+	orientation_t *surface, trRefEntity_t **entity )
 {
 	int			i;
 	cplane_t	originalPlane, plane;
-	trRefEntity_t	*e;
 	float		d;
+	vec3_t transformed, vec, end;
+	trace_t trace;
+	trRefEntity_t *e;
+	memset( &originalPlane, 0, sizeof( originalPlane ) );
+	memset( &plane, 0, sizeof( plane ) );
 
 	// create plane axis for the portal we are seeing
 	R_PlaneForSurface( drawSurf->surface, &originalPlane );
@@ -934,6 +888,10 @@ static qboolean IsMirror( const drawSurf_t *drawSurf, int entityNum )
 		plane = originalPlane;
 	}
 
+	VectorCopy( plane.normal, surface->axis[0] );
+	PerpendicularVector( surface->axis[1], surface->axis[0] );
+	CrossProduct( surface->axis[0], surface->axis[1], surface->axis[2] );
+
 	// locate the portal entity closest to this plane.
 	// origin will be the origin of the portal, origin2 will be
 	// the origin of the camera
@@ -944,8 +902,27 @@ static qboolean IsMirror( const drawSurf_t *drawSurf, int entityNum )
 			continue;
 		}
 
-		d = DotProduct( e->e.origin, originalPlane.normal ) - originalPlane.dist;
-		if ( d > 64 || d < -64) {
+		//if(*drawSurf->surface == SF_FACE) {
+			//d = DotProduct( e->e.origin, transformed ) - originalPlane.dist;
+			//PerpendicularVector( transformed, transformed );
+		//} else {
+			d = DotProduct( e->e.origin, plane.normal ) - originalPlane.dist;
+			VectorCopy( plane.normal, transformed );
+			//PerpendicularVector( transformed, plane.normal );
+		//}
+		VectorMA( e->e.origin, -128, transformed, end );
+	#ifdef USE_MULTIVM_CLIENT
+		ri.Trace( &trace, e->e.origin, NULL, NULL, end, ENTITYNUM_NONE, -1, rwi );
+	#else
+		ri.Trace( &trace, e->e.origin, NULL, NULL, end, ENTITYNUM_NONE, -1 );
+	#endif
+		VectorSubtract( trace.endpos, e->e.origin, vec );
+		Com_Printf("trace: %f, %f, %f - %f\n", 
+		trace.endpos[0],
+		trace.endpos[1],
+		trace.endpos[2],
+		VectorLength(vec));
+		if ( d > 64 || d < -64 /*VectorLength(vec) > 64 || trace.plane.dist != originalPlane.dist*/ ) {
 			continue;
 		}
 
@@ -954,11 +931,34 @@ static qboolean IsMirror( const drawSurf_t *drawSurf, int entityNum )
 			e->e.oldorigin[1] == e->e.origin[1] && 
 			e->e.oldorigin[2] == e->e.origin[2] ) 
 		{
+			VectorScale( plane.normal, plane.dist, surface->origin );
+			*entity = e;
+			Com_Printf("mirror found!\n");
 			return qtrue;
 		}
 
+		// project the origin onto the surface plane to get
+		// an origin point we can rotate around
+		d = DotProduct( e->e.origin, plane.normal ) - plane.dist;
+		VectorMA( e->e.origin, -d, surface->axis[0], surface->origin );
+
+		*entity = e;
+		Com_Printf("plane found!\n");
 		return qfalse;
 	}
+
+	Com_Printf("plane not found!\n");
+	*entity = NULL;
+	// if we didn't locate a portal entity, don't render anything.
+	// We don't want to just treat it as a mirror, because without a
+	// portal entity the server won't have communicated a proper entity set
+	// in the snapshot
+
+	// unfortunately, with local movement prediction it is easily possible
+	// to see a surface before the server has communicated the matching
+	// portal surface entity, so we don't want to print anything here...
+
+	//ri.Printf( PRINT_ALL, "Portal surface without a portal entity\n" );
 	return qfalse;
 }
 
@@ -968,7 +968,8 @@ static qboolean IsMirror( const drawSurf_t *drawSurf, int entityNum )
 **
 ** Determines if a surface is completely offscreen.
 */
-static qboolean SurfIsOffscreen( const drawSurf_t *drawSurf, qboolean *isMirror ) {
+static qboolean SurfIsOffscreen( const drawSurf_t *drawSurf, qboolean *isMirror, 
+	orientation_t *surface, trRefEntity_t **entity ) {
 	float shortest = 100000000;
 	int entityNum;
 	int numTriangles;
@@ -1052,10 +1053,16 @@ static qboolean SurfIsOffscreen( const drawSurf_t *drawSurf, qboolean *isMirror 
 
 	// mirrors can early out at this point, since we don't do a fade over distance
 	// with them (although we could)
-	if ( IsMirror( drawSurf, entityNum ) )
+	if ( IsMirror( drawSurf, entityNum, surface, entity ) )
 	{
 		*isMirror = qtrue;
+		if(*entity == NULL) {
+			return qtrue;
+		}
 		return qfalse;
+	}
+	if(*entity == NULL) {
+		return qtrue;
 	}
 
 	if ( shortest > (tess.shader->portalRange*tess.shader->portalRange) )
@@ -1147,9 +1154,11 @@ static qboolean R_MirrorViewBySurface( const drawSurf_t *drawSurf, int entityNum
 	viewParms_t		newParms;
 	viewParms_t		oldParms;
 	orientation_t	surface, camera;
+	trRefEntity_t *entity;
 	qboolean		isMirror;
 	memset(&surface, 0, sizeof(surface));
 	memset(&camera, 0, sizeof(camera));
+	entity = NULL;
 
 	// yes recursively mirror - Brian Cullinan
 	// don't recursively mirror
@@ -1165,10 +1174,11 @@ static qboolean R_MirrorViewBySurface( const drawSurf_t *drawSurf, int entityNum
 	}
 
 	// trivially reject portal/mirror
-	if ( SurfIsOffscreen( drawSurf, &isMirror ) ) {
+	if ( SurfIsOffscreen( drawSurf, &isMirror, &surface, &entity) ) {
     //Com_Printf("offscreen\n");
-		//return qfalse;
 	}
+	if(entity == NULL)
+		return qfalse;
 
 	if ( !isMirror && r_noportals->integer ) {
 		return qfalse;
@@ -1185,7 +1195,9 @@ static qboolean R_MirrorViewBySurface( const drawSurf_t *drawSurf, int entityNum
 #endif
 
 	if ( !R_GetPortalOrientations( drawSurf, entityNum, &surface, &camera, 
-		newParms.pvsOrigin, &newParms.portalView, &newParms.portalEntity
+		newParms.pvsOrigin, &newParms.portalView, 
+		entity, isMirror, 
+		&newParms.portalEntity
 #ifdef USE_MULTIVM_CLIENT
 		, &newParms.newWorld
 #endif
