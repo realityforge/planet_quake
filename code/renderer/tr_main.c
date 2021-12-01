@@ -700,10 +700,13 @@ static void R_MirrorVector( const vec3_t in, const orientation_t *surface, const
 R_PlaneForSurface
 =============
 */
-static void R_PlaneForSurface( const surfaceType_t *surfType, cplane_t *plane ) {
+static void R_PlaneForSurface( const surfaceType_t *surfType, cplane_t *plane, vec3_t mins, vec3_t maxs ) {
 	srfTriangles_t	*tri;
 	srfPoly_t		*poly;
+	srfSurfaceFace_t *face;
 	drawVert_t		*v1, *v2, *v3;
+	polyVert_t		*vv1, *vv2, *vv3;
+	float		*vvv1, *vvv2, *vvv3;
 	vec4_t			plane4;
 
 	if (!surfType) {
@@ -713,7 +716,17 @@ static void R_PlaneForSurface( const surfaceType_t *surfType, cplane_t *plane ) 
 	}
 	switch (*surfType) {
 	case SF_FACE:
-		*plane = ((srfSurfaceFace_t *)surfType)->plane;
+		face = (srfSurfaceFace_t *)surfType;
+		*plane = face->plane;
+		vvv1 = face->points[0];
+		vvv2 = face->points[1];
+		vvv3 = face->points[2];
+		mins[0] = MIN(MIN( vvv1[0], vvv2[0] ), vvv3[0] ) - 0.125;
+		mins[1] = MIN(MIN( vvv1[1], vvv2[1] ), vvv3[1] ) - 0.125;
+		mins[2] = MIN(MIN( vvv1[2], vvv2[2] ), vvv3[2] ) - 0.125;
+		maxs[0] = MAX(MAX( vvv1[0], vvv2[0] ), vvv3[0] ) + 0.125;
+		maxs[1] = MAX(MAX( vvv1[1], vvv2[1] ), vvv3[1] ) + 0.125;
+		maxs[2] = MAX(MAX( vvv1[2], vvv2[2] ), vvv3[2] ) + 0.125;
 		return;
 	case SF_TRIANGLES:
 		tri = (srfTriangles_t *)surfType;
@@ -723,12 +736,27 @@ static void R_PlaneForSurface( const surfaceType_t *surfType, cplane_t *plane ) 
 		PlaneFromPoints( plane4, v1->xyz, v2->xyz, v3->xyz );
 		VectorCopy( plane4, plane->normal ); 
 		plane->dist = plane4[3];
+		mins[0] = MIN(MIN( v1->xyz[0], v2->xyz[0] ), v3->xyz[0] ) - 0.125;
+		mins[1] = MIN(MIN( v1->xyz[1], v2->xyz[1] ), v3->xyz[1] ) - 0.125;
+		mins[2] = MIN(MIN( v1->xyz[2], v2->xyz[2] ), v3->xyz[2] ) - 0.125;
+		maxs[0] = MAX(MAX( v1->xyz[0], v2->xyz[0] ), v3->xyz[0] ) + 0.125;
+		maxs[1] = MAX(MAX( v1->xyz[1], v2->xyz[1] ), v3->xyz[1] ) + 0.125;
+		maxs[2] = MAX(MAX( v1->xyz[2], v2->xyz[2] ), v3->xyz[2] ) + 0.125;
 		return;
 	case SF_POLY:
 		poly = (srfPoly_t *)surfType;
-		PlaneFromPoints( plane4, poly->verts[0].xyz, poly->verts[1].xyz, poly->verts[2].xyz );
+		vv1 = &poly->verts[0];
+		vv2 = &poly->verts[1];
+		vv3 = &poly->verts[2];
+		PlaneFromPoints( plane4, vv1->xyz, vv2->xyz, vv3->xyz );
 		VectorCopy( plane4, plane->normal ); 
 		plane->dist = plane4[3];
+		mins[0] = MIN(MIN( vv1->xyz[0], vv2->xyz[0] ), vv3->xyz[0] ) - 0.125;
+		mins[1] = MIN(MIN( vv1->xyz[1], vv2->xyz[1] ), vv3->xyz[1] ) - 0.125;
+		mins[2] = MIN(MIN( vv1->xyz[2], vv2->xyz[2] ), vv3->xyz[2] ) - 0.125;
+		maxs[0] = MAX(MAX( vv1->xyz[0], vv2->xyz[0] ), vv3->xyz[0] ) + 0.125;
+		maxs[1] = MAX(MAX( vv1->xyz[1], vv2->xyz[1] ), vv3->xyz[1] ) + 0.125;
+		maxs[2] = MAX(MAX( vv1->xyz[2], vv2->xyz[2] ), vv3->xyz[2] ) + 0.125;
 		return;
 	default:
 		Com_Memset (plane, 0, sizeof(*plane));
@@ -857,14 +885,14 @@ static qboolean IsMirror( const drawSurf_t *drawSurf, int entityNum,
 	int			i;
 	cplane_t	originalPlane, plane;
 	float		d;
-	vec3_t transformed, vec, end;
+	vec3_t transformed, vec, end, mins, maxs;
 	trace_t trace;
 	trRefEntity_t *e;
 	memset( &originalPlane, 0, sizeof( originalPlane ) );
 	memset( &plane, 0, sizeof( plane ) );
 
 	// create plane axis for the portal we are seeing
-	R_PlaneForSurface( drawSurf->surface, &originalPlane );
+	R_PlaneForSurface( drawSurf->surface, &originalPlane, mins, maxs );
 
 	// rotate the plane if necessary
 	if ( entityNum != REFENTITYNUM_WORLD )
@@ -917,12 +945,18 @@ static qboolean IsMirror( const drawSurf_t *drawSurf, int entityNum,
 		ri.Trace( &trace, e->e.origin, NULL, NULL, end, ENTITYNUM_NONE, -1 );
 	#endif
 		VectorSubtract( trace.endpos, e->e.origin, vec );
-		Com_Printf("trace: %f, %f, %f - %f\n", 
+		Com_Printf("trace: %f, %f, %f - %f, %f, %f - %f\n", 
 		trace.endpos[0],
 		trace.endpos[1],
 		trace.endpos[2],
+		mins[0],
+		mins[1],
+		mins[2],
 		VectorLength(vec));
-		if ( d > 64 || d < -64 /*VectorLength(vec) > 64 || trace.plane.dist != originalPlane.dist*/ ) {
+		if ( VectorLength(vec) > 64 || trace.plane.dist != originalPlane.dist
+			|| !(trace.endpos[0] >= mins[0] && trace.endpos[0] <= maxs[0])
+			|| !(trace.endpos[1] >= mins[1] && trace.endpos[1] <= maxs[1])
+			|| !(trace.endpos[2] >= mins[2] && trace.endpos[2] <= maxs[2]) ) {
 			continue;
 		}
 
