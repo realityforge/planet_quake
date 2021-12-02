@@ -421,12 +421,14 @@ static void initPosition(long bt, long totalTime, idSplineList *spline) {
 }
 
 
+#if 0
 static void updateSelection(const vec3_t move, idSplineList *spline) {
 	if (spline->selected) {
 		spline->dirty = qtrue;
 		VectorAdd(*spline->selected, move, *spline->selected);
 	}
 }
+#endif
 
 
 /*
@@ -548,22 +550,6 @@ static void parseSplines(const char *(*text), idSplineList *spline ) {
 	//Com_UngetToken();
 	//COM_MatchToken( text, "}" );
 	spline->dirty = qtrue;
-}
-
-static void writeSplines(fileHandle_t file, const char *p, idSplineList *spline) {
-	const char *s = va("\t\t%s {\n", p);
-	FS_Write(s, strlen(s), file);
-	//s = va("\t\tname %s\n", name);
-	//FS_Write(s, s.length(), file);
-	s = va("\t\t\tgranularity %f\n", spline->granularity);
-	FS_Write(s, strlen(s), file);
-	int count = spline->numControlPoints;
-	for (int i = 0; i < count; i++) {
-		s = va("\t\t\t( %f %f %f )\n", spline->controlPoints[i][0], spline->controlPoints[i][1], spline->controlPoints[i][2]);
-		FS_Write(s, strlen(s), file);
-	}
-	s = "\t\t}\n";
-	FS_Write(s, strlen(s), file);
 }
 
 
@@ -1058,6 +1044,8 @@ static qboolean loadCamera_real(const char *filename, idCameraDef *cam) {
 	return qtrue;
 }
 
+
+#if 0
 static void writeInterpolated(fileHandle_t file, const char *p, idInterpolatedPosition *pos);
 static void writeFixed(fileHandle_t file, const char *p, idFixedPosition *pos);
 static void writeSpline(fileHandle_t file, const char *p, idSplinePosition *pos);
@@ -1070,6 +1058,37 @@ const char *positionStr[] = {
 	"Interpolated",
 	"Spline",
 };
+
+
+static void writeEvent(fileHandle_t file, const char *name, idCameraEvent *event) {
+	const char *s = va("\t%s {\n", name);
+	FS_Write(s, strlen(s), file);
+	s = va("\t\ttype %d\n", event->type);
+	FS_Write(s, strlen(s), file);
+	s = va("\t\tparam %s\n", event->paramStr);
+	FS_Write(s, strlen(s), file);
+	s = va("\t\ttime %ld\n", event->time);
+	FS_Write(s, strlen(s), file);
+	s = "\t}\n";
+	FS_Write(s, strlen(s), file);
+}
+
+
+static void writeSplines(fileHandle_t file, const char *p, idSplineList *spline) {
+	const char *s = va("\t\t%s {\n", p);
+	FS_Write(s, strlen(s), file);
+	//s = va("\t\tname %s\n", name);
+	//FS_Write(s, s.length(), file);
+	s = va("\t\t\tgranularity %f\n", spline->granularity);
+	FS_Write(s, strlen(s), file);
+	int count = spline->numControlPoints;
+	for (int i = 0; i < count; i++) {
+		s = va("\t\t\t( %f %f %f )\n", spline->controlPoints[i][0], spline->controlPoints[i][1], spline->controlPoints[i][2]);
+		FS_Write(s, strlen(s), file);
+	}
+	s = "\t\t}\n";
+	FS_Write(s, strlen(s), file);
+}
 
 
 static void saveCamera(const char *filename, idCameraDef *cam) {
@@ -1114,6 +1133,8 @@ static void saveCamera(const char *filename, idCameraDef *cam) {
 	}
 	FS_FCloseFile(file);
 }
+#endif
+
 
 /*
 static int sortEvents(const void *p1, const void *p2, idCameraDef *cam) {
@@ -1194,18 +1215,6 @@ static void parseEvent(const char *(*text), idCameraEvent *event ) {
 	COM_MatchToken( text, "}" );
 }
 
-static void writeEvent(fileHandle_t file, const char *name, idCameraEvent *event) {
-	const char *s = va("\t%s {\n", name);
-	FS_Write(s, strlen(s), file);
-	s = va("\t\ttype %d\n", event->type);
-	FS_Write(s, strlen(s), file);
-	s = va("\t\tparam %s\n", event->paramStr);
-	FS_Write(s, strlen(s), file);
-	s = va("\t\ttime %ld\n", event->time);
-	FS_Write(s, strlen(s), file);
-	s = "\t}\n";
-	FS_Write(s, strlen(s), file);
-}
 
 static float getVelocity(long t, idCameraPosition *pos) {
 	long check = t - pos->startTime;
@@ -1488,6 +1497,7 @@ static void parseSpline(const char *(*text), idSplinePosition *spline ) {
 
 
 
+#if 0
 static void writeFOV(fileHandle_t file, const char *p, idCameraFOV *fov) {
 	const char *s = va("\t%s {\n", p);
 	FS_Write(s, strlen(s), file);
@@ -1561,6 +1571,8 @@ static void writeSpline(fileHandle_t file, const char *p, idSplinePosition *spli
 	s = "\t}\n";
 	FS_Write(s, strlen(s), file);
 }
+#endif
+
 
 static void clearCamera(idCameraDef *cam) {
 	cam->currentCameraPosition = 0;

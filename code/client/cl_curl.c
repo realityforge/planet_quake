@@ -477,11 +477,13 @@ qboolean Com_DL_Begin( download_t *dl, const char *localName, const char *remote
 			Com_DL_Cleanup( dl );
 			return qfalse;
 		}
-    if(i > 0) {
-      Q_strcat( escaped, sizeof( escaped ), "/" );
-    }
-    Q_strcat( escaped, sizeof( escaped ), escapedName );
-    dl->func.free( escapedName );
+    //if(i > 0) {
+    //  Q_strcat( escaped, sizeof( escaped ), "/" );
+    //}
+		if(i == segmentCount - 1) {
+	    Q_strcat( escaped, sizeof( escaped ), escapedName );
+		}
+		dl->func.free( escapedName );
     escapedCount += len + 1;
   }
 

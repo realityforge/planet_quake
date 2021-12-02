@@ -2355,7 +2355,10 @@ typedef enum {
 void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, vec3_t *newOrigin ) {
 	int		clientNum; //, i;
 	int oldDelta[3];
-	sharedEntity_t *ent, *prevEnt;
+	sharedEntity_t *ent;
+#ifdef USE_MULTIVM_SERVER
+	sharedEntity_t *prevEnt;
+#endif
 	playerState_t	*ps, oldps;
 	vec3_t newAngles;
 	//gentity_t *gent, oldEnt;

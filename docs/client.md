@@ -13,6 +13,7 @@
 
 ## TODOs
 
+  * Fix defaults and limitations by looking at other engine forks, raise minimums like sv_fps, com_maxfps, snaps, etc, call the build quake3e-unlocked in Github Actions.
   * Fix Xonotic map shaders by ignoring an entire line after an unsupported parameter?
   * LOD (level of detail) based compression, loading different levels of detail in models and shaders, distance based mipmaps
   * Socks5 based cUrl downloads for downloading over the proxy and avoid content access controls
