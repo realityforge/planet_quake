@@ -27,6 +27,8 @@ Atlantis arena, will be a special kind of water based map where players must swi
 
 ## TODOs
 
+  * Cut all the maps in half, and find the color distance to make a white map, like ultra-brights for skins, but for maps and not bright. Save storage and memory by rendering the same model mirrored with a different shader palette. Perhaps the room in the middle merges the light better.
+  * Cut up all maps and use as 3D geomtry assets to build new maps automatically or upgrade map content from prior campaigns
   * fix skybox detection for new splicing tool
   * use cut out tongue or slicing tool to make a new map with teleporters in between
   * Recompile every map with new lightmaps and higher res/upscaled images

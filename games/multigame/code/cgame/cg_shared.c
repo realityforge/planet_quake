@@ -5403,7 +5403,7 @@ static keywordHash_t *menuParseKeywordHash[KEYWORDHASH_SIZE];
 Menu_SetupKeywordHash
 ===============
 */
-void Menu_SetupKeywordHash(void) {
+static void Menu_SetupKeywordHash(void) {
 	int i;
 
 	memset(menuParseKeywordHash, 0, sizeof(menuParseKeywordHash));

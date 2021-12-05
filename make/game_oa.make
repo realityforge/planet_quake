@@ -108,7 +108,6 @@ endif
 #############################################################################
 ## BASEQ3 CGAME
 #############################################################################
-# $(B)/$(MOD)/cgame/cg_particles.o \
 
 CGOBJ_  = $(B)/$(MOD)/cgame/cg_main.o \
 					$(B)/$(MOD)/cgame/bg_lib.o \
@@ -145,7 +144,8 @@ CGOBJ_ += $(B)/$(MOD)/game/q_math.o \
 endif
 
 CGOBJ   = $(CGOBJ_) $(B)/$(MOD)/cgame/cg_syscalls.o
-CGVMOBJ = $(addprefix $(B)/$(MOD)/cgame/,$(notdir $(CGOBJ_:%.o=%.asm)))
+CGVMOBJ = $(addprefix $(B)/$(MOD)/cgame/,$(notdir $(CGOBJ_:%.o=%.asm))) \
+					$(B)/$(MOD)/cgame/cg_syscalls.asm
 
 #############################################################################
 ## BASEQ3 GAME
@@ -199,7 +199,8 @@ QAOBJ_ += $(B)/$(MOD)/game/bg_alloc.o \
 endif
 
 QAOBJ   = $(QAOBJ_) $(B)/$(MOD)/game/g_syscalls.o
-QAVMOBJ = $(addprefix $(B)/$(MOD)/game/,$(notdir $(QAOBJ_:%.o=%.asm)))
+QAVMOBJ = $(addprefix $(B)/$(MOD)/game/,$(notdir $(QAOBJ_:%.o=%.asm))) \
+					$(B)/$(MOD)/game/g_syscalls.asm
 
 #############################################################################
 ## BASEQ3 UI
@@ -263,7 +264,8 @@ UIOBJ_ += $(B)/$(MOD)/ui/bg_misc.o \
 endif
 
 UIOBJ   = $(UIOBJ_) $(B)/$(MOD)/ui/ui_syscalls.o
-UIVMOBJ = $(addprefix $(B)/$(MOD)/ui/,$(notdir $(UIOBJ_:%.o=%.asm)))
+UIVMOBJ = $(addprefix $(B)/$(MOD)/ui/,$(notdir $(UIOBJ_:%.o=%.asm))) \
+					$(B)/$(MOD)/ui/ui_syscalls.asm 
 
 #############################################################################
 ## GAME MODULE RULES
@@ -288,17 +290,17 @@ $(B)/$(MOD)/ui$(SHLIBNAME): $(UIOBJ)
 
 ifneq ($(BUILD_GAME_QVM),0)
 
-$(B)/$(MOD)/vm/cgame.qvm: $(CGVMOBJ) $(GAMEDIR)/cgame/cg_syscalls.asm $(Q3ASM)
+$(B)/$(MOD)/vm/cgame.qvm: $(CGVMOBJ) $(Q3ASM)
 	$(echo_cmd) "Q3ASM $@"
-	$(Q)$(Q3ASM) -o $@ -m $(CGVMOBJ) $(GAMEDIR)/cgame/cg_syscalls.asm
+	$(Q)$(Q3ASM) -o $@ -m $(CGVMOBJ)
 
-$(B)/$(MOD)/vm/qagame.qvm: $(QAVMOBJ) $(GAMEDIR)/game/g_syscalls.asm $(Q3ASM)
+$(B)/$(MOD)/vm/qagame.qvm: $(QAVMOBJ) $(Q3ASM)
 	$(echo_cmd) "Q3ASM $@"
-	$(Q)$(Q3ASM) -o $@ -m $(QAVMOBJ) $(GAMEDIR)/game/g_syscalls.asm
+	$(Q)$(Q3ASM) -o $@ -m $(QAVMOBJ)
 
-$(B)/$(MOD)/vm/ui.qvm: $(UIVMOBJ) $(GAMEDIR)/ui/ui_syscalls.asm $(Q3ASM)
+$(B)/$(MOD)/vm/ui.qvm: $(UIVMOBJ) $(Q3ASM)
 	$(echo_cmd) "Q3ASM $@"
-	$(Q)$(Q3ASM) -o $@ -m $(UIVMOBJ) $(GAMEDIR)/ui/ui_syscalls.asm
+	$(Q)$(Q3ASM) -o $@ -m $(UIVMOBJ)
 
 endif
 
@@ -352,6 +354,7 @@ endif
 #############################################################################
 # MISC
 #############################################################################
+WORKDIRS += $(MOD) $(MOD)/cgame $(MOD)/game $(MOD)/ui $(MOD)/vm
 
 ifneq ($(BUILD_CLIENT),1)
 clean: clean-debug clean-release
@@ -376,6 +379,5 @@ clean2:
 	@rm -f ./$(B)/$(MOD)/qagame$(SHLIBNAME)
 	@rm -f ./$(B)/$(MOD)/ui$(SHLIBNAME)
 else
-WORKDIRS += $(MOD) $(MOD)/cgame $(MOD)/game $(MOD)/ui $(MOD)/vm
 CLEANS 	 += $(MOD)/cgame $(MOD)/qagame $(MOD)/ui $(MOD)
 endif

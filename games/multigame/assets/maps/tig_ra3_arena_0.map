@@ -16758,7 +16758,7 @@
 "targetname" "tig_ra3_skycam_a1"
 "origin" "-232 168 696"
 "target" "tig_ra3_dir_a1"
-"health" "1"
+"world" "1"
 "roll" "0"
 }
 {
@@ -16780,7 +16780,7 @@
 "targetname" "tig_ra3_skycam_a2"
 "origin" "-1807 610 968"
 "target" "tig_ra3_dir_a2"
-"health" "2"
+"world" "2"
 "roll" "0"
 }
 {
@@ -16802,7 +16802,7 @@
 "targetname" "tig_ra3_skycam_a3"
 "origin" "1432 3432 1112"
 "target" "tig_ra3_dir_a3"
-"health" "3"
+"world" "3"
 "roll" "180"
 }
 {
@@ -16822,7 +16822,7 @@
 "targetname" "tig_ra3_skycam_a4"
 "origin" "1536 -392 -2864"
 "target" "tig_ra3_dir_a4"
-"health" "4"
+"world" "4"
 "roll" "270"
 }
 {

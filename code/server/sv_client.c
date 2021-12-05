@@ -2508,31 +2508,10 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
 }
 
 
-qboolean SV_FindLocation(char *loc, vec3_t newOrigin, vec3_t angles) {
-#define MAX_NUN_SPAWNS 64
-	vec3_t origin;
-	vec3_t delta;
-	vec3_t spawnPoints[MAX_NUN_SPAWNS];
-	char buf[MAX_TOKEN_CHARS];
-	char nearest[MAX_TOKEN_CHARS];
-	char message[MAX_TOKEN_CHARS];
+static int parseEntities(const char **ents) {
 	const char *buffer = CM_EntityString();
-	int len, i;
- 	int depth = 0;
-	int count = 0;
-	int countSpawns = 0;
-	int tokenStartPos = 0;
-	float nearestLocation = 999999.0f;
-	qboolean isWorldspawn = qfalse;
-	qboolean isKey = qfalse;
-	qboolean isMessage = qfalse;
-	qboolean isValue = qfalse;
-	qboolean isOrigin = qfalse;
-	qboolean isLocation = qfalse;
-	qboolean isClassname = qfalse;
 	qboolean ignoreLine = qfalse;
-	qboolean isPlayerStart = qfalse;
-	qboolean isFound = qfalse;
+	int count = 0, numEntities = 0, depth = 0;
 
 	// read every brush and entity origin
 	while(1) {
@@ -2552,89 +2531,146 @@ qboolean SV_FindLocation(char *loc, vec3_t newOrigin, vec3_t angles) {
 		// first curls are entities
 		//   second curls are brushes
 		if(buffer[count] == '{') {
-			depth++;
-			if(depth == 1) {
-				isPlayerStart = qfalse;
-				isLocation = qfalse;
-				isWorldspawn = qfalse;
-				message[0] = '\0';
+			if(depth == 0) {
+				ents[numEntities] = &buffer[count];
 			}
+			depth++;
 		}
 		if(buffer[count] == '}') {
-			if(depth == 1 && !isWorldspawn) {
-				// TODO: if target matches loc, return origin and angles
-				// TODO: check if spawn is shortest distance to target
-				if(isLocation) {
-					VectorSubtract(newOrigin, origin, delta);
-					len = VectorNormalize(delta);
-					if(len < nearestLocation) {
-						nearestLocation = len;
-						strcpy(nearest, message);
-					}
-					if(loc[0] != '\0' && !Q_stricmp(loc, message)) {
-						isFound = qtrue;
-						VectorCopy(origin, newOrigin);
-					}
-					//Com_Printf("%s\n", message);
-				} else if (isPlayerStart && countSpawns < MAX_NUN_SPAWNS) { // tig_ra3 uses more spawn points than that
-					VectorCopy(origin, spawnPoints[countSpawns]);
-					countSpawns++;
-				}
+			if(depth == 1) {
+				numEntities++;
 			}
 			depth--;
 		}
-		if(depth == 1) {
-			if(!isKey && !isValue && buffer[count] == '"') {
-				if(isClassname || isOrigin || isMessage) isValue = qtrue;
-				else isKey = qtrue;
-				tokenStartPos = count+1;
-			} else if (isKey && buffer[count] == '"') {
-				if(!Q_stricmpn(&buffer[tokenStartPos], "classname", 9)) {
-					isClassname = qtrue;
-				} else if(!Q_stricmpn(&buffer[tokenStartPos], "origin", 6)) {
-					isOrigin = qtrue;
-				} else if(!Q_stricmpn(&buffer[tokenStartPos], "message", 7)) {
-					isMessage = qtrue;
-				} else {
-					//Q_strncpyz(buf, buffer+tokenStartPos, sizeof(buf));
-					//buf[count - tokenStartPos] = '\0';
-					//Com_Printf("WARNING: unknown key \"%s\"\n", buf);
-				}
-				isKey = qfalse;
-			} else if (isValue && buffer[count] == '"') {
-				isValue = qfalse;
-				if(isClassname) {
-					if(!Q_stricmpn(buffer+tokenStartPos, "worldspawn", 10)) {
-						isWorldspawn = qtrue;
-					} else if(!Q_stricmpn(buffer+tokenStartPos, "target_location", 14)) {
-						isLocation = qtrue;
-					} else if(!Q_stricmpn(buffer+tokenStartPos, "info_player_start", 16)
-						|| !Q_stricmpn(buffer+tokenStartPos, "info_player_deathmatch", 22)) {
-						isPlayerStart = qtrue;
-					}
-					isClassname = qfalse;
-				} else if (isOrigin) {
-					// check if model/entity origin is close enough to bounds
-					Q_strncpyz(buf, buffer+tokenStartPos, sizeof(buf));
-					buf[count - tokenStartPos] = '\0';
-					Cmd_TokenizeString(buf);
-					origin[0] = atof(Cmd_Argv(0));
-					origin[1] = atof(Cmd_Argv(1));
-					origin[2] = atof(Cmd_Argv(2));
-					Cmd_Clear();
-					isOrigin = qfalse;
-				} else if (isMessage) {
-					Q_strncpyz(message, buffer+tokenStartPos, sizeof(message));
-					message[count - tokenStartPos] = '\0';
-					isMessage = qfalse;
-				}
-			} else if (!isKey && !isValue && (buffer[count] == '\t' || buffer[count] == ' ')) {
-				// ignore whitespace in between
-			} else {
+	}
+	return numEntities;
+}
 
+
+static int parseKeys(const char *buffer, const char **keys, const char **vals) {
+#define MAX_KEYVALUES 16
+	qboolean ignoreLine = qfalse;
+	qboolean isKey = qfalse;
+	qboolean isMessage = qfalse;
+	qboolean isValue = qfalse;
+	qboolean isOrigin = qfalse;
+	qboolean isClassname = qfalse;
+	int tokenStartPos = 0;
+	int count = 0, numKeyValues = 0;
+
+	while(1) {
+		if(buffer[count] == '\0'
+			|| buffer[count] == '{' || buffer[count] == '}') {
+			break;
+		}
+
+		// ignore comments
+		if(buffer[count] == '/' && buffer[count+1] == '/') {
+			ignoreLine = qtrue;
+			count++;
+			continue;
+		}
+		if(buffer[count] == '\n') ignoreLine = qfalse;
+		if(ignoreLine) {
+			count++;
+			continue;
+		}
+
+		if(!isKey && !isValue && buffer[count] == '"') {
+			if(isClassname || isOrigin || isMessage) {
+				vals[numKeyValues] = &buffer[count];
+				isValue = qtrue;
+			}
+			else {
+				keys[numKeyValues] = &buffer[count];
+				isKey = qtrue;
+			}
+			tokenStartPos = count+1;
+		} else if (isKey && buffer[count] == '"') {
+			isKey = qfalse;
+		} else if (isValue && buffer[count] == '"') {
+			isValue = qfalse;
+			numKeyValues++;
+		} else if (!isKey && !isValue && (buffer[count] == '\t' || buffer[count] == ' ')) {
+			// ignore whitespace in between
+		}
+	}
+	return numKeyValues;
+}
+
+
+qboolean SV_FindLocation(char *loc, vec3_t newOrigin, vec3_t angles) {
+#define MAX_NUM_SPAWNS 64
+	vec3_t origin;
+	vec3_t delta;
+	vec3_t spawnPoints[MAX_NUM_SPAWNS];
+	const char *entities[MAX_GENTITIES];
+	char nearest[MAX_TOKEN_CHARS];
+	char message[MAX_TOKEN_CHARS];
+	int len;
+	int countSpawns = 0;
+	float nearestLocation = 999999.0f;
+	qboolean isFound = qfalse;
+
+
+	int numEntities = parseEntities(entities);
+	for(int i = 0; i < numEntities; i++) {
+		const char *keys[MAX_KEYVALUES];
+		const char *vals[MAX_KEYVALUES];
+		const char *ent = entities[i];
+		qboolean isWorldspawn = qfalse;
+		qboolean isLocation = qfalse;
+		qboolean isPlayerStart = qfalse;
+		int numKeyValues = parseKeys(ent, keys, vals);
+		for(int j = 0; j < numKeyValues; j++) {
+			if(!Q_stricmp(keys[j], "classname")) {
+				if(!Q_stricmpn(vals[j], "info_player_start", 16)
+					|| !Q_stricmpn(vals[j], "info_player_deathmatch", 22)) {
+					if(countSpawns > MAX_NUM_SPAWNS) {
+						//Com_Printf("Too many spawn points\n");
+						break;
+					}
+					isPlayerStart = qtrue;
+				}
+				else if (!Q_stricmpn(vals[j], "target_location", 14)) {
+					isLocation = qtrue;
+				}
+				else if (!Q_stricmpn(vals[j], "worldspawn", 10)) {
+					isWorldspawn = qtrue;
+				}
+				else {
+				}
+			}
+			if(!Q_stricmp(keys[j], "message")) {
+				sscanf(vals[j], "\"%s\"", message);
+			}
+			if(!Q_stricmp(keys[j], "origin")) {
+				sscanf(vals[j], "\"%f %f %f\"", 
+					&origin[0], 
+					&origin[1], 
+					&origin[2]);
 			}
 		}
-		count++;
+		if(isWorldspawn) {
+			continue;
+		}
+		if(isLocation) {
+			// check if spawn is shortest distance to target
+			VectorSubtract(newOrigin, origin, delta);
+			len = VectorNormalize(delta);
+			if(len < nearestLocation) {
+				nearestLocation = len;
+				strcpy(nearest, message);
+			}
+			// if target matches loc, return origin and angles
+			if(loc[0] != '\0' && !Q_stricmp(loc, message)) {
+				isFound = qtrue;
+				VectorCopy(origin, newOrigin);
+			}
+		} else if (isPlayerStart && countSpawns < MAX_NUM_SPAWNS) { // tig_ra3 uses more spawn points than that
+			VectorCopy(origin, spawnPoints[countSpawns]);
+			countSpawns++;
+		}
 	}
 
 	if(loc[0] == '\0') {
@@ -2645,7 +2681,7 @@ qboolean SV_FindLocation(char *loc, vec3_t newOrigin, vec3_t angles) {
 
 	if(isFound) {
 		nearestLocation = 999999.0f;
-		for(i = 0; i < countSpawns; i++) {
+		for(int i = 0; i < countSpawns; i++) {
 			VectorSubtract(newOrigin, spawnPoints[i], delta);
 			len = VectorNormalize(delta);
 			if(len < nearestLocation) {

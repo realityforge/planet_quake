@@ -798,8 +798,12 @@ static void CG_PersonalPortal(const centity_t *cent) {
     AnglesToAxis( angles, ent.axis );
     VectorCopy( cent->lerpOrigin, ent.origin);
   }
-  
+
   ent.hModel = cgs.gameModels[cent->currentState.modelindex];
+	VectorScale( ent.axis[0], 1.5, ent.axis[0] );
+	VectorScale( ent.axis[1], 1.5, ent.axis[1] );
+	VectorScale( ent.axis[2], 1.5, ent.axis[2] );
+	ent.nonNormalizedAxes = qtrue;
   if(!ent.hModel) {
     return;
   }

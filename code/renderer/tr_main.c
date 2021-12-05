@@ -945,19 +945,21 @@ static qboolean IsMirror( const drawSurf_t *drawSurf, int entityNum,
 		ri.Trace( &trace, e->e.origin, NULL, NULL, end, ENTITYNUM_NONE, -1 );
 	#endif
 		VectorSubtract( trace.endpos, e->e.origin, vec );
-		/*Com_Printf("trace: %f, %f, %f - %f, %f, %f - %f\n", 
+		Com_Printf("trace (%i): %f, %f, %f - %f, %f, %f - %f\n", 
+		*drawSurf->surface,
 		trace.endpos[0],
 		trace.endpos[1],
 		trace.endpos[2],
-		mins[0],
-		mins[1],
-		mins[2],
-		VectorLength(vec));*/
+		maxs[0],
+		maxs[1],
+		maxs[2],
+		VectorLength(vec));
 		// TODO: only use mins and maxs and cache this surface/entity matching somewhere
-		if ( VectorLength(vec) > 64 || trace.plane.dist != originalPlane.dist
+		if ( /* d > 64 || d < -64 */ VectorLength(vec) > 64 || trace.plane.dist != originalPlane.dist
 			|| !(trace.endpos[0] >= mins[0] && trace.endpos[0] <= maxs[0])
 			|| !(trace.endpos[1] >= mins[1] && trace.endpos[1] <= maxs[1])
 			|| !(trace.endpos[2] >= mins[2] && trace.endpos[2] <= maxs[2]) ) {
+			//Com_Printf("portal trace skipped\n");
 			continue;
 		}
 
@@ -1701,6 +1703,8 @@ void R_AddEntitySurfaces( void ) {
 		// simple generated models, like sprites and beams, are not culled
 		switch ( ent->e.reType ) {
 		case RT_PORTALSURFACE:
+			if(r_developer->integer)
+				R_AddDrawSurf( &entitySurface, tr.defaultShader, 0, 0 );
 			break;		// don't draw anything
 		case RT_SPRITE:
 		case RT_BEAM:

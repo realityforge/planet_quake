@@ -124,7 +124,6 @@ endif
 # $(B)/$(MOD)/cgame/cg_particles.o \
 
 CGOBJ_  = $(B)/$(MOD)/cgame/cg_main.o \
-          $(B)/$(MOD)/cgame/bg_lib.o \
           $(B)/$(MOD)/cgame/bg_misc.o \
           $(B)/$(MOD)/cgame/bg_pmove.o \
           $(B)/$(MOD)/cgame/bg_slidemove.o \
@@ -153,13 +152,17 @@ CGOBJ_ += $(B)/$(MOD)/cgame/cg_newdraw.o \
           $(B)/$(MOD)/cgame/cg_shared.o
 endif
 
-ifneq ($(BUILD_CLIENT),1)
-CGOBJ_ += $(B)/$(MOD)/cgame/q_math.o \
-          $(B)/$(MOD)/cgame/q_shared.o
-endif
-
 CGOBJ   = $(CGOBJ_) $(B)/$(MOD)/cgame/cg_syscalls.o
 CGVMOBJ = $(addprefix $(B)/$(MOD)/cgame/,$(notdir $(CGOBJ_:%.o=%.asm)))
+
+ifneq ($(BUILD_CLIENT),1)
+CGOBJ += $(B)/$(MOD)/cgame/q_math.o \
+          $(B)/$(MOD)/cgame/q_shared.o
+CGVMOBJ += $(B)/$(MOD)/cgame/q_math.asm \
+           $(B)/$(MOD)/cgame/q_shared.asm \
+           $(B)/$(MOD)/cgame/bg_lib.asm \
+           $(GAMEDIR)/cgame/cg_syscalls.asm
+endif
 
 #############################################################################
 ## BASEQ3 GAME
@@ -195,18 +198,25 @@ QAOBJ_  = $(B)/$(MOD)/game/g_main.o \
           $(B)/$(MOD)/game/g_unlagged.o \
           $(B)/$(MOD)/game/g_weapon.o
 
+QAOBJ   = $(QAOBJ_) $(B)/$(MOD)/game/g_syscalls.o
+QAVMOBJ = $(addprefix $(B)/$(MOD)/game/,$(notdir $(QAOBJ_:%.o=%.asm))) \
+
 ifneq ($(BUILD_CLIENT),1)
-QAOBJ_ += $(B)/$(MOD)/game/bg_lib.o \
-          $(B)/$(MOD)/game/bg_misc.o \
+QAOBJ += $(B)/$(MOD)/game/bg_misc.o \
           $(B)/$(MOD)/game/bg_pmove.o \
           $(B)/$(MOD)/game/bg_slidemove.o \
           $(B)/$(MOD)/game/bg_tracemap.o \
           $(B)/$(MOD)/game/q_math.o \
           $(B)/$(MOD)/game/q_shared.o
+QAVMOBJ += $(B)/$(MOD)/game/bg_lib.asm \
+           $(B)/$(MOD)/game/bg_misc.asm \
+           $(B)/$(MOD)/game/bg_pmove.asm \
+           $(B)/$(MOD)/game/bg_slidemove.asm \
+           $(B)/$(MOD)/game/bg_tracemap.asm \
+           $(B)/$(MOD)/game/q_math.asm \
+           $(B)/$(MOD)/game/q_shared.asm \
+           $(GAMEDIR)/game/g_syscalls.asm
 endif
-
-QAOBJ   = $(QAOBJ_) $(B)/$(MOD)/game/g_syscalls.o
-QAVMOBJ = $(addprefix $(B)/$(MOD)/game/,$(notdir $(QAOBJ_:%.o=%.asm)))
 
 #############################################################################
 ## BASEQ3 UI
@@ -259,15 +269,19 @@ UIOBJ_  = $(B)/$(MOD)/ui/ui_main.o \
           $(B)/$(MOD)/ui/ui_video.o
 endif
 
-ifneq ($(BUILD_CLIENT),1)
-UIOBJ_ += $(B)/$(MOD)/ui/bg_misc.o \
-          $(B)/$(MOD)/ui/bg_lib.o \
-          $(B)/$(MOD)/ui/q_math.o \
-          $(B)/$(MOD)/ui/q_shared.o
-endif
-
 UIOBJ   = $(UIOBJ_) $(B)/$(MOD)/ui/ui_syscalls.o
 UIVMOBJ = $(addprefix $(B)/$(MOD)/ui/,$(notdir $(UIOBJ_:%.o=%.asm)))
+
+ifneq ($(BUILD_CLIENT),1)
+UIOBJ  += $(B)/$(MOD)/ui/bg_misc.o \
+          $(B)/$(MOD)/ui/q_math.o \
+          $(B)/$(MOD)/ui/q_shared.o
+UIVMOBJ += $(B)/$(MOD)/ui/bg_lib.asm \
+           $(B)/$(MOD)/ui/bg_misc.asm \
+           $(B)/$(MOD)/ui/q_math.asm \
+           $(B)/$(MOD)/ui/q_shared.asm \
+           $(GAMEDIR)/ui/ui_syscalls.asm
+endif
 
 #############################################################################
 ## GAME MODULE RULES
@@ -292,17 +306,17 @@ $(B)/$(MOD)/ui$(SHLIBNAME): $(UIOBJ)
 
 ifneq ($(BUILD_GAME_QVM),0)
 
-$(B)/$(MOD)/vm/cgame.qvm: $(CGVMOBJ) $(GAMEDIR)/cgame/cg_syscalls.asm $(Q3ASM)
+$(B)/$(MOD)/vm/cgame.qvm: $(CGVMOBJ) $(Q3ASM)
 	$(echo_cmd) "Q3ASM $@"
-	$(Q)$(Q3ASM) -o $@ -m $(CGVMOBJ) $(GAMEDIR)/cgame/cg_syscalls.asm
+	$(Q)$(Q3ASM) -o $@ -m $(CGVMOBJ)
 
-$(B)/$(MOD)/vm/qagame.qvm: $(QAVMOBJ) $(GAMEDIR)/game/g_syscalls.asm $(Q3ASM)
+$(B)/$(MOD)/vm/qagame.qvm: $(QAVMOBJ) $(Q3ASM)
 	$(echo_cmd) "Q3ASM $@"
-	$(Q)$(Q3ASM) -o $@ -m $(QAVMOBJ) $(GAMEDIR)/game/g_syscalls.asm
+	$(Q)$(Q3ASM) -o $@ -m $(QAVMOBJ)
 
-$(B)/$(MOD)/vm/ui.qvm: $(UIVMOBJ) $(GAMEDIR)/ui/ui_syscalls.asm $(Q3ASM)
+$(B)/$(MOD)/vm/ui.qvm: $(UIVMOBJ) $(Q3ASM)
 	$(echo_cmd) "Q3ASM $@"
-	$(Q)$(Q3ASM) -o $@ -m $(UIVMOBJ) $(GAMEDIR)/ui/ui_syscalls.asm
+	$(Q)$(Q3ASM) -o $@ -m $(UIVMOBJ)
 
 endif
 
@@ -368,7 +382,7 @@ $(B)/$(MOD)/ui/%.asm: $(UIDIR)/%.c $(Q3LCC)
 	$(DO_UI_LCC)
 endif # missionpack
 
-endif
+endif # build qvm
 
 endif
 

@@ -195,6 +195,9 @@ struct gentity_s {
 #ifdef USE_ROTATING_DOOR
   float		distance;		// VALKYRIE: for rotating door
 #endif
+#ifdef USE_MULTIWORLD
+	int     world;
+#endif
 };
 
 

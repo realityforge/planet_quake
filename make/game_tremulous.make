@@ -74,7 +74,6 @@ makegamedirs:
 #############################################################################
 ## TREMULOUS CGAME
 #############################################################################
-# $(B)/$(MOD)/cgame/cg_particles.o \
 
 CGOBJ_  = $(B)/$(MOD)/cgame/cg_animation.o \
           $(B)/$(MOD)/cgame/cg_animmapobj.o \

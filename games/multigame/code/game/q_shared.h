@@ -238,6 +238,8 @@
 #define USE_PORTALS 1
 // add single player features like earthquakes, player stopping, and animated models
 #define USE_SINGLEPLAYER 1
+// enable special multiworld features like cameras and portals
+#define USE_MULTIWORLD 1
 // 
 #endif
 

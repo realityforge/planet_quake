@@ -19,6 +19,15 @@ Finally, I want to use multiworld for streaming game content to clients. Where t
 
 ## TODO
 
+  * Add `target_microphone` that speakers can target in different worlds, spatial and volume controls close to projected surfaces. Then go back and automatically add it for misc_portal_surface and misc_portal_cameras in an extra field.
+  * Multiworld entities like rockets with trajectories.
+  * Render UIs and cameras to a surface, UI needs absolute mouse input, play Q3 on a model computer inside Q3
+  * Copy second weapon axis from GUNNM Oculus for even weirder multiworld interaction.
+  * Finish teleporter switch in a way that any mod/mapper can use it, same with cameras, ie look for same name entity in both worlds, parse "world" field (change from "health" using inline field code in g_spawn?) from sv_init and look for those entities to switch on in sv_snapshot
+  * Additional perspectives in sv_snapshot for multiworld camera location
+  * There is a bug in mw cgame API that interferes with Auth from mods like Urban Terror. 
+  * There is a bug in multiworld renderer, trying to run normally and screen looks jittery with Urban Terror mod, but looks fine with baseq3a at 1000 FPS
+  * Compatibility with Xonotic warp zones in maps which is just an automatically configured portal camera surface
   * Connect `scores` commands from all games so players show in the same game. Connect player scores/powerups/health/stats/etc from world to world using SV_RestoreClient?
   * Fix multiworld cvar system is severly broken.
   * Filesystem switching mask so multiple mods can be loaded at the same time

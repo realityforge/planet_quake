@@ -202,6 +202,12 @@ void SP_misc_teleporter_dest( gentity_t *ent ) {
 			ent->targetname = va("arena_%i", arena);
 		}
 	}
+#ifdef USE_MULTIWORLD
+	G_SpawnString( "world", "", &s );
+  if(s[0]) {
+    ent->world = ent->s.health = atoi( s );
+  }
+#endif
 }
 
 
@@ -256,7 +262,7 @@ void locateCamera( gentity_t *ent ) {
 	else {
 		//ent->s.powerups = 1;
 	}
-  ent->s.powerups |= (owner->health << 8);
+  ent->s.powerups |= (owner->s.health << 8);
 
 	// clientNum holds the rotate offset
 	ent->s.clientNum = owner->s.clientNum;
@@ -300,12 +306,18 @@ The target for a misc_portal_director.  You can set either angles or target anot
 "roll" an angle modifier to orient the camera around the target vector;
 */
 void SP_misc_portal_camera(gentity_t *ent) {
+	char *s;
 	float	roll;
 
 	VectorClear( ent->r.mins );
 	VectorClear( ent->r.maxs );
 	trap_LinkEntity (ent);
-
+#ifdef USE_MULTIWORLD
+	G_SpawnString( "world", "", &s );
+  if(s[0]) {
+    ent->world = ent->s.health = atoi( s );
+  }
+#endif
 	G_SpawnFloat( "roll", "0", &roll );
 
 	ent->s.clientNum = roll/360.0 * 256;

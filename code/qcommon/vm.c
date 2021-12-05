@@ -1838,6 +1838,7 @@ static void * QDECL VM_LoadDll( const char *name, dllSyscall_t *entryPoint, dllS
 	dllEntry = /* ( dllEntry_t ) */ Sys_LoadFunction( libHandle, "dllEntry" );
 	*entryPoint = /* ( dllSyscall_t ) */ Sys_LoadFunction( libHandle, "vmMain" );
 	if ( !*entryPoint || !dllEntry ) {
+		Com_Printf( "VM_LoadDLL(%s) failed to find entry functions\n", name );
 		Sys_UnloadLibrary( libHandle );
 		return NULL;
 	}
