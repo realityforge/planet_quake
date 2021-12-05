@@ -51,6 +51,21 @@ byte numDied[128];
 static byte numWeapon[1024];
 #endif
 
+#ifdef USE_MULTIVM_SERVER
+typedef struct {
+	int number;
+	int world;
+	int worldFrom;
+	vec3_t origin;
+} multiworld_t;
+
+// TODO: alloc as needed?
+static multiworld_t multiworldEntities[MAX_NUM_VMS][MAX_GENTITIES];
+static int numMultiworldEntities = 0;
+// per client check if 
+static qboolean multiworldInView[MAX_NUM_VMS][MAX_GENTITIES];
+#endif
+
 /*
 =============
 SV_EmitPacketEntities
@@ -600,6 +615,120 @@ static void SV_AddEntitiesVisibleFromPoint( const vec3_t origin, clientPVS_t *pv
 }
 
 
+#ifdef USE_MULTIVM_SERVER
+/*
+===============
+SV_AddEntitiesVisibleFromPoint
+===============
+*/
+static void SV_MarkClientPortalPVS( const vec3_t origin, int clientNum, int portal ) {
+	int		e, i;
+	sharedEntity_t *ent;
+	svEntity_t	*svEnt;
+	entityState_t  *es;
+	int		l;
+	int		clientarea, clientcluster;
+	int		leafnum;
+	byte	*clientpvs;
+	byte	*bitvector;
+
+	leafnum = CM_PointLeafnum (origin);
+	clientarea = CM_LeafArea (leafnum);
+	clientcluster = CM_LeafCluster (leafnum);
+	clientpvs = CM_ClusterPVS (clientcluster, gameWorlds[gvmi]);
+
+	for ( e = 0 ; e < svs.currFrame->count; e++ ) {
+		es = svs.currFrame->ents[ e ];
+		ent = SV_GentityNum( es->number );
+		svEnt = &sv.svEntities[ es->number ];
+		if ( (ent->r.svFlags & SVF_SINGLECLIENT) && ent->r.singleClient != clientNum ) {
+			continue;
+		}
+		if ( (ent->r.svFlags & SVF_NOTSINGLECLIENT) && ent->r.singleClient == clientNum ) {
+			continue;
+		}
+		if ( (ent->r.svFlags & SVF_CLIENTMASK) ) && (~ent->r.singleClient & (1 << clientNum)) ) {
+			continue;
+		}
+		if ( svEnt->snapshotCounter == sv.snapshotCounter ) {
+			continue;
+		}
+		if ( ent->r.svFlags & SVF_BROADCAST ) {
+			continue;
+		}
+		if ( !CM_AreasConnected( clientarea, svEnt->areanum ) ) {
+			if ( !CM_AreasConnected( clientarea, svEnt->areanum2 ) ) {
+				continue;		// blocked by a door
+			}
+		}
+
+		bitvector = clientpvs;
+
+		// check individual leafs
+		if ( !svEnt->numClusters ) {
+			continue;
+		}
+		l = 0;
+		for ( i=0 ; i < svEnt->numClusters ; i++ ) {
+			l = svEnt->clusternums[i];
+			if ( bitvector[l >> 3] & (1 << (l&7) ) ) {
+				break;
+			}
+		}
+		if ( i == svEnt->numClusters ) {
+			if ( svEnt->lastCluster ) {
+				for ( ; l <= svEnt->lastCluster ; l++ ) {
+					if ( bitvector[l >> 3] & (1 << (l&7) ) ) {
+						break;
+					}
+				}
+				if ( l == svEnt->lastCluster ) {
+					continue;	// not visible
+				}
+			} else {
+				continue;
+			}
+		}
+
+		// if it's a portal entity, add everything visible from its camera position
+		if ( ent->r.svFlags & SVF_PORTAL ) {
+			if ( ent->s.generic1 ) {
+				vec3_t dir;
+				VectorSubtract(ent->s.origin, origin, dir);
+				if ( VectorLengthSquared(dir) > (float) ent->s.generic1 * ent->s.generic1 ) {
+					continue;
+				}
+			}
+
+			// mark the portal as being in view so the other world snapshot can always send entities from this point
+			//   when the portals have the same name in both maps, and the same location, entities will be sent
+			for(int j = 0; j < numMultiworldEntities[gvmi]; j++) {
+				if(multiworldEntities[gvmi][j].worldFrom != gvmi) continue; // skip portals not from this world
+				if(multiworldEntities[gvmi][j].world == gvmi) continue; // skip portals that lead to this world
+				// only portals from this world leading to other worlds
+				if(multiworldEntities[gvmi][j].number == es->number) {
+					int prevGvm = gvmi;
+					gvmi = multiworldEntities[gvmi][j].world;
+					multiworldInView[gvmi][j] = qtrue;
+					// powerups hack, add world parameter to powerups for non-multigame QVMs like baseq3a, 
+					//   so a prebuilt QVM can still use portals as long as cgame transfers powerups flags to the renderer
+					if ( ent->s.eType == ET_PORTAL ) {
+						ent->s.powerups |= (multiworldEntities[gvmi][j].world << 8);
+					}
+					CM_SwitchMap(gameWorlds[gvmi]);
+					if(portal < 10)
+						SV_MarkClientPortalPVS( ent->s.origin2, portal + 1 );
+					gvmi = prevGvm;
+					CM_SwitchMap(gameWorlds[gvmi]);
+					break;
+				}
+			}
+		}
+	}
+}
+#endif
+
+
 /*
 ===============
 SV_InitSnapshotStorage
@@ -844,6 +973,15 @@ static clientPVS_t *SV_BuildClientPVS( int clientSlot, const playerState_t *ps, 
 		pvs->numbers.numSnapshotEntities = 0;
 		pvs->numbers.unordered = qfalse;
 		SV_AddEntitiesVisibleFromPoint( org, pvs, qfalse );
+#ifdef USE_MULTIVM_SERVER
+		for(int j = 0; j < numMultiworldEntities[gvmi]; j++) {
+			if(multiworldInView[gvmi][j] 
+				&& multiworldEntities[gvmi][j].world == gvmi) {
+				// TODO: add another visibility point from this view point
+				SV_AddEntitiesVisibleFromPoint( multiworldEntities[gvmi][j].origin, pvs, qtrue );
+			}
+		}
+#endif
 		// if there were portals visible, there may be out of order entities
 		// in the list which will need to be resorted for the delta compression
 		// to work correctly.  This also catches the error condition
@@ -1105,6 +1243,14 @@ void SV_SendClientSnapshot( client_t *client, qboolean includeBaselines ) {
 	sharedEntity_t *ent;
 	//entityState_t nullstate;
 	//const svEntity_t *svEnt;
+	// mark portal PVS ahead of time, sucks to do extra math, but then all worlds can refer to each other easily
+	for(gvmi = 0; gvmi < MAX_NUM_VMS; gvmi++) {
+		if(!gvmWorlds[gvmi]) continue;
+		ent = SV_GentityNum( client - svs.clients );
+		if(ent->s.eType == 0) continue; // they must at least be a spectator even to "peer" into this world from another
+		CM_SwitchMap(gameWorlds[gvmi]);
+		SV_MarkClientPortalPVS( SV_GameClientNum(client - svs.clients)->origin );
+	}
 
 	for(igvm = 0; igvm < MAX_NUM_VMS; igvm++) {
 		if(!gvmWorlds[igvm]) continue;
