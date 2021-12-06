@@ -2164,13 +2164,16 @@ static void R_LoadEntities( const lump_t *l ) {
 
 #ifdef USE_LAZY_MEMORY
 #ifdef USE_MULTIVM_CLIENT
+void RE_SetWorld(int);
 void RE_SwitchWorld(int w) {
 	//if(w != rwi)
 	//  ri.Printf( PRINT_ALL, "Switching renderers %i -> %i\n", rwi, w );
 	if(s_worldDatas[w].name[0] == '\0') {
 		return;
 	}
-	R_IssuePendingRenderCommands();
+	// TODO: create a switch world command for renderer to know when to switch
+	//R_IssuePendingRenderCommands();
+	RE_SetWorld(w);
 	rwi = w;
 	tr.world = &s_worldDatas[rwi];
 	// reassign bmodels to same position as server entities

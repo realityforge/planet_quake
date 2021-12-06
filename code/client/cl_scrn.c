@@ -1009,6 +1009,10 @@ void SCR_UpdateScreen( qboolean fromVM ) {
 		//}
 		
 		if(!cgvm && !uivm) continue;
+#ifdef USE_MULTIVM_CLIENT
+		//if(clientScreens[cgvmi][0] == -1) continue;
+#endif
+
 
 		if(first) {
 			CL_CalculatePing(ms);

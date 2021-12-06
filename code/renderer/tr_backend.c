@@ -1029,6 +1029,22 @@ void RE_UploadCinematic( int w, int h, int cols, int rows, byte *data, int clien
 
 /*
 =============
+RB_SetWorld
+=============
+*/
+static const void *RB_SetWorld( const void *data ) {
+	const setWorldCommand_t	*cmd;
+
+	cmd = (const setWorldCommand_t *)data;
+
+	RE_SwitchWorld( cmd->world );
+
+	return (const void *)(cmd + 1);
+}
+
+
+/*
+=============
 RB_SetColor
 =============
 */
@@ -1661,6 +1677,9 @@ void RB_ExecuteRenderCommands( const void *data ) {
 		data = PADP(data, sizeof(void *));
 
 		switch ( *(const int *)data ) {
+		case RC_SET_WORLD:
+			data = RB_SetWorld( data );
+			break;
 		case RC_SET_COLOR:
 			data = RB_SetColor( data );
 			break;

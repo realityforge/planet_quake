@@ -1861,6 +1861,11 @@ typedef struct {
 
 typedef struct {
 	int		commandId;
+	int 	world;
+} setWorldCommand_t;
+
+typedef struct {
+	int		commandId;
 	int		buffer;
 } drawBufferCommand_t;
 
@@ -1930,6 +1935,7 @@ typedef struct
 typedef enum {
 	RC_END_OF_LIST,
 	RC_SET_COLOR,
+	RC_SET_WORLD,
   RC_POLY2D_INDEXED,
 	RC_STRETCH_PIC,
 	RC_DRAW_SURFS,

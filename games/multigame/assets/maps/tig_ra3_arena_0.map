@@ -16803,7 +16803,7 @@
 "origin" "1432 3432 1112"
 "target" "tig_ra3_dir_a3"
 "world" "3"
-"roll" "180"
+"roll" "120"
 }
 {
 "classname" "info_notnull"

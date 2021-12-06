@@ -871,7 +871,7 @@ void CG_DrawPortals( void ) {
 #ifdef USE_PORTALS
     if(cent->currentState.eType == ET_TELEPORT_TRIGGER
 			&& cent->currentState.modelindex
-		//	&& cent->currentState.clientNum
+			//&& cent->currentState.clientNum
 			&& (cent->currentState.powerups & ((1 << 4) | (1 << 5)))
 		) {
       CG_PersonalPortal( cent );

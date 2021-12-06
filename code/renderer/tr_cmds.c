@@ -179,6 +179,24 @@ void R_AddDrawSurfCmd( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 
 /*
 =============
+RE_SetWorld
+
+Passing NULL will set the color to white
+=============
+*/
+void RE_SetWorld( int w ) {
+	setWorldCommand_t	*cmd;
+	cmd = R_GetCommandBuffer( sizeof( *cmd ) );
+	if ( !cmd ) {
+		return;
+	}
+	cmd->commandId = RC_SET_WORLD;
+	cmd->world = w;
+}
+
+
+/*
+=============
 RE_SetColor
 
 Passing NULL will set the color to white

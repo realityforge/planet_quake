@@ -37,8 +37,8 @@ textures/gothic_door/door02_i_ornate5_fin
 		//blendFunc GL_DST_COLOR GL_SRC_ALPHA
 		//rgbGen identity
 		//alphaGen lightingSpecular
-    alphagen portal 1024
-  	depthWrite
+    //alphagen portal 1024
+  	//depthWrite
 	}
 }
 
@@ -377,8 +377,8 @@ textures/tig_ra3/tig_ra3_a1
 	portal
 	{
 		map textures/tig_ra3/tig_ra3_a1.tga
-		blendfunc GL_SRC_ALPHA GL_ONE
-    alphagen portal 1024
+		blendfunc GL_SRC_ALPHA GL_ONE_MINUS_SRC_ALPHA
+    alphagen portal 512
 		depthWrite
 	}
 
@@ -392,8 +392,8 @@ textures/tig_ra3/tig_ra3_a2
 	portal
 	{
 		map textures/tig_ra3/tig_ra3_a2.tga
-		blendfunc GL_SRC_ALPHA GL_ONE
-    alphagen portal 1024
+		blendfunc GL_SRC_ALPHA GL_ONE_MINUS_SRC_ALPHA
+    alphagen portal 512
 		depthWrite
 	}
 
@@ -407,8 +407,8 @@ textures/tig_ra3/tig_ra3_a3
 	portal
 	{
 		map textures/tig_ra3/tig_ra3_a3.tga
-		blendfunc GL_SRC_ALPHA GL_ONE
-    alphagen portal 1024
+		blendfunc GL_SRC_ALPHA GL_ONE_MINUS_SRC_ALPHA
+    alphagen portal 512
 		depthWrite
 	}
 
@@ -422,8 +422,8 @@ textures/tig_ra3/tig_ra3_a4
 	portal
 	{
 		map textures/tig_ra3/tig_ra3_a4.tga
-		blendfunc GL_SRC_ALPHA GL_ONE
-    alphagen portal 1024
+		blendfunc GL_SRC_ALPHA GL_ONE_MINUS_SRC_ALPHA
+    alphagen portal 512
 		depthWrite
 	}
 

@@ -2508,7 +2508,7 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
 }
 
 
-static int parseEntities(const char **ents) {
+int parseEntities(const char **ents) {
 	const char *buffer = CM_EntityString();
 	qboolean ignoreLine = qfalse;
 	int count = 0, numEntities = 0, depth = 0;
@@ -2542,12 +2542,13 @@ static int parseEntities(const char **ents) {
 			}
 			depth--;
 		}
+		count++;
 	}
 	return numEntities;
 }
 
 
-static int parseKeys(const char *buffer, const char **keys, const char **vals) {
+int parseKeys(const char *buffer, const char **keys, const char **vals) {
 #define MAX_KEYVALUES 16
 	qboolean ignoreLine = qfalse;
 	qboolean isKey = qfalse;
@@ -2594,6 +2595,7 @@ static int parseKeys(const char *buffer, const char **keys, const char **vals) {
 		} else if (!isKey && !isValue && (buffer[count] == '\t' || buffer[count] == ' ')) {
 			// ignore whitespace in between
 		}
+		count++;
 	}
 	return numKeyValues;
 }
@@ -2604,16 +2606,15 @@ qboolean SV_FindLocation(char *loc, vec3_t newOrigin, vec3_t angles) {
 	vec3_t origin;
 	vec3_t delta;
 	vec3_t spawnPoints[MAX_NUM_SPAWNS];
-	const char *entities[MAX_GENTITIES];
+	static const char *entities[MAX_GENTITIES];
 	char nearest[MAX_TOKEN_CHARS];
 	char message[MAX_TOKEN_CHARS];
 	int len;
 	int countSpawns = 0;
 	float nearestLocation = 999999.0f;
 	qboolean isFound = qfalse;
-
-
 	int numEntities = parseEntities(entities);
+
 	for(int i = 0; i < numEntities; i++) {
 		const char *keys[MAX_KEYVALUES];
 		const char *vals[MAX_KEYVALUES];

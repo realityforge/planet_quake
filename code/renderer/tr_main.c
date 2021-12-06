@@ -844,7 +844,7 @@ static qboolean R_GetPortalOrientations( const drawSurf_t *drawSurf, int entityN
 	VectorSubtract( vec3_origin, camera->axis[1], camera->axis[1] );
 
 #ifdef USE_MULTIVM_CLIENT
-	*world = (e->e.oldframe >> 8);
+	*world = e->e.oldframe >> 8;
 	if(e->e.oldframe & 12) { // special indication meaning portal and frames are entity nums not rotations
 		*portalEntity = e->e.frame;
 	} else 
@@ -945,15 +945,15 @@ static qboolean IsMirror( const drawSurf_t *drawSurf, int entityNum,
 		ri.Trace( &trace, e->e.origin, NULL, NULL, end, ENTITYNUM_NONE, -1 );
 	#endif
 		VectorSubtract( trace.endpos, e->e.origin, vec );
-		Com_Printf("trace (%i): %f, %f, %f - %f, %f, %f - %f\n", 
+		/*Com_Printf("trace (%i): %f, %f, %f - %f, %f, %f - %f\n", 
 		*drawSurf->surface,
-		trace.endpos[0],
-		trace.endpos[1],
-		trace.endpos[2],
-		maxs[0],
-		maxs[1],
-		maxs[2],
-		VectorLength(vec));
+			trace.endpos[0],
+			trace.endpos[1],
+			trace.endpos[2],
+			maxs[0],
+			maxs[1],
+			maxs[2],
+			VectorLength(vec));*/
 		// TODO: only use mins and maxs and cache this surface/entity matching somewhere
 		if ( /* d > 64 || d < -64 */ VectorLength(vec) > 64 || trace.plane.dist != originalPlane.dist
 			|| !(trace.endpos[0] >= mins[0] && trace.endpos[0] <= maxs[0])
@@ -970,7 +970,7 @@ static qboolean IsMirror( const drawSurf_t *drawSurf, int entityNum,
 		{
 			VectorScale( plane.normal, plane.dist, surface->origin );
 			*entity = e;
-			Com_Printf("mirror found!\n");
+			//Com_Printf("mirror found!\n");
 			return qtrue;
 		}
 
@@ -1210,7 +1210,8 @@ static qboolean R_MirrorViewBySurface( const drawSurf_t *drawSurf, int entityNum
 
 	// trivially reject portal/mirror
 	if ( SurfIsOffscreen( drawSurf, &isMirror, &surface, &entity) ) {
-    //Com_Printf("offscreen\n");
+  	Com_Printf("offscreen\n");
+		return qfalse;
 	}
 	if(entity == NULL)
 		return qfalse;

@@ -297,6 +297,12 @@ static void SV_GetServerinfo( char *buffer, int bufferSize ) {
 }
 
 
+#ifdef USE_MULTIVM_SERVER
+void SV_AddWorldlyEntities( void );
+void SV_RemoveWorldlyEntities( void );
+#endif
+
+
 /*
 ===============
 SV_LocateGameData
@@ -337,6 +343,10 @@ static void SV_LocateGameData( sharedEntity_t *gEnts, int numGEntities, int size
 
 	sv.gameClients = clients;
 	sv.gameClientSize = sizeofGameClient;
+
+#ifdef USE_MULTIVM_SERVER
+	SV_AddWorldlyEntities();
+#endif
 }
 
 
@@ -1136,6 +1146,7 @@ void SV_ShutdownGameProgs( void ) {
 		gvmi = i;
 		CM_SwitchMap(gameWorlds[gvmi]);
 		SV_SetAASgvm(gvmi);
+		SV_RemoveWorldlyEntities();
 #else
 ;
 	if ( !gvm ) {
