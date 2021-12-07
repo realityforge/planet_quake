@@ -16759,7 +16759,7 @@
 "origin" "-232 168 696"
 "target" "tig_ra3_dir_a1"
 "world" "1"
-"roll" "0"
+"roll" "-30"
 }
 {
 "classname" "info_notnull"
@@ -16803,7 +16803,7 @@
 "origin" "1432 3432 1112"
 "target" "tig_ra3_dir_a3"
 "world" "3"
-"roll" "120"
+"roll" "200"
 }
 {
 "classname" "info_notnull"

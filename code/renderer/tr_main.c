@@ -890,6 +890,8 @@ static qboolean IsMirror( const drawSurf_t *drawSurf, int entityNum,
 	trRefEntity_t *e;
 	memset( &originalPlane, 0, sizeof( originalPlane ) );
 	memset( &plane, 0, sizeof( plane ) );
+	VectorClear( mins );
+	VectorClear( maxs );
 
 	// create plane axis for the portal we are seeing
 	R_PlaneForSurface( drawSurf->surface, &originalPlane, mins, maxs );
@@ -945,7 +947,7 @@ static qboolean IsMirror( const drawSurf_t *drawSurf, int entityNum,
 		ri.Trace( &trace, e->e.origin, NULL, NULL, end, ENTITYNUM_NONE, -1 );
 	#endif
 		VectorSubtract( trace.endpos, e->e.origin, vec );
-		/*Com_Printf("trace (%i): %f, %f, %f - %f, %f, %f - %f\n", 
+		Com_Printf("trace (%i): %f, %f, %f - %f, %f, %f - %f\n", 
 		*drawSurf->surface,
 			trace.endpos[0],
 			trace.endpos[1],
@@ -953,13 +955,13 @@ static qboolean IsMirror( const drawSurf_t *drawSurf, int entityNum,
 			maxs[0],
 			maxs[1],
 			maxs[2],
-			VectorLength(vec));*/
+			VectorLength(vec));
 		// TODO: only use mins and maxs and cache this surface/entity matching somewhere
 		if ( /* d > 64 || d < -64 */ VectorLength(vec) > 64 || trace.plane.dist != originalPlane.dist
 			|| !(trace.endpos[0] >= mins[0] && trace.endpos[0] <= maxs[0])
 			|| !(trace.endpos[1] >= mins[1] && trace.endpos[1] <= maxs[1])
 			|| !(trace.endpos[2] >= mins[2] && trace.endpos[2] <= maxs[2]) ) {
-			//Com_Printf("portal trace skipped\n");
+			Com_Printf("portal trace skipped\n");
 			continue;
 		}
 
@@ -974,6 +976,7 @@ static qboolean IsMirror( const drawSurf_t *drawSurf, int entityNum,
 			return qtrue;
 		}
 
+		//Com_Printf("portal found!\n");
 		// project the origin onto the surface plane to get
 		// an origin point we can rotate around
 		d = DotProduct( e->e.origin, plane.normal ) - plane.dist;
@@ -1052,7 +1055,7 @@ static qboolean SurfIsOffscreen( const drawSurf_t *drawSurf, qboolean *isMirror,
 	if ( pointAnd )
 	{
 		tess.numIndexes = 0;
-		return qtrue;
+		//return qtrue;
 	}
 
 	// determine if this surface is backfaced and also determine the distance
@@ -1083,7 +1086,7 @@ static qboolean SurfIsOffscreen( const drawSurf_t *drawSurf, qboolean *isMirror,
 	tess.numIndexes = 0;
 	if ( !numTriangles )
 	{
-		return qtrue;
+		//return qtrue;
 	}
 
 	// mirrors can early out at this point, since we don't do a fade over distance
@@ -1210,7 +1213,7 @@ static qboolean R_MirrorViewBySurface( const drawSurf_t *drawSurf, int entityNum
 
 	// trivially reject portal/mirror
 	if ( SurfIsOffscreen( drawSurf, &isMirror, &surface, &entity) ) {
-  	Com_Printf("offscreen\n");
+  	//Com_Printf("offscreen\n");
 		return qfalse;
 	}
 	if(entity == NULL)
@@ -1704,8 +1707,10 @@ void R_AddEntitySurfaces( void ) {
 		// simple generated models, like sprites and beams, are not culled
 		switch ( ent->e.reType ) {
 		case RT_PORTALSURFACE:
-			if(r_developer->integer)
+			if(r_developer->integer) {
+				tr.currentModel = s_worldData.models[0];
 				R_AddDrawSurf( &entitySurface, tr.defaultShader, 0, 0 );
+			}
 			break;		// don't draw anything
 		case RT_SPRITE:
 		case RT_BEAM:

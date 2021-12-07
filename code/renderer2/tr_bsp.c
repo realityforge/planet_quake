@@ -2726,12 +2726,14 @@ void R_CalcVertexLightDirs( void )
 
 #ifdef USE_LAZY_MEMORY
 #ifdef USE_MULTIVM_CLIENT
+void RE_SetWorld(int);
 void RE_SwitchWorld(int w) {
   //ri.Printf( PRINT_ALL, "Switching renderers %i -> %i\n", rwi, w );
 	if(s_worldDatas[w].name[0] == '\0') {
 		return;
 	}
-	R_IssuePendingRenderCommands();
+	//R_IssuePendingRenderCommands();
+	RE_SetWorld(w);
 	rwi = w;
 	tr.world = &s_worldData;
 	// reassign bmodels to same position as server entities

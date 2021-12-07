@@ -220,6 +220,25 @@ void	R_AddPostProcessCmd( void ) {
 	cmd->viewParms = tr.viewParms;
 }
 
+#ifdef USE_MULTIVM_CLIENT
+/*
+=============
+RE_SetWorld
+
+Passing NULL will set the color to white
+=============
+*/
+void RE_SetWorld( int w ) {
+	setWorldCommand_t	*cmd;
+	cmd = R_GetCommandBuffer( sizeof( *cmd ) );
+	if ( !cmd ) {
+		return;
+	}
+	cmd->commandId = RC_SET_WORLD;
+	cmd->world = w;
+}
+#endif
+
 /*
 =============
 RE_SetColor

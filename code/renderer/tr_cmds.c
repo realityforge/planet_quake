@@ -176,7 +176,7 @@ void R_AddDrawSurfCmd( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 	cmd->viewParms = tr.viewParms;
 }
 
-
+#ifdef USE_MULTIVM_CLIENT
 /*
 =============
 RE_SetWorld
@@ -193,7 +193,7 @@ void RE_SetWorld( int w ) {
 	cmd->commandId = RC_SET_WORLD;
 	cmd->world = w;
 }
-
+#endif
 
 /*
 =============

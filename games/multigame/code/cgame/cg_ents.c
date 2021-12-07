@@ -816,8 +816,12 @@ static void CG_PersonalPortal(const centity_t *cent) {
 
   // add portal camera view
   memset (&ent, 0, sizeof(ent));
-  VectorCopy( cent->lerpOrigin, ent.origin );
-  VectorCopy( cent->currentState.origin2, ent.oldorigin );
+  //VectorCopy( cent->lerpOrigin, ent.origin );
+  //VectorCopy( cent->currentState.origin2, ent.oldorigin );
+	PerpendicularVector( vec, angles );
+	VectorScale( vec, AWAY_FROM_WALL, vec );
+	VectorSubtract( cent->lerpOrigin, vec, ent.origin );
+	VectorSubtract( cent->currentState.origin2, vec, ent.oldorigin );
   // TODO: size of portal model cached somewhere else like itemInfo_t?
   // TODO: change cg_weapons to match, it also uses midpoint of weapon models?
   //if(cent->currentState.powerups)

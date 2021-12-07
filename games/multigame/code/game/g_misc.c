@@ -303,13 +303,13 @@ The target for a misc_portal_director.  You can set either angles or target anot
 "roll" an angle modifier to orient the camera around the target vector;
 */
 void SP_misc_portal_camera(gentity_t *ent) {
-	 *s;
 	float	roll;
 
 	VectorClear( ent->r.mins );
 	VectorClear( ent->r.maxs );
 	trap_LinkEntity (ent);
 #ifdef USE_MULTIWORLD
+  // TODO: default "world" is the current world, store in a variable somewhere like `g_mvWorld_0..9`
 	G_SpawnInt( "world", "0", &ent->world );
 #endif
 	G_SpawnFloat( "roll", "0", &roll );

@@ -1009,7 +1009,7 @@ static void PM_CrashLand( void ) {
 	// want to take damage or play a crunch sound
 	if ( !(pml.groundTrace.surfaceFlags & SURF_NODAMAGE) )  {
     
-    Com_Printf("falling, ouch!\n");
+    //Com_Printf("falling, ouch!\n");
 		if ( delta > 60 ) {
 			PM_AddEvent( EV_FALL_FAR );
 		} else if ( delta > 40 ) {

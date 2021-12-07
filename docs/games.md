@@ -44,7 +44,7 @@ The following features I've added to baseq3a without affecting the networking pr
 
 ## TODO
 
-  * Finish Tig_RA3 demo. Finish portal features below, like interpolation, and seeing one portal surface through another portal, projectiles (distance from origin). Share entities between multiple server qagame QVMs, possibly through the engine itself or a new API call for game/g_*.c  Indicate clientWorld number to camera system in tr_main.c; multiworld portals.  Add `world` game commands when using inter-dimensional teleporters, and set the `sv_mvWorld` designation for managed cameras. Finish multiworld TODOs like not crashing after 10 maps and cvars. 
+  * Finish Tig_RA3 demo. Finish portal features below, like interpolation, and seeing one portal surface through another portal, projectiles (distance from origin). Share entities between multiple server qagame QVMs, possibly through the engine itself or a new API call for game/g_*.c  Add `world` game commands when using inter-dimensional teleporters, and set the `sv_mvWorld` designation for managed cameras. Finish multiworld TODOs like not crashing after 10 maps and cvars. 
   * Rocket Arena maps. Place white return teleporters for arena 0 on player_start positions and going through a portal counts as a vote to white arena to play in. Or use drop command to drop portal connects and in RA mode return to arena 0. Always spawn in arena 0 during intermission until voted, or remove guns from arena 0 and repawn in voted arena.
   * Add entities through portals
   * Add autosprite flag to misc_model for rotating like portal always facing camera

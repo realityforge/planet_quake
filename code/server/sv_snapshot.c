@@ -475,12 +475,17 @@ static void SV_AddIndexToSnapshot( svEntity_t *svEnt, int index, snapshotEntityN
 }
 
 
+typedef enum {
+	EPV_NOTPORTAL,
+	EPV_PORTAL,
+	EPV_PORTALONLY,
+} entityPOV_t;
 /*
 ===============
 SV_AddEntitiesVisibleFromPoint
 ===============
 */
-static void SV_AddEntitiesVisibleFromPoint( const vec3_t origin, clientPVS_t *pvs, qboolean portal ) {
+static void SV_AddEntitiesVisibleFromPoint( const vec3_t origin, clientPVS_t *pvs, entityPOV_t portal ) {
 	int		e, i;
 	sharedEntity_t *ent;
 	svEntity_t	*svEnt;
@@ -589,11 +594,17 @@ static void SV_AddEntitiesVisibleFromPoint( const vec3_t origin, clientPVS_t *pv
 			}
 		}
 
+#ifdef USE_MULTIVM_SERVER
+		if(portal == EPV_PORTALONLY && ent->s.eType != ET_PORTAL) {
+			continue;
+		}
+#endif
+
 		// add it
 		SV_AddIndexToSnapshot( svEnt, e, &pvs->numbers );
 
 		// if it's a portal entity, add everything visible from its camera position
-		if ( ent->r.svFlags & SVF_PORTAL && !portal ) {
+		if ( ent->r.svFlags & SVF_PORTAL && portal == EPV_NOTPORTAL ) {
 			if ( ent->s.generic1 ) {
 				vec3_t dir;
 				VectorSubtract(ent->s.origin, origin, dir);
@@ -606,10 +617,11 @@ static void SV_AddEntitiesVisibleFromPoint( const vec3_t origin, clientPVS_t *pv
 			if(ent->s.eType == ET_PORTAL) {
 				int newWorld = ent->s.powerups >> 8;
 				// don't show entities if the portal is from a different world
-				//if(newWorld != gvmi) {
-				//	continue;
-				//}
-			}
+				if(newWorld != gvmi) {
+					SV_AddEntitiesVisibleFromPoint( ent->s.origin2, pvs, EPV_PORTALONLY );
+				} else
+					SV_AddEntitiesVisibleFromPoint( ent->s.origin2, pvs, portal );
+			} else
 #endif
 			SV_AddEntitiesVisibleFromPoint( ent->s.origin2, pvs, portal );
 		}
@@ -617,8 +629,8 @@ static void SV_AddEntitiesVisibleFromPoint( const vec3_t origin, clientPVS_t *pv
 
 	ent = SV_GentityNum( pvs->clientNum );
 	// merge second PVS at ent->r.s.origin2
-	if ( ent->r.svFlags & SVF_SELF_PORTAL2 && !portal ) {
-		SV_AddEntitiesVisibleFromPoint( ent->r.s.origin2, pvs, qtrue );
+	if ( ent->r.svFlags & SVF_SELF_PORTAL2 && portal == EPV_NOTPORTAL ) {
+		SV_AddEntitiesVisibleFromPoint( ent->r.s.origin2, pvs, EPV_PORTAL );
 		pvs->numbers.unordered = qtrue;
 	}
 }
@@ -763,6 +775,9 @@ void SV_AddWorldlyEntities( void ) {
 		qboolean isTeleporter = qfalse;
 		qboolean isCamera = qfalse;
 		int numKeyValues = parseKeys(ent, keys, vals);
+		world = gvmi;
+		message[0] = '\0';
+		VectorClear(origin);
 		for(int j = 0; j < numKeyValues; j++) {
 			if(!Q_stricmp(keys[j], "classname")) {
 				if(!Q_stricmpn(vals[j], "misc_teleporter_dest", 16)) {
@@ -809,7 +824,7 @@ void SV_AddWorldlyEntities( void ) {
 
 void SV_RemoveWorldlyEntities( void ) {
 	for(int i = 0; i < numMultiworldEntities; i++) {
-		if(multiworldEntities[i].world == gvmi) {
+		if(multiworldEntities[i].worldFrom == gvmi) {
 			memcpy(&multiworldEntities[i], &multiworldEntities[i + 1], sizeof(multiworldEntities) - (i + 1) * sizeof(multiworldEntities[i]));
 			numMultiworldEntities--;
 			memset(&multiworldEntities[numMultiworldEntities], 0, sizeof(multiworldEntities[0]));
@@ -1067,13 +1082,13 @@ static clientPVS_t *SV_BuildClientPVS( int clientSlot, const playerState_t *ps, 
 		pvs->entMaskBuilt = qfalse;
 		pvs->numbers.numSnapshotEntities = 0;
 		pvs->numbers.unordered = qfalse;
-		SV_AddEntitiesVisibleFromPoint( org, pvs, qfalse );
+		SV_AddEntitiesVisibleFromPoint( org, pvs, EPV_NOTPORTAL );
 #ifdef USE_MULTIVM_SERVER
 		for(int j = 0; j < numMultiworldEntities; j++) {
 			if(multiworldInView[j] 
 				&& multiworldEntities[j].world == gvmi) {
 				// TODO: add another visibility point from this view point
-				SV_AddEntitiesVisibleFromPoint( multiworldEntities[j].origin, pvs, qtrue );
+				SV_AddEntitiesVisibleFromPoint( multiworldEntities[j].origin, pvs, EPV_PORTAL );
 				pvs->numbers.unordered = qtrue;
 			}
 		}
