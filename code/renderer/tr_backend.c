@@ -159,7 +159,8 @@ void GL_Cull( cullType_t cullType ) {
 		qglEnable( GL_CULL_FACE );
 
 		cullFront = (cullType == CT_FRONT_SIDED);
-		if ( backEnd.viewParms.portalView == PV_MIRROR )
+		if ( backEnd.viewParms.portalView >= PV_MIRROR
+			&& backEnd.viewParms.portalView < PV_COUNT )
 		{
 			cullFront = !cullFront;
 		}

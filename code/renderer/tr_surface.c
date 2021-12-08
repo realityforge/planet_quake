@@ -180,7 +180,8 @@ static void RB_SurfaceSprite( void ) {
 		VectorMA( up, s * radius, backEnd.viewParms.or.axis[1], up );
 	}
 
-	if ( backEnd.viewParms.portalView == PV_MIRROR ) {
+	if ( backEnd.viewParms.portalView >= PV_MIRROR
+			&& backEnd.viewParms.portalView < PV_COUNT ) {
 		VectorSubtract( vec3_origin, left, left );
 	}
 

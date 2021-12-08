@@ -1266,7 +1266,6 @@ static void SV_BuildClientSnapshot( client_t *client ) {
 		// auto score request
 		if ( sv_demoFlags->integer & ( SCORE_RECORDER | SCORE_CLIENT ) )
 			SV_QueryClientScore( client );
-
 	}
 	else // non-multiview frame
 #endif
