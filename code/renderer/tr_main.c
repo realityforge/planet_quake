@@ -847,7 +847,6 @@ static qboolean R_GetPortalOrientations( const drawSurf_t *drawSurf, int entityN
 	*world = e->e.oldframe >> 8;
 #endif
 	if(e->e.oldframe & 12) { // special indication meaning portal and frames are entity nums not rotations
-	Com_Printf("is portal: %i\n", e->e.frame);
 		*portalEntity = e->e.frame;
 		d = 0;
 		VectorCopy( camera->axis[1], transformed );
@@ -952,7 +951,7 @@ static qboolean IsMirror( const drawSurf_t *drawSurf, int entityNum,
 			//PerpendicularVector( transformed, transformed );
 		//} else {
 			d = DotProduct( e->e.origin, plane.normal ) - originalPlane.dist;
-			Com_Printf("trace (%i): %f, %f, %f <= %f, %f, %f >= %f, %f, %f - %f\n", 
+		/* Com_Printf("trace (%i): %f, %f, %f <= %f, %f, %f >= %f, %f, %f - %f\n", 
 			*drawSurf->surface,
 			mins[0],
 			mins[1],
@@ -963,7 +962,7 @@ static qboolean IsMirror( const drawSurf_t *drawSurf, int entityNum,
 			maxs[0],
 			maxs[1],
 			maxs[2],
-			d);
+			d); */
 			/*
 			VectorCopy( plane.normal, transformed );
 			//PerpendicularVector( transformed, plane.normal );
@@ -997,7 +996,7 @@ static qboolean IsMirror( const drawSurf_t *drawSurf, int entityNum,
 			|| !(trace.endpos[0] >= mins[0] && trace.endpos[0] <= maxs[0])
 			|| !(trace.endpos[1] >= mins[1] && trace.endpos[1] <= maxs[1])
 			|| !(trace.endpos[2] >= mins[2] && trace.endpos[2] <= maxs[2]) */ ) {
-			Com_Printf("portal trace skipped\n");
+			//Com_Printf("portal trace skipped\n");
 			continue;
 		}
 
@@ -1007,11 +1006,11 @@ static qboolean IsMirror( const drawSurf_t *drawSurf, int entityNum,
 			e->e.oldorigin[2] == e->e.origin[2] ) {
 			VectorScale( plane.normal, plane.dist, surface->origin );
 			*entity = e;
-			Com_Printf("mirror found!\n");
+			//Com_Printf("mirror found!\n");
 			return qtrue;
 		}
 
-		Com_Printf("portal found!\n");
+		//Com_Printf("portal found!\n");
 		// project the origin onto the surface plane to get
 		// an origin point we can rotate around
 		d = DotProduct( e->e.origin, plane.normal ) - plane.dist;
@@ -1138,9 +1137,11 @@ static qboolean SurfIsOffscreen( const drawSurf_t *drawSurf, qboolean *isMirror,
 		return qtrue;
 	}
 
-	if ( shortest > (tess.shader->portalRange*tess.shader->portalRange) )
+	VectorSubtract((*entity)->e.origin, tr.viewParms.or.origin, eye);
+	//Com_Printf("Portal: %f\n", VectorLength(eye));
+	if ( VectorLength(eye) > (tess.shader->portalRange*tess.shader->portalRange) )
 	{
-		//return qtrue;
+		return qtrue;
 	}
 
 	return qfalse;
@@ -1248,7 +1249,7 @@ static qboolean R_MirrorViewBySurface( const drawSurf_t *drawSurf, int entityNum
 
 	// trivially reject portal/mirror
 	if ( SurfIsOffscreen( drawSurf, &isMirror, &surface, &entity) ) {
-  	Com_Printf("offscreen\n");
+  	//Com_Printf("offscreen\n");
 		return qfalse;
 	}
 	if(entity == NULL)

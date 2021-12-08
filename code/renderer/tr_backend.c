@@ -1038,7 +1038,10 @@ static const void *RB_SetWorld( const void *data ) {
 
 	cmd = (const setWorldCommand_t *)data;
 
-	RE_SwitchWorld( cmd->world );
+	rwi = cmd->world;
+	tr.world = &s_worldData;
+	tr.numLightmaps = s_worldData.numLightmaps;
+	tr.lightmaps = s_worldData.lightmaps;
 
 	return (const void *)(cmd + 1);
 }

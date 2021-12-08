@@ -10,7 +10,7 @@ textures/portal/portal_sfx_blue2
     map textures/common/mirror1.tga
     blendfunc GL_ONE GL_ONE_MINUS_SRC_ALPHA
     depthWrite
-    alphagen portal 1024
+    alphagen portal 512
   }
 }
 
@@ -27,7 +27,7 @@ textures/portal/portal_sfx_blue
 		blendfunc GL_SRC_ALPHA GL_ONE
 		tcmod rotate .1 //.1
 		tcmod scroll .01 .03
-    alphagen portal 1024
+    alphagen portal 512
     depthWrite
   }
 
@@ -92,7 +92,7 @@ textures/portal/portal_sfx_red
     blendfunc GL_SRC_ALPHA GL_ONE
 		tcmod rotate .1 //.1
 		tcmod scroll .01 .03
-    alphagen portal 1024
+    alphagen portal 512
 		depthWrite
 	}
 

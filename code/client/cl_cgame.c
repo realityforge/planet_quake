@@ -1011,11 +1011,11 @@ static intptr_t CL_CgameSystemCalls( intptr_t *args ) {
     }
 #endif
 #ifdef USE_MULTIVM_CLIENT
-		if(clientScreens[cgvmi][0] == -1)
-			return 0;
+		//if(clientScreens[cgvmi][0] == -1)
+		//	return 0;
 #endif
-    X_DMG_DrawDamage((refdef_t*)VMA(1));
-    tc_vis_render();
+    //X_DMG_DrawDamage((refdef_t*)VMA(1));
+    //tc_vis_render();
 		re.RenderScene( VMA(1) );
 		return 0;
 	case CG_R_SETCOLOR:

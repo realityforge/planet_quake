@@ -772,6 +772,7 @@ static void CG_PersonalPortal(const centity_t *cent) {
   VectorSubtract( cg.refdef.vieworg, cent->lerpOrigin, vec );
   len = VectorNormalize( vec );
   VectorClear(angles);
+	VectorClear(angles2);
 
   // add portal model
   memset (&ent, 0, sizeof(ent));
@@ -837,7 +838,13 @@ static void CG_PersonalPortal(const centity_t *cent) {
     // is mirror
 		isMirror = qtrue;
 		target = &cg_entities[cent->currentState.otherEntityNum];
-		AxisClear( ent.axis );
+		if(target->currentState.eventParm
+			|| cent->currentState.eventParm) {
+			AxisClear( ent.axis );
+		} else {
+			//angles2[PITCH] = angles[PITCH];
+			//AnglesToAxis( angles2, ent.axis );
+		}
 		/*
 		if( target->currentState.eventParm
 			|| cent->currentState.eventParm ) {
