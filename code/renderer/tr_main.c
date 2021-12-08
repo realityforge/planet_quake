@@ -852,7 +852,7 @@ static qboolean R_GetPortalOrientations( const drawSurf_t *drawSurf, int entityN
 		VectorCopy( camera->axis[1], transformed );
 		RotatePointAroundVector( camera->axis[1], camera->axis[0], transformed, d );
 		CrossProduct( camera->axis[0], camera->axis[1], camera->axis[2] );
-	} else 
+	}
 	// optionally rotate
 	if ( e->e.oldframe & 1 ) {
 		// if a speed is specified

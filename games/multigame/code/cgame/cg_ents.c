@@ -804,7 +804,7 @@ static void CG_PersonalPortal(const centity_t *cent) {
 	//VectorScale( ent.axis[0], 1.5, ent.axis[0] );
 	//VectorScale( ent.axis[1], 1.5, ent.axis[1] );
 	//VectorScale( ent.axis[2], 1.5, ent.axis[2] );
-	ent.nonNormalizedAxes = qtrue;
+	//ent.nonNormalizedAxes = qtrue;
   if(!ent.hModel) {
     return;
   }
@@ -838,12 +838,11 @@ static void CG_PersonalPortal(const centity_t *cent) {
     // is mirror
 		isMirror = qtrue;
 		target = &cg_entities[cent->currentState.otherEntityNum];
-		if(target->currentState.eventParm
-			|| cent->currentState.eventParm) {
+		if(target->currentState.eventParm) {
 			AxisClear( ent.axis );
 		} else {
-			//angles2[PITCH] = angles[PITCH];
-			//AnglesToAxis( angles2, ent.axis );
+			angles2[PITCH] = angles[PITCH];
+			AnglesToAxis( angles2, ent.axis );
 		}
 		/*
 		if( target->currentState.eventParm
@@ -856,8 +855,7 @@ static void CG_PersonalPortal(const centity_t *cent) {
   } else {
 		isMirror = qfalse;
 		target = &cg_entities[cent->currentState.otherEntityNum];
-		if( target->currentState.eventParm
-			|| cent->currentState.eventParm ) {
+		if( target->currentState.eventParm ) {
 			// if it is a wall portal
 			ByteToDir( target->currentState.eventParm, angles2 );
 			vectoangles( angles2, angles2 );
@@ -877,7 +875,7 @@ static void CG_PersonalPortal(const centity_t *cent) {
   ent.reType = RT_PORTALSURFACE;
   //ent.renderfx = RF_FIRST_PERSON;
 	//ent.radius = 12;
-	ent.skinNum |= cent->currentState.otherEntityNum;
+	ent.skinNum = 0;
   ent.frame = cent->currentState.number;
   ent.oldframe = (cent->currentState.powerups & 0xF0) | 12;
   trap_R_AddRefEntityToScene(&ent);
