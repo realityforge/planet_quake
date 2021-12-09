@@ -2874,6 +2874,8 @@ static void CL_DownloadsComplete( void ) {
 		cgvmi = clc.currentView;
 		Com_Printf("Using existing cgame VM: %i\n", cgvmi);
 		CM_SwitchMap(clientMaps[cgvmi]);
+		clientGames[clc.currentView] = clc.currentView;
+		clientWorlds[clc.currentView] = clc.clientNum;
 		CL_InitCGame(cgvmi);
 		//cls.state = CA_ACTIVE;
 	}

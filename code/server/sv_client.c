@@ -2462,8 +2462,8 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
 	//SV_UpdateConfigstrings( client );
 	ent = SV_GentityNum( clientNum );
 	ps = SV_GameClientNum( clientNum );
-	ent->s.eFlags |= EF_TELEPORT_BIT;
-	ps->eFlags |= EF_TELEPORT_BIT;
+	ent->s.eFlags ^= EF_TELEPORT_BIT;
+	ps->eFlags ^= EF_TELEPORT_BIT;
 	ent->s.number = clientNum;
 	client->gentity = ent;
 	VM_Call( gvm, 1, GAME_CLIENT_BEGIN, clientNum );
@@ -2532,7 +2532,7 @@ int parseEntities(const char **ents) {
 		//   second curls are brushes
 		if(buffer[count] == '{') {
 			if(depth == 0) {
-				ents[numEntities] = &buffer[count];
+				ents[numEntities] = &buffer[count + 1];
 			}
 			depth++;
 		}
@@ -2552,19 +2552,11 @@ int parseKeys(const char *buffer, const char **keys, const char **vals) {
 #define MAX_KEYVALUES 16
 	qboolean ignoreLine = qfalse;
 	qboolean isKey = qfalse;
-	qboolean isMessage = qfalse;
 	qboolean isValue = qfalse;
-	qboolean isOrigin = qfalse;
-	qboolean isClassname = qfalse;
 	int tokenStartPos = 0;
 	int count = 0, numKeyValues = 0;
 
 	while(1) {
-		if(buffer[count] == '\0'
-			|| buffer[count] == '{' || buffer[count] == '}') {
-			break;
-		}
-
 		// ignore comments
 		if(buffer[count] == '/' && buffer[count+1] == '/') {
 			ignoreLine = qtrue;
@@ -2577,13 +2569,18 @@ int parseKeys(const char *buffer, const char **keys, const char **vals) {
 			continue;
 		}
 
+		if(buffer[count] == '\0'
+			|| buffer[count] == '{' || buffer[count] == '}') {
+			break;
+		}
+
 		if(!isKey && !isValue && buffer[count] == '"') {
-			if(isClassname || isOrigin || isMessage) {
+			if(keys[numKeyValues] != NULL) {
 				vals[numKeyValues] = &buffer[count];
 				isValue = qtrue;
 			}
 			else {
-				keys[numKeyValues] = &buffer[count];
+				keys[numKeyValues] = &buffer[count+1];
 				isKey = qtrue;
 			}
 			tokenStartPos = count+1;
@@ -2618,34 +2615,36 @@ qboolean SV_FindLocation(char *loc, vec3_t newOrigin, vec3_t angles) {
 	for(int i = 0; i < numEntities; i++) {
 		const char *keys[MAX_KEYVALUES];
 		const char *vals[MAX_KEYVALUES];
+		memset(keys, 0, sizeof(keys));
+		memset(vals, 0, sizeof(vals));
 		const char *ent = entities[i];
 		qboolean isWorldspawn = qfalse;
 		qboolean isLocation = qfalse;
 		qboolean isPlayerStart = qfalse;
 		int numKeyValues = parseKeys(ent, keys, vals);
 		for(int j = 0; j < numKeyValues; j++) {
-			if(!Q_stricmp(keys[j], "classname")) {
-				if(!Q_stricmpn(vals[j], "info_player_start", 16)
-					|| !Q_stricmpn(vals[j], "info_player_deathmatch", 22)) {
+			if(!Q_stricmpn(keys[j], "classname", 9)) {
+				if(!Q_stricmpn(vals[j]+1, "info_player_start", 16)
+					|| !Q_stricmpn(vals[j]+1, "info_player_deathmatch", 22)) {
 					if(countSpawns > MAX_NUM_SPAWNS) {
 						//Com_Printf("Too many spawn points\n");
 						break;
 					}
 					isPlayerStart = qtrue;
 				}
-				else if (!Q_stricmpn(vals[j], "target_location", 14)) {
+				else if (!Q_stricmpn(vals[j]+1, "target_location", 14)) {
 					isLocation = qtrue;
 				}
-				else if (!Q_stricmpn(vals[j], "worldspawn", 10)) {
+				else if (!Q_stricmpn(vals[j]+1, "worldspawn", 10)) {
 					isWorldspawn = qtrue;
 				}
 				else {
 				}
 			}
-			if(!Q_stricmp(keys[j], "message")) {
+			if(!Q_stricmpn(keys[j], "message", 7)) {
 				sscanf(vals[j], "\"%s\"", message);
 			}
-			if(!Q_stricmp(keys[j], "origin")) {
+			if(!Q_stricmpn(keys[j], "origin", 6)) {
 				sscanf(vals[j], "\"%f %f %f\"", 
 					&origin[0], 
 					&origin[1], 

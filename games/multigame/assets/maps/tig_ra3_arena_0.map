@@ -9,7 +9,6 @@
 
 
 
-"arena" "4" 
 "message" "Certain Ruin by Tigger-oN" 
 "ambient" "12" 
 
@@ -8159,8 +8158,8 @@
 
 
 {
-"arena" "4"
 "classname" "trigger_teleport"
+"target" "tele_world_4"
 // brush 0
 {
 ( -2816 -1448 -1632 ) ( -2816 -1256 -1632 ) ( -3200 -1256 -1632 ) common/trigger 0 0 0 0.500000 0.500000 134217728 0 0
@@ -16279,7 +16278,7 @@
 
 {
 "classname" "trigger_teleport"
-"arena" "1"
+"target" "tele_world_1"
 // brush 0
 {
 ( -2816 -3256 -1632 ) ( -2816 -3064 -1632 ) ( -3200 -3064 -1632 ) common/trigger 0 -32 0 0.500000 0.500000 134217728 0 0
@@ -16297,8 +16296,8 @@
 
 
 {
-"arena" "2"
 "classname" "trigger_teleport"
+"target" "tele_world_2"
 // brush 0
 {
 ( -4024 -2368 -1632 ) ( -3832 -2368 -1632 ) ( -3832 -1984 -1632 ) common/trigger 0 0 90 0.500000 0.500000 134217728 0 0
@@ -16317,7 +16316,7 @@
 
 {
 "classname" "trigger_teleport"
-"arena" "3"
+"target" "tele_world_3"
 // brush 0
 {
 ( -4024 -1792 -1632 ) ( -3832 -1792 -1632 ) ( -3832 -1408 -1632 ) common/trigger 0 0 90 0.500000 0.500000 134217728 0 0
@@ -16766,6 +16765,12 @@
 "targetname" "tig_ra3_dir_a1"
 "origin" "192 -232 156"
 }
+{
+"classname" "misc_teleporter_dest"
+"targetname" "tele_world_1"
+"origin" "192 -232 256"
+"world" "1"
+}
 
 
 
@@ -16788,7 +16793,12 @@
 "targetname" "tig_ra3_dir_a2"
 "origin" "-2830 756 600"
 }
-
+{
+"classname" "misc_teleporter_dest"
+"targetname" "tele_world_2"
+"origin" "-2830 756 700"
+"world" "2"
+}
 
 
 
@@ -16810,6 +16820,13 @@
 "targetname" "tig_ra3_dir_a3"
 "origin" "2112 2464 320"
 }
+{
+"classname" "misc_teleporter_dest"
+"targetname" "tele_world_3"
+"origin" "2112 2464 420"
+"world" "3"
+}
+
 
 
 {
@@ -16829,4 +16846,10 @@
 "classname" "info_notnull"
 "targetname" "tig_ra3_dir_a4"
 "origin" "2176 -1536 -3188"
+}
+{
+"classname" "misc_teleporter_dest"
+"targetname" "tele_world_4"
+"origin" "2176 -1536 -3288"
+"world" "4"
 }

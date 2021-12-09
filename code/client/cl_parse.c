@@ -741,8 +741,7 @@ void CL_ParseServerInfo( int igs )
 	const char *serverInfo;
 	size_t	len;
 
-  serverInfo = cl.gameState.stringData
-		+ cl.gameState.stringOffsets[ CS_SERVERINFO ];
+  serverInfo = cl.gameState.stringData + cl.gameState.stringOffsets[ CS_SERVERINFO ];
 	Com_Printf("Gamestate (%i): %.*s\n", igs, (int)strlen(serverInfo), serverInfo);
 
   if(clc.demoplaying) {

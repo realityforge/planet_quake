@@ -765,11 +765,11 @@ void SV_AddWorldlyEntities( void ) {
 	memset(entities, 0, sizeof(entities));
 	numEntities = parseEntities(entities);
 
-	//Com_Printf("SV_AddWorldlyEntities: %d entities\n", numEntities);
-	return;
 	for(int i = 0; i < numEntities; i++) {
 		const char *keys[MAX_KEYVALUES];
 		const char *vals[MAX_KEYVALUES];
+		memset(keys, 0, sizeof(keys));
+		memset(vals, 0, sizeof(vals));
 		const char *ent = entities[i];
 		qboolean isWorldspawn = qfalse;
 		qboolean isTeleporter = qfalse;
@@ -779,26 +779,26 @@ void SV_AddWorldlyEntities( void ) {
 		message[0] = '\0';
 		VectorClear(origin);
 		for(int j = 0; j < numKeyValues; j++) {
-			if(!Q_stricmp(keys[j], "classname")) {
-				if(!Q_stricmpn(vals[j], "misc_teleporter_dest", 16)) {
+			if(!Q_stricmpn(keys[j], "classname", 9)) {
+				if(!Q_stricmpn(vals[j]+1, "misc_teleporter_dest", 20)) {
 					isTeleporter = qtrue;
 				}
-				else if (!Q_stricmpn(vals[j], "misc_portal_camera", 14)) {
+				else if (!Q_stricmpn(vals[j]+1, "misc_portal_camera", 18)) {
 					isCamera = qtrue;
 				}
-				else if (!Q_stricmpn(vals[j], "worldspawn", 10)) {
+				else if (!Q_stricmpn(vals[j]+1, "worldspawn", 10)) {
 					isWorldspawn = qtrue;
 				}
 				else {
 				}
 			}
-			if(!Q_stricmp(keys[j], "world")) {
+			else if(!Q_stricmpn(keys[j], "world", 5)) {
 				sscanf(vals[j], "\"%i\"", &world);
 			}
-			if(!Q_stricmp(keys[j], "message")) {
+			else if(!Q_stricmpn(keys[j], "message", 7)) {
 				sscanf(vals[j], "\"%s\"", message);
 			}
-			if(!Q_stricmp(keys[j], "origin")) {
+			else if(!Q_stricmpn(keys[j], "origin", 6)) {
 				sscanf(vals[j], "\"%f %f %f\"", 
 					&origin[0], 
 					&origin[1], 
@@ -808,16 +808,12 @@ void SV_AddWorldlyEntities( void ) {
 		if(isWorldspawn) {
 			continue;
 		}
-		if(isCamera && world != gvmi) {
-			// check if spawn is shortest distance to target
+		if((isCamera || isTeleporter) && world != gvmi) {
 			multiworldEntities[numMultiworldEntities].world = world;
 			multiworldEntities[numMultiworldEntities].worldFrom = gvmi;
 			multiworldEntities[numMultiworldEntities].number = i;
 			VectorCopy(origin, multiworldEntities[numMultiworldEntities].origin);
 			numMultiworldEntities++;
-		} else if (isTeleporter && world != gvmi) {
-			//VectorCopy(origin, spawnPoints[countSpawns]);
-			//countSpawns++;
 		}
 	}
 }
@@ -1184,6 +1180,21 @@ static void SV_BuildClientSnapshot( client_t *client ) {
 	// grab the current playerState_t
 	ps = SV_GameClientNum( cl );
 	frame->ps = *ps;
+#ifdef USE_MULTIVM_SERVER
+	clientSnapshot_t *oldframe = &client->frames[gvmi][ client->netchan.outgoingSequence - 1 & PACKET_MASK ];
+	if(/* sv_mvWorld->integer &&*/ gvmi == client->gameWorld
+		&& ((ps->eFlags ^ oldframe->ps.eFlags) & EF_TELEPORT_BIT)) {
+		for(int i = 0; i < numMultiworldEntities; i++) {
+			int newWorld = multiworldEntities[i].world;
+			vec3_t vec;
+			VectorSubtract(multiworldEntities[i].origin, ps->origin, vec);
+			if(newWorld != client->newWorld
+				&& VectorLength(vec) < 64) {
+				SV_ExecuteClientCommand(client, va("game %i", newWorld));
+			}
+		}
+	}
+#endif
 
 	clientNum = frame->ps.clientNum;
 	if ( clientNum < 0 || clientNum >= MAX_GENTITIES-1 ) {
@@ -1213,6 +1224,7 @@ static void SV_BuildClientSnapshot( client_t *client ) {
 		clientPVS_t *pvs;
 		psFrame_t *psf;
 		int slot;
+
 		for ( slot = 0 ; slot < sv_maxclients->integer; slot++ ) {
 			// record only form primary slot or active clients
 			if ( slot == cl || svs.clients[ slot ].state == CS_ACTIVE ) {
@@ -1266,6 +1278,7 @@ static void SV_BuildClientSnapshot( client_t *client ) {
 		// auto score request
 		if ( sv_demoFlags->integer & ( SCORE_RECORDER | SCORE_CLIENT ) )
 			SV_QueryClientScore( client );
+
 	}
 	else // non-multiview frame
 #endif
