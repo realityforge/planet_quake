@@ -29,7 +29,7 @@ Loads and prepares a map file for scene rendering.
 
 A single entry point:
 
-void RE_LoadWorldMap( const char *name );
+int RE_LoadWorldMap( const char *name );
 
 */
 
@@ -2211,7 +2211,7 @@ RE_LoadWorldMap
 Called directly from cgame
 =================
 */
-void RE_LoadWorldMap( const char *name ) {
+int RE_LoadWorldMap( const char *name ) {
 	int			i;
 	int32_t		size;
 	dheader_t	*header;
@@ -2230,7 +2230,7 @@ void RE_LoadWorldMap( const char *name ) {
 #ifdef USE_LAZY_MEMORY
 			RE_SwitchWorld(j);
 #endif
-			return;
+			return j;
 		} else if (s_worldDatas[j].name[0] == '\0' && empty == -1) {
 			// load additional world in to next slot
 			empty = j;
@@ -2325,4 +2325,9 @@ void RE_LoadWorldMap( const char *name ) {
 	tr.world = &s_worldData;
 
 	ri.FS_FreeFile( buffer.v );
+#ifdef USE_MULTIVM_CLIENT
+	return rwi;
+#else
+  return 0;
+#endif
 }

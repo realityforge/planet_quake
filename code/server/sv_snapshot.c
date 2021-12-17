@@ -1188,9 +1188,9 @@ static void SV_BuildClientSnapshot( client_t *client ) {
 			int newWorld = multiworldEntities[i].world;
 			vec3_t vec;
 			VectorSubtract(multiworldEntities[i].origin, ps->origin, vec);
-			if(newWorld != client->newWorld
-				&& VectorLength(vec) < 64) {
-				SV_ExecuteClientCommand(client, va("game %i", newWorld));
+			if(newWorld != client->newWorld && VectorLength(vec) < 64) {
+				client->newWorld = newWorld;
+				Cbuf_AddText(va("wait 1\nswitchgame %i %i\n", cl, newWorld));
 			}
 		}
 	}

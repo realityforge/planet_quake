@@ -1987,7 +1987,7 @@ void	RE_UploadCinematic (int w, int h, int cols, int rows, byte *data, int clien
 
 void		RE_BeginFrame( stereoFrame_t stereoFrame );
 void		RE_BeginRegistration( glconfig_t *glconfig );
-void		RE_LoadWorldMap( const char *mapname );
+int		RE_LoadWorldMap( const char *mapname );
 #ifdef USE_MULTIVM_CLIENT
 void		RE_SwitchWorld( int world );
 #endif

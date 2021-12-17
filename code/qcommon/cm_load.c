@@ -757,7 +757,6 @@ int CM_LoadMap( const char *name, qboolean clientload, int *checksum ) {
 			// fill the next empty clipmap slot
 			empty = i;
 		}
-
 	}
 	cmi = empty;
   Com_DPrintf( "%s( '%s', %i )\n", __func__, name, clientload );

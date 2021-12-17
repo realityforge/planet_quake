@@ -42,6 +42,13 @@ int clientMaps[MAX_NUM_VMS] = {
 #endif
 };
 
+int worldMaps[MAX_NUM_VMS] = {
+  0
+#ifdef USE_MULTIVM_CLIENT
+	,0,0,0,0,0,0,0,0,0
+#endif
+};
+
 // connect a specific virtual machine to a gamestate/world from server 0-9
 int clientGames[MAX_NUM_VMS] = {
 	0
@@ -637,6 +644,15 @@ static void CL_CM_LoadMap( const char *mapname ) {
 }
 
 
+static void CL_RE_LoadMap( const char *mapname ) {
+#ifdef USE_MULTIVM_CLIENT
+	worldMaps[cgvmi] = re.LoadWorld( VMA(1) );
+#else
+	worldMaps[0] = re.LoadWorld( VMA(1) );
+#endif
+}
+
+
 /*
 ====================
 CL_ShutdonwCGame
@@ -925,7 +941,7 @@ static intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 		S_StartBackgroundTrack( VMA(1), VMA(2) );
 		return 0;
 	case CG_R_LOADWORLDMAP:
-		re.LoadWorld( VMA(1) );
+		CL_RE_LoadMap( VMA(1) );
 		return 0;
 	case CG_R_REGISTERMODEL:
 		return re.RegisterModel( VMA(1) );
@@ -1444,7 +1460,7 @@ qboolean CL_GameCommand( int igvm ) {
 	if (VM_IsSuspended(cgvm)) {
 #ifdef USE_MULTIVM_CLIENT
 			cgvmi = prevGvm;
-			CM_SwitchMap(cgvmi);
+			CM_SwitchMap(clientMaps[cgvmi]);
 #endif
 		return qfalse;
 	}

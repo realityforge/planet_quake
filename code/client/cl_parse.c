@@ -742,7 +742,7 @@ void CL_ParseServerInfo( int igs )
 	size_t	len;
 
   serverInfo = cl.gameState.stringData + cl.gameState.stringOffsets[ CS_SERVERINFO ];
-	Com_Printf("Gamestate (%i): %.*s\n", igs, (int)strlen(serverInfo), serverInfo);
+	//Com_Printf("Gamestate (%i): %.*s\n", igs, (int)strlen(serverInfo), serverInfo);
 
   if(clc.demoplaying) {
     qboolean serverOverride = qfalse;

@@ -2859,25 +2859,19 @@ static void CL_DownloadsComplete( void ) {
 	// force the client to load a new VM using sv_mvWorld
 	// this only loads a VM the first time, decoupling game state from loading
 	// TODO: exec world 0:0 asynchronously
-	if(!cgvmWorlds[clc.currentView]
+	if((!clientGames[clc.currentView] || clientGames[clc.currentView] < 0)
 		// server controls world view
-		&& (clc.currentView == 0 || !atoi(&clc.world[0]))
-		// TODO: client auto loads world, default autoload
+		&& (clc.currentView == 0 || (clc.world && atoi(clc.world)))
+		// client auto loads world, default autoload
 		// || cl_mvWorld->integer
 	) {
-		Cmd_TokenizeString( "load cgame" );
-		clientGames[clc.currentView] = clc.currentView;
-		clientWorlds[clc.currentView] = clc.clientNum;
-		CL_LoadVM_f();
-		Cmd_Clear();
-	} else {
 		cgvmi = clc.currentView;
-		Com_Printf("Using existing cgame VM: %i\n", cgvmi);
-		CM_SwitchMap(clientMaps[cgvmi]);
 		clientGames[clc.currentView] = clc.currentView;
 		clientWorlds[clc.currentView] = clc.clientNum;
+		re.SwitchWorld(cgvmi);
 		CL_InitCGame(cgvmi);
-		//cls.state = CA_ACTIVE;
+	} else {
+		Com_Error(ERR_DROP, "what to do?");
 	}
 #else
 	clientGames[0] = 0;
@@ -4900,6 +4894,8 @@ void CL_LoadVM_f( void ) {
 		CL_AddReliableCommand( va("load %s", Cmd_ArgsFrom(1)), qfalse );
 		//CL_ForwardCommandToServer("load game");
 		return;
+
+
 	} else if ( !Q_stricmp( name, "cgame" )
     || !Q_stricmp( name, "demo" )) {
 		if(Cmd_Argc() > 3) {
@@ -4920,9 +4916,6 @@ void CL_LoadVM_f( void ) {
 		re.SwitchWorld(cgvmi);
 #endif
     if(!Q_stricmp( name, "demo" )) {
-      clc.currentView = cgvmi;
-      clientGames[clc.currentView] = clc.currentView;
-      // load gamestate first, then start cgame
       CL_PlayDemo_f();
     } else {
 		  CL_InitCGame(cgvmi); // createNew if cgvmWorlds[cgvmi] is already taken

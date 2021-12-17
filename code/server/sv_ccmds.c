@@ -1560,11 +1560,13 @@ static void SV_CompleteMapName( char *args, int argNum ) {
 
 
 #ifdef USE_MULTIVM_SERVER
+void SV_Game_f( client_t *client );
+
 void SV_SwitchGame_f ( void ) {
 	client_t *client;
 	int game;
-	if ( Cmd_Argc() > 2 ) {
-		Com_Printf ("Usage: game <clientnum>\n");
+	if ( Cmd_Argc() > 4 ) {
+		Com_Printf ("Usage: game <client> [num] (<mode>)\n");
 		return;
 	}
 
@@ -1575,8 +1577,15 @@ void SV_SwitchGame_f ( void ) {
 		//   client command already exists in sv_client.c
 	//	game = 
 	} else {
-		game = atoi(Cmd_Argv(1));
+		game = atoi(Cmd_Argv(2));
 	}
+	if(Cmd_Argc() == 4) {
+		Cmd_TokenizeString( va("game %s %s", Cmd_Argv(3), Cmd_Argv(2)) );
+	} else {
+		Cmd_TokenizeString( va("game 0 %s", Cmd_ArgsFrom(2)) );
+	}
+	SV_Game_f( client );
+	Cmd_Clear();
 }
 
 void SV_Teleport_f (void) {

@@ -260,9 +260,6 @@ typedef struct {
 #ifdef USE_MV
 	int			zexpectDeltaSeq;			// for compressed server commands
 #endif
-#ifdef USE_MULTIVM_CLIENT
-	int     currentView; // force the client to load a new VM
-#endif
 	int			lastPacketSentTime;			// for retransmits during connection
 	int			lastPacketTime;				// for timeouts
 
@@ -301,9 +298,6 @@ typedef struct {
 
   qboolean isMultiGame;
 
-#ifdef USE_MULTIVM_CLIENT
-	char    *world;
-#endif
 	char		sv_dlURL[MAX_CVAR_VALUE_STRING];
 	int			downloadNumber;
 	int			downloadBlock;	// block we are waiting for
@@ -335,7 +329,10 @@ typedef struct {
 	qboolean	demoplaying;
 	qboolean	demowaiting;	// don't record until a non-delta message is received
 	qboolean	firstDemoFrameSkipped;
+
 #ifdef USE_MULTIVM_CLIENT
+	int     currentView; // force the client to load a new VM
+	char    *world;
   fileHandle_t	demofiles[MAX_NUM_VMS];
 #define demofile demofiles[igs]
   int			      numDemoIndexes[MAX_NUM_VMS];

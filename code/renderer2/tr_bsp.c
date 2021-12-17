@@ -33,7 +33,7 @@ Loads and prepares a map file for scene rendering.
 
 A single entry point:
 
-void RE_LoadWorldMap( const char *name );
+int RE_LoadWorldMap( const char *name );
 
 */
 
@@ -2782,7 +2782,7 @@ RE_LoadWorldMap
 Called directly from cgame
 =================
 */
-void RE_LoadWorldMap( const char *name ) {
+int RE_LoadWorldMap( const char *name ) {
 	int			id1, id2;
 	dheader_t	*header;
 	union {
