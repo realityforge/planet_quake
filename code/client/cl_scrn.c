@@ -1026,7 +1026,7 @@ void SCR_UpdateScreen( qboolean fromVM ) {
       Com_Error(ERR_FATAL, "WARNING: Renderer compiled without multiworld support!");
     } else {
 			// TODO: limit secondary screens to 60 FPS using buffers
-			re.SwitchWorld(clientMaps[cgvmi]);
+			re.SwitchWorld(worldMaps[cgvmi]);
       re.SetDvrFrame(clientScreens[cgvmi][0], clientScreens[cgvmi][1], clientScreens[cgvmi][2], clientScreens[cgvmi][3]);
     }
 #endif
@@ -1056,7 +1056,7 @@ void SCR_UpdateScreen( qboolean fromVM ) {
 	uivmi = 0;
   CM_SwitchMap(clientMaps[cgvmi]);
 #ifdef USE_LAZY_MEMORY
-  re.SwitchWorld(clientMaps[cgvmi]);
+  re.SwitchWorld(worldMaps[cgvmi]);
   re.SetDvrFrame(0, 0, 1, 1);
 #endif
 #endif
@@ -1071,7 +1071,7 @@ void SCR_UpdateScreen( qboolean fromVM ) {
       Com_Error(ERR_FATAL, "WARNING: Renderer compiled without multiworld support!");
     } else {
       re.BeginFrame( STEREO_CENTER );
-  		re.SwitchWorld(clientMaps[i]);
+  		re.SwitchWorld(worldMaps[i]);
       //re.SetDvrFrame(clientScreens[i][0], clientScreens[i][1], clientScreens[i][2], clientScreens[i][3]);
       /* q3dm0
       views[i].vieworg[0] = -1148;

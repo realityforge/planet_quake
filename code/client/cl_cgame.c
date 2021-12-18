@@ -646,9 +646,9 @@ static void CL_CM_LoadMap( const char *mapname ) {
 
 static void CL_RE_LoadMap( const char *mapname ) {
 #ifdef USE_MULTIVM_CLIENT
-	worldMaps[cgvmi] = re.LoadWorld( VMA(1) );
+	worldMaps[cgvmi] = re.LoadWorld( mapname );
 #else
-	worldMaps[0] = re.LoadWorld( VMA(1) );
+	worldMaps[0] = re.LoadWorld( mapname );
 #endif
 }
 

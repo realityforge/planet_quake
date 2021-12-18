@@ -2868,7 +2868,6 @@ static void CL_DownloadsComplete( void ) {
 		cgvmi = clc.currentView;
 		clientGames[clc.currentView] = clc.currentView;
 		clientWorlds[clc.currentView] = clc.clientNum;
-		re.SwitchWorld(cgvmi);
 		CL_InitCGame(cgvmi);
 	} else {
 		Com_Error(ERR_DROP, "what to do?");
@@ -4912,9 +4911,6 @@ void CL_LoadVM_f( void ) {
 			}
 		}
 		count++;
-#ifdef USE_LAZY_MEMORY
-		re.SwitchWorld(cgvmi);
-#endif
     if(!Q_stricmp( name, "demo" )) {
       CL_PlayDemo_f();
     } else {
@@ -4941,12 +4937,9 @@ void CL_LoadVM_f( void ) {
     for(i = 0; i < MAX_NUM_VMS; i++) {
 			if(clientWorlds[i] > -1) count++;
       else {
-#ifdef USE_LAZY_MEMORY
-        re.SwitchWorld(count);
-#endif
-        re.LoadWorld( va("maps/%s.bsp", name) );
         clientWorlds[i] = count;
         clientMaps[i] = count;
+        worldMaps[i] = re.LoadWorld( va("maps/%s.bsp", name) );
         Com_Printf("World loaded on %i\n", i);
         break;
       }
