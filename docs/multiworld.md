@@ -20,11 +20,13 @@ Finally, I want to use multiworld for streaming game content to clients. Where t
 
 ## TODO
 
+  * Fix delay between teleporting to other worlds
+  * Fix multiworld networking
+  * Add rendering to a texture http://www.opengl-tutorial.org/intermediate-tutorials/tutorial-14-render-to-texture/
   * Add `target_microphone` that speakers can target in different worlds, spatial and volume controls close to projected surfaces. Then go back and automatically add it for misc_portal_surface and misc_portal_cameras in an extra field.
   * Multiworld entities like rockets with trajectories.
   * Render UIs and cameras to a surface, UI needs absolute mouse input, play Q3 on a model computer inside Q3
   * Copy second weapon axis from GUNNM Oculus for even weirder multiworld interaction.
-  * Finish teleporter switch in a way that any mod/mapper can use it, same with cameras, ie look for same name entity in both worlds, parse "world" field (change from "health" using inline field code in g_spawn?) from sv_init and look for those entities to switch on in sv_snapshot
   * Additional perspectives in sv_snapshot for multiworld camera location
   * There is a bug in mw cgame API that interferes with Auth from mods like Urban Terror. 
   * There is a bug in multiworld renderer, trying to run normally and screen looks jittery with Urban Terror mod, but looks fine with baseq3a at 1000 FPS

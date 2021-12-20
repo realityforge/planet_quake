@@ -2868,6 +2868,10 @@ static void CL_DownloadsComplete( void ) {
 		cgvmi = clc.currentView;
 		clientGames[clc.currentView] = clc.currentView;
 		clientWorlds[clc.currentView] = clc.clientNum;
+		if(clc.currentView != 0)
+			Cvar_Set( "cl_lazyLoad", "2" ); // TODO: 4
+		else
+			Cvar_Set( "cl_lazyLoad", "1" );
 		CL_InitCGame(cgvmi);
 	} else {
 		Com_Error(ERR_DROP, "what to do?");

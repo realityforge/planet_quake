@@ -1,0 +1,85 @@
+<html>
+<body>
+<pre>
+<h1>Build Log</h1>
+<h3>
+--------------------Configuration: q3_ui - Win32 Release--------------------
+</h3>
+<h3>Command Lines</h3>
+Creating temporary file "C:\DOCUME~1\jpl\CONFIG~1\Temp\RSP289.tmp" with contents
+[
+/nologo /MT /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "Q3_UI_EXPORTS" /Fp"Release/q3_ui.pch" /YX /Fo"Release/" /Fd"Release/" /FD /c 
+"D:\CVSMerlin\TDC\code\q3_ui\ui_credits.c"
+"D:\CVSMerlin\TDC\code\q3_ui\ui_menu.c"
+"D:\CVSMerlin\TDC\code\q3_ui\ui_saveload.c"
+"D:\CVSMerlin\TDC\code\q3_ui\ui_spskill.c"
+]
+Creating command line "cl.exe @C:\DOCUME~1\jpl\CONFIG~1\Temp\RSP289.tmp" 
+Creating temporary file "C:\DOCUME~1\jpl\CONFIG~1\Temp\RSP28A.tmp" with contents
+[
+kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /incremental:no /pdb:"Release/uix86.pdb" /machine:I386 /def:".\ui.def" /out:"c:\quake3\conjunction\uix86.dll" /implib:"Release/uix86.lib" 
+.\Release\bg_misc.obj
+.\Release\q_math.obj
+.\Release\q_shared.obj
+.\Release\ui_addbots.obj
+.\Release\ui_atoms.obj
+.\Release\ui_cdkey.obj
+.\Release\ui_cinematics.obj
+.\Release\ui_confirm.obj
+.\Release\ui_connect.obj
+.\Release\ui_controls2.obj
+.\Release\ui_credits.obj
+.\Release\ui_demo2.obj
+.\Release\ui_display.obj
+.\Release\ui_gameinfo.obj
+.\Release\ui_ingame.obj
+.\Release\ui_main.obj
+.\Release\ui_menu.obj
+.\Release\ui_mfield.obj
+.\Release\ui_mods.obj
+.\Release\ui_network.obj
+.\Release\ui_options.obj
+.\Release\ui_playermodel.obj
+.\Release\ui_players.obj
+.\Release\ui_playersettings.obj
+.\Release\ui_preferences.obj
+.\Release\ui_qmenu.obj
+.\Release\ui_removebots.obj
+.\Release\ui_saveload.obj
+.\Release\ui_serverinfo.obj
+.\Release\ui_servers2.obj
+.\Release\ui_setup.obj
+.\Release\ui_sound.obj
+.\Release\ui_sparena.obj
+.\Release\ui_specifyserver.obj
+.\Release\ui_splevel.obj
+.\Release\ui_sppostgame.obj
+.\Release\ui_spreset.obj
+.\Release\ui_spskill.obj
+.\Release\ui_startserver.obj
+.\Release\ui_syscalls.obj
+.\Release\ui_team.obj
+.\Release\ui_teamorders.obj
+.\Release\ui_video.obj
+]
+Creating command line "link.exe @C:\DOCUME~1\jpl\CONFIG~1\Temp\RSP28A.tmp"
+<h3>Output Window</h3>
+Compiling...
+ui_credits.c
+D:\CVSMerlin\TDC\code\q3_ui\ui_credits.c(51) : warning C4305: 'initializing' : truncation from 'const double ' to 'float '
+D:\CVSMerlin\TDC\code\q3_ui\ui_credits.c(51) : warning C4305: 'initializing' : truncation from 'const double ' to 'float '
+D:\CVSMerlin\TDC\code\q3_ui\ui_credits.c(51) : warning C4305: 'initializing' : truncation from 'const double ' to 'float '
+ui_menu.c
+D:\CVSMerlin\TDC\code\q3_ui\ui_menu.c(159) : warning C4013: 'trap_VerifyCDKey' undefined; assuming extern returning int
+ui_saveload.c
+ui_spskill.c
+Linking...
+   Creating library Release/uix86.lib and object Release/uix86.exp
+
+
+
+<h3>Results</h3>
+uix86.dll - 0 error(s), 4 warning(s)
+</pre>
+</body>
+</html>

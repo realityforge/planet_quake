@@ -1,0 +1,103 @@
+<html>
+<body>
+<pre>
+<h1>Build Log</h1>
+<h3>
+--------------------Configuration: game - Win32 Release--------------------
+</h3>
+<h3>Command Lines</h3>
+Creating temporary file "C:\DOCUME~1\jpl\CONFIG~1\Temp\RSP280.tmp" with contents
+[
+/nologo /G6 /ML /W4 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "GLOBALRANK" /Fp".\Release/game.pch" /YX /Fo".\Release/" /Fd".\Release/" /FD /c 
+"D:\CVSMerlin\TDC\code\game\ai_main.c"
+"D:\CVSMerlin\TDC\code\game\bg_pmove.c"
+"D:\CVSMerlin\TDC\code\game\g_active.c"
+"D:\CVSMerlin\TDC\code\game\g_main.c"
+"D:\CVSMerlin\TDC\code\game\g_md3anim.c"
+"D:\CVSMerlin\TDC\code\game\g_missile.c"
+"D:\CVSMerlin\TDC\code\game\g_mover.c"
+"D:\CVSMerlin\TDC\code\game\g_npc.c"
+"D:\CVSMerlin\TDC\code\game\g_npcmove.c"
+"D:\CVSMerlin\TDC\code\game\g_npcthink.c"
+"D:\CVSMerlin\TDC\code\game\g_savestate.c"
+"D:\CVSMerlin\TDC\code\game\g_target.c"
+"D:\CVSMerlin\TDC\code\game\g_trigger.c"
+"D:\CVSMerlin\TDC\code\game\g_weapon.c"
+]
+Creating command line "cl.exe @C:\DOCUME~1\jpl\CONFIG~1\Temp\RSP280.tmp" 
+Creating temporary file "C:\DOCUME~1\jpl\CONFIG~1\Temp\RSP281.tmp" with contents
+[
+kernel32.lib user32.lib winmm.lib /nologo /base:"0x20000000" /subsystem:windows /dll /incremental:no /pdb:".\Release/qagamex86.pdb" /map:".\Release/qagamex86.map" /machine:I386 /def:".\game.def" /out:"c:\quake3\conjunction\qagamex86.dll" /implib:".\Release/qagamex86.lib" 
+.\Release\ai_main.obj
+.\Release\bg_misc.obj
+.\Release\bg_pmove.obj
+.\Release\bg_slidemove.obj
+.\Release\g_active.obj
+.\Release\g_arenas.obj
+.\Release\g_client.obj
+.\Release\g_cmds.obj
+.\Release\g_combat.obj
+.\Release\g_items.obj
+.\Release\g_main.obj
+.\Release\g_md3anim.obj
+.\Release\g_mem.obj
+.\Release\g_misc.obj
+.\Release\g_missile.obj
+.\Release\g_mover.obj
+.\Release\g_npc.obj
+.\Release\g_npcmove.obj
+.\Release\g_npcthink.obj
+.\Release\g_savestate.obj
+.\Release\g_session.obj
+.\Release\g_spawn.obj
+.\Release\g_svcmds.obj
+.\Release\g_syscalls.obj
+.\Release\g_target.obj
+.\Release\g_team.obj
+.\Release\g_trigger.obj
+.\Release\g_utils.obj
+.\Release\g_weapon.obj
+.\Release\q_math.obj
+.\Release\q_shared.obj
+]
+Creating command line "link.exe @C:\DOCUME~1\jpl\CONFIG~1\Temp\RSP281.tmp"
+<h3>Output Window</h3>
+Compiling...
+ai_main.c
+D:\CVSMerlin\TDC\code\game\ai_main.c(1327) : warning C4101: 'i' : unreferenced local variable
+D:\CVSMerlin\TDC\code\game\ai_main.c(1662) : warning C4101: 'i' : unreferenced local variable
+bg_pmove.c
+g_active.c
+D:\CVSMerlin\TDC\code\game\g_active.c(567) : warning C4013: 'Weapon_Bone' undefined; assuming extern returning int
+D:\CVSMerlin\TDC\code\game\g_active.c(995) : warning C4013: 'ExitLevel' undefined; assuming extern returning int
+D:\CVSMerlin\TDC\code\game\g_active.c(1185) : warning C4505: 'StuckInOtherClient' : unreferenced local function has been removed
+        D:\CVSMerlin\TDC\code\game\g_active.c(661) : see declaration of 'StuckInOtherClient'
+g_main.c
+D:\CVSMerlin\TDC\code\game\g_main.c(1103) : warning C4189: 'won' : local variable is initialized but not referenced
+g_md3anim.c
+g_missile.c
+g_mover.c
+g_npc.c
+g_npcmove.c
+D:\CVSMerlin\TDC\code\game\g_npc.c(472) : warning C4761: integral size mismatch in argument; conversion supplied
+D:\CVSMerlin\TDC\code\game\g_npc.c(494) : warning C4761: integral size mismatch in argument; conversion supplied
+D:\CVSMerlin\TDC\code\game\g_npc.c(538) : warning C4761: integral size mismatch in argument; conversion supplied
+D:\CVSMerlin\TDC\code\game\g_npcmove.c(327) : warning C4305: '*=' : truncation from 'const double ' to 'float '
+g_npcthink.c
+D:\CVSMerlin\TDC\code\game\g_npcthink.c(801) : warning C4101: 'dist' : unreferenced local variable
+g_savestate.c
+g_target.c
+D:\CVSMerlin\TDC\code\game\g_target.c(468) : warning C4013: 'ExitLevel' undefined; assuming extern returning int
+g_trigger.c
+g_weapon.c
+D:\CVSMerlin\TDC\code\game\g_weapon.c(1215) : warning C4761: integral size mismatch in argument; conversion supplied
+Linking...
+   Creating library .\Release/qagamex86.lib and object .\Release/qagamex86.exp
+
+
+
+<h3>Results</h3>
+qagamex86.dll - 0 error(s), 13 warning(s)
+</pre>
+</body>
+</html>

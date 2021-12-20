@@ -698,8 +698,11 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 
 				stage->bundle[0].image[0] = R_FindImageFile( token, flags );
 
-				if ( !stage->bundle[0].image[0] )
-				{
+				if ( !stage->bundle[0].image[0] 
+#ifdef USE_LAZY_LOAD
+					|| (!mapShaders && r_lazyLoad->integer >= 2 && (long)stage->bundle[0].image[0] == 1)
+#endif
+				) {
 					ri.Printf( PRINT_DEVELOPER, "WARNING: R_FindImageFile could not find '%s' in shader '%s'\n", token, shader.name );
 					return qfalse;
 				}
@@ -741,8 +744,11 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 				flags |= IMGFLAG_NOLIGHTSCALE;
 
 			stage->bundle[0].image[0] = R_FindImageFile( token, flags );
-			if ( !stage->bundle[0].image[0] )
-			{
+			if ( !stage->bundle[0].image[0] 
+#ifdef USE_LAZY_LOAD
+				|| (!mapShaders && r_lazyLoad->integer >= 2 && (long)stage->bundle[0].image[0] == 1)
+#endif
+			) {
 				ri.Printf( PRINT_DEVELOPER, "WARNING: R_FindImageFile could not find '%s' in shader '%s'\n", token, shader.name );
 				return qfalse;
 			}
@@ -785,8 +791,11 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 						flags |= IMGFLAG_NOLIGHTSCALE;
 
 					stage->bundle[0].image[num] = R_FindImageFile( token, flags );
-					if ( !stage->bundle[0].image[num] )
-					{
+					if ( !stage->bundle[0].image[num] 
+#ifdef USE_LAZY_LOAD
+						|| (!mapShaders && r_lazyLoad->integer >= 2 && (long)stage->bundle[0].image[num] == 1)
+#endif
+					) {
 						ri.Printf( PRINT_DEVELOPER, "WARNING: R_FindImageFile could not find '%s' in shader '%s'\n", token, shader.name );
 						return qfalse;
 					}
@@ -1377,7 +1386,11 @@ static void ParseSkyParms( const char **text ) {
 				, token, suf[i] );
 			shader.sky.outerbox[i] = R_FindImageFile( pathname, imgFlags | IMGFLAG_CLAMPTOEDGE );
 
-			if ( !shader.sky.outerbox[i] ) {
+			if ( !shader.sky.outerbox[i] 
+#ifdef USE_LAZY_LOAD
+				|| (!mapShaders && r_lazyLoad->integer >= 2 && (long)shader.sky.outerbox[i] == 1)
+#endif
+			) {
 				shader.sky.outerbox[i] = tr.defaultImage;
 			}
 		}
@@ -1406,7 +1419,11 @@ static void ParseSkyParms( const char **text ) {
 			Com_sprintf( pathname, sizeof(pathname), "%s_%s.tga"
 				, token, suf[i] );
 			shader.sky.innerbox[i] = R_FindImageFile( pathname, imgFlags );
-			if ( !shader.sky.innerbox[i] ) {
+			if ( !shader.sky.innerbox[i] 
+#ifdef USE_LAZY_LOAD
+				|| (!mapShaders && r_lazyLoad->integer >= 2 && (long)shader.sky.innerbox[i] == 1)
+#endif
+			) {
 				shader.sky.innerbox[i] = tr.defaultImage;
 			}
 		}
@@ -3251,7 +3268,7 @@ shader_t *R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImag
 #ifdef USE_LAZY_LOAD
 		// this indicates that it is lazily loading and it will be replaced when
 		// the image arrives
-		if(!mapShaders && r_lazyLoad->integer > 0 && (long)image == 1) {
+		if(!mapShaders && r_lazyLoad->integer >= 2 && (long)image == 1) {
 			shader.remappedShader = tr.defaultShader;
 			shader.defaultShader = qfalse;
 		} else

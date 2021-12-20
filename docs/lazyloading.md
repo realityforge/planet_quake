@@ -14,7 +14,7 @@ That means, I can load graphics quickly enough that it does it in-between frames
 
 ## TODO
 
-  * Fix check for files from renderer and return 0 if file isn't in index and return placeholder when file is queued for download
+  * Fix check for files from renderer2 and return 0 if file isn't in index and return placeholder when file is queued for download
   * Distance based lazy loading, need to sort which graphics load first by the number of times it's displayed on screen
   * 4 - set all to default and load during intermission (this is specifically for subordinate VMs in multiVM/multi-render modes)
   * Leave files open for changing mip levels (especially on DDS)?
