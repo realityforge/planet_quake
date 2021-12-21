@@ -132,6 +132,7 @@ void RE_RemapShader(const char *shaderName, const char *newShaderName, const cha
       && (index == 0 || sh->lightmapSearchIndex == index) 
 #endif
     ) {
+			sh->defaultShader = qfalse;
 			if (sh != sh2) {
 				sh->remappedShader = sh2;
 			} else {
@@ -3208,7 +3209,7 @@ shader_t *R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImag
 #ifdef USE_LAZY_LOAD
       && (!mapShaders && sh->lightmapSearchIndex == lightmapIndex)
 #endif
-      && sh->lastTimeUsed >= tr.lastRegistrationTime
+      //&& sh->lastTimeUsed >= tr.lastRegistrationTime
     ) {
 			// match found
 			return sh;
