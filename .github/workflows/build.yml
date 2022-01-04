@@ -204,10 +204,6 @@ jobs:
         
     - name: Checkout submodules
       run: |
-        git submodule add -f git://github.com/emscripten-core/emsdk.git libs/emsdk
-        git submodule update --init --recursive
-        npm install
-        npm run install:emsdk
         npm run install:libs
 
     - name: Build
