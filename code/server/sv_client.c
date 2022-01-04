@@ -3305,8 +3305,10 @@ static void SV_UserMove( client_t *cl, msg_t *msg, qboolean delta ) {
 		// don't execute if this is an old cmd which is already executed
 		// these old cmds are included when cl_packetdup > 0
 		if ( cmds[i].serverTime <= cl->lastUsercmd.serverTime ) {
+			Com_Printf("skipping! \n");
 			continue;
 		}
+		Com_Printf("thinking! \n");
 		SV_ClientThink (cl, &cmds[ i ]);
 	}
 }

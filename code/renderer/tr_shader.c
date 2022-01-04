@@ -3209,9 +3209,9 @@ shader_t *R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImag
 #ifdef USE_LAZY_LOAD
       && (!mapShaders && sh->lightmapSearchIndex == lightmapIndex)
 #endif
-      //&& sh->lastTimeUsed >= tr.lastRegistrationTime
     ) {
 			// match found
+			sh->lastTimeUsed = tr.lastRegistrationTime;
 			return sh;
 		}
 	}
