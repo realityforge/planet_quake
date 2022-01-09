@@ -1,3 +1,4 @@
+include make/configure.make
 
 BASE_CFLAGS += -Wall -fno-strict-aliasing -Wimplicit -Wstrict-prototypes -pipe
 
@@ -30,18 +31,23 @@ SHLIBEXT = so
 SHLIBCFLAGS = -fPIC -fvisibility=hidden -fno-common
 SHLIBLDFLAGS = -shared $(LDFLAGS)
 
-LDFLAGS=-lm
+CLIENT_LDFLAGS += -lm
 
 ifeq ($(USE_SDL),1)
-  BASE_CFLAGS += $(SDL_CFLAGS)
-  CLIENT_LDFLAGS = $(SDL_LIBS)
+  BASE_CFLAGS += $(SDL_CFLAGS) -I/usr/include/SDL2
+  CLIENT_LDFLAGS += -lSDL2
 else
-  BASE_CFLAGS += $(X11_CFLAGS)
-  CLIENT_LDFLAGS = $(X11_LIBS)
+  BASE_CFLAGS += $(X11_CFLAGS) -I/usr/X11R6/include
+  CLIENT_LDFLAGS += -lX11
 endif
 
 ifeq ($(USE_CODEC_VORBIS),1)
   CLIENT_LDFLAGS += -lvorbisfile -lvorbis -logg
+endif
+
+ifeq ($(USE_SYSTEM_ZLIB),1)
+  BASE_CFLAGS    += -Ilibs/zlib/contrib/minizip -DUSE_SYSTEM_ZLIB
+  CLIENT_LDFLAGS += $(ZLIB_LIBS)
 endif
 
 ifeq ($(USE_SYSTEM_JPEG),1)
@@ -55,15 +61,17 @@ ifeq ($(USE_CURL),1)
 endif
 
 ifeq ($(PLATFORM),linux)
-  LDFLAGS += -ldl -Wl,--hash-style=both
+  CLIENT_LDFLAGS += -ldl -Wl,--hash-style=both
   ifeq ($(ARCH),x86)
-    # linux32 make ...
     BASE_CFLAGS += -m32
-    LDFLAGS += -m32
+    CLIENT_LDFLAGS += -m32
   endif
 endif
 
 DEBUG_CFLAGS = $(BASE_CFLAGS) -DDEBUG -D_DEBUG -g -O0
 RELEASE_CFLAGS = $(BASE_CFLAGS) -DNDEBUG $(OPTIMIZE)
 
-DEBUG_LDFLAGS = -rdynamic
+ifdef B
+pre-build:
+	@:
+endif

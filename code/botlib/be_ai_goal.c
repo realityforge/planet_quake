@@ -1589,8 +1589,9 @@ int BotChooseLTGItem(int goalstate, vec3_t origin, int *inventory, int travelfla
       }
       
       //if the item is not in a possible goal area
-  		if (!li->goalareanum)
+  		if (!li->goalareanum) {
   			continue;
+			}
       
       // TODO: need this?
       //if (!li->entitynum && !(li->flags & IFL_ROAM))

@@ -361,7 +361,7 @@ void RE_StretchPic ( float x, float y, float w, float h,
 	cmd->t1 = t1;
 	cmd->s2 = s2;
 	cmd->t2 = t2;
-#ifdef BUILD_EXPERIMENTAL
+#ifdef USE_CURSOR_SPY
 	if(bannerResetTime < 100 && Q_stristr(cmd->shader->name, "font2_prop")) {
 		bannerResetTime++;
 		ri.Spy_Banner(s1, t1);

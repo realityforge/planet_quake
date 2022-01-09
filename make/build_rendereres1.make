@@ -7,7 +7,10 @@ MKFILE         := $(lastword $(MAKEFILE_LIST))
 include make/platform.make
 endif
 
-REND_TARGET    := $(RENDERER_PREFIX)_opengles_$(SHLIBNAME)
+REND_TARGET    := $(CNAME)_opengles_$(SHLIBNAME)
+ifeq ($(USE_MULTIVM_CLIENT),1)
+REND_TARGET    := $(CNAME)_mw_opengles_$(SHLIBNAME)
+endif
 REND_SOURCES   := $(MOUNT_DIR)/$(REND_SOURCE) $(MOUNT_DIR)/$(REND_SOURCE)/glsl $(MOUNT_DIR)/renderercommon
 CFILES         := $(foreach dir,$(REND_SOURCES), $(wildcard $(dir)/*.c))
 ifeq ($(USE_RENDERER_DLOPEN),1)

@@ -21,12 +21,12 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 ===========================================================================
 */
 
-#ifdef USE_DEMO_SERVER
-
 
 // sv_demo.c -- Server side demo recording
 
 #include "server.h"
+
+#ifdef USE_DEMO_SERVER
 
 #define Q_IsColorStringGameCommand(p)      ((p) && *(p) == Q_COLOR_ESCAPE && *((p)+1)) // ^[anychar]
 

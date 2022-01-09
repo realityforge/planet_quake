@@ -845,6 +845,10 @@ static qboolean R_GetPortalOrientations( const drawSurf_t *drawSurf, int entityN
 
 #ifdef USE_MULTIVM_CLIENT
 	*world = e->e.oldframe >> 8;
+#else
+	if((e->e.oldframe >> 8) > 0) {
+		return qfalse;
+	}
 #endif
 	if(e->e.oldframe & 12) { // special indication meaning portal and frames are entity nums not rotations
 		*portalEntity = e->e.frame;
@@ -889,8 +893,9 @@ static qboolean IsMirror( const drawSurf_t *drawSurf, int entityNum,
 	int			i;
 	cplane_t	originalPlane, plane;
 	float		d;
-	vec3_t transformed, vec, end, mins, maxs;
-	trace_t trace;
+	//vec3_t transformed, end;
+	vec3_t vec, mins, maxs;
+	//trace_t trace;
 	trRefEntity_t *e;
 	memset( &originalPlane, 0, sizeof( originalPlane ) );
 	memset( &plane, 0, sizeof( plane ) );

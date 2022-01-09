@@ -625,7 +625,13 @@ static void CL_KeyDownEvent( int key, unsigned time, int fingerId )
 
 
 #ifdef USE_MV
-	if ( (key == K_MOUSE1 || key == K_MOUSE2) && clc.demoplaying && cl.snapWorlds[0].multiview ) {
+	if ( (key == K_MOUSE1 || key == K_MOUSE2) && clc.demoplaying 
+#ifdef USE_MULTIVM_CLIENT
+		&& cl.snapWorlds[0].multiview 
+#else
+		&& cl.snap.multiview 
+#endif
+	) {
 		int id, n, d;
 		//if ( key == K_MOUSE1 )
 			d = 1;
@@ -637,16 +643,19 @@ static void CL_KeyDownEvent( int key, unsigned time, int fingerId )
 		int from = (clientWorlds[0] + d + MAX_CLIENTS ) % MAX_CLIENTS;
 #endif
 		for ( id = from, n = 0; n < MAX_CLIENTS; n++, id = ( id + d + MAX_CLIENTS ) % MAX_CLIENTS ) {
-			if ( cl.snapWorlds[0].clps[ id ].valid ) {
 #ifdef USE_MULTIVM_CLIENT
+			if ( cl.snapWorlds[0].clps[ id ].valid ) {
 				Com_Printf( S_COLOR_CYAN "MultiView: switch POV %d => %d\n", clientWorlds[clc.currentView], id );
 				clientWorlds[clc.currentView] = id;
-#else
-				Com_Printf( S_COLOR_CYAN "MultiView: switch POV %d => %d\n", clientWorlds[0], id );
-				clientWorlds[0] = id;
-#endif
 				break;
 			}
+#else
+			if ( cl.snap.clps[ id ].valid ) {
+				Com_Printf( S_COLOR_CYAN "MultiView: switch POV %d => %d\n", clientWorlds[0], id );
+				clientWorlds[0] = id;
+				break;
+			}
+#endif
 		}
 	}
 #endif // USE_MV
@@ -708,7 +717,7 @@ static void CL_KeyDownEvent( int key, unsigned time, int fingerId )
 #endif
         
 #ifdef USE_ASYNCHRONOUS
-        if(FS_Initialized())
+        if(FS_Initialized()) {
 #endif
 				if(uivm) {
 					VM_Call( uivm, 1, UI_SET_ACTIVE_MENU, UIMENU_MAIN );
@@ -717,6 +726,9 @@ static void CL_KeyDownEvent( int key, unsigned time, int fingerId )
 					CL_InitUI(qfalse);
 					VM_Call( uivm, 1, UI_SET_ACTIVE_MENU, UIMENU_MAIN );
 				}
+#ifdef USE_ASYNCHRONOUS
+				}
+#endif
 			}
 			return;
 		}
@@ -898,8 +910,7 @@ void CL_DropStart( void ) {
   sounds = 0;
   pk3s = 0;
   if(!(Key_GetCatcher() & KEYCATCH_CONSOLE))
-    Key_SetCatcher( Key_GetCatcher() | KEYCATCH_CONSOLE );
-  con.displayFrac = 1.0
+    Key_SetCatcher( (Key_GetCatcher() & ~(KEYCATCH_UI | KEYCATCH_CGAME)) | KEYCATCH_CONSOLE );
 }
 #endif
 

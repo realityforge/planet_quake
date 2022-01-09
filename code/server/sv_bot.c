@@ -586,7 +586,7 @@ void SV_BotInitBotLib(void) {
 #endif // __linux__
 
   // TODO: make this a fancy list of botlibs we recognize
-	Com_sprintf( dllName, sizeof( dllName ), BOTLIB_PREFIX "_libbots_" REND_ARCH_STRING DLL_EXT );
+	Com_sprintf( dllName, sizeof( dllName ), XSTRING(BOTLIB_PREFIX) "_libbots_" REND_ARCH_STRING DLL_EXT );
 	botLib = FS_LoadLibrary( dllName );
 
 	if ( !botLib )

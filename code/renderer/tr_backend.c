@@ -1028,6 +1028,7 @@ void RE_UploadCinematic( int w, int h, int cols, int rows, byte *data, int clien
 }
 
 
+#ifdef USE_MULTIVM_CLIENT
 /*
 =============
 RB_SetWorld
@@ -1045,6 +1046,7 @@ static const void *RB_SetWorld( const void *data ) {
 
 	return (const void *)(cmd + 1);
 }
+#endif
 
 
 /*
@@ -1681,9 +1683,11 @@ void RB_ExecuteRenderCommands( const void *data ) {
 		data = PADP(data, sizeof(void *));
 
 		switch ( *(const int *)data ) {
+#ifdef USE_MULTIVM_CLIENT
 		case RC_SET_WORLD:
 			data = RB_SetWorld( data );
 			break;
+#endif
 		case RC_SET_COLOR:
 			data = RB_SetColor( data );
 			break;

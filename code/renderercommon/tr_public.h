@@ -272,7 +272,7 @@ typedef struct {
 #ifdef USE_LAZY_LOAD
 	int   (*FS_FOpenFileRead)( const char *filename, fileHandle_t *file, qboolean uniqueFILE );
 #endif
-#ifdef BUILD_EXPERIMENTAL
+#ifdef USE_CURSOR_SPY
 	void (*Spy_CursorPosition)(float x, float y);
 	void (*Spy_InputText)( void );
 	void (*Spy_Banner)(float x, float y);

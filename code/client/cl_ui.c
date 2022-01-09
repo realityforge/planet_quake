@@ -1277,6 +1277,8 @@ void CL_ShutdownUI( void ) {
 #ifdef USE_ABS_MOUSE
 	cls.cursorx = 0;
 	cls.cursory = 0;
+#endif
+#ifdef USE_VID_FAST
 	cls.uiGlConfig = NULL;
 	cls.numUiPatches = 0;
 #endif

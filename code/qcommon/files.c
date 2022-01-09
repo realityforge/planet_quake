@@ -3413,8 +3413,8 @@ static void FS_ReorderSearchPaths( void );
 #ifdef USE_DRAGDROP
 static char fileNames[6][MAX_QPATH*5];
 void FS_AddZipFile( const char *zipfile ) {
-  searchpath_t	*search;
   /*
+  searchpath_t	*search;
   Causes crash for some reason
   pack_t *pak = FS_LoadZipFile( zipfile );
   pak->pakGamename = FS_GetCurrentGameDir();
@@ -5784,7 +5784,7 @@ int getAltChecksum(const char *pakName, int *altChecksum) {
 	const altChecksumFiles_t *alt;
 	int c, i;
 	qboolean found = qfalse;
-	int useChecksum, useChecksum2;
+	int useChecksum = 0, useChecksum2;
 	// add alternate checksums
 	for(c = 0; c < ARRAY_LEN(hardcoded_checksums); c++) {
 		alt = &hardcoded_checksums[c];

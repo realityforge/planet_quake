@@ -40,7 +40,7 @@ jobs:
             prefix: mingw-w64-x86_64
 
           - config: Release
-            rule: install
+            rule: release
 
     defaults:
       run:
@@ -56,17 +56,22 @@ jobs:
         update: false
 
     - uses: actions/checkout@v2
-      with:
-        submodules: recursive
 
     - name: Build
       run: |
-        make ${{ matrix.rule }} -j 8 ARCH=${{ matrix.arch }} CC=${{ matrix.cc }} DESTDIR=bin USE_RENDERER_DLOPEN=0 USE_SDL=0 USE_VULKAN=1 CNAME=quake3e-vulkan BUILD_SERVER=0
-        make clean ARCH=${{ matrix.arch }}
-        make ${{ matrix.rule }} -j 8 ARCH=${{ matrix.arch }} CC=${{ matrix.cc }} DESTDIR=bin USE_RENDERER_DLOPEN=0 USE_SDL=0 USE_VULKAN_API=0
+        mkdir bin
+        make -f make/build_client.make clean ${{ matrix.rule }} -j 8 ARCH=${{ matrix.arch }}   CC=${{ matrix.cc }} USE_SDL=0 USE_VULKAN=1 CNAME=quake3e-vulkan NO_MAKE_LOCAL=1
+        make -f make/build_client.make clean ${{ matrix.rule }} -j 8 ARCH=${{ matrix.arch }}   CC=${{ matrix.cc }} USE_SDL=0 USE_VULKAN_API=0 CNAME=quake3e NO_MAKE_LOCAL=1
+        if [ ${{ matrix.arch }} == "x86" ]; then
+          cp build/release-mingw32-x86/quake3e.exe bin/
+          cp build/release-mingw32-x86/quake3e-vulkan.exe bin/
+        else
+          cp build/release-mingw64-x86_64/quake3e.x64.exe bin/
+          cp build/release-mingw64-x86_64/quake3e-vulkan.x64.exe bin/
+        fi
 
     - uses: actions/upload-artifact@v2
-      if: matrix.cc == 'gcc' && matrix.config == 'Release'
+      if: matrix.config == 'Release'
       with:
         name: windows-mingw-${{ matrix.arch }}
         path: bin
@@ -100,8 +105,6 @@ jobs:
     - uses: microsoft/setup-msbuild@v1.0.2
 
     - uses: actions/checkout@v2
-      with:
-        submodules: recursive
 
     - name: Build
       run: |
@@ -143,7 +146,7 @@ jobs:
         config: [Release]
         include:
           - config: Release
-            rule: install
+            rule: release
           - arch: x86
             use_sdl: USE_SDL=0
           - arch: x86_64
@@ -162,17 +165,22 @@ jobs:
         fi
 
     - uses: actions/checkout@v2
-      with:
-        submodules: recursive
 
     - name: Build
       run: |
-        make ${{ matrix.rule }} -j 8 ARCH=${{ matrix.arch }} CC=${{ matrix.cc }} DESTDIR=bin USE_RENDERER_DLOPEN=0 ${{ matrix.use_sdl }} USE_VULKAN=1 CNAME=quake3e-vulkan BUILD_SERVER=0
-        make clean ARCH=${{ matrix.arch }} 
-        make ${{ matrix.rule }} -j 8 ARCH=${{ matrix.arch }} CC=${{ matrix.cc }} DESTDIR=bin USE_RENDERER_DLOPEN=0 ${{ matrix.use_sdl }} USE_VULKAN_API=0
+        mkdir bin
+        make -f make/build_client.make clean ${{ matrix.rule }} -j 8 ARCH=${{ matrix.arch }}    ${{ matrix.use_sdl }} USE_VULKAN=1 CNAME=quake3e-vulkan NO_MAKE_LOCAL=1
+        make -f make/build_client.make clean ${{ matrix.rule }} -j 8 ARCH=${{ matrix.arch }}    ${{ matrix.use_sdl }} USE_VULKAN_API=0 CNAME=quake3e NO_MAKE_LOCAL=1
+        if [ ${{ matrix.arch }} == "x86" ]; then
+          cp build/release-linux-x86/quake3e bin/
+          cp build/release-linux-x86/quake3e-vulkan bin/
+        else
+          cp build/release-linux-x86_64/quake3e.x64 bin/
+          cp build/release-linux-x86_64/quake3e-vulkan.x64 bin/
+        fi
 
     - uses: actions/upload-artifact@v2
-      if: matrix.cc == 'gcc' && matrix.config == 'Release'
+      if: matrix.config == 'Release'
       with:
         name: linux-${{ matrix.arch }}
         path: bin
@@ -185,45 +193,34 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        arch: [x86_64]
-        cc: [emcc]
+        arch: [js]
+        cc: [gcc]
         config: [Release]
         include:
           - config: Release
-            rule: install
-          - arch: x86_64
-            use_sdl: USE_SDL=1
+            rule: release
+          - arch: js
+            use_sdl: USE_SDL=0
 
     steps:
+    - uses: actions/checkout@v2
+
     - name: Install tools
       run: |
+        mkdir libs/linux
         sudo apt-get -qq update
-        sudo apt-get -y install build-essential libcurl4-openssl-dev mesa-common-dev libxxf86dga-dev libxrandr-dev libxxf86vm-dev libasound-dev libsdl2-dev nodejs
-  
-    - uses: actions/checkout@v2
-      with:
-        submodules: recursive
-        
-    - name: Checkout submodules
-      run: |
-        git submodule add -f git://github.com/emscripten-core/emsdk.git libs/emsdk
-        git submodule update --init --recursive
-        npm install
-        npm run install:emsdk
-        echo "" >  /home/runner/work/planet_quake/planet_quake/libs/emsdk/upstream/emscripten/.emscripten
-        echo "BINARYEN_ROOT = '/home/runner/work/planet_quake/planet_quake/libs/emsdk/upstream'" >> /home/runner/work/planet_quake/planet_quake/libs/emsdk/upstream/emscripten/.emscripten
-        echo "LLVM_ROOT = '/home/runner/work/planet_quake/planet_quake/libs/emsdk/upstream/bin'" >> /home/runner/work/planet_quake/planet_quake/libs/emsdk/upstream/emscripten/.emscripten
-        echo "NODE_JS = '/usr/bin/node'" >> /home/runner/work/planet_quake/planet_quake/libs/emsdk/upstream/emscripten/.emscripten
-        echo "EM_CACHE = '/home/runner/work/planet_quake/planet_quake/libs/emsdk/upstream/emscripten/cache'" >> /home/runner/work/planet_quake/planet_quake/libs/emsdk/upstream/emscripten/.emscripten
-        echo "EMSCRIPTEN_CACHE = '/home/runner/work/planet_quake/planet_quake/libs/emsdk/upstream/emscripten/cache'" >> /home/runner/work/planet_quake/planet_quake/libs/emsdk/upstream/emscripten/.emscripten
-        npm run install:libs
+        sudo apt-get -y install libcurl4-openssl-dev mesa-common-dev libxxf86dga-dev libxrandr-dev libxxf86vm-dev libasound-dev libsdl2-dev wget
+        wget --no-check-certificate https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-14/wasi-sdk-14.0-linux.tar.gz
+        tar -xf wasi-sdk-14.0-linux.tar.gz -C libs/linux/
 
     - name: Build
       run: |
-        make ${{ matrix.rule }} -j 8 DESTDIR=bin EMSCRIPTEN_CACHE="/home/runner/work/planet_quake/planet_quake/libs/emsdk/upstream/emscripten/cache" USE_RENDERER_DLOPEN=0 USE_SDL=1 USE_VULKAN=0 BUILD_SERVER=0 PLATFORM=js
+        mkdir bin
+        make -f make/build_client.make clean ${{ matrix.rule }} -j 8 ARCH=${{ matrix.arch }}    ${{ matrix.use_sdl }} USE_VULKAN_API=0 CNAME=quake3e PLATFORM=js NO_MAKE_LOCAL=1
+        cp build/release-js-js/quake3e_js.wasm bin/
 
     - uses: actions/upload-artifact@v2
-      if: matrix.cc == 'gcc' && matrix.config == 'Release'
+      if: matrix.config == 'Release'
       with:
         name: js-${{ matrix.arch }}
         path: bin
@@ -241,13 +238,11 @@ jobs:
         config: [Release]
         include:
           - config: Release
-            rule: install
+            rule: release
 
     steps:
     - uses: actions/checkout@v2
       if: false
-      with:
-        submodules: recursive
 
     - name: Build ${{ matrix.arch }}
       uses: uraimo/run-on-arch-action@v2.0.5
@@ -261,13 +256,12 @@ jobs:
           apt-get -qq update
           apt-get install -y make gcc g++
           apt-get -y install libcurl4-openssl-dev mesa-common-dev libxxf86dga-dev libxrandr-dev libxxf86vm-dev libasound-dev
-          make ${{ matrix.rule }} -j 4 ARCH=${{ matrix.arch }} CC=${{ matrix.cc }} DESTDIR=bin USE_RENDERER_DLOPEN=0 USE_SDL=0 USE_VULKAN=1 CNAME=quake3e-vulkan BUILD_SERVER=0
-          make clean ARCH=${{ matrix.arch }} 
-          make ${{ matrix.rule }} -j 4 ARCH=${{ matrix.arch }} CC=${{ matrix.cc }} DESTDIR=bin USE_RENDERER_DLOPEN=0 USE_SDL=0 USE_VULKAN_API=0
+          make -f make/build_client.make clean ${{ matrix.rule }} -j 4 ARCH=${{ matrix.arch }}    USE_SDL=0 USE_VULKAN=1 CNAME=quake3e-vulkan NO_MAKE_LOCAL=1
+          make -f make/build_client.make clean ${{ matrix.rule }} -j 4 ARCH=${{ matrix.arch }}    USE_SDL=0 USE_VULKAN_API=0 CNAME=quake3e NO_MAKE_LOCAL=1
 
     - uses: actions/upload-artifact@v2
       if: false
-      #if: matrix.cc == 'gcc' && matrix.config == 'Release'
+      #if: matrix.config == 'Release'
       with:
         name: linux-${{ matrix.arch }}
         path: bin
@@ -285,24 +279,38 @@ jobs:
         config: [Release]
         include:
           - config: Release
-            rule: install
+            rule: release
 
     steps:
     - name: Install tools
-      run: brew install coreutils sdl2
+      run: brew install coreutils sdl2 glib
 
     - uses: actions/checkout@v2
-      with:
-        submodules: recursive
 
     - name: Build
       run: |
-        make ${{ matrix.rule }} -j 4 CC=${{ matrix.cc }} DESTDIR=bin INSTALL=ginstall USE_RENDERER_DLOPEN=0 USE_VULKAN=1 CNAME=quake3e-vulkan BUILD_SERVER=0
-        make clean ARCH=${{ matrix.arch }} 
-        make ${{ matrix.rule }} -j 4 CC=${{ matrix.cc }} DESTDIR=bin INSTALL=ginstall USE_RENDERER_DLOPEN=0 USE_VULKAN_API=0
+        mkdir bin
+        make -f make/build_client.make clean ${{ matrix.rule }} -j 4     RENDERER_DEFAULT=vulkan USE_SDL=1 CNAME=quake3e-vulkan NO_MAKE_LOCAL=1
+        make -f make/build_client.make clean ${{ matrix.rule }} -j 4     USE_VULKAN_API=0 USE_SDL=1 NO_MAKE_LOCAL=1
+        make -f make/lib_q3map2.make clean ${{ matrix.rule }} -j 4  NO_MAKE_LOCAL=1
+        make -f make/build_client.make clean ${{ matrix.rule }} -j 4     USE_VULKAN_API=0 USE_SDL=1 USE_MULTIVM_CLIENT=1 USE_MULTIVM_SERVER=1 NO_MAKE_LOCAL=1
+        make -f make/build_client.make clean ${{ matrix.rule }} -j 4     USE_VULKAN_API=0 USE_SDL=1 BUILD_EXPERIMENTAL=1 NO_MAKE_LOCAL=1
+        make -f make/build_client.make clean ${{ matrix.rule }} -j 4     USE_VULKAN_API=0 USE_SDL=1 NO_MAKE_LOCAL=1 BUILD_SLIM_CLIENT=1
+        make -f make/build_server.make clean ${{ matrix.rule }} -j 4     NO_MAKE_LOCAL=1
+        make -f make/build_server.make clean ${{ matrix.rule }} -j 4     BUILD_EXPERIMENTAL=1 NO_MAKE_LOCAL=1
+        make -f make/build_server.make clean ${{ matrix.rule }} -j 4     USE_MULTIVM_SERVER=1 NO_MAKE_LOCAL=1
+        cp build/release-darwin-x86_64/quake3e bin/
+        cp build/release-darwin-x86_64/quake3e_mw bin/
+        cp build/release-darwin-x86_64/quake3e_q3map2_x86_64.dylib bin/
+        cp build/release-darwin-x86_64/quake3e_experimental bin/
+        cp build/release-darwin-x86_64/quake3e_slim bin/
+        cp build/release-darwin-x86_64/quake3e.ded bin/
+        cp build/release-darwin-x86_64/quake3e.ded_experimental bin/
+        cp build/release-darwin-x86_64/quake3e.ded_mw bin/
+        cp build/release-darwin-x86_64/quake3e-vulkan bin/
 
     - uses: actions/upload-artifact@v2
-      if: matrix.cc == 'clang' && matrix.config == 'Release'
+      if: matrix.config == 'Release'
       with:
         name: macos-${{ matrix.arch }}
         path: bin
@@ -311,7 +319,7 @@ jobs:
 
   create-testing:
     if: github.ref == 'refs/heads/master' && github.event_name == 'push' || github.event_name == 'workflow_dispatch'
-    needs: [windows-msys, windows-msvc, ubuntu-x86, ubuntu-arm, macos-x86]
+    needs: [windows-msys, windows-msvc, ubuntu-x86, ubuntu-arm, macos-x86, js-js]
     runs-on: ubuntu-latest
     steps:
       - name: Download Artifacts
@@ -327,6 +335,7 @@ jobs:
           7z a -r quake3e-windows-msvc-x86_64.zip  ./windows-msvc-x86_64/*
           7z a -r quake3e-windows-msvc-arm64.zip   ./windows-msvc-arm64/*
           7z a -r quake3e-macos-x86_64.zip   ./macos-x86_64/*
+          7z a -r quake3e-js.zip   ./js-js/*
 #         7z a -r quake3e-linux-aarch64.zip  ./linux-aarch64/*
 #         7z a -r quake3e-linux-armv7.zip    ./linux-armv7/*
 
@@ -342,7 +351,7 @@ jobs:
 
   update-release:
     if: ${{ github.event_name == 'release' }}
-    needs: [windows-msys, windows-msvc, ubuntu-x86, ubuntu-arm, macos-x86]
+    needs: [windows-msys, windows-msvc, ubuntu-x86, ubuntu-arm, macos-x86, js-js]
     runs-on: ubuntu-latest
 
     strategy:
@@ -380,6 +389,9 @@ jobs:
 
           - artifact_dir: macos-x86_64
             artifact_name: quake3e-macos-x86_64.zip
+
+          - artifact_dir: js-js
+            artifact_name: quake3e-js.zip
 
     steps:
       - name: Download Artifacts

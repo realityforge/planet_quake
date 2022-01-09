@@ -7,7 +7,10 @@ MKFILE         := $(lastword $(MAKEFILE_LIST))
 include make/platform.make
 endif
 
-REND_TARGET    := $(RENDERER_PREFIX)_opengl1_$(SHLIBNAME)
+REND_TARGET    := $(CNAME)_opengl1_$(SHLIBNAME)
+ifeq ($(USE_MULTIVM_CLIENT),1)
+REND_TARGET    := $(CNAME)_mw_opengl1_$(SHLIBNAME)
+endif
 REND_SOURCES   := $(MOUNT_DIR)/$(REND_SOURCE) $(MOUNT_DIR)/renderercommon
 REND_CFILES    := $(foreach dir,$(REND_SOURCES), $(wildcard $(dir)/*.c))
 ifeq ($(USE_RENDERER_DLOPEN),1)

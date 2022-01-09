@@ -22,7 +22,9 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 // tr_image.c
 #include "tr_local.h"
 #ifdef _DEBUG
+#ifndef __WASM__
 #include <execinfo.h>
+#endif
 #include <unistd.h>
 #endif
 
@@ -173,14 +175,18 @@ void R_ImageList_f( void ) {
 				estSize /= 2;
 				break;
 			case GL_RGBA4:
+#ifndef __WASM__
 			case GL_RGBA8:
+#endif
 			case GL_RGBA:
 				format = "RGBA ";
 				// 4 bytes per pixel
 				estSize *= 4;
 				break;
 			case GL_RGB5:
+#ifndef __WASM__
 			case GL_RGB8:
+#endif
 			case GL_RGB:
 				format = "RGB  ";
 				// 3 bytes per pixel?

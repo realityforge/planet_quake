@@ -482,3 +482,13 @@ void CIN_UploadCinematic( int handle ) {
 		}
 	}
 }
+
+void CIN_CloseAllVideos( void ) {
+	int		i;
+
+	for ( i = 0 ; i < MAX_VIDEO_HANDLES ; i++ ) {
+		if (cinTable[i].fileName[0] != '\0' ) {
+			CIN_StopCinematic(i);
+		}
+	}
+}

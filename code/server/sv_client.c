@@ -517,7 +517,7 @@ void SV_RestoreClient( int clientNum ) {
   
   // don't restore client is certain time has passed
 	if(sv_clSessions->integer != -1 && I_FloatTime() - t > sv_clSessions->integer) {
-    Com_DPrintf("Client %i not restored because session expired after %i seconds\n", 
+    Com_DPrintf("Client %i not restored because session expired after %li seconds\n", 
       clientNum, I_FloatTime() - t);
     return;
   }
@@ -547,7 +547,7 @@ void SV_RestoreClient( int clientNum ) {
 		Com_Printf( S_COLOR_RED "SESSION ERROR: Player entity sizes do not match (%i != %lu).\n", size, sizeof(playerState_t));
 	} else {
 		memcpy(&ent->health, &((gentity_t*)buffer)->health, sizeof(int));
-		Com_Printf("Restoring client %i: %i, %f x %f\n", c, ent->health /*sizeof(playerState_t) + ((intptr_t)&ent->health - (intptr_t)ent)*/, ps->origin[0], ps->origin[1]);
+		Com_Printf("Restoring client %i: %i, %f x %f\n", clientNum, ent->health /*sizeof(playerState_t) + ((intptr_t)&ent->health - (intptr_t)ent)*/, ps->origin[0], ps->origin[1]);
 	}
 
 	FS_Read(buffer, sizeof(int), h);
@@ -3305,8 +3305,10 @@ static void SV_UserMove( client_t *cl, msg_t *msg, qboolean delta ) {
 		// don't execute if this is an old cmd which is already executed
 		// these old cmds are included when cl_packetdup > 0
 		if ( cmds[i].serverTime <= cl->lastUsercmd.serverTime ) {
+			Com_Printf("skipping! \n");
 			continue;
 		}
+		Com_Printf("thinking! \n");
 		SV_ClientThink (cl, &cmds[ i ]);
 	}
 }

@@ -11,9 +11,9 @@ BUILD_Q3MAP2     := 1
 include make/platform.make
 
 ifeq ($(LINKABLE),1)
-Q3MAP2_TARGET    := $(Q3MAP2_PREFIX)_q3map2_$(SHLIBNAME)
+Q3MAP2_TARGET    := $(DNAME)_q3map2_$(SHLIBNAME)
 else
-Q3MAP2_TARGET    := $(Q3MAP2_PREFIX)_q3map2
+Q3MAP2_TARGET    := $(DNAME)_q3map2
 endif
 CPPSOURCES       := $(Q3MAP2DIR)/common $(Q3MAP2DIR)/q3map2
 INCLUDES         := $(Q3MAP2DIR)/common $(Q3MAP2DIR)/../libs \

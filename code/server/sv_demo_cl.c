@@ -1,7 +1,7 @@
+#include "server.h"
 
 #ifdef USE_DEMO_CLIENTS
 
-#include "server.h"
 
 
 /*

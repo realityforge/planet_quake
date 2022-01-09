@@ -24,12 +24,14 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "client.h"
 #include <limits.h>
 #ifdef _DEBUG
+#ifndef  __WASM__
 #include <execinfo.h>
+#endif
 #include <unistd.h>
 #endif
 
 #ifdef USE_VID_FAST
-#include "../ui/ui_shared.h"
+//#include "../ui/ui_shared.h"
 #endif
 
 cvar_t	*cl_noprint;
@@ -794,10 +796,10 @@ void CL_ReadDemoIndex( void ) {
 	int			r;
 	msg_t		buf;
 	int				cmd;
-	int count = 0, offset = 0, newnum, i;
+	int count = 0, newnum, i;
 	byte		bufData[ MAX_MSGLEN_BUF ];
 	int    startTime;
-	int    demoStart = 0, demoEnd;
+	int    demoStart = 0, demoEnd = 0;
 	entityState_t	*es;
 	entityState_t	nullstate;
 	const int SIMPLE_READ_SIZE = 24;
@@ -847,12 +849,12 @@ void CL_ReadDemoIndex( void ) {
 	}
 
 	clc.numDemoIndex = (demoEnd - demoStart) / 1000 + 10;
-	
+
 	// allocate the necessary number of indexes 1 for each second, 
 	//   +1 in case it's ever rounded down after / 1000
 	Com_Printf( "DEMO: Initial scan took %ims\n", Sys_Milliseconds() - startTime );
-	Com_Printf("DEMO: Allocating %lu KB for %i frames\n", 
-		clc.numDemoIndex * sizeof(demoIndex_t) / 1000, clc.numDemoIndex);
+	Com_Printf("DEMO: Allocating %i KB for %i frames\n", 
+		(int)(clc.numDemoIndex * sizeof(demoIndex_t) / 1000), clc.numDemoIndex);
 
 	clc.demoIndex = Z_Malloc(clc.numDemoIndex * sizeof(demoIndex_t));
 	
@@ -860,7 +862,6 @@ void CL_ReadDemoIndex( void ) {
 	FS_Seek(clc.demofile, 0, FS_SEEK_SET);
 	
 	count = -1;
-	offset = 0;
 	while(qtrue) {
 		// get the sequence number
 		r = FS_Read( &s, 4, clc.demofile );
@@ -946,7 +947,7 @@ void CL_ReadDemoIndex( void ) {
 			} else {
 			}
 		}
-		offset = 8 + buf.cursize;
+		//offset = 8 + buf.cursize;
 	}
 
 	Com_Printf( "DEMO: Read %i key frames\n", count );
@@ -1611,9 +1612,13 @@ qboolean CL_Disconnect( qboolean showMainMenu, qboolean dropped ) {
 	static qboolean cl_disconnecting = qfalse;
 	qboolean cl_restarted = qfalse;
 
+#ifdef _DEBUG
+#ifndef __WASM__
   void *syms[20];
   const size_t size = backtrace( syms, ARRAY_LEN( syms ) );
   backtrace_symbols_fd( syms, size, STDERR_FILENO );
+#endif
+#endif
 
 	if ( !com_cl_running || !com_cl_running->integer ) {
 		return cl_restarted;
@@ -4253,9 +4258,13 @@ void CL_StartHunkUsers( void ) {
 		return;
 	}
 
+#ifndef __WASM__
+#ifdef _DEBUG
   void *syms[20];
   const size_t size = backtrace( syms, ARRAY_LEN( syms ) );
   backtrace_symbols_fd( syms, size, STDERR_FILENO );
+#endif
+#endif
 
 	// fixup renderer -EC-
 	if ( !re.BeginRegistration ) {
@@ -4415,12 +4424,12 @@ static void CL_InitRef( void ) {
 #endif
 
 // TODO: make this a fancy list of renderers we recognize
-	Com_sprintf( dllName, sizeof( dllName ), RENDERER_PREFIX "_%s_" REND_ARCH_STRING DLL_EXT, cl_renderer->string );
+	Com_sprintf( dllName, sizeof( dllName ), XSTRING(RENDERER_PREFIX) "_%s_" REND_ARCH_STRING DLL_EXT, cl_renderer->string );
 	rendererLib = FS_LoadLibrary( dllName );
 	if ( !rendererLib )
 	{
 		Cvar_ForceReset( "cl_renderer" );
-		Com_sprintf( dllName, sizeof( dllName ), RENDERER_PREFIX "_%s_" REND_ARCH_STRING DLL_EXT, cl_renderer->string );
+		Com_sprintf( dllName, sizeof( dllName ), XSTRING(RENDERER_PREFIX) "_%s_" REND_ARCH_STRING DLL_EXT, cl_renderer->string );
 		rendererLib = FS_LoadLibrary( dllName );
 	if ( !rendererLib )
 	{
@@ -4528,7 +4537,7 @@ static void CL_InitRef( void ) {
 #ifdef USE_VID_FAST
 	rimp.GLimp_UpdateMode = GLimp_UpdateMode;
 #endif
-#ifdef BUILD_EXPERIMENTAL
+#ifdef USE_CURSOR_SPY
 	rimp.Spy_CursorPosition = Spy_CursorPosition;
 	rimp.Spy_InputText = Spy_InputText;
 	rimp.Spy_Banner = Spy_Banner;

@@ -487,7 +487,9 @@ void NET_SendLoopPacket( netsrc_t sock, int length, const void *data )
 	loop->msgs[i].datalen = length;
 	
 #ifdef USE_LOCAL_DED
+#ifdef __WASM__
 	Sys_NET_MulticastLocal(sock, length, data);
+#endif
 #endif
 }
 

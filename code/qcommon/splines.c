@@ -604,7 +604,7 @@ static idInterpolatedPosition *initInterpolatedPosition(vec3_t start, vec3_t end
 
 static idSplineList *initSplineList(const char *p) {
 	idSplineList *result = Z_Malloc(sizeof(idSplineList));
-	memcpy(result->name, p, sizeof(result->name));
+	strcpy(result->name, p);
 	result->controlPoints = Z_Malloc(sizeof(vec3_t) * MAX_CONTROL_POINTS);
 	result->numControlPoints = 0;
 	result->dirty = qtrue;
@@ -648,7 +648,7 @@ static void addTarget(const char *name, positionType type, idCameraDef *cam) {
 		if(name && name[0] != '\0') {
 			memcpy(pos->name, name, sizeof(pos->name));
 		} else {
-			memcpy(pos->name, "position", sizeof(pos->name));
+			strcpy(pos->name, "position");
 		}
 		cam->targetPositions[cam->numTargetPositions] = *pos;
 		cam->numTargetPositions++;
@@ -1580,7 +1580,7 @@ static void clearCamera(idCameraDef *cam) {
 	VectorClear(cam->lastDirection);
 	cam->baseTime = 30;
 	cam->activeTarget = 0;
-	memcpy(cam->name, "camera01", sizeof(cam->name));
+	strcpy(cam->name, "camera01");
 	cam->fov.fov = 90;
 
 	if(cam->targetPositions)

@@ -602,6 +602,7 @@ void Cvar_SetServerDescriptions( void ) {
   Cvar_SetDescription( "sv_cheats", "enable cheating commands (give all)" );
 }
 
+#ifndef DEDICATED
 void Cvar_SetKnownDescriptions(vmIndex_t index, recognizedVM_t knownVM) {
   if(index == VM_CGAME) {
     Cvar_SetDescription( "capturelimit", "set # of times a team must grab the others flag before the win is declared\nDefault: 8" );
@@ -699,3 +700,4 @@ void Cvar_SetKnownDescriptions(vmIndex_t index, recognizedVM_t knownVM) {
 */
   }
 }
+#endif

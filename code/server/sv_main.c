@@ -1482,7 +1482,10 @@ static qboolean SV_CheckPaused( void ) {
 		if ( cl->state >= CS_CONNECTED && cl->netchan.remoteAddress.type != NA_BOT ) {
 			count++;
       if(atoi(Info_ValueForKey(cl->userinfo, "cl_paused"))
-        || (cl_paused && cl_paused->integer)) {
+#ifndef DEDICATED
+        || (cl_paused && cl_paused->integer)
+#endif
+			) {
         clPaused = qtrue;
       }
 		}

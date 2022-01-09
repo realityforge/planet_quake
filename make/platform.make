@@ -58,6 +58,7 @@ INSTALL   ?= install
 MKDIR     ?= mkdir
 MOUNT_DIR ?= code
 BUILD_DIR ?= build
+MAKE      ?= make
 
 BD=$(BUILD_DIR)/debug-$(PLATFORM)-$(ARCH)
 BR=$(BUILD_DIR)/release-$(PLATFORM)-$(ARCH)

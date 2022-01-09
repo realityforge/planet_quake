@@ -1,83 +1,68 @@
 MKFILE           := $(lastword $(MAKEFILE_LIST))
 WORKDIR          := ded
 
-BUILD_SERVER     :=1
-USE_DEDICATED    :=1
+BUILD_SERVER     := 1
+USE_DEDICATED    := 1
 include make/platform.make
 
 TARGET_SERVER    := $(DNAME)$(ARCHEXT)$(BINEXT)
-ifeq ($(USE_MULTIVM_CLIENT),1)
+ifeq ($(USE_MULTIVM_SERVER),1)
 TARGET_SERVER    := $(DNAME)_mw$(ARCHEXT)$(BINEXT)
+endif
+ifeq ($(BUILD_EXPERIMENTAL),1)
+TARGET_SERVER    := $(DNAME)_experimental$(ARCHEXT)$(BINEXT)
 endif
 
 SOURCES  := $(MOUNT_DIR)/server $(MOUNT_DIR)/botlib
 
-CLIPMAP  := $(B)/ded/cm_load.o \
-            $(B)/ded/cm_load_bsp2.o \
-            $(B)/ded/cm_patch.o \
-            $(B)/ded/cm_polylib.o \
-            $(B)/ded/cm_test.o \
-            $(B)/ded/cm_trace.o
+CLIPMAP  := cm_load.o cm_load_bsp2.o \
+            cm_patch.o cm_polylib.o \
+            cm_test.o cm_trace.o
 
-QCOMMON  := $(B)/ded/cmd.o \
-            $(B)/ded/common.o \
-            $(B)/ded/cvar.o \
-            $(B)/ded/files.o \
-            $(B)/ded/history.o \
-            $(B)/ded/keys.o \
-            $(B)/ded/md4.o \
-            $(B)/ded/md5.o \
-            $(B)/ded/msg.o \
-            $(B)/ded/net_chan.o \
-            $(B)/ded/net_ip.o \
-            $(B)/ded/huffman.o \
-            $(B)/ded/huffman_static.o \
-            $(B)/ded/q_math.o \
-            $(B)/ded/q_shared.o \
-            $(B)/ded/unzip.o \
-            $(B)/ded/puff.o
+QCOMMON  := cmd.o cmd_descriptions.o common.o \
+            cvar.o cvar_descriptions.o \
+            files.o history.o keys.o \
+            md4.o md5.o msg.o \
+            net_chan.o net_ip.o huffman.o \
+            huffman_static.o q_math.o q_shared.o \
+            unzip.o puff.o
 
-VM       := $(B)/ded/vm.o \
-            $(B)/ded/vm_interpreted.o
+VM       := vm.o \
+            vm_interpreted.o
 ifeq ($(HAVE_VM_COMPILED),true)
 ifeq ($(ARCH),x86)
-  VM     += $(B)/ded/vm_x86.o
+  VM     += vm_x86.o
 endif
 ifeq ($(ARCH),x86_64)
-  VM     += $(B)/ded/vm_x86.o
+  VM     += vm_x86.o
 endif
 ifeq ($(ARCH),arm)
-  VM     += $(B)/ded/vm_armv7l.o
+  VM     += vm_armv7l.o
 endif
 ifeq ($(ARCH),aarch64)
-  VM     += $(B)/ded/vm_aarch64.o
+  VM     += vm_aarch64.o
 endif
 endif
 
 CURL     :=
 ifeq ($(USE_CURL),1)
-  CURL   += $(B)/ded/cl_curl.o
+  CURL   += cl_curl.o
 endif
 
 
 SYSTEM   :=
 ifeq ($(PLATFORM),js)
-  SYSTEM += $(B)/ded/sys_glimp.o \
-            $(B)/ded/sys_main.o \
-            $(B)/ded/sys_input.o \
-            $(B)/ded/unix_shared.o
+  SYSTEM += sys_glimp.o sys_main.o \
+            sys_input.o unix_shared.o
 
 else
 ifdef MINGW
-  SYSTEM += $(B)/ded/win_main.o \
-            $(B)/ded/win_shared.o \
-            $(B)/ded/win_syscon.o \
-            $(B)/ded/win_resource.o
+  SYSTEM += win_main.o win_shared.o \
+            win_syscon.o win_resource.o
 
 else # !MINGW
-  SYSTEM += $(B)/ded/unix_main.o \
-            $(B)/ded/unix_shared.o \
-            $(B)/ded/linux_signals.o
+  SYSTEM += unix_main.o unix_shared.o \
+            linux_signals.o
 
 endif
 endif
@@ -87,6 +72,16 @@ INCLUDES := $(MOUNT_DIR)/qcommon
 
 CFILES   := $(foreach dir,$(SOURCES), $(wildcard $(dir)/sv_*.c)) \
             $(CLIPMAP) $(QCOMMON) $(VM) $(SYSTEM)
+ifneq ($(USE_BOTLIB_DLOPEN),1)
+CFILES   += $(foreach dir,$(SOURCES), $(wildcard $(dir)/be_*.c)) \
+            $(foreach dir,$(SOURCES), $(wildcard $(dir)/l_*.c))
+endif
+
+ifeq ($(USE_MEMORY_MAPS),1)
+CLIENT_LDFLAGS   += $(B)/$(DNAME)_q3map2_$(SHLIBNAME)
+CFILES   += cl_jpeg.o
+endif
+
 OBJS     := $(CFILES:.c=.o) 
 Q3OBJ    := $(addprefix $(B)/$(WORKDIR)/,$(notdir $(OBJS)))
 
@@ -100,6 +95,11 @@ CFLAGS   := $(INCLUDE) -fsigned-char -ftree-vectorize \
 define DO_SERVER_CC
   $(echo_cmd) "SERVER_CC $<"
   $(Q)$(CC) $(CFLAGS) -o $@ -c $<
+endef
+
+define DO_BOT_CC
+	$(echo_cmd) "BOT_CC $<"
+	$(Q)$(CC) -o $@ $(CFLAGS) -DBOTLIB -c $<
 endef
 
 debug:
@@ -119,9 +119,6 @@ clean:
 	@rm -rf ./$(BR)/$(WORKDIR) ./$(BR)/$(TARGET_SERVER)
 
 ifdef B
-# TODO: cl_curl for server downloads, still need to fix sync lag
-#$(B)/$(WORKDIR)/%.o: $(MOUNT_DIR)/ded/%.c
-#	$(DO_CLIENT_CC)
 
 $(B)/$(WORKDIR)/%.o: $(MOUNT_DIR)/unix/%.c
 	$(DO_SERVER_CC)
@@ -138,11 +135,15 @@ $(B)/$(WORKDIR)/%.o: $(MOUNT_DIR)/wasm/%.c
 $(B)/$(WORKDIR)/%.o: $(MOUNT_DIR)/qcommon/%.c
 	$(DO_SERVER_CC)
 
+# server might use cl_curl or cl_jpeg
+$(B)/$(WORKDIR)/%.o: $(MOUNT_DIR)/client/%.c
+	$(DO_SERVER_CC)
+
 $(B)/$(WORKDIR)/%.o: $(MOUNT_DIR)/server/%.c
 	$(DO_SERVER_CC)
 
 $(B)/$(WORKDIR)/%.o: $(MOUNT_DIR)/botlib/%.c
-	$(DO_SERVER_CC)
+	$(DO_BOT_CC)
 
 $(B)/$(TARGET_SERVER): $(Q3OBJ)
 	$(echo_cmd) "LD $@"

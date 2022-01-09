@@ -22,7 +22,6 @@ RMLUI_CFLAGS  := $(INCLUDE) \
                  -DRMLUI_NO_THIRDPARTY_CONTAINERS \
                  -DBUILD_FREETYPE $(FREETYPE_CFLAGS) \
                  -DRmlCore_EXPORTS \
-                 -isysroot $(SYSROOT) -MMD \
                  -DRMLUI_NO_THIRDPARTY_CONTAINERS
 RMLUI_CXXFLAGS := $(RMLUI_CFLAGS) -std=c++14
 

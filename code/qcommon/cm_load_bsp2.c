@@ -512,7 +512,7 @@ CMod_LoadPatches
 #define	MAX_PATCH_VERTS		1024
 void CMod_LoadPatches2( lump_t *surfs, lump_t *verts ) {
 	vec3_t	*dv, *dv_p;
-	dBspFace_t	*in;
+	dBsp2Face_t	*in;
 	int			count;
 	int			i, j;
 	int			c;
@@ -720,7 +720,7 @@ void LoadQ2Map(const char *name) {
 	C(LEAFS, leafs2, numLeafs, dBsp2Leaf_t);
 	C(NODES, nodes2, numNodes, dBsp2Node_t);
 	C(TEXINFO, texinfo2, numTexinfo, dBsp2Texinfo_t);
-	C(FACES, faces2, numFaces, dBspFace_t);
+	C(FACES, faces2, numFaces, dBsp2Face_t);
 	C(LEAFFACES, leaffaces2, numLeaffaces, unsigned short);
 	C(LEAFBRUSHES, leafbrushes2, numLeafbrushes, unsigned short);
 	C(SURFEDGES, surfedges, numSurfedges, int);

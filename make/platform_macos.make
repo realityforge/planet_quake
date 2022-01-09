@@ -1,6 +1,9 @@
 
 include make/configure.make
 
+SYSROOT      := $(shell xcrun --show-sdk-path)
+#SYSROOT       := /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX11.1.sdk
+
 CC               := gcc
 CXX              := c++
 GXX              := g++
@@ -47,15 +50,13 @@ endif
 ifeq ($(USE_SYSTEM_ZLIB),1)
   BASE_CFLAGS    += -Ilibs/zlib/contrib/minizip -DUSE_SYSTEM_ZLIB
   CLIENT_LDFLAGS += $(ZLIB_LIBS)
-else
-#  CLIENT_LDFLAGS += $(B)/libz_$(SHLIBNAME)
 endif
 
 
 BASE_CFLAGS      += -I/usr/include -I/usr/local/include -isysroot $(SYSROOT)
 DEBUG_CFLAGS      = $(BASE_CFLAGS) -DDEBUG -D_DEBUG -g -O0
 RELEASE_CFLAGS    = $(BASE_CFLAGS) -DNDEBUG $(OPTIMIZE)
-USE_SDL           = 1
+USE_SDL          ?= 1
 
 
 ifdef B

@@ -1014,10 +1014,14 @@ void SCR_UpdateScreen( qboolean fromVM ) {
 #endif
 
 
-		if(first) {
+		if(first
+#ifdef USE_MULTIVM_CLIENT
+		  && clientScreens[cgvmi][0] > -1
+#endif
+		) {
 			CL_CalculatePing(ms);
+			first = qfalse;
 		}
-		first = qfalse;
 
 #ifdef USE_MULTIVM_CLIENT
 		CM_SwitchMap(clientMaps[cgvmi]);

@@ -14,3 +14,5 @@ code/wasm/node_modules/
 .resources
 libs/tools/mbspc/build
 libs/omni-bot/GameInterfaces/ET-GPL/src/curl-7.12.2
+libs/darwin/
+libs/linux/

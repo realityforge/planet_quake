@@ -673,12 +673,12 @@ void CL_ShutdownCGame( void ) {
 		cgvmi = i;
 #endif
 	if ( !cgvm ) {
-			continue;
-		}
+		continue;
+	}
 
 #ifdef USE_ASYNCHRONOUS
-		while (VM_IsSuspended(cgvm)) {
-			VM_Resume(cgvm);
+	while (VM_IsSuspended(cgvm)) {
+		VM_Resume(cgvm);
 	}
 #endif
 
@@ -781,9 +781,9 @@ static intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 		return Sys_Milliseconds();
 	case CG_CVAR_REGISTER:
 	{
+#ifdef USE_VID_FAST
 		vmCvar_t *cvar;
 		cvar = (vmCvar_t *)VMA(1);
-#ifdef USE_VID_FAST
 		if (cvar && (!cls.cgameFirstCvar || cvar < cls.cgameFirstCvar)) {
 			cls.cgameFirstCvar = cvar;
 		}
@@ -1324,7 +1324,7 @@ void CL_InitCGame( int inVM ) {
   } else
 #endif
 #endif
-	cgvm = VM_Create( VM_CGAME, CL_CgameSystemCalls, CL_DllSyscall, interpret );
+		cgvm = VM_Create( VM_CGAME, CL_CgameSystemCalls, CL_DllSyscall, interpret );
 	if ( !cgvm ) {
 		Com_Error( ERR_DROP, "VM_Create on cgame failed" );
 	}

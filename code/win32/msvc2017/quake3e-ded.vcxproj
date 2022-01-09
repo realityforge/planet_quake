@@ -281,6 +281,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\..\qcommon\cmd.c" />
+    <ClCompile Include="..\..\qcommon\cmd_descriptions.c" />
     <ClCompile Include="..\..\qcommon\cm_load.c" />
     <ClCompile Include="..\..\qcommon\cm_patch.c" />
     <ClCompile Include="..\..\qcommon\cm_polylib.c" />
@@ -288,6 +289,7 @@
     <ClCompile Include="..\..\qcommon\cm_trace.c" />
     <ClCompile Include="..\..\qcommon\common.c" />
     <ClCompile Include="..\..\qcommon\cvar.c" />
+    <ClCompile Include="..\..\qcommon\cvar_descriptions.c" />
     <ClCompile Include="..\..\qcommon\files.c" />
     <ClCompile Include="..\..\qcommon\history.c" />
     <ClCompile Include="..\..\qcommon\huffman.c" />
@@ -312,10 +314,6 @@
     <ClCompile Include="..\..\qcommon\vm_x86.c">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\qcommon\vm_x86_ng.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="..\..\server\sv_bot.c" />
     <ClCompile Include="..\..\server\sv_ccmds.c" />

@@ -825,7 +825,7 @@ qboolean Com_EarlyParseCmdLine( char *commandLine, char *con_title, int title_si
       com_consoleLines[i][0] = '\0';
       Q_strncpyz( com_earlyConnect, Cmd_Argv( 1 ), sizeof( com_earlyConnect ) );
     } else {
-      Com_Printf("WARNING: Using asynchronous build without an early \\connect <address> command.")
+      Com_Printf("WARNING: Using asynchronous build without an early \\connect <address> command.");
     }
 #endif
 	}
@@ -3183,7 +3183,7 @@ int Com_EventLoop( void ) {
     case SE_DROPBEGIN:
       CL_DropStart();
       break;
-    case SE_DROPCOMPLETE
+    case SE_DROPCOMPLETE:
       CL_DropComplete();
       break;
     case SE_DROPFILE:
@@ -4138,6 +4138,8 @@ void Com_Init( char *commandLine ) {
 
 #ifdef USE_PERSIST_CONSOLE
   com_logfile = Cvar_Get( "logfile", "4", CVAR_TEMP );
+#ifndef USE_NO_CONSOLE
+#ifndef DEDICATED
   char previousLog[1024];
   int prevLine = 0;
   fileHandle_t prevLogFile = FS_INVALID_HANDLE;
@@ -4163,6 +4165,8 @@ void Com_Init( char *commandLine ) {
     CL_ConsolePrint(S_COLOR_STRIP "\n");
     FS_FCloseFile(prevLogFile);
   }
+#endif // DEDICATED
+#endif // USE_NO_CONSOLE
 #else
 	com_logfile = Cvar_Get( "logfile", "0", CVAR_TEMP );
 #endif

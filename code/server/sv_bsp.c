@@ -1,7 +1,7 @@
+#include "server.h"
 
 #ifdef USE_MEMORY_MAPS
 
-#include "server.h"
 #include "../qcommon/vm_local.h"
 #include "../qcommon/cm_public.h"
 #include "../game/bg_public.h"

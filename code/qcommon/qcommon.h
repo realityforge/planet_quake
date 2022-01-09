@@ -914,9 +914,11 @@ fileHandle_t FS_SV_FOpenFileWrite( const char *filename );
 int		FS_SV_FOpenFileRead( const char *filename, fileHandle_t *fp );
 void	FS_SV_Rename( const char *from, const char *to );
 int		FS_FOpenFileRead( const char *qpath, fileHandle_t *file, qboolean uniqueFILE );
+#ifdef USE_CURSOR_SPY
 void Spy_CursorPosition(float x, float y);
 void Spy_InputText( void );
 void Spy_Banner(float x, float y);
+#endif
 
 // if uniqueFILE is true, then a new FILE will be fopened even if the file
 // is found in an already open pak file.  If uniqueFILE is false, you must call

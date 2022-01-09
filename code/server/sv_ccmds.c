@@ -192,7 +192,7 @@ static void SV_Map_f( void ) {
 			return;
 		}
 		// check if com_errorMessage, display it onscreen with
-    if(*Cvar_VariableString("com_errorMessage") != "\0")
+    if(*Cvar_VariableString("com_errorMessage") != '\0')
 		  SV_SendServerCommand(NULL, "cp \"%s\"", Cvar_VariableString("com_errorMessage"));
 #else
 		Com_Printf("Error: Can't find map %s\n", expanded );

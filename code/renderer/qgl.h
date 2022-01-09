@@ -37,6 +37,12 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #endif
 #include <windows.h>
 #include <GL/gl.h>
+#elif defined(__WASM__)
+#include <GL/gl.h>
+#undef GL_RGBA8
+#define GL_RGBA8 GL_RGBA
+#undef GL_RGB8
+#define GL_RGB8 GL_RGB
 #elif defined( __linux__ ) || defined(__FreeBSD__) || defined(__OpenBSD__) || defined( __sun )
 #include <GL/gl.h>
 #include <GL/glx.h>
@@ -282,6 +288,7 @@ typedef char GLchar;
 	GLE( void, glXCopyContext, Display *dpy, GLXContext src, GLXContext dst, GLuint mask ) \
 	GLE( void, glXSwapBuffers, Display *dpy, GLXDrawable drawable )
 
+#ifndef __WASM__
 #ifndef __APPLE__
 
 #define GLE( ret, name, ... ) extern ret ( APIENTRY * q##name )( __VA_ARGS__ );
@@ -294,5 +301,5 @@ typedef char GLchar;
 #undef GLE
 
 #endif // !__APPLE__
-
+#endif
 #endif // __QGL_H__

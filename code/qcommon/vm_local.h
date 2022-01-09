@@ -38,6 +38,16 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 // for some buggy mods
 #define	PROGRAM_STACK_EXTRA	(32*1024)
 
+// reserved space for effective LOCAL+LOAD* checks
+// also to avoid runtime range checks for many small agruments/structs in systemcalls
+#define	VM_DATA_GUARD_SIZE	1024
+
+// guard size must cover at least function arguments area
+#if VM_DATA_GUARD_SIZE < 256
+#undef VM_DATA_GUARD_SIZE
+#define VM_DATA_GUARD_SIZE 256
+#endif
+
 // flags for vm_rtChecks cvar
 #define VM_RTCHECK_PSTACK  1
 #define VM_RTCHECK_OPSTACK 2
@@ -164,8 +174,8 @@ struct vm_s {
 
 	syscall_t	systemCall;
 	byte		*dataBase;
-	int			*opStack;			// pointer to local function stack
-	int			*opStackTop;
+	int32_t		*opStack;			// pointer to local function stack
+	int32_t		*opStackTop;
 
 	int			programStack;		// the vm may be recursively entered
 	int			stackBottom;		// if programStack < stackBottom, error
@@ -197,7 +207,7 @@ struct vm_s {
 	unsigned int dataMask;
 	unsigned int dataLength;			// data segment length
 	unsigned int exactDataLength;	// from qvm header
-	unsigned int dataAlloc;			// actually allocated
+	unsigned int dataAlloc;			// actually allocated, for mmap()/munmap()
 
 	int			numSymbols;
 	vmSymbol_t	*symbols;
@@ -206,7 +216,7 @@ struct vm_s {
 	int			breakFunction;		// increment breakCount on function entry to this
 	int			breakCount;
 
-	byte		*jumpTableTargets;
+	int32_t		*jumpTableTargets;
 	int			numJumpTableTargets;
 
 	uint32_t	crc32sum;
@@ -239,20 +249,23 @@ extern  int       uivmi;
 extern	vm_t		 *cgvmWorlds[MAX_NUM_VMS];	// interface to ui dll or vm
 extern  int       cgvmi;
 #define cgvm      cgvmWorlds[cgvmi]
+#else
+extern  vm_t     *uivm;
+extern  vm_t     *cgvm;
+#endif
+#ifdef USE_MULTIVM_SERVER
 extern	vm_t		 *gvmWorlds[MAX_NUM_VMS];	// interface to ui dll or vm
 extern  int       gvmi;
 #define gvm       gvmWorlds[gvmi]
 #else
-extern  vm_t     *uivm;
-extern  vm_t     *cgvm;
 extern  vm_t     *gvm;
 #endif
 
 qboolean VM_Compile( vm_t *vm, vmHeader_t *header );
-int	VM_CallCompiled( vm_t *vm, int nargs, int *args );
+int32_t VM_CallCompiled( vm_t *vm, int nargs, int32_t *args );
 
 qboolean VM_PrepareInterpreter2( vm_t *vm, vmHeader_t *header );
-int	VM_CallInterpreted2( vm_t *vm, int nargs, int *args );
+int32_t VM_CallInterpreted2( vm_t *vm, int nargs, int32_t *args );
 
 vmSymbol_t *VM_ValueToFunctionSymbol( vm_t *vm, int value );
 int VM_SymbolToValue( vm_t *vm, const char *symbol );
@@ -261,7 +274,7 @@ void VM_LogSyscalls( int *args );
 
 const char *VM_LoadInstructions( const byte *code_pos, int codeLength, int instructionCount, instruction_t *buf );
 const char *VM_CheckInstructions( instruction_t *buf, int instructionCount, 
-								 const byte *jumpTableTargets, 
+								 const int32_t *jumpTableTargets,
 								 int numJumpTableTargets, 
 								 int dataLength );
 

@@ -78,7 +78,9 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define USE_MV				  // multiview enabled
 //#define USE_MV_ZCMD		// command compression
 // RmlUi adds supplementary initerfaces written in HTML.
-#define USE_RMLUI 1
+//#define USE_RMLUI 1
+// spy on the cursors position for absolute mouse control
+//#define USE_CURSOR_SPY 1
 // TheDoctors method of recording a demo file for every single client
 #define USE_DEMO_CLIENTS 1
 // lrq3000 method of server side demos, sending entity states to every client while spectating
@@ -88,7 +90,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 // use pre-compile templates to filter annoying debug messages
 #define USE_PRINT_CONSOLE 1
 // remove console drop down in game functionality altogether
-#define USE_NO_CONSOLE 1
+//#define USE_NO_CONSOLE 1
 // persist console messages between games and also between launches
 #define USE_PERSIST_CONSOLE 1
 // dynamically build zip files to transer to clients using lazyLoading
@@ -117,7 +119,9 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 // Cyrax's Multiview is what makes multiworld possible.
 #define USE_LAZY_MEMORY 1
 #define USE_LAZY_LOAD 1
+#ifndef USE_MV
 #define USE_MV 1
+#endif
 #endif
 
 #ifdef USE_MV
@@ -147,7 +151,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #ifdef __WASM__
 // vid_restart fast hack scans memory to change ratio values cgame uses to position the HUD and game
-#define USE_VID_FAST 1
+//#define USE_VID_FAST 1
 // allow touch events to set exact cursor position using "cursor spy"
 #define USE_ABS_MOUSE 1
 // start a dedicated server even for single player mode, automatically join a match

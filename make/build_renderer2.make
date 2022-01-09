@@ -7,7 +7,10 @@ MKFILE         := $(lastword $(MAKEFILE_LIST))
 include make/platform.make
 endif
 
-REND_TARGET    := $(RENDERER_PREFIX)_opengl2_$(SHLIBNAME)
+REND_TARGET    := $(CNAME)_opengl2_$(SHLIBNAME)
+ifeq ($(USE_MULTIVM_CLIENT),1)
+REND_TARGET    := $(CNAME)_mw_opengl2_$(SHLIBNAME)
+endif
 REND_SOURCES   := $(MOUNT_DIR)/$(REND_SOURCE) $(MOUNT_DIR)/$(REND_SOURCE)/glsl \
 									$(MOUNT_DIR)/renderercommon
 GLSLFFALLBACKS := $(foreach dir,$(REND_SOURCES), $(wildcard $(dir)/*.glsl))
