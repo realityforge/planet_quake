@@ -299,6 +299,7 @@ jobs:
         make -f make/build_server.make clean ${{ matrix.rule }} -j 4     NO_MAKE_LOCAL=1
         make -f make/build_server.make clean ${{ matrix.rule }} -j 4     BUILD_EXPERIMENTAL=1 NO_MAKE_LOCAL=1
         make -f make/build_server.make clean ${{ matrix.rule }} -j 4     USE_MULTIVM_SERVER=1 NO_MAKE_LOCAL=1
+        make -f make/game_multi.make clean ${{ matrix.rule }} -j 4     MISSIONPACK=1 BUILD_GAME_QVM=0 NO_MAKE_LOCAL=1
         cp build/release-darwin-x86_64/quake3e bin/
         cp build/release-darwin-x86_64/quake3e_mw bin/
         cp build/release-darwin-x86_64/quake3e_q3map2_x86_64.dylib bin/
