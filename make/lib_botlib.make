@@ -4,9 +4,9 @@ WORKDIR      := botlib
 BUILD_BOTLIB := 1
 include make/platform.make
 
-TARGET       := $(DNAME)_libbots_$(SHLIBNAME)
+TARGET       := $(CNAME)_libbots_$(SHLIBNAME)
 ifeq ($(USE_MULTIVM_SERVER),1)
-TARGET       := $(DNAME)_mw_libbots_$(SHLIBNAME)
+TARGET       := $(CNAME)_mw_libbots_$(SHLIBNAME)
 endif
 SOURCES      := $(MOUNT_DIR)/botlib
 INCLUDES     := 

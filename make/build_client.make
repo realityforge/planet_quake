@@ -170,7 +170,7 @@ CLIENT_LDFLAGS   += $(THEORA_LIBS)
 endif
 
 ifeq ($(USE_MEMORY_MAPS),1)
-CLIENT_LDFLAGS   += $(B)/$(DNAME)_q3map2_$(SHLIBNAME)
+CLIENT_LDFLAGS   += $(B)/$(CNAME)_q3map2_$(SHLIBNAME)
 endif
 
 ifeq ($(USE_RMLUI),1)

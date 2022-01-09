@@ -9,7 +9,7 @@ RADIANT_MINOR_VERSION:=0
 BUILD_MBSPC      := 1
 include make/platform.make
 
-MBSPC_TARGET		 := $(DNAME)_mbspc
+MBSPC_TARGET		 := $(CNAME)_mbspc
 CSOURCES         := $(MBSPCDIR)/qcommon $(MBSPCDIR)/mbspc $(MBSPCDIR)/botlib 
 INCLUDES         := $(MBSPCDIR)/../libs
 LIBS             := 
