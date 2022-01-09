@@ -86,6 +86,7 @@ endef
 #############################################################################
 
 ifneq ($(BUILD_CLIENT),1)
+ifneq ($(BUILD_GAME_QVM),0)
 debug:
 	@$(MAKE) -f $(MKFILE) makegamedirs \
 		$(BD)/$(MOD)/cgame$(SHLIBNAME) \
@@ -107,6 +108,23 @@ release:
 	  $(BR)/$(MOD)/vm/ui.qvm \
 	  B=$(BR) GAME_CFLAGS="$(GAME_CFLAGS)" \
 	  OPTIMIZE="-DNDEBUG $(OPTIMIZE)" V=$(V)
+else
+debug:
+	@$(MAKE) -f $(MKFILE) makegamedirs \
+		$(BD)/$(MOD)/cgame$(SHLIBNAME) \
+		$(BD)/$(MOD)/qagame$(SHLIBNAME) \
+		$(BD)/$(MOD)/ui$(SHLIBNAME) \
+	  B=$(BD) GAME_CFLAGS="$(GAME_CFLAGS)" \
+	  OPTIMIZE="$(DEBUG_CFLAGS)" V=$(V)
+
+release:
+	@$(MAKE) -f $(MKFILE) makegamedirs \
+	  $(BR)/$(MOD)/cgame$(SHLIBNAME) \
+	  $(BR)/$(MOD)/qagame$(SHLIBNAME) \
+	  $(BR)/$(MOD)/ui$(SHLIBNAME) \
+	  B=$(BR) GAME_CFLAGS="$(GAME_CFLAGS)" \
+	  OPTIMIZE="-DNDEBUG $(OPTIMIZE)" V=$(V)
+endif
 
 makegamedirs:
 	@if [ ! -d $(BUILD_DIR) ];then $(MKDIR) $(BUILD_DIR);fi
