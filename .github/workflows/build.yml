@@ -68,7 +68,7 @@ jobs:
           cp build/release-mingw32-x86/quake3e-vulkan.exe bin/
           cp build/release-mingw32-x86/quake3e.ded.exe bin/
         else
-          make -f make/lib_q3map2.make clean ${{ matrix.rule }} -j 4  NO_MAKE_LOCAL=1
+          make -f make/lib_q3map2.make clean ${{ matrix.rule }} -j 4 -D_WIN32=1 -DWIN32=1 NO_MAKE_LOCAL=1
           make -f make/build_client.make clean ${{ matrix.rule }} -j 8 ARCH=${{ matrix.arch }}    ${{ matrix.use_sdl }} USE_VULKAN_API=0 BUILD_EXPERIMENTAL=1 NO_MAKE_LOCAL=1
           make -f make/build_client.make clean ${{ matrix.rule }} -j 8 ARCH=${{ matrix.arch }}    ${{ matrix.use_sdl }} USE_VULKAN_API=0 USE_MULTIVM_CLIENT=1 USE_MULTIVM_SERVER=1  NO_MAKE_LOCAL=1
           make -f make/build_server.make clean ${{ matrix.rule }} -j 8 ARCH=${{ matrix.arch }}    ${{ matrix.use_sdl }} BUILD_EXPERIMENTAL=1 NO_MAKE_LOCAL=1
