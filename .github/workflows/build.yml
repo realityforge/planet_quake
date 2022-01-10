@@ -68,7 +68,7 @@ jobs:
           cp build/release-mingw32-x86/quake3e-vulkan.exe bin/
           cp build/release-mingw32-x86/quake3e.ded.exe bin/
         else
-          make -f make/lib_q3map2.make clean ${{ matrix.rule }}  NO_MAKE_LOCAL=1
+          make -f make/lib_q3map2.make clean ${{ matrix.rule }}  NO_MAKE_LOCAL=1 V=1
           make -f make/build_client.make clean ${{ matrix.rule }}  ARCH=${{ matrix.arch }}    ${{ matrix.use_sdl }} USE_VULKAN_API=0 BUILD_EXPERIMENTAL=1 NO_MAKE_LOCAL=1
           make -f make/build_client.make clean ${{ matrix.rule }}  ARCH=${{ matrix.arch }}    ${{ matrix.use_sdl }} USE_VULKAN_API=0 USE_MULTIVM_CLIENT=1 USE_MULTIVM_SERVER=1  NO_MAKE_LOCAL=1
           make -f make/build_server.make clean ${{ matrix.rule }}  ARCH=${{ matrix.arch }}    ${{ matrix.use_sdl }} BUILD_EXPERIMENTAL=1 NO_MAKE_LOCAL=1
@@ -205,11 +205,11 @@ jobs:
           cp build/release-linux-x86_64/quake3e-vulkan.x64 bin/
           cp build/release-linux-x86_64/quake3e.ded.x64 bin/
           cp build/release-linux-x86_64/quake3e_q3map2_x86_64.so bin/
-          cp build/release-linux-x86_64/q3lcc bin/
-          cp build/release-linux-x86_64/q3asm bin/
-          cp build/release-linux-x86_64/q3rcc bin/
-          cp build/release-linux-x86_64/q3cpp bin/
-          cp build/release-linux-x86_64/lburg/lburg bin/
+          cp build/release-linux-x86_64/tools/q3lcc bin/
+          cp build/release-linux-x86_64/tools/q3asm bin/
+          cp build/release-linux-x86_64/tools/q3rcc bin/
+          cp build/release-linux-x86_64/tools/q3cpp bin/
+          cp build/release-linux-x86_64/tools/lburg/lburg bin/
           cp build/release-linux-x86_64/quake3e.ded_mw bin/
           cp build/release-linux-x86_64/quake3e.ded_experimental.x64 bin/
           cp build/release-linux-x86_64/quake3e_experimentalx64 bin/
