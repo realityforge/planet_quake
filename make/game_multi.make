@@ -88,7 +88,9 @@ endef
 ifneq ($(BUILD_CLIENT),1)
 ifneq ($(BUILD_GAME_QVM),0)
 debug:
-	@$(MAKE) -f $(MKFILE) makegamedirs \
+	$(echo_cmd) "MAKE $(MOD)"
+	@$(MAKE) -f $(MKFILE) makegamedirs
+	@$(MAKE) -f $(MKFILE)  -j 8 \
 		$(BD)/$(MOD)/cgame$(SHLIBNAME) \
 		$(BD)/$(MOD)/qagame$(SHLIBNAME) \
 		$(BD)/$(MOD)/ui$(SHLIBNAME) \
@@ -99,7 +101,9 @@ debug:
 	  OPTIMIZE="$(DEBUG_CFLAGS)" V=$(V)
 
 release:
-	@$(MAKE) -f $(MKFILE) makegamedirs \
+	$(echo_cmd) "MAKE $(MOD)"
+	@$(MAKE) -f $(MKFILE) makegamedirs
+	@$(MAKE) -f $(MKFILE)  -j 8 \
 	  $(BR)/$(MOD)/cgame$(SHLIBNAME) \
 	  $(BR)/$(MOD)/qagame$(SHLIBNAME) \
 	  $(BR)/$(MOD)/ui$(SHLIBNAME) \
@@ -111,7 +115,9 @@ release:
 
 else
 debug:
-	@$(MAKE) -f $(MKFILE) makegamedirs \
+	$(echo_cmd) "MAKE $(MOD)"
+	@$(MAKE) -f $(MKFILE) makegamedirs
+	@$(MAKE) -f $(MKFILE)  -j 8 \
 		$(BD)/$(MOD)/cgame$(SHLIBNAME) \
 		$(BD)/$(MOD)/qagame$(SHLIBNAME) \
 		$(BD)/$(MOD)/ui$(SHLIBNAME) \
@@ -119,7 +125,9 @@ debug:
 	  OPTIMIZE="$(DEBUG_CFLAGS)" V=$(V)
 
 release:
-	@$(MAKE) -f $(MKFILE) makegamedirs \
+	$(echo_cmd) "MAKE $(MOD)"
+	@$(MAKE) -f $(MKFILE) makegamedirs
+	@$(MAKE) -f $(MKFILE)  -j 8 \
 	  $(BR)/$(MOD)/cgame$(SHLIBNAME) \
 	  $(BR)/$(MOD)/qagame$(SHLIBNAME) \
 	  $(BR)/$(MOD)/ui$(SHLIBNAME) \

@@ -36,6 +36,10 @@ TOOLS_CFLAGS  := $(BASE_CFLAGS) \
                  -DTEMPDIR=\"$(TEMPDIR)\" -DSYSTEM=\"\" \
                  -I$(Q3LCCDIR)/src \
                  -I$(LBURGDIR)
+ifdef MINGW
+TOOLS_CFLAGS  += -D_WIN32=1 -DWIN32=1
+endif
+
 TOOLS_LIBS    :=
 TOOLS_LDFLAGS :=
 
@@ -57,7 +61,7 @@ debug:
 	$(echo_cmd) "MAKE Q3LCC"
 	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) WORKDIRS="$(Q3LCC_WORKDIRS)" mkdirs
 	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) pre-build
-	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) \
+	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) -j 8 \
 	  WORKDIRS="$(Q3LCC_WORKDIRS)" \
 	  CFLAGS="$(CFLAGS) $(DEBUG_CFLAGS)" \
 	  LDFLAGS="$(LDFLAGS) $(DEBUG_LDFLAGS)" \

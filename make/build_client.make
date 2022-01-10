@@ -250,7 +250,7 @@ debug:
 	$(echo_cmd) "MAKE $(TARGET_CLIENT)"
 	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) WORKDIRS="$(WORKDIR) $(WORKDIRS)" mkdirs
 	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) pre-build
-	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) \
+	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) -j 8 \
 		WORKDIRS="$(WORKDIR) $(WORKDIRS)" \
 		CFLAGS="$(CFLAGS) $(DEBUG_CFLAGS)" \
 		LDFLAGS="$(LDFLAGS) $(DEBUG_LDFLAGS)" \
@@ -260,7 +260,7 @@ release:
 	$(echo_cmd) "MAKE $(TARGET_CLIENT)"
 	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) WORKDIRS="$(WORKDIR) $(WORKDIRS)" mkdirs
 	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) pre-build
-	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) \
+	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) -j 8 \
 		WORKDIRS="$(WORKDIR) $(WORKDIRS)" \
 		CFLAGS="$(CFLAGS) $(RELEASE_CFLAGS)" \
 		LDFLAGS="$(LDFLAGS) $(RELEASE_LDFLAGS)" \
