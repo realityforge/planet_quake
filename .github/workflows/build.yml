@@ -209,7 +209,7 @@ jobs:
           cp build/release-linux-x86_64/q3asm bin/
           cp build/release-linux-x86_64/q3rcc bin/
           cp build/release-linux-x86_64/q3cpp bin/
-          cp build/release-linux-x86_64/lburg bin/
+          cp build/release-linux-x86_64/lburg/lburg bin/
           cp build/release-linux-x86_64/quake3e.ded_mw bin/
           cp build/release-linux-x86_64/quake3e.ded_experimental bin/
           cp build/release-linux-x86_64/quake3e_experimental bin/

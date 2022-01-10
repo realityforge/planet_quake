@@ -50,7 +50,7 @@ endif
 BASE_CFLAGS += -Wall -fno-strict-aliasing -Wimplicit -Wstrict-prototypes \
   -DUSE_ICON -DMINGW=1
 
-BASE_CFLAGS += -Wno-unused-result
+BASE_CFLAGS += -Wno-unused-result -I/usr/include/glib-2.0
 
 ifeq ($(ARCH),x86_64)
   ARCHEXT = .x64
