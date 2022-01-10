@@ -36,9 +36,6 @@ TOOLS_CFLAGS  := $(BASE_CFLAGS) \
                  -DTEMPDIR=\"$(TEMPDIR)\" -DSYSTEM=\"\" \
                  -I$(Q3LCCDIR)/src \
                  -I$(LBURGDIR)
-ifdef MINGW
-TOOLS_CFLAGS  += -D_WIN32=1 -DWIN32=1
-endif
 
 TOOLS_LIBS    :=
 TOOLS_LDFLAGS :=

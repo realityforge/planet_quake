@@ -203,7 +203,7 @@ jobs:
           make -f make/game_multi.make clean ${{ matrix.rule }}      MISSIONPACK=1 NO_MAKE_LOCAL=1
           cp build/release-linux-x86_64/quake3e.x64 bin/
           cp build/release-linux-x86_64/quake3e-vulkan.x64 bin/
-          cp build/release-linux-x86_64/quake3e.ded bin/
+          cp build/release-linux-x86_64/quake3e.ded.x64 bin/
           cp build/release-linux-x86_64/quake3e_q3map2_x86_64.so bin/
           cp build/release-linux-x86_64/q3lcc bin/
           cp build/release-linux-x86_64/q3asm bin/
@@ -211,9 +211,9 @@ jobs:
           cp build/release-linux-x86_64/q3cpp bin/
           cp build/release-linux-x86_64/lburg/lburg bin/
           cp build/release-linux-x86_64/quake3e.ded_mw bin/
-          cp build/release-linux-x86_64/quake3e.ded_experimental bin/
-          cp build/release-linux-x86_64/quake3e_experimental bin/
-          cp build/release-linux-x86_64/quake3e_mw bin/
+          cp build/release-linux-x86_64/quake3e.ded_experimental.x64 bin/
+          cp build/release-linux-x86_64/quake3e_experimentalx64 bin/
+          cp build/release-linux-x86_64/quake3e_mwx64 bin/
           cp build/release-linux-x86_64/multigame/cgamex86_64.so bin/
           cp build/release-linux-x86_64/multigame/qagamex86_64.so bin/
           cp build/release-linux-x86_64/multigame/uix86_64.so bin/
