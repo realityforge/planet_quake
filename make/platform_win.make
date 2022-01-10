@@ -63,7 +63,7 @@ ifeq ($(ARCH),x86)
 endif
 
 SHLIBEXT = dll
-SHLIBCFLAGS = -fPIC -fvisibility=hidden -fno-common
+SHLIBCFLAGS = -fPIC -fvisibility=hidden -fno-common  -I/usr/include/glib-2.0
 SHLIBLDFLAGS = -shared $(LDFLAGS)
 
 BINEXT = .exe

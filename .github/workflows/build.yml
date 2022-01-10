@@ -210,10 +210,10 @@ jobs:
           cp build/release-linux-x86_64/tools/q3rcc bin/
           cp build/release-linux-x86_64/tools/q3cpp bin/
           cp build/release-linux-x86_64/tools/lburg/lburg bin/
-          cp build/release-linux-x86_64/quake3e.ded_mw bin/
+          cp build/release-linux-x86_64/quake3e.ded_mw.x64 bin/
           cp build/release-linux-x86_64/quake3e.ded_experimental.x64 bin/
-          cp build/release-linux-x86_64/quake3e_experimentalx64 bin/
-          cp build/release-linux-x86_64/quake3e_mwx64 bin/
+          cp build/release-linux-x86_64/quake3e_experimental.x64 bin/
+          cp build/release-linux-x86_64/quake3e_mw.x64 bin/
           cp build/release-linux-x86_64/multigame/cgamex86_64.so bin/
           cp build/release-linux-x86_64/multigame/qagamex86_64.so bin/
           cp build/release-linux-x86_64/multigame/uix86_64.so bin/
