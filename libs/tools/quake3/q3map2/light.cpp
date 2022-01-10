@@ -795,7 +795,7 @@ int LightContributionToSample( trace_t *trace ){
 			}
 
 			/* clamp the distance to prevent super hot spots */
-			dist = std::max( 16.0f, sqrt( dist * dist + light->extraDist * light->extraDist ) );
+			dist = std::max( 16.0f, (float)sqrt( dist * dist + light->extraDist * light->extraDist ) );
 
 			add = light->photons / ( dist * dist ) * angle;
 
@@ -860,7 +860,7 @@ int LightContributionToSample( trace_t *trace ){
 		}
 
 		/* clamp the distance to prevent super hot spots */
-		dist = std::max( 16.0f, sqrt( dist * dist + light->extraDist * light->extraDist ) );
+		dist = std::max( 16.0f, (float)sqrt( dist * dist + light->extraDist * light->extraDist ) );
 
 		/* angle attenuation */
 		if ( light->flags & LightFlags::AttenAngle ) {
@@ -1230,7 +1230,7 @@ bool LightContributionToPoint( trace_t *trace ){
 	/* ptpff approximation */
 	if ( light->type == ELightType::Area && faster ) {
 		/* clamp the distance to prevent super hot spots */
-		dist = std::max( 16.0f, sqrt( dist * dist + light->extraDist * light->extraDist ) );
+		dist = std::max( 16.0f, (float)sqrt( dist * dist + light->extraDist * light->extraDist ) );
 
 		/* attenuate */
 		add = light->photons / ( dist * dist );
@@ -1278,7 +1278,7 @@ bool LightContributionToPoint( trace_t *trace ){
 	/* point/spot lights */
 	else if ( light->type == ELightType::Point || light->type == ELightType::Spot ) {
 		/* clamp the distance to prevent super hot spots */
-		dist = std::max( 16.0f, sqrt( dist * dist + light->extraDist * light->extraDist ) );
+		dist = std::max( 16.0f, (float)sqrt( dist * dist + light->extraDist * light->extraDist ) );
 
 		/* attenuate */
 		if ( light->flags & LightFlags::AttenLinear ) {
@@ -1659,7 +1659,7 @@ void SetupGrid( void ){
 	/* quantize it */
 	const Vector3 oldGridSize = gridSize;
 	for ( i = 0; i < 3; i++ )
-		gridSize[ i ] = std::max( 8.0f, floor( gridSize[ i ] ) );
+		gridSize[ i ] = std::max( 8.0f, (float)floor( gridSize[ i ] ) );
 
 	/* ydnar: increase gridSize until grid count is smaller than max allowed */
 	numRawGridPoints = MAX_MAP_LIGHTGRID + 1;

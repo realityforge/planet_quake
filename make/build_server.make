@@ -97,6 +97,13 @@ define DO_SERVER_CC
   $(Q)$(CC) $(CFLAGS) -o $@ -c $<
 endef
 
+ifdef WINDRES
+define DO_WINDRES
+	$(echo_cmd) "WINDRES $<"
+	$(Q)$(WINDRES) -o $@ -i $<
+endef
+endif
+
 define DO_BOT_CC
 	$(echo_cmd) "BOT_CC $<"
 	$(Q)$(CC) -o $@ $(CFLAGS) -DBOTLIB -c $<
@@ -125,6 +132,9 @@ $(B)/$(WORKDIR)/%.o: $(MOUNT_DIR)/unix/%.c
 
 $(B)/$(WORKDIR)/%.o: $(MOUNT_DIR)/win32/%.c
 	$(DO_SERVER_CC)
+
+$(B)/$(WORKDIR)/%.o: $(MOUNT_DIR)/win32/%.rc
+	$(DO_WINDRES)
 
 $(B)/$(WORKDIR)/%.o: $(MOUNT_DIR)/macosx/%.c
 	$(DO_SERVER_CC)
