@@ -1,3 +1,5 @@
+USE_SDL=0
+
 include make/configure.make
 
 ifeq ($(CROSS_COMPILING),1)

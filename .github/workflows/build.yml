@@ -62,12 +62,29 @@ jobs:
         mkdir bin
         make -f make/build_client.make clean ${{ matrix.rule }} -j 8 ARCH=${{ matrix.arch }}   CC=${{ matrix.cc }} USE_SDL=0 USE_VULKAN=1 CNAME=quake3e-vulkan NO_MAKE_LOCAL=1
         make -f make/build_client.make clean ${{ matrix.rule }} -j 8 ARCH=${{ matrix.arch }}   CC=${{ matrix.cc }} USE_SDL=0 USE_VULKAN_API=0 CNAME=quake3e NO_MAKE_LOCAL=1
+        make -f make/build_server.make clean ${{ matrix.rule }} -j 8 ARCH=${{ matrix.arch }}   CC=${{ matrix.cc }} USE_SDL=0 NO_MAKE_LOCAL=1
         if [ ${{ matrix.arch }} == "x86" ]; then
           cp build/release-mingw32-x86/quake3e.exe bin/
           cp build/release-mingw32-x86/quake3e-vulkan.exe bin/
+          cp build/release-mingw32-x86/quake3e.ded.exe bin/
         else
+          make -f make/lib_q3map2.make clean ${{ matrix.rule }} -j 4  NO_MAKE_LOCAL=1
+          make -f make/build_client.make clean ${{ matrix.rule }} -j 8 ARCH=${{ matrix.arch }}    ${{ matrix.use_sdl }} USE_VULKAN_API=0 BUILD_EXPERIMENTAL=1 NO_MAKE_LOCAL=1
+          make -f make/build_client.make clean ${{ matrix.rule }} -j 8 ARCH=${{ matrix.arch }}    ${{ matrix.use_sdl }} USE_VULKAN_API=0 USE_MULTIVM_CLIENT=1 USE_MULTIVM_SERVER=1  NO_MAKE_LOCAL=1
+          make -f make/build_server.make clean ${{ matrix.rule }} -j 8 ARCH=${{ matrix.arch }}    ${{ matrix.use_sdl }} BUILD_EXPERIMENTAL=1 NO_MAKE_LOCAL=1
+          make -f make/build_server.make clean ${{ matrix.rule }} -j 8 ARCH=${{ matrix.arch }}    ${{ matrix.use_sdl }} USE_MULTIVM_SERVER=1 NO_MAKE_LOCAL=1
+          make -f make/game_multi.make clean ${{ matrix.rule }} -j 4     MISSIONPACK=1 BUILD_GAME_QVM=0 NO_MAKE_LOCAL=1
           cp build/release-mingw64-x86_64/quake3e.x64.exe bin/
           cp build/release-mingw64-x86_64/quake3e-vulkan.x64.exe bin/
+          cp build/release-mingw64-x86_64/quake3e.ded.exe bin/
+          cp build/release-mingw64-x86_64/quake3e_q3map2_x86_64.dll bin/
+          cp build/release-mingw64-x86_64/quake3e.ded_mw.exe bin/
+          cp build/release-mingw64-x86_64/quake3e.ded_experimental.exe bin/
+          cp build/release-mingw64-x86_64/quake3e_experimental.exe bin/
+          cp build/release-mingw64-x86_64/quake3e_mw.exe bin/
+          cp build/release-mingw64-x86_64/multigame/cgamex86_64.dll bin/
+          cp build/release-mingw64-x86_64/multigame/qagamex86_64.dll bin/
+          cp build/release-mingw64-x86_64/multigame/uix86_64.dll bin/
         fi
 
     - uses: actions/upload-artifact@v2
@@ -170,13 +187,39 @@ jobs:
       run: |
         mkdir bin
         make -f make/build_client.make clean ${{ matrix.rule }} -j 8 ARCH=${{ matrix.arch }}    ${{ matrix.use_sdl }} USE_VULKAN=1 CNAME=quake3e-vulkan NO_MAKE_LOCAL=1
-        make -f make/build_client.make clean ${{ matrix.rule }} -j 8 ARCH=${{ matrix.arch }}    ${{ matrix.use_sdl }} USE_VULKAN_API=0 CNAME=quake3e NO_MAKE_LOCAL=1
+        make -f make/build_client.make clean ${{ matrix.rule }} -j 8 ARCH=${{ matrix.arch }}    ${{ matrix.use_sdl }} USE_VULKAN_API=0 NO_MAKE_LOCAL=1
+        make -f make/build_server.make clean ${{ matrix.rule }} -j 8 ARCH=${{ matrix.arch }}    ${{ matrix.use_sdl }} NO_MAKE_LOCAL=1
         if [ ${{ matrix.arch }} == "x86" ]; then
           cp build/release-linux-x86/quake3e bin/
           cp build/release-linux-x86/quake3e-vulkan bin/
+          cp build/release-linux-x86/quake3e.ded bin/
         else
+          make -f make/lib_q3map2.make clean ${{ matrix.rule }} -j 4  NO_MAKE_LOCAL=1
+          make -f make/build_client.make clean ${{ matrix.rule }} -j 8 ARCH=${{ matrix.arch }}    ${{ matrix.use_sdl }} USE_VULKAN_API=0 BUILD_EXPERIMENTAL=1 NO_MAKE_LOCAL=1
+          make -f make/build_client.make clean ${{ matrix.rule }} -j 8 ARCH=${{ matrix.arch }}    ${{ matrix.use_sdl }} USE_VULKAN_API=0 USE_MULTIVM_CLIENT=1 USE_MULTIVM_SERVER=1  NO_MAKE_LOCAL=1
+          make -f make/build_server.make clean ${{ matrix.rule }} -j 8 ARCH=${{ matrix.arch }}    ${{ matrix.use_sdl }} BUILD_EXPERIMENTAL=1 NO_MAKE_LOCAL=1
+          make -f make/build_server.make clean ${{ matrix.rule }} -j 8 ARCH=${{ matrix.arch }}    ${{ matrix.use_sdl }} USE_MULTIVM_SERVER=1 NO_MAKE_LOCAL=1
+          make -f make/lib_q3lcc.make clean ${{ matrix.rule }} -j 4      NO_MAKE_LOCAL=1
+          make -f make/game_multi.make clean ${{ matrix.rule }} -j 4     MISSIONPACK=1 NO_MAKE_LOCAL=1
           cp build/release-linux-x86_64/quake3e.x64 bin/
           cp build/release-linux-x86_64/quake3e-vulkan.x64 bin/
+          cp build/release-linux-x86_64/quake3e.ded bin/
+          cp build/release-linux-x86_64/quake3e_q3map2_x86_64.so bin/
+          cp build/release-linux-x86_64/q3lcc bin/
+          cp build/release-linux-x86_64/q3asm bin/
+          cp build/release-linux-x86_64/q3rcc bin/
+          cp build/release-linux-x86_64/q3cpp bin/
+          cp build/release-linux-x86_64/lburg bin/
+          cp build/release-linux-x86_64/quake3e.ded_mw bin/
+          cp build/release-linux-x86_64/quake3e.ded_experimental bin/
+          cp build/release-linux-x86_64/quake3e_experimental bin/
+          cp build/release-linux-x86_64/quake3e_mw bin/
+          cp build/release-linux-x86_64/multigame/cgamex86_64.so bin/
+          cp build/release-linux-x86_64/multigame/qagamex86_64.so bin/
+          cp build/release-linux-x86_64/multigame/uix86_64.so bin/
+          cp build/release-linux-x86_64/multigame/vm/cgame.qvm bin/
+          cp build/release-linux-x86_64/multigame/vm/qagame.qvm bin/
+          cp build/release-linux-x86_64/multigame/vm/ui.qvm bin/
         fi
 
     - uses: actions/upload-artifact@v2
@@ -309,6 +352,9 @@ jobs:
         cp build/release-darwin-x86_64/quake3e.ded_experimental bin/
         cp build/release-darwin-x86_64/quake3e.ded_mw bin/
         cp build/release-darwin-x86_64/quake3e-vulkan bin/
+        cp build/release-darwin-x86_64/multigame/cgamex86_64.dylib bin/
+        cp build/release-darwin-x86_64/multigame/qagamex86_64.dylib bin/
+        cp build/release-darwin-x86_64/multigame/uix86_64.dylib bin/
 
     - uses: actions/upload-artifact@v2
       if: matrix.config == 'Release'
