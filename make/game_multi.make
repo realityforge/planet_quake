@@ -108,6 +108,7 @@ release:
 	  $(BR)/$(MOD)/vm/ui.qvm \
 	  B=$(BR) GAME_CFLAGS="$(GAME_CFLAGS)" \
 	  OPTIMIZE="-DNDEBUG $(OPTIMIZE)" V=$(V)
+
 else
 debug:
 	@$(MAKE) -f $(MKFILE) makegamedirs \
@@ -124,9 +125,11 @@ release:
 	  $(BR)/$(MOD)/ui$(SHLIBNAME) \
 	  B=$(BR) GAME_CFLAGS="$(GAME_CFLAGS)" \
 	  OPTIMIZE="-DNDEBUG $(OPTIMIZE)" V=$(V)
+
 endif
 
 makegamedirs:
+	@echo "MKDIRS $(B)/$(MOD)"
 	@if [ ! -d $(BUILD_DIR) ];then $(MKDIR) $(BUILD_DIR);fi
 	@if [ ! -d $(B) ];then $(MKDIR) $(B);fi
 	@if [ ! -d $(B)/$(MOD) ];then $(MKDIR) $(B)/$(MOD);fi
@@ -134,6 +137,7 @@ makegamedirs:
 	@if [ ! -d $(B)/$(MOD)/game ];then $(MKDIR) $(B)/$(MOD)/game;fi
 	@if [ ! -d $(B)/$(MOD)/ui ];then $(MKDIR) $(B)/$(MOD)/ui;fi
 	@if [ ! -d $(B)/$(MOD)/vm ];then $(MKDIR) $(B)/$(MOD)/vm;fi
+
 endif
 
 #############################################################################
@@ -174,8 +178,8 @@ CGOBJ   = $(CGOBJ_) $(B)/$(MOD)/cgame/cg_syscalls.o
 CGVMOBJ = $(addprefix $(B)/$(MOD)/cgame/,$(notdir $(CGOBJ_:%.o=%.asm)))
 
 ifneq ($(BUILD_CLIENT),1)
-CGOBJ += $(B)/$(MOD)/cgame/q_math.o \
-          $(B)/$(MOD)/cgame/q_shared.o
+CGOBJ   += $(B)/$(MOD)/cgame/q_math.o \
+           $(B)/$(MOD)/cgame/q_shared.o
 CGVMOBJ += $(B)/$(MOD)/cgame/q_math.asm \
            $(B)/$(MOD)/cgame/q_shared.asm \
            $(B)/$(MOD)/cgame/bg_lib.asm \
@@ -359,7 +363,7 @@ $(B)/$(MOD)/ui/bg_%.o: $(QADIR)/bg_%.c
 	$(DO_UI_CC)
 
 $(B)/$(MOD)/ui/q_%.o: $(QADIR)/q_%.c
-	$(DO_CGAME_CC)
+	$(DO_UI_CC)
 
 ifeq ($(MISSIONPACK),1)
 $(B)/$(MOD)/ui/ui_%.o: $(SUIDIR)/ui_%.c
@@ -410,16 +414,7 @@ endif
 WORKDIRS += $(MOD) $(MOD)/cgame $(MOD)/game $(MOD)/ui $(MOD)/vm
 
 ifneq ($(BUILD_CLIENT),1)
-clean: clean-debug clean-release
-
-clean-debug:
-	@$(MAKE) -f $(MKFILE) clean2 B=$(BD)
-
-clean-release:
-	@$(MAKE) -f $(MKFILE) clean2 B=$(BR)
-
-clean2:
-	@echo "CLEAN $(B)"
+clean:
 	@rm -rf ./$(BD)/$(MOD)/cgame
 	@rm -rf ./$(BR)/$(MOD)/cgame
 	@rm -rf ./$(BD)/$(MOD)/game
@@ -428,9 +423,15 @@ clean2:
 	@rm -rf ./$(BR)/$(MOD)/ui
 	@rm -rf ./$(BD)/$(MOD)/vm
 	@rm -rf ./$(BR)/$(MOD)/vm
-	@rm -f ./$(B)/$(MOD)/cgame$(SHLIBNAME)
-	@rm -f ./$(B)/$(MOD)/qagame$(SHLIBNAME)
-	@rm -f ./$(B)/$(MOD)/ui$(SHLIBNAME)
+	@rm -f ./$(BD)/$(MOD)/cgame$(SHLIBNAME)
+	@rm -f ./$(BD)/$(MOD)/qagame$(SHLIBNAME)
+	@rm -f ./$(BD)/$(MOD)/ui$(SHLIBNAME)
+	@rm -f ./$(BR)/$(MOD)/cgame$(SHLIBNAME)
+	@rm -f ./$(BR)/$(MOD)/qagame$(SHLIBNAME)
+	@rm -f ./$(BR)/$(MOD)/ui$(SHLIBNAME)
+	@rm -rf ./$(BD)/$(MOD)
+	@rm -rf ./$(BR)/$(MOD)
+
 else
 GAME_OBJ  = $(QAOBJ) $(CGOBJ) $(UIOBJ)
 CLEANS 	 += $(MOD)/cgame $(MOD)/qagame $(MOD)/ui $(MOD)
