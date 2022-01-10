@@ -89,7 +89,7 @@ ifneq ($(BUILD_CLIENT),1)
 ifneq ($(BUILD_GAME_QVM),0)
 debug:
 	$(echo_cmd) "MAKE $(MOD)"
-	@$(MAKE) -f $(MKFILE) makegamedirs
+	@$(MAKE) -f $(MKFILE) makegamedirs B=$(BD) 
 	@$(MAKE) -f $(MKFILE)  -j 8 \
 		$(BD)/$(MOD)/cgame$(SHLIBNAME) \
 		$(BD)/$(MOD)/qagame$(SHLIBNAME) \
@@ -102,7 +102,7 @@ debug:
 
 release:
 	$(echo_cmd) "MAKE $(MOD)"
-	@$(MAKE) -f $(MKFILE) makegamedirs
+	@$(MAKE) -f $(MKFILE) makegamedirs B=$(BR) 
 	@$(MAKE) -f $(MKFILE)  -j 8 \
 	  $(BR)/$(MOD)/cgame$(SHLIBNAME) \
 	  $(BR)/$(MOD)/qagame$(SHLIBNAME) \
@@ -116,7 +116,7 @@ release:
 else
 debug:
 	$(echo_cmd) "MAKE $(MOD)"
-	@$(MAKE) -f $(MKFILE) makegamedirs
+	@$(MAKE) -f $(MKFILE) makegamedirs B=$(BD) 
 	@$(MAKE) -f $(MKFILE)  -j 8 \
 		$(BD)/$(MOD)/cgame$(SHLIBNAME) \
 		$(BD)/$(MOD)/qagame$(SHLIBNAME) \
@@ -126,7 +126,7 @@ debug:
 
 release:
 	$(echo_cmd) "MAKE $(MOD)"
-	@$(MAKE) -f $(MKFILE) makegamedirs
+	@$(MAKE) -f $(MKFILE) makegamedirs B=$(BR) 
 	@$(MAKE) -f $(MKFILE)  -j 8 \
 	  $(BR)/$(MOD)/cgame$(SHLIBNAME) \
 	  $(BR)/$(MOD)/qagame$(SHLIBNAME) \
