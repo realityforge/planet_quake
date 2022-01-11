@@ -82,9 +82,9 @@ jobs:
           #cp build/release-mingw64-x86_64/quake3e.ded_experimental.x64.exe bin/
           #cp build/release-mingw64-x86_64/quake3e_experimental.x64.exe bin/
           cp build/release-mingw64-x86_64/quake3e_mw.x64.exe bin/
-          cp build/release-mingw64-x86_64/multigame/cgame.x64.dll bin/
-          cp build/release-mingw64-x86_64/multigame/qagame.x64.dll bin/
-          cp build/release-mingw64-x86_64/multigame/ui.x64.dll bin/
+          cp build/release-mingw64-x86_64/multigame/cgamex86_64.dll bin/
+          cp build/release-mingw64-x86_64/multigame/qagamex86_64.dll bin/
+          cp build/release-mingw64-x86_64/multigame/uix86_64.dll bin/
         fi
 
     - uses: actions/upload-artifact@v2
