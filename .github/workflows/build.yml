@@ -68,10 +68,10 @@ jobs:
           cp build/release-mingw32-x86/quake3e-vulkan.exe bin/
           cp build/release-mingw32-x86/quake3e.ded.exe bin/
         else
-          make -f make/lib_q3map2.make clean ${{ matrix.rule }}  NO_MAKE_LOCAL=1 V=1
+          #make -f make/lib_q3map2.make clean ${{ matrix.rule }}  NO_MAKE_LOCAL=1 V=1
           make -f make/build_client.make clean ${{ matrix.rule }}  ARCH=${{ matrix.arch }}    ${{ matrix.use_sdl }} USE_VULKAN_API=0 BUILD_EXPERIMENTAL=1 NO_MAKE_LOCAL=1
           make -f make/build_client.make clean ${{ matrix.rule }}  ARCH=${{ matrix.arch }}    ${{ matrix.use_sdl }} USE_VULKAN_API=0 USE_MULTIVM_CLIENT=1 USE_MULTIVM_SERVER=1  NO_MAKE_LOCAL=1
-          make -f make/build_server.make clean ${{ matrix.rule }}  ARCH=${{ matrix.arch }}    ${{ matrix.use_sdl }} BUILD_EXPERIMENTAL=1 NO_MAKE_LOCAL=1
+          #make -f make/build_server.make clean ${{ matrix.rule }}  ARCH=${{ matrix.arch }}    ${{ matrix.use_sdl }} BUILD_EXPERIMENTAL=1 NO_MAKE_LOCAL=1
           make -f make/build_server.make clean ${{ matrix.rule }}  ARCH=${{ matrix.arch }}    ${{ matrix.use_sdl }} USE_MULTIVM_SERVER=1 NO_MAKE_LOCAL=1
           make -f make/game_multi.make clean ${{ matrix.rule }}      MISSIONPACK=1 BUILD_GAME_QVM=0 NO_MAKE_LOCAL=1
           cp build/release-mingw64-x86_64/quake3e.x64.exe bin/
