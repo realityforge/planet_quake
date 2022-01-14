@@ -24,7 +24,7 @@ USE_RMLUI_DLOPEN    ?= 0
 USE_OPUS_DLOPEN     ?= 0
 USE_FREETYPE_DLOPEN ?= 0
 
-USE_SDL             ?= 0
+USE_SDL             ?= 1
 USE_CURL            ?= 0
 USE_LOCAL_HEADERS   ?= 0
 USE_VULKAN          ?= 0

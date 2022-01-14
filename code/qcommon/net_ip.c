@@ -192,7 +192,8 @@ static sockaddr_t socksRelayAddr;
 
 #ifdef USE_MULTI_PORT
 #define ip_socket ip_sockets[igvm]
-static SOCKET	ip_sockets[MAX_NUM_VMS] = {
+#define MAX_NUM_PORTS MAX_NUM_VMS
+static SOCKET	ip_sockets[MAX_NUM_PORTS] = {
   INVALID_SOCKET, INVALID_SOCKET, INVALID_SOCKET, INVALID_SOCKET,
   INVALID_SOCKET, INVALID_SOCKET, INVALID_SOCKET, INVALID_SOCKET,
   INVALID_SOCKET, INVALID_SOCKET
@@ -752,6 +753,9 @@ static qboolean NET_GetPacket( netadr_t *net_from, msg_t *net_message, const fd_
 			}
 
 			net_message->cursize = ret;
+#ifdef USE_MULTI_PORT
+			net_from->netWorld = igvm;
+#endif
 			return qtrue;
 		}
 	}
@@ -827,13 +831,13 @@ static qboolean NET_GetPacket( netadr_t *net_from, msg_t *net_message, const fd_
 Sys_SendPacket
 ==================
 */
-#ifdef USE_MULTI_PORT
-void Sys_SendPacket( int length, const void *data, const netadr_t *to, int igvm )
-#else
 void Sys_SendPacket( int length, const void *data, const netadr_t *to )
-#endif
 {
 	int ret = SOCKET_ERROR;
+#ifdef USE_MULTI_PORT
+	int igvm = to->netWorld;
+	//Com_Printf( "Sys_SendPacket: %i\n", ip_socket );
+#endif
 	sockaddr_t addr;
 
 	switch ( to->type ) {
@@ -1676,7 +1680,12 @@ static void NET_GetLocalAddress( void ) {
 NET_OpenIP
 ====================
 */
-static void NET_OpenIP( void ) {
+#ifndef USE_MULTIVM_SERVER
+static void NET_OpenIP( void )
+#else
+void NET_OpenIP( int igvm )
+#endif
+{
 	int		i;
 	int		err;
 	int		port;
@@ -1684,7 +1693,22 @@ static void NET_OpenIP( void ) {
 	int		port6;
 #endif
 #ifdef USE_MULTI_PORT
-  int igvm = 0;
+	if(igvm == -1) {
+		for(igvm = 0; igvm < MAX_NUM_PORTS; igvm++) {
+			if(ip_sockets[igvm] != INVALID_SOCKET)
+				continue;
+			else
+				break;
+		}
+		if(igvm == MAX_NUM_PORTS) {
+			Com_Printf( "NET_OpenIP: MAX_NUM_PORTS reached\n" );
+			return;
+		}
+	}
+	else if(ip_sockets[igvm] != INVALID_SOCKET) {
+		Com_Printf( "NET_OpenIP: Socket already open for world slot\n" );
+		return;
+	}
 #endif
 
 	port = net_port->integer;
@@ -1721,9 +1745,14 @@ static void NET_OpenIP( void ) {
 
 	if(net_enabled->integer & NET_ENABLEV4)
 	{
-		for( i = 0 ; i < 10 ; i++ ) {
+		for( i = 0 ; i < MAX_NUM_VMS * 10 ; i++ ) {
 			ip_socket = NET_IPSocket( net_ip->string, port + i, &err );
 			if (ip_socket != INVALID_SOCKET) {
+				Com_Printf("binding to %i - %s:%i\n", igvm, net_ip->string, port + i);
+
+#ifdef USE_MULTI_PORT
+				if(igvm == 0)
+#endif
 				Cvar_SetIntegerValue( "net_port", port + i );
 
 				if (net_socksEnabled->integer)
@@ -1890,7 +1919,7 @@ static void NET_Config( qboolean enableNetworking ) {
 
 	if( stop ) {
 #ifdef USE_MULTI_PORT
-    for(int igvm = 0; igvm < MAX_NUM_VMS; igvm++)
+    for(int igvm = 0; igvm < MAX_NUM_PORTS; igvm++)
 #endif
 		if ( ip_socket != INVALID_SOCKET ) {
 			closesocket( ip_socket );
@@ -1921,7 +1950,11 @@ static void NET_Config( qboolean enableNetworking ) {
 	{
 		if ( net_enabled->integer )
 		{
+#ifndef USE_MULTIVM_SERVER
 			NET_OpenIP();
+#else
+			NET_OpenIP(-1);
+#endif
 #ifdef USE_IPV6
 			NET_SetMulticast6();
 #endif
@@ -2073,7 +2106,7 @@ qboolean NET_Sleep( int timeout )
 	FD_ZERO( &fdr );
 
 #ifdef USE_MULTI_PORT
-  for(int igvm = 0; igvm < MAX_NUM_VMS; igvm++)
+  for(int igvm = 0; igvm < MAX_NUM_PORTS; igvm++)
 #endif
 	if ( ip_socket != INVALID_SOCKET )
 	{
@@ -2111,20 +2144,26 @@ qboolean NET_Sleep( int timeout )
 	tv.tv_sec = timeout / 1000000;
 	tv.tv_usec = timeout - tv.tv_sec * 1000000;
 
+#ifdef USE_MULTI_PORT
+	qboolean result;
+	for(int igvm = 0; igvm < MAX_NUM_PORTS; igvm++) {
+		retval = select( ip_socket + 1, &fdr, NULL, NULL, &tv );
+		if ( retval > 0 ) {
+			NET_Event( &fdr, igvm );
+			result = qtrue;
+		}
+	}
+	if(result)
+		return qfalse;
+#else
 	retval = select( highestfd + 1, &fdr, NULL, NULL, &tv );
 
 	if ( retval > 0 ) {
-#ifdef USE_MULTI_PORT
-    for(int igvm = 0; igvm < MAX_NUM_VMS; igvm++) {
-      if(highestfd == ip_sockets[igvm]) {
-        NET_Event( &fdr, igvm );
-      }
-    }
-#else
-    NET_Event( &fdr );
-#endif
+		NET_Event( &fdr );
 		return qfalse;
-	} else if (usingSocks && socks_socket != INVALID_SOCKET) {
+	}
+#endif
+	else if (usingSocks && socks_socket != INVALID_SOCKET) {
     // alternate between the two sockets
     FD_SET( socks_socket, &fdr );
 

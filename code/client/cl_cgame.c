@@ -1403,7 +1403,6 @@ void CL_InitCGame( int inVM ) {
 void CL_UpdateShader( void ) {
 	char *lazyShader = Sys_UpdateShader();
 	if(!lazyShader || strlen(lazyShader) == 0) return;
-  Com_Printf("Update shader: %s\n", lazyShader);
 	lazyShader[12] = '\0';
 	//if(!strcmp(&lazyShader[13], "console"))
 	//	Com_Printf("Error: CL_UpdateShader: %s, %i\n", &lazyShader[13], atoi(&lazyShader[0]));

@@ -1525,12 +1525,7 @@ void	Sys_DisplaySystemConsole( qboolean show );
 
 void	Sys_ShowConsole( int level, qboolean quitOnClose );
 void	Sys_SetErrorText( const char *text );
-
-#if defined(USE_MULTIVM_SERVER) || defined(USE_MULTIVM_CLIENT)
-void	Sys_SendPacket( int length, const void *data, const netadr_t *to, int igvm );
-#else
 void	Sys_SendPacket( int length, const void *data, const netadr_t *to );
-#endif
 
 qboolean	Sys_StringToAdr( const char *s, netadr_t *a, netadrtype_t family );
 //Does NOT parse port numbers, only base addresses.

@@ -23,10 +23,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "q_shared.h"
 #include "qcommon.h"
 
-#if defined(USE_MULTIVM_SERVER) || defined(USE_MULTIVM_CLIENT)
-#define USE_MULTI_PORT 1
-#endif
-
 #ifdef USE_PRINT_CONSOLE
 #undef Com_Printf
 #undef Com_DPrintf
@@ -105,6 +101,9 @@ void Netchan_Setup( netsrc_t sock, netchan_t *chan, const netadr_t *adr, int por
 	chan->challenge = challenge;
 	chan->compat = compat;
 	chan->isLANAddress = Sys_IsLANAddress( adr );
+#if defined(USE_MULTIVM_CLIENT) || defined(USE_MULTIVM_SERVER)
+	chan->remoteAddress.netWorld = 0;
+#endif
 }
 
 
@@ -543,11 +542,7 @@ void NET_FlushPacketQueue( void )
 		now = Sys_Milliseconds();
 		if ( packetQueue->release - now >= 0 )
 			break;
-#ifdef USE_MULTI_PORT
-		Sys_SendPacket( packetQueue->length, packetQueue->data, &packetQueue->to, packetQueue->to.netWorld );
-#else
     Sys_SendPacket( packetQueue->length, packetQueue->data, &packetQueue->to );
-#endif
 		last = packetQueue;
 		packetQueue = packetQueue->next;
 		Z_Free( last->data );
@@ -583,11 +578,7 @@ void NET_SendPacket( netsrc_t sock, int length, const void *data, const netadr_t
 		NET_QueuePacket( length, data, to, sv_packetdelay->integer );
 	}
 	else {
-#ifdef USE_MULTI_PORT
-		Sys_SendPacket( length, data, to, to->netWorld );
-#else
     Sys_SendPacket( length, data, to );
-#endif
 	}
 }
 
@@ -689,6 +680,9 @@ int NET_StringToAdr( const char *s, netadr_t *a, netadrtype_t family )
 		return 1;
 	}
 
+#if defined(USE_MULTIVM_CLIENT) || defined(USE_MULTIVM_SERVER)
+	a->netWorld = 0;
+#endif
 	a->protocol[0] = 0;
 	search = NET_ParseProtocol(s, a->protocol);
 	Q_strncpyz( base, search, sizeof( base ) );

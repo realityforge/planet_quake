@@ -6064,7 +6064,9 @@ static void CL_LocalServers_f( void ) {
 		// can nicely run multiple servers
 		for ( j = 0 ; j < NUM_SERVER_PORTS ; j++ ) {
 			to.port = BigShort( (short)(PORT_SERVER + j) );
-
+#ifdef USE_MULTIVM_CLIENT
+			to.netWorld = 0;
+#endif
 			to.type = NA_BROADCAST;
 			NET_SendPacket( NS_CLIENT, n, message, &to );
 #ifdef USE_IPV6

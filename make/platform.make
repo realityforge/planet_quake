@@ -55,7 +55,7 @@ export ARCH
 ####################################################################
 
 INSTALL   ?= install
-MKDIR     ?= mkdir
+MKDIR     ?= mkdir -p
 MOUNT_DIR ?= code
 BUILD_DIR ?= build
 MAKE      ?= make

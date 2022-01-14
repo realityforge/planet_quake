@@ -80,6 +80,14 @@ I began working on this project by updating QuakeJS. At the time, around 2018, t
   3) baseq3-cc - flat files with converted images and audio
   4) baseq3-ccr - repacked files using new index.json
 
+### Repacking with make
+
+  Included is a Makefile build script that repacks any mod directory into a single pk3 file suitable for use with QuakeJS.
+
+  `make -f make/repack.make SRCDIR=/Applications/ioquake3/baseq3`
+
+  Graphing features are not included, so if there are extra source files, they will need to be TODO: filtered out. TODO: `NO_OVERWRITE=1` works as expected.
+
 ## Compilation and installation
   
   See [QuakeJS README](../QuakeJs.md) for more build instructions.

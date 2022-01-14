@@ -1575,7 +1575,7 @@ void SV_SwitchGame_f ( void ) {
 	if(Cmd_Argc() == 1) {
 		// TODO: finish this, switch a specific client to a new game or switch all clients to a new game
 		//   client command already exists in sv_client.c
-	//	game = 
+		//game = 
 	} else {
 		game = atoi(Cmd_Argv(2));
 	}
@@ -1589,16 +1589,13 @@ void SV_SwitchGame_f ( void ) {
 }
 
 void SV_Teleport_f (void) {
-
 	if ( Cmd_Argc() > 4 || Cmd_Argc() == 2 ) {
 		Com_Printf ("Usage: teleport <clientnum> [xcoord zcoord ycoord]\n");
 		return;
 	}
-	
 	//cl = SV_GetPlayerByNum();
 	//ps = SV_GameClientNum( i );
 	//client = SV_GetPlayerByHandle();
-
 }
 
 void SV_LoadVM_f(void) {

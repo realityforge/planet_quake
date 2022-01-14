@@ -2260,6 +2260,8 @@ void SV_PrintLocations_f( client_t *client ) {
 }
 
 #ifdef USE_MULTIVM_SERVER
+void NET_OpenIP( int igvm );
+
 void SV_LoadVM( client_t *cl ) {
 	char *mapname;
 	int checksum;
@@ -2303,6 +2305,7 @@ void SV_LoadVM( client_t *cl ) {
 	SV_ClearWorld();
   sv.state = SS_LOADING;
 	SV_SetAASgvm(gvmi);
+	NET_OpenIP(gvmi);
 	SV_InitGameProgs(qtrue);
 	// catch up with current VM
 	for ( i = 4; i > 1; i-- )
@@ -3305,10 +3308,10 @@ static void SV_UserMove( client_t *cl, msg_t *msg, qboolean delta ) {
 		// don't execute if this is an old cmd which is already executed
 		// these old cmds are included when cl_packetdup > 0
 		if ( cmds[i].serverTime <= cl->lastUsercmd.serverTime ) {
-			Com_Printf("skipping! \n");
+			//Com_Printf("skipping! \n");
 			continue;
 		}
-		Com_Printf("thinking! \n");
+		//Com_Printf("thinking! \n");
 		SV_ClientThink (cl, &cmds[ i ]);
 	}
 }
