@@ -1,5 +1,6 @@
 ## Rune Descriptions
 
+![Runes](../docs/runes.png?raw=true)
 
 ### Rune of Strength (1)
 
@@ -27,7 +28,7 @@
 	far.
 
 
-### Rune of Environmental Protection (5)
+### TODO: Rune of Environmental Protection (5)
 
 	The most obvious effect of this rune is that water, slime and
 	lava, which normally hurt you, heal you instead.  It also
@@ -55,7 +56,7 @@
 	bleed in a disturbing manner.
 
 
-### Rune of Recall (8)
+### TODO: Rune of Recall (8)
 
 	Activate rune-use and you'll set your recall location.  Go
 	elsewhere and press it again and you'll teleport to your
@@ -64,21 +65,21 @@
 	set a new one.
 
 
-### Electric Rune (9)
+### TODO: Electric Rune (9)
 
 	You zap anybody who gets too close to you.  Each zap uses up a
 	cell, the rune comes with 10 of them, plus you generate 1 every
 	5 seconds.
 
 
-### Rune of Cloaking (10)
+### TODO: Rune of Cloaking (10)
 
 	You never make any noise.  Also, if you don't attack and aren't
 	hurt for a few seconds, you become invisible (as with the ring
 	of shadows).
 
 
-### Rune of Divine Wind (11)
+### TODO: Rune of Divine Wind (11)
 
 	You explode when killed, doing a fair amount of damage and so
 	often taking some other players out with you.  If you activate
@@ -87,7 +88,7 @@
 	for activating the rune.
 
 
-### Death Spots (12)
+### TODO: Death Spots (12)
 
 	When you activate this rune you place a multicolored death spot
 	which will arm in a few seconds.  The spot will kill anybody who
@@ -95,7 +96,7 @@
 	with vengeance hitting your death spot!
 
 
-### Holorune (13)
+### TODO: Holorune (13)
 
 	Activating this rune leaves a holographic image of yourself
 	behind.  The image stays in place but otherwise is animated just
@@ -103,13 +104,13 @@
 	up to 5 holograms active at a time.
 
 
-### Orb of Death (14)
+### TODO: Orb of Death (14)
 
 	An orange orb replete with yellow spots orbits around you.  It
 	does a huge amount of damage to any of your foes that it contacts.
 
 
-### Blink Rune (15)
+### TODO: Blink Rune (15)
 
 	This is a semi-random teleport.  It teleports you onto objects
 	around the level.  You can normally use it often, but if you
@@ -118,7 +119,7 @@
 	This rune puts a bubble over your head.  I'm not sure why.
 
 
-### Rune of Camouflage (16)
+### TODO: Rune of Camouflage (16)
 
 	If you stand still, don't fire, and aren't being hurt, you are
 	completely invisible, not even your eyes show.  You can still
@@ -126,14 +127,14 @@
 	delight.
 
 
-### Rune of Uncontrollable Jumping (17)
+### TODO: Rune of Uncontrollable Jumping (17)
 
 	Everybody is so happy to see you that they jump for joy, though
 	there are red slippers overtones.  Also known as the rune of
 	dancing.  "Now you will dance for me."
 
 
-### Action Movie Arsenal (18)
+### TODO: Action Movie Arsenal (18)
 
 	Just like Arnold in the latest big budget shoot-em-up, you have
 	a virtually inexhaustible supply of ammunition.  (All of your
@@ -146,7 +147,7 @@
 	hook.
 
 
-### Vampiric Rune (19)
+### TODO: Vampiric Rune (19)
 
 	When you damage other players, you get their health.  (You don't
 	get back the damage you do to their armor.)  You can go above
@@ -161,7 +162,7 @@
 	when you die while you have this rune.
 
 
-### Rune of Shielding (20)
+### TODO: Rune of Shielding (20)
 
 	When you press the button you're rendered invulnerable for 3
 	seconds.  (Your opponents can tell this has happened both by
@@ -173,13 +174,13 @@
 	is canceled.)
 
 
-### Rune of Good Health (21)
+### TODO: Rune of Good Health (21)
 
 	Your maximum health value is 666, plus you get 100 health just
 	for picking up the rune.
 
 
-### Rune of Radioactivity (22)
+### TODO: Rune of Radioactivity (22)
 
 	When you press the button you drop a radiation point.  After it
 	arms in a few seconds, it does damage to any of your foes which
@@ -193,14 +194,14 @@
 	fields in certain areas.  This is very powerful.
 
 
-### Switch Rune (23)
+### TODO: Switch Rune (23)
 
 	Point at another creature and activate the button and you'll
 	switch with them.  You'll swap positions, health, armor, ammo,
 	items and powerups, but not runes.
 
 
-### Ice Traps (24)
+### TODO: Ice Traps (24)
 
 	Pressing the button with this rune creates a freeze trap which
 	will arm in a few seconds.  Anybody who touches this trap
@@ -209,7 +210,7 @@
 	disappears.  You can have 6 traps active at once.
 
 
-### Gravity Rune (25)
+### TODO: Gravity Rune (25)
 
 	Pressing the button drops an orange globe which attracts
 	everything but you and (if in team mode) your teammates.
@@ -221,7 +222,7 @@
 	armor in The Ogre Citadel.
 
 
-### The Teleport Shuffle (26)
+### TODO: The Teleport Shuffle (26)
 
 	Aim a little above the floor at some distant point and press
 	the button and you'll (usually) be teleported there.  (I'll be
@@ -231,7 +232,7 @@
 	you'll switch places with them.
 
 
-### Impact Rune (27)
+### TODO: Impact Rune (27)
 
 	Your attacks move people around much more than normal, your
 	attacks do a little more damage than normal, and if you touch
@@ -240,14 +241,14 @@
 	stay away from you.
 
 
-### Rune of Vengeance (28)
+### TODO: Rune of Vengeance (28)
 
 	You get an enormous bleeding head.  As if that weren't enough,
 	any damage people do to you is visited right back upon them, and
 	if that kills them, you get the frag.
 
 
-### Shub Hat (29)
+### TODO: Shub Hat (29)
 
 	You're surrounded by a holographic projection of Shub-Niggurath.
 	After you get past the surprise factor, this is useful both
@@ -256,14 +257,14 @@
 	you're facing and when you're firing.
 
 
-### Rune of Repulsion (30)
+### TODO: Rune of Repulsion (30)
 
 	Most things in the game, including players, projectiles and
 	death spots, are repulsed away from you.  It is a lot of fun to
 	use the grenade launcher when you have this rune.
 
 
-### Phasing Rune (31)
+### TODO: Phasing Rune (31)
 
 	You can walk through walls.  You'll have to experiment a little
 	to get the technique down, get close to a wall and activate your
@@ -271,7 +272,7 @@
 	to a new location.
 
 
-### Shambler Helper (32)
+### TODO: Shambler Helper (32)
 
 	You'll get a pet shambler of your very own.  He'll follow you
 	around and attack anybody he sees (including your teammates
@@ -279,7 +280,7 @@
 	he absorbs too much damage he'll teleport to you.
 
 
-### Rune of Dual Recall (33)
+### TODO: Rune of Dual Recall (33)
 
 	This is another teleport rune, this one teleports you back
 	to the last place at which you activated it.  Telefragging
@@ -291,7 +292,7 @@
 	to let you get close.
 
 
-### Rune of Weirdness (34)
+### TODO: Rune of Weirdness (34)
 
 	Little bubbles float off of you (or are pushed off, if you press
 	the button) and wander randomly.  If your enemy touches one
@@ -300,7 +301,7 @@
 	once.
 
 
-### Phoenix Rune (35)
+### TODO: Phoenix Rune (35)
 
 	When you are killed you respawn right where your body landed,
 	with all your items and 15 seconds of quad damage.  You can do
@@ -313,32 +314,32 @@
 	will be a warning message to indicate such.
 
 
-### Rune of Floating Spiky Death Cloud (36)
+### TODO: Rune of Floating Spiky Death Cloud (36)
 
 	A large cloud floats above you, randomly giving off little spiky
 	balls which bounce and cause a lot of damage if they hit an enemy.
 
 
-### Rune of Fire Walking (37)
+### TODO: Rune of Fire Walking (37)
 
 	You leave spots of fire behind when you walk.  The fire does a
 	lot of damage to your foes.
 
 
-### Grappling Hook (38)
+### TODO: Grappling Hook (38)
 
 	This rune gives you a grappling hook.  See the section on the
 	grappling hook for details.
 
 
-### Rune of Athletics (39)
+### TODO: Rune of Athletics (39)
 
 	This allows you to swim further, and the button performs a
 	really big jump.  I'd like to have it let you run faster,
 	but I don't think there's a safe way to do that in POQ.
 
 
-### Lumberjack Rune (40)
+### TODO: Lumberjack Rune (40)
 
 	Being a hale and hearty sort accustomed to a fit life in the
 	wilds of Canada, your maximum health is 250 rather than the
@@ -349,7 +350,7 @@
 	the impact rune.
 
 
-### Houngan Rune (41)
+### TODO: Houngan Rune (41)
 
 	When you activate this rune you'll place a camping zombie slave.
 	The zombie will stay right where you put him and attack anybody
@@ -364,7 +365,7 @@
 	A houngan is a Vodun (aka Voodoo) priest.
 
 
-### Rune of Armor Piercing (42)
+### TODO: Rune of Armor Piercing (42)
 
 	Your attacks ignore your opponent's armor.  This is nice both in
 	that it lets you kill them more easily (most people die with
@@ -374,7 +375,7 @@
 	pierce your own armor.
 
 
-### Rune of Self Preservation (43)
+### TODO: Rune of Self Preservation (43)
 
 	This rune is a rocket jumper's delight.  When you've got it
 	your own attacks don't hurt you.  (This is nicer than the buggy
@@ -383,7 +384,7 @@
 	disabled it) underwater discharge.
 
 
-### Zen Monk (44)
+### TODO: Zen Monk (44)
 
 	You're mostly invulnerable if you stand still if you haven't
 	attacked for a few seconds.  You're still vulnerable to kamikaze,
@@ -392,7 +393,7 @@
 	Plus, of course, you don't take damage from falling.
 
 
-### Human Torch (45)
+### TODO: Human Torch (45)
 
 	Lava doesn't hurt you (though you can still drown in it if you
 	stay submerged), but water does.  Bumping into people can set
@@ -403,7 +404,7 @@
 	when they're triggered.
 
 
-### Pack Rat (46)
+### TODO: Pack Rat (46)
 
 	You can pick up extra runes and carry them around.  (You don't
 	actually use them, you just carry them.)  This helps you in
@@ -435,7 +436,7 @@
       make it too easy for good players).
 
 
-### Rune of Good Armor (47)
+### TODO: Rune of Good Armor (47)
 
 	When you have this rune all the armor you get counts as red
 	armor, plus you can hold a ton of the stuff.
@@ -457,14 +458,14 @@
 	80% absorption, just like red armor.
 
 
-### Rune of Quad Damage (48)
+### TODO: Rune of Quad Damage (48)
 
 	Activating this rune gives you quad damage for a few seconds.  As
 	with the shield rune, there's a delay while the rune recharges
 	before you can activate it again.
 
 
-### Jack of All Runes (49)
+### TODO: Jack of All Runes (49)
 
 	You get the abilities of a number of other runes but in less
     	potent form.  It gives you some of the features of regen, good
@@ -472,65 +473,65 @@
     	arsenal.
 
 
-### Super Blue Stuff (50)
+### TODO: Super Blue Stuff (50)
 
 	Also known as The Glun Gun, launch a glob of blue glue that locks
 	a player down for a little bit before releasing.  Your opponent can
 	still pivot and fire.
 
 
-### Blizzard Rune (51)
+### TODO: Blizzard Rune (51)
 
 	Send out a blast of cold air that freezes everyone in site.  The
 	storm only lasts a second or two but it's enough to get off the
 	first shot!  You can pick up ice traps for a longer burst.
 
 
-### Rune of Thor (52)
+### TODO: Rune of Thor (52)
 
 	Supplies you with a lightning gun and 50 cells.  Your ammo will
 	rapidly increase until weapon is full.  Your BFG range also
 	increases.
 
 
-### Sniper Rune (53)
+### TODO: Sniper Rune (53)
 
 	Activate your rune to gib just about anyone. You start off losing
 	health with each activation. Your potential health loss will
 	increase with every kill. There is no recharge time!
 
 
-### Anti-Packs Rune (54)
+### TODO: Anti-Packs Rune (54)
 
 	Drop backpacks that remove ammo and weapons from your enemies. The
 	backpacks will bleed to indicate they are not standard backpacks.
 
 
-### Telefrag Deflect Rune (55)
+### TODO: Telefrag Deflect Rune (55)
 
 	Deflects most telefrags!
 
 
-### Bouncing Betty Rune (56)
+### TODO: Bouncing Betty Rune (56)
 
 	Also known as cluster grenades. You launch a single grenade which
 	after a second spawns multiple clusters of grenades. A real
 	crowd pleaser!
 
 
-### Tornado Rune (57)
+### TODO: Tornado Rune (57)
 
 	Launch a massive tornado that sucks you, and everyone else into its
 	center. If you touch the center you will be gibbed.
 
 
-### Requiem Rune (58)
+### TODO: Requiem Rune (58)
 
     Walking over ammo, health, or armor doesn't pick it up but provides a
     continuous supply.
 
 
-### Lithium Hook (59)
+### TODO: Lithium Hook (59)
 
 	This isn't a standard rune, it's the quasi-rune used to give you
 	a grappling hook in Lithium hook mode.  You can use impulse 159

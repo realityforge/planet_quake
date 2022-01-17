@@ -1326,6 +1326,7 @@ default values.
 #define CVAR_TAGGED_SPECIFIC   0x40000
 #define CVAR_TAGGED_ORIGINAL   0x80000
 #endif
+
 #ifdef USE_CVAR_UNCHEAT
 //#define CVAR_UNCHEATED         0x100000
 #endif

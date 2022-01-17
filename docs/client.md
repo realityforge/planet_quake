@@ -3,12 +3,62 @@
 
 ## Client Features
 
-  * Uncheat, removed the `CVAR_CHEAT` flag from specific cvars, then shares those cvars with the server for blocking.
   * Rcon auto-complete, sends a `complete` command to server and response with an `autocomplete` key in an `infoResponse` which is an easy way to intercept messages without adding a command.
-  * Heavily modified "Local" multiplayer page that lists specific masters server using `cl_master1-24` as opposed to `sv_master1-24` like on the "Internet" page of the multiplayer menu, if admins want to list servers by geographically nearby.
-  * Slim client without extra file formats or server, only for connecting to games or rendering demos.
-  * RmlUi support for HTML/RCSS style menus.
-  * Persistent console.
+
+This fork includes various experimental features. Most of them can be turned on and off during compiling because the feature is tagged with pre-compile `#if` statements to include the feature.
+This is an incomplete list of features added.
+Use `USE_FEATURE=1` with make to enable.
+
+### USE_CVAR_UNCHEAT
+Uncheat, removed the `CVAR_CHEAT` flag from specific cvars, then shares those cvars with the server for blocking.
+
+### USE_LOCAL_DED
+start a dedicated server even for single player mode, automatically join a match
+
+### USE_LAZY_LOAD
+allow loading graphics after the BSP and world has been entered
+
+### USE_LAZY_MEMORY
+minimize the number of times the renderer restarts
+
+### USE_MASTER_LAN
+Heavily modified "Local" multiplayer page that lists specific masters server using `cl_master1-24` as opposed to `sv_master1-24` like on the "Internet" page of the multiplayer menu, if admins want to list servers by geographically nearby.
+
+### USE_MV
+Cyrax's Multiview is what makes multiworld possible.
+USE_MV_ZCMD - command compression
+
+### USE_RMLUI
+RmlUi adds supplementary initerfaces written in HTML.
+
+### USE_CURSOR_SPY
+spy on the cursors position for absolute mouse control
+
+### USE_DRAGDROP
+allow files like pk3s to be dragged into the client for easy loading
+
+### USE_PRINT_CONSOLE
+use pre-compile templates to filter annoying debug messages
+
+### USE_NO_CONSOLE
+remove console drop down in game functionality altogether
+
+### USE_PERSIST_CONSOLE
+Persist console messages between games and also between launches
+
+### USE_LIVE_RELOAD
+automatically reload game when the QVM changes from a new compile
+
+### USE_DIDYOUMEAN
+show did you mean? results for map names, cvars, command names, etc
+
+### BUILD_CLIENT_SLIM
+Slim client without extra file formats or server, only for connecting to games or rendering demos.
+
+
+## Multigame
+
+Multigame is a mod I've been working on that adds Runes and alternate fire modes and stuff, [games.md](../docs/games.md#game-features).
 
 
 ## TODOs

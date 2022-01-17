@@ -1,13 +1,3 @@
-
-- [Compilation and installation](#compilation-and-installation)
-- [Console](#console)
-- [Docker](#docker)
-- [Running content server](#running-content-server)
-- [Repacking](#repacking)
-- [Building](#building)
-- [Contributing](#contributing)
-- [Credits](#credits)
-
 ```
 ,-------------------------------------------------------------------------------.
  _____  _               _   _ ______ _______    ____  _    _         _  ________ 
@@ -45,6 +35,7 @@ More on what makes WebAssembly [difficult to build here](./docs/quakejs.md).
   * [Multiple game styles](./docs/games.md)
   * [Slim client/auto connect and more](./docs/client.md)
   * [Referee, persistent sessions, event system](./docs/server.md)
+  * [Various, experimental, features](./docs/experimental.md)
   * PNG support
   * Drag and drop
   * Many, many bug fixes
