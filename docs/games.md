@@ -13,19 +13,20 @@ These features are included in the games/multigame folder as a fork on baseq3a.
 Use `USE_FEATURE=1` with make to enable.
 
 ### BUILD_EXPERIMENTAL
-enabled experimental features (enabled by default)
+Enable experimental features (enabled by default)
 
 ### USE_DAMAGE_PLUMS
 Damage plums, every time you hit another player, a little floating number appears from the spot you hit them.
+
+![F1](../docs/plums.png?raw=true)
 
 ### USE_ITEM_TIMERS
 Power-up item timers. Shows how long until power-up respawns.
 
 ![F1](../docs/timers.png?raw=true)
 
-
 ### USE_TEAM_VARS
-team variables modified
+Advanced team-play variables, currently only supports `g_flagReturn`, the number of milliseconds before a flag returns to base after being dropped.
 
 ### USE_PHYSICS_VARS
 Configurable physics variables, usually transfered from server to client
@@ -34,7 +35,7 @@ Configurable physics variables, usually transfered from server to client
 Configurable vote options based on roles.
 
 ### USE_REFEREE_CMDS
-allow referees to freeze players/TODO: rebalance teams
+Allow referees to freeze players/TODO: rebalance teams
 
 ### USE_GAME_FREEZETAG
 Freezing a player like freeze tag with `\freeze` in the console. TODO: freeze when player dies, optional unfreeze with partial health or gib/respawn when unfrozen.  TODO: referee only, add freezing to game dynamics. TODO: add map triggers to freeze. TODO: treat frozen player like spectator.
@@ -42,13 +43,27 @@ Freezing a player like freeze tag with `\freeze` in the console. TODO: freeze wh
 ![F1](../docs/freeze.png?raw=true)
 
 ### USE_ADVANCED_HUD
-advanced hud features like player looking in the same direction, 3D guns, etc
+Advanced hud features like player looking in the same direction, 3D guns, etc
 
 ### USE_3D_WEAPONS
-draw 3D weapons that rotate slightly
+Draw 3D weapons that rotate back and forth slightly while your switching weapons.
+
+![F1](../docs/hud.png?raw=true)
 
 ### USE_WEAPON_VARS
-weapon vars allow customizing all weapon behavior
+Weapon vars have the same basic format. `Enable`, `Cycle`, `Damage`, `Splash`, `Radius`, `Speed`, `Time`. The explaination for each setting is below.
+
+Weapons are named as `gaunt`, `machine`, `shotgun`, `grenade`, `rocket`, `plasma`, `rail`, `light`, `bfg`, `grapple`, `nail`, `prox`, `chain`, `flame`.
+
+Combine the weapon words above like `\set wp_bfgEnable 0` to set each combination.
+
+  * Enable - Disable the weapon on the map if the item appears and in the players arsenal.
+  * Cycle - How quickly the weapon reloads in between firing each shot.
+  * Damage - How much damage the weapon does to the players health with a direct hit.
+  * Splash - How much splash damage the explosion does on impact.
+  * Radius - The size radius around the impact to diffuse the splash damage.
+  * Speed - The projectile speed.
+  * Time - Time before the projectile triggers/reacts/auto-explodes.
 
 ### USE_WEAPON_ORDER
 Advanced weapon switching order for clients to set which weapons upgrade when they pick up.
@@ -57,7 +72,7 @@ Advanced weapon switching order for clients to set which weapons upgrade when th
 Allow clients to center the weapon in the middle of the hud instead of using the hand aligned position. TODO: turn off LERPTAG for this and just draw the weapon centered in the middle using weapon->mins/maxs.
 
 ### USE_LOCAL_DMG
-Advanged Location Damage, hitting a player on specific body parts changes damage amount. Also, slows and breaks legs if you fall too far like UrT.
+Advanced Location Damage, hitting a player on specific body parts changes damage amount. Also, slows and breaks legs if you fall too far like UrT.
 
 ### USE_GRAVITY_BOOTS
 Anti-gravity boots with `\boots` command.
@@ -78,13 +93,13 @@ Advanced Progressive Zoom stops zooming when the key is up at any zoom level and
 Rotating doors in maps for UrT support, Quake 2 map support.
 
 ### USE_HEADSHOTS
-show special messages and animation for headshots
+Beheading with headshot detection for Railgun only. Shows a special message and head only big animation.
 
 ### USE_ALT_FIRE
-Alternate weapon fire, twice as fast POC.
+Alternate weapon fire, twice as fast POC. Set `\bind mouse2 +button13`.
 
 ### USE_CLUSTER_GRENADES
-cluster grenades create offspring every time they hit something
+Cluster grenades explodes with grenades in 4 directions after they hit the ground.
 
 ### USE_HOMING_MISSILE
 Homing rockets look for other player to track and change direction until they explode on impact. They are hard to dodge, but sometimes can get trapped in corridors.
@@ -93,16 +108,16 @@ Homing rockets look for other player to track and change direction until they ex
 Spreadfire weapon and powerup mod, sends lots of fire in every direction.
 
 ### USE_TRINITY
-unholy trinity mode, start with rocket, rails, lightning
+Unholy Trinity Mode, only starts the player with rocket, rails, lightning and unlimited ammo.
 
 ### USE_INSTAGIB
-Server-side insta-gib gameplay. Weapons do 1000 times damage only on a direct hit. Beheading with headshot detection for Railgun only.
+Server-side insta-gib gameplay. Weapons do 1000 times damage only on a direct hit.
 
 ### USE_GRAPPLE
 Working Grappling Hook. TODO: add bot support. TODO: add to character class like Major only. Anyone can pick up if she drops it.
 
 ### USE_ACCEL_RPG
-rpg accellerating missiles start slow and then speed up as they fly
+RPG accelerating missiles start slow and then speed up as they fly.
 
 ### USE_WEAPON_DROP
 ### USE_ITEM_DROP
@@ -114,13 +129,13 @@ rpg accellerating missiles start slow and then speed up as they fly
 Weapon dropping, using the `\drop` command will eject current weapon, eject picked-up items, eject ammo, eject active power-up, eject runes, eject persistent power-ups like guard and returns to their podium at the team base, ejects health orbs in a medic situation.
 
 ### USE_BOUNCE_CMD
-allow clients to specify bouncing rockets
+Allow clients to specify bouncing rockets with the `\bounce` command.
 
 ### USE_BOUNCE_RPG
 Bouncing rockets bounce off of walls. Can be enabled from map item's SPAWNFLAGS or server enabled.
 
 ### USE_BOUNCE_RAIL
-bouncing rail guns
+Railgun fire bounces off of walls instead of going through them or hitting stopping after the first impact.
 
 ### USE_CLOAK_CMD
 Infinite invisibility cloak with `\cloak` command.
@@ -147,19 +162,19 @@ Armor piercing rails, rails that go through walls.
 More modes of death - ring out takes a point away from the person who falls into the void and gives a point to the last person that did knock-back damage to the player that died (MOD_RING_OUT). "Void death" detection if someone fall a distance and then was killed by a world trigger (MOD_VOID). "from the grave" mode of death - when a grenade goes off and kills another player, after the grenade owner already died (MOD_FROM_GRAVE).
 
 ### USE_HOTRPG
-hot rockets do no self-splash damage, infinite rockets, intagib on direct hits
+Hot rockets do no self-splash damage, infinite rockets, intagib on direct hits.
 
 ### USE_HOTBFG
-hot BFG better balance, infinite ammo
+Hot BFG better balance for damage dealt, infinite ammo.
 
 ### USE_PORTALS
 Portals! Portal power-up can be placed anywhere, ground, mid-air, under water. Portal gun can replace the BFG with left and right click to place a portal on walls. Portal power-up `\give portal` is a free standing portal it will set 2 ends of a portal with the `\use` command. Both ends of free standing portals rotate to always face the camera in the same orientation. Shader portals can specify "world" key in the .map entities and can be used on any mod with the new engine and renderer. ![Portals](../docs/portals.png?raw=true)
 
 ### USE_SINGLEPLAYER
-add single player features like earthquakes, player stopping, and animated models
+Add single player features like earthquakes, player stopping, and animated models.
 
 ### USE_MULTIWORLD
-special multiworld features like cameras and portals
+Special multiworld features like cameras and portals. See [multiworld](../docs/multiworld.md) for more information.
 
 
 ## TODO

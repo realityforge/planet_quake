@@ -1147,16 +1147,13 @@ void SV_Init( void )
 #ifndef BUILD_SLIM_CLIENT
 #ifdef USE_LOCAL_DED
 	if(com_dedicated->integer)
-	{
 #endif
-;
+	{
 	// force initial check
 	SV_TrackCvarChanges();
 
 	SV_InitChallenger();
-#ifdef USE_LOCAL_DED
 	}
-#endif
 #endif
 }
 

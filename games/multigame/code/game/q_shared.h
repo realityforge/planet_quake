@@ -144,6 +144,8 @@
 #define BUILD_EXPERIMENTAL 1
 
 #ifdef BUILD_EXPERIMENTAL
+// mission pack features are enabled
+#define MISSIONPACK 1
 // compile damage plums every time someone gets hit
 #define USE_DAMAGE_PLUMS 1
 // compile item timers, show how long until power-up respawns

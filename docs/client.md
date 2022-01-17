@@ -13,13 +13,16 @@ Use `USE_FEATURE=1` with make to enable.
 Uncheat, removed the `CVAR_CHEAT` flag from specific cvars, then shares those cvars with the server for blocking.
 
 ### USE_LOCAL_DED
-start a dedicated server even for single player mode, automatically join a match
+Start a dedicated server for single player mode in a seperate process, automatically join the match. This mod has communication changes, the server can send any command to the local client to execute, server info can be updated mid-game, single player functionality in the dedicated server setting, benefit of splitting math work between processors.
 
 ### USE_LAZY_LOAD
-allow loading graphics after the BSP and world has been entered
+Lazy loading was implemented because graphics over web are traditionally loaded into the page asynchronously. The main principle is loading graphics in between frames from very low res sources. Read more about it here, [lazyloading.md](../docs/lazyloading.md).
+
+[![Lazy](https://img.youtube.com/vi/lkp0A68ygBQ/0.jpg)](https://www.youtube.com/watch?v=lkp0A68ygBQ
+)
 
 ### USE_LAZY_MEMORY
-minimize the number of times the renderer restarts
+Similar to lazy loading, lazy memory reduces the number of times the renderer restarts. Instead of restarting the renderer every time the menu loads or the map changes, all the graphics are left in memory and slowly rotated out of memory as they are no longer used. This takes up more memory, but that's not a problem for most modern computers.
 
 ### USE_MASTER_LAN
 Heavily modified "Local" multiplayer page that lists specific masters server using `cl_master1-24` as opposed to `sv_master1-24` like on the "Internet" page of the multiplayer menu, if admins want to list servers by geographically nearby.
@@ -33,27 +36,23 @@ RmlUi adds supplementary initerfaces written in HTML.
 
 ![F1](../docs/rml.png?raw=true)
 
-
-### USE_CURSOR_SPY
-spy on the cursors position for absolute mouse control
-
 ### USE_DRAGDROP
-allow files like pk3s to be dragged into the client for easy loading
+Allow files like pk3s to be dragged into the client for easy loading.
 
 ### USE_PRINT_CONSOLE
-use pre-compile templates to filter annoying debug messages
+Use pre-compile templates to filter annoying debug messages. TODO: more documentation here
 
 ### USE_NO_CONSOLE
-remove console drop down in game functionality altogether
+Remove console drop down in game functionality altogether.
 
 ### USE_PERSIST_CONSOLE
 Persist console messages between games and also between launches
 
 ### USE_LIVE_RELOAD
-automatically reload game when the QVM changes from a new compile
+Automatically reload game when the QVM changes from a new compile, or restart the process when the engine is recompiled from a code change, or reload the map when the .map file is saved.
 
 ### USE_DIDYOUMEAN
-show did you mean? results for map names, cvars, command names, etc
+Show "Did you mean?" results for mis-typed map names, cvars, command names, etc.
 
 ### BUILD_CLIENT_SLIM
 Slim client without extra file formats or server, only for connecting to games or rendering demos.

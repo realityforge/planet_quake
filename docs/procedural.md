@@ -39,7 +39,7 @@ Atlantis arena, will be a special kind of water based map where players must swi
   * Recompile every map with new lightmaps and higher res/upscaled images
   * Connect every map in one giant universe, after removing ceilings (for birds eye), simplifying geometry, and stretching walls slightly outwards (multiply every Z point/total Z as a factor of growth between ceiling and floor so all the walls slant outwards)
   * Recompile skyboxes with different colors (q3map_skylight) like based on time of day, to make it feel more realistic and melancholic like you've lost a whole day in the game even if you've only been playing an hour. Might need GauGAN
-  * Connect virtual-fs for image loading
+  * Connect virtual-fs to q3map2 for image loading, instead of passing the vargs option.
   * Create voxelized model on server aka "destructible model" and stream to client, replace using z-index?
   * Use destruction and voxelization on Quake 2 remake where player has to return to previous levels in ruins
   * Add checksum to skip download, also minimize download screen 

@@ -1,5 +1,8 @@
 ## What is lazy loading?
 
+[![Lazy](https://img.youtube.com/vi/lkp0A68ygBQ/0.jpg)](https://www.youtube.com/watch?v=lkp0A68ygBQ
+)
+
 I soon realized by down encoding graphics, then maximizing in game quality, I could get a similar "feel" from only 10-20% of an image. This meant, it would be faster to load the images into memory, but the quality on the GPU would be similar to the default, using 0-mips.
 
 That means, I can load graphics quickly enough that it does it in-between frames. That also means, the graphics could be downloaded from a remote source, and loaded in-game whenever they arrive. Combine this feature with multiworld, and I can create an experience similar to MegaTexture where different quality graphics and models can be loaded based on the distance the player is from the content. Then the entire render will switch "worlds" as they get closer.

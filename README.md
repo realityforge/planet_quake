@@ -35,7 +35,6 @@ More on what makes WebAssembly [difficult to build here](./docs/quakejs.md).
   * [Multiple game styles](./docs/games.md)
   * [Slim client/auto connect and more](./docs/client.md)
   * [Referee, persistent sessions, event system](./docs/server.md)
-  * [Various, experimental, features](./docs/experimental.md)
   * PNG support
   * Drag and drop
   * Many, many bug fixes

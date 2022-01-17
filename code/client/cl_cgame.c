@@ -435,9 +435,12 @@ static void CL_ConfigstringModified( void ) {
 	if ( index == CS_SYSTEMINFO ) {
 		// parse serverId and other cvars
 		CL_SystemInfoChanged( qfalse, igs );
-	} else if (index == CS_SERVERINFO) {
+	}
+#ifdef USE_LOCAL_DED
+	else if (index == CS_SERVERINFO) {
 		CL_ParseServerInfo(igs);
 	}
+#endif
 }
 
 
