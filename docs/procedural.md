@@ -7,10 +7,15 @@ A maze map, using recursive division. Has 4 floors each with a different maze, a
 
 A chutes and ladders map, based on Quake 1 Edge of Oblivion, has ramps between 2 pyramids and wind tunnels connecting it in between.
 
+![F1](../docs/chutes.png?raw=true)
+
 An F1 race track. Uses CEIC2000 as edge detection for a JPG image of a bird eye view of the Monaco race track to generate the proper brushwork to for a road.
+
+![F1](../docs/f1.png?raw=true)
 
 Atlantis arena, will be a special kind of water based map where players must swim through a giant globe of water to reach power-ups. Markers within the water will allow you to jettison in different directions, with a big open arena in the center.
 
+![F1](../docs/aqua.png?raw=true)
 
 
 ## Procedural Features

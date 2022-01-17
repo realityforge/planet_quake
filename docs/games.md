@@ -1,8 +1,6 @@
-
 I have intentionally put off "game code" development because the possibilities are so endless. Game-code is separate from "engine-code". There is a hard line, a fixed set of API calls that the game code makes to the engine. Things like RegisterModel() is a call from the game to the engine to load a specific model file. The game doesn't care what format the model is in, just that it looks like the specific model it needs, the renderers job is to decode the model format. The same thing applies to every graphic, the game doesn't care if the graphic is PNG, JPEG, that is the engine's job to figure out.
 
 The following features I've added to baseq3a without affecting the networking protocol.
-
 
 ## Game Features:
 
@@ -23,6 +21,9 @@ Damage plums, every time you hit another player, a little floating number appear
 ### USE_ITEM_TIMERS
 Power-up item timers. Shows how long until power-up respawns.
 
+![F1](../docs/timers.png?raw=true)
+
+
 ### USE_TEAM_VARS
 team variables modified
 
@@ -37,6 +38,8 @@ allow referees to freeze players/TODO: rebalance teams
 
 ### USE_GAME_FREEZETAG
 Freezing a player like freeze tag with `\freeze` in the console. TODO: freeze when player dies, optional unfreeze with partial health or gib/respawn when unfrozen.  TODO: referee only, add freezing to game dynamics. TODO: add map triggers to freeze. TODO: treat frozen player like spectator.
+
+![F1](../docs/freeze.png?raw=true)
 
 ### USE_ADVANCED_HUD
 advanced hud features like player looking in the same direction, 3D guns, etc

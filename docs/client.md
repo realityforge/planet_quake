@@ -31,6 +31,9 @@ USE_MV_ZCMD - command compression
 ### USE_RMLUI
 RmlUi adds supplementary initerfaces written in HTML.
 
+![F1](../docs/rml.png?raw=true)
+
+
 ### USE_CURSOR_SPY
 spy on the cursors position for absolute mouse control
 
@@ -56,6 +59,11 @@ show did you mean? results for map names, cvars, command names, etc
 Slim client without extra file formats or server, only for connecting to games or rendering demos.
 
 
+## Experimental server features
+
+Some server features require changes to the client component and server component. Server features are listed here, [server.md](../docs/server.md).
+
+
 ## Multigame
 
 Multigame is a mod I've been working on that adds Runes and alternate fire modes and stuff, [games.md](../docs/games.md#game-features).
@@ -71,6 +79,7 @@ Multigame is a mod I've been working on that adds Runes and alternate fire modes
   * .Gif support with automatic frame binding in animMap
   * Ported IQM and MD5 bone structures from spearmint engine
   * Many BSP formats (Quake 1, Quake 2, Quake 4, Doom 1, Doom 2, Doom 3, Hexen maps) support and cross compatibility with other game content like Call of Duty, Half-Life, and Savage XR
+  ![F1](../docs/et.png?raw=true)
   * move console background image API to server-side with console instead of mod side like in e+/freon.
   * Fix r_fbo and add pixel buffer objects for recordings. Send PBO to a worker thread to encode to VPX-wasm for live streaming.
   * Something wrong with r_fbo causing driver crash. Need it for hall of mirrors effect for portals.
