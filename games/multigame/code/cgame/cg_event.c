@@ -220,6 +220,11 @@ static void CG_Obituary( entityState_t *ent ) {
       }
       break;
 #endif
+#ifdef USE_MODES_DEATH
+		case MOD_SPECTATE:
+			message = "left to spectate";
+			break;
+#endif
 		default:
 			if ( gender == GENDER_FEMALE )
 				message = "killed herself";

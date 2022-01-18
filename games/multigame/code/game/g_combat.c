@@ -656,7 +656,11 @@ void player_die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int
 	Team_FragBonuses(self, inflictor, attacker);
 
 	// if I committed suicide, the flag does not fall, it returns.
-	if (meansOfDeath == MOD_SUICIDE) {
+	if (meansOfDeath == MOD_SUICIDE
+#ifdef USE_MODES_DEATH
+		|| meansOfDeath == MOD_SPECTATE
+#endif
+	) {
 #ifdef MISSIONPACK
 		if ( self->items[ITEM_PW_MIN + PW_NEUTRALFLAG] ) {		// only happens in One Flag CTF
 			Team_ReturnFlag( TEAM_FREE );
@@ -753,6 +757,9 @@ void player_die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int
     && meansOfDeath != MOD_HEADSHOT
 #endif
     ) || meansOfDeath == MOD_SUICIDE
+#ifdef USE_MODES_DEATH
+		|| meansOfDeath == MOD_SPECTATE
+#endif
   ) {
 		// gib death
 		GibEntity( self, killer );

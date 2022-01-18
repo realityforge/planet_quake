@@ -296,7 +296,12 @@ typedef struct client_s {
 	qboolean		downloadEOF;		// We have sent the EOF block
 	int				downloadSendTime;	// time we last got an ack from the client
 
+#ifdef USE_MULTIVM_SERVER
+	int				deltaMessages[MAX_NUM_VMS];		// frame last client usercmd message
+#define deltaMessage deltaMessages[gvmi]
+#else
 	int				deltaMessage;		// frame last client usercmd message
+#endif
 	int				lastPacketTime;		// svs.time when packet was last received
 	int				lastConnectTime;	// svs.time when connection started
 	int				lastDisconnectTime;

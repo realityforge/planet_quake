@@ -351,7 +351,7 @@ void CL_ParseSnapshot( msg_t *msg, qboolean multiview ) {
 			} else if ( old->messageNum != newSnap.deltaNum ) {
 				// The frame that the server did the delta from
 				// is too old, so we can't reconstruct it properly.
-				Com_Printf ("Delta frame too old: %i -> %i.\n", igs, newSnap.deltaNum);
+				Com_Printf ("Delta frame too old: %i -> %i != %i != %i.\n", igs, newSnap.deltaNum, old->messageNum, cl.snapshots[newSnap.deltaNum + 1 & PACKET_MASK].messageNum);
 			} else if ( cl.parseEntitiesNumWorlds[igs] - old->parseEntitiesNum > MAX_PARSE_ENTITIES - MAX_SNAPSHOT_ENTITIES ) {
 				Com_Printf ("Delta parseEntitiesNum too old.\n");
 			} else {
@@ -535,7 +535,7 @@ void CL_ParseSnapshot( msg_t *msg, qboolean multiview ) {
 	}
 	for ( ; oldMessageNum < newSnap.messageNum ; oldMessageNum++ ) {
 //		if(cl.snapshots[oldMessageNum & PACKET_MASK].valid)
-//Com_Printf("Invalidated (%i): %i == %i\n", cgvmi, igs, clientGames[cgvmi]);
+//Com_Printf("Invalidated (%i): %i == %i\n", oldMessageNum, igs, clientGames[cgvmi]);
 		cl.snapshots[oldMessageNum & PACKET_MASK].valid = qfalse;
 	}
 

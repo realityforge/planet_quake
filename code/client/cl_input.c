@@ -808,7 +808,7 @@ void CL_WritePacket( void ) {
 			continue;
 		}
 		int igs = clientGames[igvm];
-		int oldCmdNum = cl.clCmdNumbers[igvm];
+		//int oldCmdNum = cl.clCmdNumbers[igvm];
 		CL_CreateNewCommands(igvm);
 		if(igvm != 0) {
       // choose which client to extract movement commands from, cl.currentView?
@@ -857,7 +857,7 @@ void CL_WritePacket( void ) {
 
 #ifdef USE_MULTIVM_CLIENT
 	oldPacketNum = (clc.netchan.outgoingSequence - 2) & PACKET_MASK;
-	count = 4;
+	count = 1;
 #else
   if(!cl_packetdup)
     oldPacketNum = (clc.netchan.outgoingSequence - 2) & PACKET_MASK;
@@ -894,11 +894,11 @@ void CL_WritePacket( void ) {
 
 		// write all the commands, including the predicted command
 		for ( i = 0 ; i < count ; i++ ) {
-#ifdef USE_MULTIVM_CLIENT
-			j = (i == 0 ? oldCmdNum : cl.clCmdNumbers[igvm]) & CMD_MASK;
-#else
+//#ifdef USE_MULTIVM_CLIENT
+//			j = (i == 0 ? oldCmdNum : cl.clCmdNumbers[igvm]) & CMD_MASK;
+//#else
 			j = (cl.cmdNumber - count + i + 1) & CMD_MASK;
-#endif
+//#endif
 			cmd = &cl.cmds[j];
 			MSG_WriteDeltaUsercmdKey (&buf, key, oldcmd, cmd);
 			oldcmd = cmd;
