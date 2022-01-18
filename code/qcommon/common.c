@@ -564,6 +564,13 @@ void QDECL Com_Error( errorParm_t code, const char *fmt, ... ) {
 
 	Cbuf_Init();
 
+#ifndef DEDICATED
+#ifdef USE_LAZY_LOAD
+	if(Cvar_VariableIntegerValue("cl_lazyLoad"))
+		Cvar_Set("cl_lazyLoad", "1");
+#endif
+#endif
+
 	if ( code == ERR_DISCONNECT || code == ERR_SERVERDISCONNECT ) {
 		VM_Forced_Unload_Start();
 #ifndef BUILD_SLIM_CLIENT

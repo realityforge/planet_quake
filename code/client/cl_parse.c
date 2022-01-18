@@ -347,11 +347,11 @@ void CL_ParseSnapshot( msg_t *msg, qboolean multiview ) {
 			old = &cl.snapshots[newSnap.deltaNum & PACKET_MASK];
 			if ( !old->valid ) {
 				// should never happen
-				Com_Printf ("Delta from invalid frame (not supposed to happen!).\n");
+				Com_Printf ("Delta from invalid frame (not supposed to happen!): %i -> %i.\n", igs, newSnap.deltaNum);
 			} else if ( old->messageNum != newSnap.deltaNum ) {
 				// The frame that the server did the delta from
 				// is too old, so we can't reconstruct it properly.
-				Com_Printf ("Delta frame too old.\n");
+				Com_Printf ("Delta frame too old: %i -> %i.\n", igs, newSnap.deltaNum);
 			} else if ( cl.parseEntitiesNumWorlds[igs] - old->parseEntitiesNum > MAX_PARSE_ENTITIES - MAX_SNAPSHOT_ENTITIES ) {
 				Com_Printf ("Delta parseEntitiesNum too old.\n");
 			} else {
@@ -365,7 +365,7 @@ void CL_ParseSnapshot( msg_t *msg, qboolean multiview ) {
 				}
 			}
 		}
-//Com_Printf("Parsing world: %i (%i -> %i -> %i)\n", cgvmi, deltaNum, newSnap.messageNum, clc.reliableAcknowledge);
+//Com_Printf("Parsing world: %i (%i -> %i -> %i)\n", igs, deltaNum, newSnap.messageNum, clc.reliableAcknowledge);
 #endif
 
 		// from here we can start version-dependent snapshot parsing
@@ -934,9 +934,13 @@ static void CL_ParseGamestate( msg_t *msg ) {
 
 	clc.clientNum = MSG_ReadLong(msg);
 	
-	#ifdef USE_MV
-		clc.zexpectDeltaSeq = 0; // that will reset compression context
-	#endif
+#ifdef USE_MULTIVM_CLIENT
+	clientGames[clc.currentView] = clc.currentView;
+	clientWorlds[clc.currentView] = clc.clientNum;
+#endif
+#ifdef USE_MV
+	clc.zexpectDeltaSeq = 0; // that will reset compression context
+#endif
 
 	// read the checksum feed
 	clc.checksumFeed = MSG_ReadLong( msg );

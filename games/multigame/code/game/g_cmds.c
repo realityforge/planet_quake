@@ -1962,8 +1962,8 @@ void Cmd_DropAmmo_f(gentity_t *ent) {
 void Cmd_DropHealth_f(gentity_t *ent) {
   gitem_t *item;
 	// TODO: infinite version of health 999 like DOOM?
-	//if(ent->client->ps.ammo[i] == INFINITE)
-	//	return;
+	if(ent->health == INFINITE)
+		return;
 	item = BG_FindItemForHealth(25);
 	if(floor(ent->health / item->quantity) > 1) {
 		dropWeapon( ent, item, 0, FL_DROPPED_ITEM | FL_THROWN_ITEM );

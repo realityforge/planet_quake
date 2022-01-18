@@ -1479,6 +1479,7 @@ memory on the hunk from cgame, ui, and renderer
 void CL_MapLoading( void ) {
 #ifdef USE_MULTIVM_CLIENT
   int igs = clientGames[cgvmi];
+	clientWorlds[cgvmi] = clc.clientNum;
 #endif
 
 	if ( com_dedicated->integer ) {
@@ -2864,15 +2865,14 @@ static void CL_DownloadsComplete( void ) {
 	// force the client to load a new VM using sv_mvWorld
 	// this only loads a VM the first time, decoupling game state from loading
 	// TODO: exec world 0:0 asynchronously
-	if((!clientGames[clc.currentView] || clientGames[clc.currentView] < 0)
+	if(((!clientGames[clc.currentView] || clientGames[clc.currentView] < 0)
+		&& clc.currentView == 0)
 		// server controls world view
-		&& (clc.currentView == 0 || (clc.world && atoi(clc.world)))
+		|| (clc.world && atoi(clc.world))
 		// client auto loads world, default autoload
 		// || cl_mvWorld->integer
 	) {
 		cgvmi = clc.currentView;
-		clientGames[clc.currentView] = clc.currentView;
-		clientWorlds[clc.currentView] = clc.clientNum;
 #ifdef USE_LAZY_LOAD
 		if(clc.currentView != 0)
 			Cvar_Set( "cl_lazyLoad", "2" ); // TODO: 4

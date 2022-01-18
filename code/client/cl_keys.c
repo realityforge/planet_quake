@@ -926,6 +926,7 @@ void CL_KeyEvent( int key, qboolean down, unsigned time, int finger )
 {
 #ifdef USE_MULTIVM_CLIENT
 	cgvmi = clc.currentView;
+	CM_SwitchMap(clientMaps[cgvmi]);
 #endif
 	if ( down )
 		CL_KeyDownEvent( key, time, finger );

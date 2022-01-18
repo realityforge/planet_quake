@@ -802,9 +802,8 @@ void CL_WritePacket( void ) {
 	//   e.g. dead world versus living world, like respawn in WoW, 
 	//     different enemies in dead world for powerups like in Prey
 	for(int igvm = 0; igvm < MAX_NUM_VMS; igvm++) {
-		if(igvm > 0 && (!cgvmWorlds[igvm]
-			|| clientGames[igvm] == -1
-			|| clientWorlds[igvm] != clc.clientNum)
+		if(clientGames[igvm] == -1
+			|| clientWorlds[igvm] != clc.clientNum
 		) {
 			continue;
 		}
@@ -858,7 +857,7 @@ void CL_WritePacket( void ) {
 
 #ifdef USE_MULTIVM_CLIENT
 	oldPacketNum = (clc.netchan.outgoingSequence - 2) & PACKET_MASK;
-	count = 2;
+	count = 4;
 #else
   if(!cl_packetdup)
     oldPacketNum = (clc.netchan.outgoingSequence - 2) & PACKET_MASK;

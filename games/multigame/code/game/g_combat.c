@@ -116,7 +116,15 @@ void TossClientItems( gentity_t *self ) {
     && !g_hotBFG.integer
 #endif
 #ifdef USE_FLAME_THROWER
+		// don't drop flame thrower power-up
     && weapon != WP_FLAME_THROWER
+#endif
+#ifdef USE_PORTALS
+		// don't drop portal guns
+		&& (!wp_portalEnable.integer || weapon != WP_BFG)
+#endif
+#ifdef USE_WEAPON_VARS
+		&& self->client->ps.ammo[ weapon ] != INFINITE
 #endif
     && self->client->ps.ammo[ weapon ] ) {
 		// find the item type for this weapon

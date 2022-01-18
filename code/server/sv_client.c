@@ -938,7 +938,9 @@ gotnewcl:
 	}
 #ifdef USE_MULTIVM_SERVER
   // add new clients to all worlds
-  else if(sv_mvOmnipresent->integer == 1) {
+  else if(sv_mvOmnipresent->integer != 0) {
+		newcl->multiview.protocol = MV_PROTOCOL_VERSION;
+		newcl->multiview.scoreQueryTime = 0;
     for(int igvm = 0; igvm < MAX_NUM_VMS; igvm++) {
   		if(!gvmWorlds[igvm]) continue;
       if(igvm == newcl->gameWorld) continue; // already joined above
@@ -2420,7 +2422,7 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
       VM_Call( gvm, 1, GAME_CLIENT_DISCONNECT, clientNum );	// firstTime = qfalse
 			prevEnt = SV_GentityNum( clientNum );
     } else if (sv_mvOmnipresent->integer == -1) {
-      SV_ExecuteClientCommand(client, "team spectator");
+      SV_ExecuteClientCommand(client, "team s");
     }
 
 		gvmi = newWorld;
@@ -3117,7 +3119,7 @@ static qboolean SV_ClientCommand( client_t *cl, msg_t *msg ) {
 		SV_DropClient( cl, "Lost reliable commands" );
 		return qfalse;
 	}
-	
+
 #ifdef USE_MULTIVM_SERVER
 	int prevGvm = gvmi;
 	gvmi = cl->newWorld;

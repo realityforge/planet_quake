@@ -10,7 +10,6 @@
 '----------------------------- https://quake.games -----------------------------'
 ```
 
-
 This project derives from https://github.com/ec-/Quake3e and https://github.com/inolen/quakejs.
 
 To see a live demo, check out https://quake.games
@@ -19,9 +18,9 @@ Demo videos https://www.youtube.com/channel/UCPaZDuwY1sJOb5l-QHm9mDw
 
 Go to [Releases](../../releases) section to download latest binaries for your platform.
 
-The feature list has become so long that I needed separate readme files to describe each piece. This list will only have a short, truncated description with links to the other read-mes.
+The feature list has become so long that I needed separate README files to describe each piece. This list will only have a short, truncated description with links to the other read-mes.
 
-More on what makes WebAssembly [difficult to build here](./docs/quakejs.md).
+More on what makes WebAssembly [difficult to build here](./docs/quakejs.md#reasons-i-quit-working-on-this).
 
 ## New Features
 
@@ -39,7 +38,6 @@ More on what makes WebAssembly [difficult to build here](./docs/quakejs.md).
   * Drag and drop
   * Many, many bug fixes
 
-
 ## Coming soon!
   
   * Asynchronous lazy loading with zip file repackaging and coalescing.
@@ -51,7 +49,7 @@ More on what makes WebAssembly [difficult to build here](./docs/quakejs.md).
 
   * Authenticated clients
   * Copy kubernetes support https://github.com/criticalstack/quake-kube
-  * Asynchronous rendering for portals, mirrors, demos, videos, etc
+  * Asynchronous rendering for portals, mirrors, demos, videos, multiple maps, etc
   * Make a simple thread manager https://stackoverflow.com/questions/7269709/sending-information-with-a-signal-in-linux or use oneTBB as an alternative?
   * IN PROGRESS: removing Emscripten and compiling only to wasm with clang.
   * Move more features like EULA, file extension alternatives from ListFiles that comes from menu system, etc out of JS and in to C system.
@@ -60,33 +58,23 @@ More on what makes WebAssembly [difficult to build here](./docs/quakejs.md).
   * Always on twitch.tv streaming at no expense to the game server
   * IN FAILURE: webm/VPX/vorbis video format, SVG
 
-
-# Console
+## Console
 
 See the console commands from ioq3 https://github.com/ioquake/ioq3#console
 
 Some client variables have been set by default for compatibility, those are listed here:
 https://github.com/briancullinan/planet_quake/blob/ioq3-quakejs/code/sys/sys_browser.js
 
+## Building
 
-# Building
-
-Derives from [Quake3e Github](https://github.com/ec-/Quake3e#build-instructions)
-
-and
-
+Derives from [Quake3e Github](https://github.com/ec-/Quake3e#build-instructions) and 
 [QuakeJS Github](https://github.com/inolen/quakejs#building-binaries)
 
-It's also good to have understanding of Emscripten:
-
-[Emscripten docs](https://emscripten.org/docs/building_from_source/toolchain_what_is_needed.html)
-
-
-# Contributing
+## Contributing
 
 Use [Issue tracker on Github](https://github.com/briancullinan/planet_quake/issues)
 
-# Credits
+## Credits
 
 Maintainers
 

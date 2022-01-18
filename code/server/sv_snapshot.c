@@ -173,24 +173,23 @@ static void SV_WriteSnapshotToClient( const client_t *client, msg_t *msg ) {
 #endif
 		lastframe = client->netchan.outgoingSequence - client->deltaMessage;
 		// we may refer on outdated frame
+#ifndef USE_MULTIVM_SERVER
 		if ( svs.lastValidFrame > oldframe->frameNum ) {
-#ifdef USE_MULTIVM_SERVER
-      Com_DPrintf( "%s: Delta request from out of date frame. (%i)\n", client->name, gvmi );
-#else
-			Com_DPrintf( "%s: Delta request from out of date frame.\n", client->name );
-#endif
+			Com_Printf( "%s: Delta request from out of date frame.\n", client->name );
 			oldframe = NULL;
 			lastframe = 0;
+		} 
+#endif
 #ifdef USE_MV
-		} else if ( frame->multiview && oldframe->first_psf <= svs.nextSnapshotPSF - svs.numSnapshotPSF ) {
-			Com_DPrintf( "%s: Delta request from out of date playerstate.\n", client->name );
+		if ( frame->multiview && oldframe->first_psf <= svs.nextSnapshotPSF - svs.numSnapshotPSF ) {
+			Com_Printf( "%s: Delta request from out of date playerstate.\n", client->name );
 			oldframe = NULL;
 			lastframe = 0;
 		} else if ( frame->multiview && oldframe->version != MV_PROTOCOL_VERSION ) {
 			oldframe = NULL;
 			lastframe = 0;
-#endif
 		}
+#endif
 	}
 
 #ifdef USE_MV
@@ -618,6 +617,7 @@ static void SV_AddEntitiesVisibleFromPoint( const vec3_t origin, clientPVS_t *pv
 				int newWorld = ent->s.powerups >> 8;
 				// don't show entities if the portal is from a different world
 				if(newWorld != gvmi) {
+					// doesn't add portals but still adds camera points
 					SV_AddEntitiesVisibleFromPoint( ent->s.origin2, pvs, EPV_PORTALONLY );
 				} else
 					SV_AddEntitiesVisibleFromPoint( ent->s.origin2, pvs, portal );
@@ -658,7 +658,9 @@ static void SV_MarkClientPortalPVS( const vec3_t origin, int clientNum, int port
 	clientcluster = CM_LeafCluster (leafnum);
 	clientpvs = CM_ClusterPVS (clientcluster, gameWorlds[gvmi]);
 
-return;
+	if(!svs.currFrame)
+		return;
+
 	for ( e = 0 ; e < svs.currFrame->count; e++ ) {
 		es = svs.currFrame->ents[ e ];
 		ent = SV_GentityNum( es->number );
@@ -674,7 +676,7 @@ return;
 		}
 		if ( ent->r.svFlags & SVF_CLIENTMASK ) {
 			if ( ~ent->r.singleClient & (1 << clientNum) )
-				continue;
+			continue;
 		}
 		if ( svEnt->snapshotCounter == sv.snapshotCounter ) {
 			continue;
@@ -726,6 +728,7 @@ return;
 
 		// mark the portal as being in view so the other world snapshot can always send entities from this point
 		//   when the portals have the same name in both maps, and the same location, entities will be sent
+		Com_Printf("otherwordly portal found: %i\n", numMultiworldEntities);
 		for(int j = 0; j < numMultiworldEntities; j++) {
 			if(multiworldEntities[j].worldFrom != gvmi) continue; // skip portals not from this world
 			if(multiworldEntities[j].world == gvmi) continue; // skip portals that lead to this world
@@ -1373,7 +1376,9 @@ void SV_SendClientSnapshot( client_t *client, qboolean includeBaselines ) {
 		if(!gvmWorlds[igvm]) continue;
 		gvmi = igvm;
 		ent = SV_GentityNum( client - svs.clients );
-		if(ent->s.eType == 0) continue; // they must at least be a spectator even to "peer" into this world from another
+		// they must at least be a spectator even to "peer" into this world from another
+		if(ent->s.eType == 0 
+			&& gvmi != client->gameWorld && gvmi != client->newWorld) continue;
 		CM_SwitchMap(gameWorlds[gvmi]);
 		SV_MarkClientPortalPVS( SV_GameClientNum(client - svs.clients)->origin, client - svs.clients, 0 );
 	}
@@ -1385,14 +1390,16 @@ void SV_SendClientSnapshot( client_t *client, qboolean includeBaselines ) {
 		SV_SetAASgvm(gvmi);
 		playerState_t	*ps = SV_GameClientNum( client - svs.clients );
 		ent = SV_GentityNum( ps->clientNum );
-		if(ent->s.eType == 0) continue; // skip worlds client hasn't entered yet
+		// skip worlds client hasn't entered yet
+		if(ent->s.eType == 0 
+			&& gvmi != client->gameWorld && gvmi != client->newWorld) continue;
 		//Com_Printf("Sending snapshot %i %i >= %i\n", gvmi, client->mvAck, client->messageAcknowledge);
-		if(gvmi != 0 && (client->mvAck == 0 || client->mvAck >= client->messageAcknowledge)) continue;
+		if(gvmi != 0 && (client->mvAck == 0 
+			|| client->mvAck >= client->messageAcknowledge)) continue;
     // remove this line when MULTIIVM is working
 		//if(gvmi != 0) continue;
 		//if(gvmi != client->gameWorld) continue;
 #endif
-;
 
 	// build the snapshot
 	SV_BuildClientSnapshot( client );

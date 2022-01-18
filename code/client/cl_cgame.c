@@ -708,6 +708,7 @@ void CL_ShutdownCGame( void ) {
 }
 
 
+
 static int FloatAsInt( float f ) {
 	floatint_t fi;
 	fi.f = f;

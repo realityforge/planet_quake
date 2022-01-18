@@ -3,7 +3,7 @@ When I started on multiworld (Sep 30, 2019), I originally wanted to "split-up" Q
 
 When I started researching Cyrax' multiview protocol, it dawned on me that this was the perfect match for loading multiple QVMs at the same time. It's just CPU cycles right? For my proof-of-concept, I changed about 3,000 lines of code, made all the replacements to turn every reference to a VM into an array of VMs. Since then, I've reversed all of my changes, and now this uses a few small pre-compiler templates to achieve the same goal, making it only about 300 lines of code changed from master. It is also mostly additions, so there should be no trouble merging future updates from master Q3e.
 
-Multiworld serves multiple purposes. For example, now using multiview, you can view multiple players at the same time by loading multiple CGame QVMs, each with their own managed state information.  As kind of an administrative picture-in-picture. Or maybe there is a game play where you have a heads up display of your teammates, like some futuristic military force.
+Multiworld serves multiple purposes. For example, now using multiview, you can view multiple players at the same time by loading multiple CGame QVMs, each with their own managed state information.  As kind of an administrative picture-in-picture. Or maybe there is a game play where you have a heads up display of your teammates, like some futuristic police body-camera.
 
 Multiworld can also load multiple maps at the same time. Each load has it's own settings, and `g_gametype`. This isn't implemented, but I see in the future, maybe someone wants to play a death match, and someone else wants to play capture the flag, they can both be present and playing on the same server, the same map loaded multiple times, but they are playing 2 different games and interacting as obstacles for each other as if they were playing the same game.
 
@@ -19,12 +19,30 @@ Finally, I want to use multiworld for streaming game content to clients. Where t
   * Multiworld portals https://www.youtube.com/watch?v=iGxOdTNv3uY
 
 
+## Running Multiworld
+
+  Server:
+  ```
+  ./build/debug-darwin-x86_64/quake3e +set fs_basepath /Applications/ioquake3 +set fs_game baseq3 +set sv_pure 0 +set net_enable 1 +set dedicated 2 +set bot_enable 1 +set activeAction \"load\ game\ q3dm2\" +spmap q3dm1
+  ```
+
+  then Client:
+
+  ```
+  ./build/debug-darwin-x86_64/quake3e +set fs_basepath /Applications/ioquake3 +set fs_game baseq3 +set sv_pure 0 +set net_enable 1 +set dedicated 0 +set cl_nodelta 1 +bind g \"game\;\ wait\ 10\;\ tile\ 0\ 0\ 0\;\ tile\ -1\ -1\ 1\;\ tile\ 0\ 0\ 0\" +bind h \"game\;\ world\ 1\;\" +bind j \"game\;\ wait\ 10\;\ tile\ 0\ 0\ 0\;\ tile\ 1\ 0\ 1\;\ tile\ 0\ 0\ 0\" +connect local.games
+  ```
+
+  Explanation: Server starts on map q3dm1, the activeAction is added and launches another single player VM on q3dm2. Dedicated is required with USE_LOCAL_DED to prevent automatically starting multiple processes.
+
+  Client cl_nodelta is required for the time-being, deltas work but it causes server errors. Binds set the DVR for q3dm1 to `g` key, and q3dm2 to `h` key. Level only needs to load first time it's used.
+
+
 ## TODO
 
   * Fix delay between teleporting to other worlds
-  * Fix multiworld networking
   * Add rendering to a texture http://www.opengl-tutorial.org/intermediate-tutorials/tutorial-14-render-to-texture/
   * Add `target_microphone` that speakers can target in different worlds, spatial and volume controls close to projected surfaces. Then go back and automatically add it for misc_portal_surface and misc_portal_cameras in an extra field.
+  * Fix interpolation in portal using relative direction and distance from where the portal was triggered, i.e. enter top left, player and projectiles should come out top left of center.
   * Multiworld entities like rockets with trajectories.
   * Render UIs and cameras to a surface, UI needs absolute mouse input, play Q3 on a model computer inside Q3
   * Copy second weapon axis from GUNNM Oculus for even weirder multiworld interaction.
@@ -42,21 +60,3 @@ Finally, I want to use multiworld for streaming game content to clients. Where t
   * Open multiple websocket ports connected to the same server, server accepts data from either socket but merges or ignores based on sequence just like normal UDP and deltas.
   * Stop crash after loading 10 maps with use_lazy_memory. Fix in cm_load, vm_create, renderer2, clear old bots? sound uses FindOldest? Multiworld hunking, so levels can be cleared individually?
   * Connect to multiple servers at the same time, closer with demo work
-
-
-## Multiworld
-
-  Server:
-  ```
-  ./build/debug-darwin-x86_64/quake3e +set fs_basepath /Applications/ioquake3 +set fs_game baseq3 +set sv_pure 0 +set net_enable 1 +set dedicated 2 +set bot_enable 1 +set activeAction \"load\ game\ q3dm2\" +spmap q3dm1
-  ```
-
-  then Client:
-
-  ```
-  ./build/debug-darwin-x86_64/quake3e +set fs_basepath /Applications/ioquake3 +set fs_game baseq3 +set sv_pure 0 +set net_enable 1 +set dedicated 0 +set cl_nodelta 1 +bind g \"game\;\ wait\ 10\;\ tile\ 0\ 0\ 0\;\ tile\ -1\ -1\ 1\;\ tile\ 0\ 0\ 0\" +bind h \"game\;\ world\ 1\;\" +bind j \"game\;\ wait\ 10\;\ tile\ 0\ 0\ 0\;\ tile\ 1\ 0\ 1\;\ tile\ 0\ 0\ 0\" +connect local.games
-  ```
-
-  Explanation: Server starts on map q3dm1, the activeAction is added and launches another single player VM on q3dm2. Dedicated is required with USE_LOCAL_DED to prevent automatically starting multiple processes.
-
-  Client cl_nodelta is required for the time-being, deltas work but it causes server errors. Binds set the DVR for q3dm1 to `g` key, and q3dm2 to `h` key. Level only needs to load first time it's used.
