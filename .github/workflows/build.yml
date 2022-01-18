@@ -257,13 +257,15 @@ jobs:
         tar -xf wasi-sdk-14.0-linux.tar.gz -C libs/linux/
 
     - name: Build
+      if: false
       run: |
         mkdir bin
         make -f make/build_client.make clean ${{ matrix.rule }}  ARCH=${{ matrix.arch }}    ${{ matrix.use_sdl }} USE_VULKAN_API=0 CNAME=quake3e PLATFORM=js NO_MAKE_LOCAL=1
         cp build/release-js-js/quake3e_js.wasm bin/
 
     - uses: actions/upload-artifact@v2
-      if: matrix.config == 'Release'
+      if: false
+      #if: matrix.config == 'Release'
       with:
         name: js-${{ matrix.arch }}
         path: bin

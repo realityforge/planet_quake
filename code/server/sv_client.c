@@ -2424,6 +2424,7 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
     } else if (sv_mvOmnipresent->integer == -1) {
       SV_ExecuteClientCommand(client, "team s");
     }
+		SV_SendClientSnapshot( client, qfalse );
 
 		gvmi = newWorld;
 		CM_SwitchMap(gameWorlds[gvmi]);
@@ -2438,16 +2439,16 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
 			//   to only send commands from a game to the client of the same world
 			VM_Call( gvm, 3, GAME_CLIENT_CONNECT, clientNum, qtrue, qfalse );	// firstTime = qfalse
 			// if this is the first time they are entering a world, send a gamestate
-			client->deltaMessage = -1;
-			client->lastSnapshotTime = svs.time - 9999; // generate a snapshot immediately
-			SV_SendClientSnapshot( client, qfalse );
+			//client->deltaMessage = -1;
+			//client->lastSnapshotTime = svs.time - 9999; // generate a snapshot immediately
 			if(sv_mvOmnipresent->integer == 0) {
 				// clear entity type so we know they are no longer present in this world
 				prevEnt->s.eType = 0; 
 				// also prevents server from sending snapshots from this world
 			}
-			client->state = CS_CONNECTED;
-			client->gamestateMessageNum = -1; // send a new gamestate
+			SV_SendClientGameState( client );
+			//client->state = CS_CONNECTED;
+			//client->gamestateMessageNum = -1; // send a new gamestate
 			return;
 		} else {
 			// above must come before this because there is a filter 
@@ -2731,6 +2732,7 @@ void SV_Tele_f( client_t *client ) {
 	Q_strncpyz(cmd, Cmd_ArgsFrom(0), sizeof(cmd));
 
 	// TODO: need to check a named list of teleporter locations on map
+	// TODO: add levenstient "did you mean?" message from server
 	// select closest spawn point to named target_location
 	VectorCopy(ps->origin, newOrigin);
 	if(SV_FindLocation(Cmd_ArgsFrom(1), newOrigin, forward)) {
@@ -3313,7 +3315,7 @@ static void SV_UserMove( client_t *cl, msg_t *msg, qboolean delta ) {
 			//Com_Printf("skipping! \n");
 			continue;
 		}
-		//Com_Printf("thinking! \n");
+		//Com_Printf("thinking! %i\n", gvmi);
 		SV_ClientThink (cl, &cmds[ i ]);
 	}
 }

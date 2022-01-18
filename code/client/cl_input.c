@@ -810,6 +810,7 @@ void CL_WritePacket( void ) {
 		int igs = clientGames[igvm];
 		//int oldCmdNum = cl.clCmdNumbers[igvm];
 		CL_CreateNewCommands(igvm);
+		//Com_Printf("input: %i\n", igs);
 		if(igvm != 0) {
       // choose which client to extract movement commands from, cl.currentView?
 			cl.cmds[cl.clCmdNumbers[igvm] & CMD_MASK].forwardmove = 
