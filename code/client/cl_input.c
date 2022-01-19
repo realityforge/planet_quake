@@ -803,7 +803,7 @@ void CL_WritePacket( void ) {
 	//     different enemies in dead world for powerups like in Prey
 	for(int igvm = 0; igvm < MAX_NUM_VMS; igvm++) {
 		if(clientGames[igvm] == -1
-			|| clientWorlds[igvm] != clc.clientNum
+		//	|| clientWorlds[igvm] != clc.clientNum
 		) {
 			continue;
 		}

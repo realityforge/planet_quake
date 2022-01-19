@@ -1822,14 +1822,14 @@ void SV_Frame( int msec ) {
 			gvmi = i;
 			CM_SwitchMap(gameWorlds[gvmi]);
 			SV_SetAASgvm(gvmi);
-#endif
-;
 			VM_Call( gvm, 1, GAME_RUN_FRAME, sv.time );
-#ifdef USE_MULTIVM_SERVER
+			sv.time += 1;
 		}
 		gvmi = 0;
 		CM_SwitchMap(gameWorlds[gvmi]);
 		SV_SetAASgvm(gvmi);
+#else
+		VM_Call( gvm, 1, GAME_RUN_FRAME, sv.time );
 #endif
 		
 #ifdef USE_MV

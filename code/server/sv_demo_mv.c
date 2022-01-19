@@ -562,6 +562,12 @@ void SV_MultiView_f( client_t *client ) {
 			}
 		}
 
+		if(atoi(Info_ValueForKey( client->userinfo, "mvproto" )) != MV_PROTOCOL_VERSION) {
+			NET_OutOfBandPrint( NS_SERVER, &client->netchan.remoteAddress, "print\nSorry, but this server requires multiview %i\n", MV_PROTOCOL_VERSION );
+			Com_DPrintf( "Multiview join comand rejected a regular client.\n" );
+			return;
+		}
+
 		client->multiview.protocol = MV_PROTOCOL_VERSION;
 		client->multiview.scoreQueryTime = 0;
 #ifdef USE_MV_ZCMD

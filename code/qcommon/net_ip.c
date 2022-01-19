@@ -836,7 +836,7 @@ void Sys_SendPacket( int length, const void *data, const netadr_t *to )
 	int ret = SOCKET_ERROR;
 #ifdef USE_MULTI_PORT
 	int igvm = to->netWorld;
-	//Com_Printf( "Sys_SendPacket: %i\n", ip_socket );
+	//Com_Printf( "Sys_SendPacket: %i -> %i\n", ip_socket, igvm );
 #endif
 	sockaddr_t addr;
 

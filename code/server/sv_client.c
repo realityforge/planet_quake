@@ -893,7 +893,11 @@ gotnewcl:
 #endif
 
 #ifdef USE_MULTIVM_SERVER
-	gvmi = newcl->gameWorld = newcl->newWorld = 0;
+	//if(from->type == NA_LOOPBACK) {
+		gvmi = newcl->gameWorld = newcl->newWorld = 0;
+	//} else {
+	//	gvmi = newcl->gameWorld = newcl->newWorld = 1;
+	//}
 	CM_SwitchMap(gameWorlds[gvmi]);
 	SV_SetAASgvm(gvmi);
 #endif
@@ -922,6 +926,40 @@ gotnewcl:
 		SV_SaveSequences();
 	}
 
+#ifdef USE_MULTIVM_SERVER
+  // add new clients to all worlds
+	if(sv_mvOmnipresent->integer != 0) {
+		if(atoi(Info_ValueForKey( userinfo, "mvproto" )) != MV_PROTOCOL_VERSION) {
+			NET_OutOfBandPrint( NS_SERVER, from, "print\nSorry, but this server requires multiview %i\n", MV_PROTOCOL_VERSION );
+			Com_DPrintf( "Multiview rejected a regular client.\n" );
+			return;
+		} else {
+			newcl->multiview.protocol = MV_PROTOCOL_VERSION;
+			newcl->multiview.scoreQueryTime = 0;
+		}
+	}
+	for(int igvm = 0; igvm < MAX_NUM_VMS; igvm++) {
+		if(!gvmWorlds[igvm]) continue;
+		// only join 1 world
+		if(sv_mvOmnipresent->integer == 0 && igvm != newcl->gameWorld) continue;
+		gvmi = igvm;
+		CM_SwitchMap(gameWorlds[gvmi]);
+		SV_SetAASgvm(gvmi);
+		denied = VM_Call( gvm, 3, GAME_CLIENT_CONNECT, clientNum, qtrue, qfalse ); // firstTime = qtrue
+		if ( denied ) {
+#ifndef BUILD_GAME_STATIC
+			const char *str = GVM_ArgPtr( denied );
+#else
+			const char *str = (void *)denied;
+#endif
+			NET_OutOfBandPrint( NS_SERVER, from, "print\n%s\n", str );
+			Com_Printf("WARNING: client (%i) denied.", clientNum);
+		}
+	}
+	gvmi = newcl->gameWorld;
+	CM_SwitchMap(gameWorlds[gvmi]);
+	SV_SetAASgvm(gvmi);
+#else
 	// get the game a chance to reject this connection or modify the userinfo
 	denied = VM_Call( gvm, 3, GAME_CLIENT_CONNECT, clientNum, qtrue, qfalse ); // firstTime = qtrue
 	if ( denied ) {
@@ -936,23 +974,6 @@ gotnewcl:
 		Com_DPrintf( "Game rejected a connection: %s.\n", str );
 		return;
 	}
-#ifdef USE_MULTIVM_SERVER
-  // add new clients to all worlds
-  else if(sv_mvOmnipresent->integer != 0) {
-		newcl->multiview.protocol = MV_PROTOCOL_VERSION;
-		newcl->multiview.scoreQueryTime = 0;
-    for(int igvm = 0; igvm < MAX_NUM_VMS; igvm++) {
-  		if(!gvmWorlds[igvm]) continue;
-      if(igvm == newcl->gameWorld) continue; // already joined above
-  		gvmi = igvm;
-  		CM_SwitchMap(gameWorlds[gvmi]);
-  		SV_SetAASgvm(gvmi);
-      denied = VM_Call( gvm, 3, GAME_CLIENT_CONNECT, clientNum, qtrue, qfalse ); // firstTime = qtrue
-      if ( denied ) {
-        Com_Printf("WARNING: client (%i) denied on subsequent worlds using sv_mvOmnipresent.", clientNum);
-      }
-    }
-  }
 #endif
 
 	if ( sv_clientTLD->integer ) {
@@ -1375,7 +1396,7 @@ void SV_ClientEnterWorld( client_t *client, usercmd_t *cmd ) {
 #endif
 	client->state = CS_ACTIVE;
 #ifdef USE_MULTIVM_SERVER
-	if(sv_mvWorld->integer) {
+	if(sv_mvWorld->integer && client->multiview.protocol > 0) {
 		SV_SendServerCommand(client, "world %i", client->newWorld);
 	}
 #endif
@@ -2430,7 +2451,7 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
 		CM_SwitchMap(gameWorlds[gvmi]);
 		SV_SetAASgvm(gvmi);
 		client->newWorld = newWorld;
-		if(ent->s.eType == 0) {
+		if(ent->s.eType == 0 || !client->multiview.protocol) {
 			// if the client is new to the world, the only option is SPAWNORIGIN
 			if(changeOrigin != COPYORIGIN) {
 				changeOrigin = SPAWNORIGIN;
@@ -2446,10 +2467,13 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
 				prevEnt->s.eType = 0; 
 				// also prevents server from sending snapshots from this world
 			}
-			SV_SendClientGameState( client );
-			//client->state = CS_CONNECTED;
-			//client->gamestateMessageNum = -1; // send a new gamestate
-			return;
+			//if(!client->multiview.protocol) {
+				client->state = CS_CONNECTED;
+				client->gamestateMessageNum = -1; // send a new gamestate
+			//} else {
+				SV_SendClientGameState( client );
+			//}
+			//return;
 		} else {
 			// above must come before this because there is a filter 
 			//   to only send commands from a game to the client of the same world
@@ -2457,6 +2481,7 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
 			// not the first time they have entered, automatically connect
 			client->gameWorld = newWorld;
 			//client->deltaMessage = -1;
+			//client->lastSnapshotTime = svs.time - 9999; // generate a snapshot immediately
 			// notify the client of the secondary map
 			if(sv_mvWorld->integer) {
 				SV_SendServerCommand(client, "world %i", client->newWorld);
@@ -2472,7 +2497,13 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
 	ps->eFlags ^= EF_TELEPORT_BIT;
 	ent->s.number = clientNum;
 	client->gentity = ent;
+#ifdef USE_MULTIVM_SERVER
+	if(client->newWorld == client->gameWorld) {
+		VM_Call( gvm, 1, GAME_CLIENT_BEGIN, clientNum );
+	}
+#else
 	VM_Call( gvm, 1, GAME_CLIENT_BEGIN, clientNum );
+#endif
 
 	// if copy, keeping the original/same, or moving origins,
 	//   we need to reset a few things
@@ -2842,8 +2873,18 @@ void SV_Game_f( client_t *client ) {
 	vec3_t newOrigin = {0.0, 0.0, 0.0};
 
 	if(!client) return;
-	client->multiview.protocol = MV_PROTOCOL_VERSION;
-	client->multiview.scoreQueryTime = 0;
+	if(atoi(Info_ValueForKey( client->userinfo, "mvproto" )) != MV_PROTOCOL_VERSION) {
+		if(sv_mvOmnipresent->integer != 0) {
+			NET_OutOfBandPrint( NS_SERVER, &client->netchan.remoteAddress, "print\nSorry, but this server requires multiview %i\n", MV_PROTOCOL_VERSION );
+			Com_DPrintf( "Game comand rejected a regular client.\n" );
+			return;
+		} else {
+			// send a new gamestate just like normal, every time they go through a portal they have to load games
+		}
+	} else {
+		client->multiview.protocol = MV_PROTOCOL_VERSION;
+		client->multiview.scoreQueryTime = 0;
+	}
 	clientNum = client - svs.clients;
 	
 	userOrigin = Cmd_Argv(1);
@@ -3271,18 +3312,21 @@ static void SV_UserMove( client_t *cl, msg_t *msg, qboolean delta ) {
 			return;
 		}
 #ifdef USE_MULTIVM_SERVER
-		if(cl->newWorld != cl->gameWorld) {
-			int prevGvm = gvmi; // hopefully it is the same but maybe not
-			gvmi = cl->gameWorld = cl->newWorld;
-			CM_SwitchMap(gameWorlds[gvmi]);
-			SV_SetAASgvm(gvmi);
-			SV_ClientEnterWorld( cl, &cmds[0] ); // NULL );
-			gvmi = prevGvm;
-			CM_SwitchMap(gameWorlds[gvmi]);
-			SV_SetAASgvm(gvmi);
-		} else 
-#endif
+		//if(cl->newWorld != cl->gameWorld) {
+		int prevGvm = gvmi; // hopefully it is the same but maybe not
+		gvmi = cl->gameWorld = cl->newWorld;
+		CM_SwitchMap(gameWorlds[gvmi]);
+		SV_SetAASgvm(gvmi);
+		SV_ClientEnterWorld( cl, &cmds[0] ); // NULL );
+		gvmi = prevGvm;
+		CM_SwitchMap(gameWorlds[gvmi]);
+		SV_SetAASgvm(gvmi);
+		//} else {
+
+		//}
+#else
 		SV_ClientEnterWorld( cl, &cmds[0] );
+#endif
 		// the moves can be processed normally
 	}
 	
@@ -3312,7 +3356,7 @@ static void SV_UserMove( client_t *cl, msg_t *msg, qboolean delta ) {
 		// don't execute if this is an old cmd which is already executed
 		// these old cmds are included when cl_packetdup > 0
 		if ( cmds[i].serverTime <= cl->lastUsercmd.serverTime ) {
-			//Com_Printf("skipping! \n");
+			//Com_Printf("skipping! %i\n", gvmi);
 			continue;
 		}
 		//Com_Printf("thinking! %i\n", gvmi);
@@ -3467,7 +3511,7 @@ void SV_ExecuteClientMessage( client_t *cl, msg_t *msg ) {
 		CM_SwitchMap(gameWorlds[gvmi]);
 		SV_SetAASgvm(gvmi);
 	} else {
-		gvmi = 0;
+		gvmi = cl->gameWorld;
 		CM_SwitchMap(gameWorlds[gvmi]);
 		SV_SetAASgvm(gvmi);
 	}
@@ -3479,7 +3523,7 @@ void SV_ExecuteClientMessage( client_t *cl, msg_t *msg ) {
 	} else if ( c == clc_moveNoDelta ) {
 		SV_UserMove( cl, msg, qfalse );
 	} else if ( c != clc_EOF ) {
-		Com_Printf( "WARNING: bad command byte %i for client %i\n", c, (int) (cl - svs.clients) );
+		Com_Printf( "WARNING: bad command byte %i for client %i\n", c, (int)(cl - svs.clients) );
 	}
 //	if ( msg->readcount != msg->cursize ) {
 //		Com_Printf( "WARNING: Junk at end of packet for client %i\n", cl - svs.clients );

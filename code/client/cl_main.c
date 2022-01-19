@@ -917,7 +917,7 @@ void CL_ReadDemoIndex( void ) {
 					MSG_ReadDeltaEntity( &buf, &nullstate, es, newnum );
 					cl.baselineUsed[ newnum ] = 1;
 				} else {
-					Com_Error( ERR_DROP, "CL_ParseGamestate: bad command byte" );
+					Com_Error( ERR_DROP, "CL_ParseGamestate: bad command byte %i", cmd );
 				}
 			}
 
@@ -5270,6 +5270,9 @@ void CL_Init( void ) {
 	cl_returnURL = Cvar_Get("cl_returnURL", "", CVAR_TEMP);
 #endif
 
+#ifdef USE_MV
+	Cvar_Get( "mvproto", va( "%i", MV_PROTOCOL_VERSION ), CVAR_USERINFO | CVAR_ROM );
+#endif
 #ifdef USE_MULTIVM_CLIENT
   cl_mvHighlight = Cvar_Get("cl_mvHighlight", "1", CVAR_ARCHIVE);
   Cvar_CheckRange( cl_mvHighlight, "0", "1", CV_INTEGER );
