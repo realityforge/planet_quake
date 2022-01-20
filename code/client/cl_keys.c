@@ -455,9 +455,12 @@ static void Console_Key( int key ) {
 	// command completion
 
 	if (key == K_TAB) {
+#ifdef USE_LOCAL_DED
 		int beforeLength = strlen(g_consoleField.buffer);
+#endif
 		Field_AutoComplete(&g_consoleField);
 		
+#ifdef USE_LOCAL_DED
 		// try to rcon complete the command
 		if(!com_dedicated->integer
 			&& !Q_stristr(g_consoleField.buffer, "\\rcon")
@@ -465,6 +468,7 @@ static void Console_Key( int key ) {
 			Cbuf_AddText( va("rcon complete %s\n", g_consoleField.buffer) );
 			Cbuf_Execute();		
 		}
+#endif
 
 		return;
 	}

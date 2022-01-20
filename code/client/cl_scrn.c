@@ -1140,7 +1140,7 @@ donewithupdate:
 #endif
 
   SCR_DrawFPS(ms);
-  if(cls.state == CA_ACTIVE && !clc.demoplaying)
+  if(cl_lagometer->integer && cls.state == CA_ACTIVE && !clc.demoplaying)
     SCR_DrawLagometer();
 
 	// debug graph can be drawn on top of anything

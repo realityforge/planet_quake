@@ -810,7 +810,7 @@ void CL_WritePacket( void ) {
 		int igs = clientGames[igvm];
 		//int oldCmdNum = cl.clCmdNumbers[igvm];
 		CL_CreateNewCommands(igvm);
-		//Com_Printf("input: %i\n", igs);
+		//Com_Printf("input: %i -> %i\n", igvm, igs);
 		if(igvm != 0) {
       // choose which client to extract movement commands from, cl.currentView?
 			cl.cmds[cl.clCmdNumbers[igvm] & CMD_MASK].forwardmove = 
@@ -838,12 +838,6 @@ void CL_WritePacket( void ) {
 
 	// write the last reliable message we received
 	MSG_WriteLong( &buf, clc.serverCommandSequence );
-
-#ifdef USE_MULTIVM_CLIENT
-	if(cl.snapWorlds[0].multiview || cl.snap.multiview) {
-		MSG_WriteByte( &buf, igs );
-	}
-#endif
 
 	// write any unacknowledged clientCommands
 	for ( i = clc.reliableAcknowledge + 1 ; i <= clc.reliableSequence ; i++ ) {
@@ -876,6 +870,18 @@ void CL_WritePacket( void ) {
 		}
 
 		// begin a client move command
+#ifdef USE_MULTIVM_CLIENT
+		if(cl.snapWorlds[0].multiview || cl.snap.multiview) {
+			if ( !cl_nodelta || cl_nodelta->integer || !cl.snap.valid || clc.demowaiting
+				|| clc.serverMessageSequence != cl.snap.messageNum ) {
+				MSG_WriteByte (&buf, clc_mvMoveNoDelta);
+				MSG_WriteByte (&buf, igs);
+			} else {
+				MSG_WriteByte (&buf, clc_mvMove);
+				MSG_WriteByte (&buf, igs);
+			}
+		} else
+#endif
 		if ( !cl_nodelta || cl_nodelta->integer || !cl.snap.valid || clc.demowaiting
 			|| clc.serverMessageSequence != cl.snap.messageNum ) {
 			MSG_WriteByte (&buf, clc_moveNoDelta);

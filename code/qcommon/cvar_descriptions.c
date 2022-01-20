@@ -78,7 +78,7 @@ void Cvar_SetClientDescriptions( void ) {
 		" 0 - current game directory\n"
 		" 1 - fs_basegame (%s) directory\n", FS_GetBaseGameDir() ) );
   Cvar_SetDescription( "cl_reconnectArgs", "Holds the previous connection so \\reconnect command can be used\nDefault: empty" );
-  Cvar_SetDescription( "snaps", "set the number of snapshots sever will send to a client\nDefault: 40" );
+  Cvar_SetDescription( "snaps", "set the number of snapshots server will send to a client\nDefault: 40" );
   Cvar_SetDescription( "cl_guid", "Holds the guid from the client to identify the client\nDefault: empty" );
 #ifdef USE_LNBITS
   Cvar_SetDescription( "cl_lnInvoice", "The previous LNBits invoice code sent by the server requesting payment\nDefault: empty");

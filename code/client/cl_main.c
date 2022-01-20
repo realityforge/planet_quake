@@ -3864,7 +3864,7 @@ static void CL_CheckUserinfo( void ) {
 		cvar_modifiedFlags &= ~CVAR_USERINFO;
 
 #ifdef USE_MULTIVM_CLIENT
-		info = Cvar_InfoString( CVAR_USERINFO, &infoTruncated, cgvmi );
+		info = Cvar_InfoString( CVAR_USERINFO, &infoTruncated, clientGames[cgvmi] );
 #else
     info = Cvar_InfoString( CVAR_USERINFO, &infoTruncated );
 #endif
@@ -5311,10 +5311,12 @@ void CL_Init( void ) {
 
 #ifdef USE_LAZY_LOAD
 #ifdef USE_ASYNCHRONOUS
-	cl_lazyLoad = Cvar_Get( "cl_lazyLoad", "1", CVAR_ARCHIVE | CVAR_TEMP );
+	cl_lazyLoad = Cvar_Get( "cl_lazyLoad", "1", CVAR_TEMP );
 #else
-  cl_lazyLoad = Cvar_Get( "cl_lazyLoad", "0", CVAR_ARCHIVE | CVAR_TEMP );
+  cl_lazyLoad = Cvar_Get( "cl_lazyLoad", "0", CVAR_TEMP );
 #endif
+	if(cl_lazyLoad->integer > 1)
+		Cvar_Set("cl_lazyLoad", "1");
 #endif
 
 #ifdef __WASM__
@@ -5341,7 +5343,11 @@ void CL_Init( void ) {
 #ifdef BUILD_GAME_STATIC
   cl_snaps = Cvar_Get ("snaps", "100", CVAR_USERINFO | CVAR_TEMP );
 #else
+#ifdef USE_MULTIVM_CLIENT
+	cl_snaps = Cvar_Get ("snaps", "100", CVAR_USERINFO | CVAR_ARCHIVE );
+#else
 	cl_snaps = Cvar_Get ("snaps", "40", CVAR_USERINFO | CVAR_ARCHIVE );
+#endif
 #endif
 	Cvar_Get ("model", "sarge", CVAR_USERINFO | CVAR_ARCHIVE_ND );
 	Cvar_Get ("headmodel", "sarge", CVAR_USERINFO | CVAR_ARCHIVE_ND );
@@ -5635,7 +5641,9 @@ static void CL_ServerInfoPacket( const netadr_t *from, msg_t *msg ) {
 	int		i, type, len;
 	char	info[MAX_INFO_STRING];
 	const char *infoString;
+#ifdef USE_LOCAL_DED
 	char *autocomplete;
+#endif
 #ifdef USE_LNBITS
 	char *paymentInvoice, *challenge;
 #endif
@@ -5651,6 +5659,7 @@ static void CL_ServerInfoPacket( const netadr_t *from, msg_t *msg ) {
 
 	infoString = MSG_ReadString( msg );
 	
+#ifdef USE_LOCAL_DED
 	// exit early if this is an autocomplete message
 	autocomplete = Info_ValueForKey( infoString, "autocomplete" );
 	NET_StringToAdr( rconAddress->string, &rcon_address, NA_UNSPEC );
@@ -5673,6 +5682,7 @@ static void CL_ServerInfoPacket( const netadr_t *from, msg_t *msg ) {
 			Com_Printf( "Rcon: autocomplete dropped\n" );
 		return;
 	}
+#endif
 
 #ifdef USE_LNBITS
 	// exit early if this is a payment request
@@ -6639,8 +6649,7 @@ CL_Download_f
 #ifndef USE_ASYNCHRONOUS
 static 
 #endif
-void CL_Download_f( void )
-{
+void CL_Download_f( void ) {
 	if ( Cmd_Argc() < 2 || *Cmd_Argv( 1 ) == '\0' )
 	{
 		Com_Printf( "Usage: %s <mapname>\n", Cmd_Argv( 0 ) );
@@ -6681,48 +6690,17 @@ void CL_Download_f( void )
 
 #ifdef USE_MV
 
-static qboolean GetConfigString( int index, char *buf, int size )
-{
-	int		offset;
+void CL_Multiview_f( void ) {
 #ifdef USE_MULTIVM_CLIENT
 	int igs = clientGames[clc.currentView];
 #endif
 
-	if ( index < 0 || index >= MAX_CONFIGSTRINGS ) {
-		buf[0] = '\0';
-		return qfalse;
-	}
-
-	offset = cl.gameState.stringOffsets[ index ];
-	if ( !offset ) {
-		if ( size ) {
-			buf[0] = '\0';
-		}
-		return qfalse;
-	}
-
-	Q_strncpyz( buf, cl.gameState.stringData + offset, size );
-
-	return qtrue;
-}
-
-
-void CL_Multiview_f( void )
-{
-	char serverinfo[ MAX_INFO_STRING ];
-	char *v;
-	
 	if ( cls.state != CA_ACTIVE || !cls.servername[0] || clc.demoplaying ) {
 		Com_Printf( "Not connected.\n" );
 		return;
 	}
 
-	if ( !GetConfigString( CS_SERVERINFO, serverinfo, sizeof( serverinfo ) ) || !serverinfo[0] ) {
-		Com_Printf( "No serverinfo available.\n" );
-	}
-
-	v = Info_ValueForKey( serverinfo, "mvproto" );
-	if ( atoi( v ) != MV_PROTOCOL_VERSION ) {
+	if ( atoi( Info_ValueForKey( cl.gameState.stringData + cl.gameState.stringOffsets[ CS_SERVERINFO ], "mvproto" ) ) != MV_PROTOCOL_VERSION ) {
 		Com_Printf( S_COLOR_YELLOW "Remote server does not support this function.\n" );
 		return;
 	}
@@ -6731,8 +6709,7 @@ void CL_Multiview_f( void )
 }
 
 
-void CL_MultiviewFollow_f( void )
-{
+void CL_MultiviewFollow_f( void ) {
 	int clientNum;
 #ifdef USE_MULTIVM_CLIENT
 	int igs = clientGames[clc.currentView];

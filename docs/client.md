@@ -3,8 +3,6 @@
 
 ## Client Features
 
-  * Rcon auto-complete, sends a `complete` command to server and response with an `autocomplete` key in an `infoResponse` which is an easy way to intercept messages without adding a command.
-
 This fork includes various experimental features. Most of them can be turned on and off during compiling because the feature is tagged with pre-compile `#if` statements to include the feature.
 This is an incomplete list of features added.
 Use `USE_FEATURE=1` with make to enable.
@@ -14,6 +12,8 @@ Uncheat, removed the `CVAR_CHEAT` flag from specific cvars, then shares those cv
 
 ### USE_LOCAL_DED
 Start a dedicated server for single player mode in a seperate process, automatically join the match. This mod has communication changes, the server can send any command to the local client to execute, server info can be updated mid-game, single player functionality in the dedicated server setting, benefit of splitting math work between processors.
+
+Rcon auto-complete, sends a `complete` command to server and response with an `autocomplete` key in an `infoResponse` which is an easy way to intercept messages without adding a command.
 
 ### USE_LAZY_LOAD
 Lazy loading was implemented because graphics over web are traditionally loaded into the page asynchronously. The main principle is loading graphics in between frames from very low res sources. Read more about it here, [lazyloading.md](../docs/lazyloading.md).

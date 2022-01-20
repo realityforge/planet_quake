@@ -458,7 +458,10 @@ enum clc_ops_e {
 	clc_moveNoDelta,		// [[usercmd_t]
 	clc_clientCommand,		// [string] message
 	clc_EOF,
-
+#if defined(USE_MULTIVM_SERVER) || defined(USE_MULTIVM_CLIENT)
+	clc_mvMove,
+	clc_mvMoveNoDelta,
+#endif
 	// new commands, supported only by ioquake3 protocol but not legacy
 	clc_voipSpeex,   // not wrapped in USE_VOIP, so this value is reserved.
 	clc_voipOpus,    //

@@ -607,6 +607,8 @@ void SV_SpawnServer( const char *mapname, qboolean killBots ) {
 #ifdef USE_MULTIVM_SERVER
   Cvar_Get( va("mapname_%i", gvmi), mapname, CVAR_TAGGED_SPECIFIC );
   Cvar_Set( va("mapname_%i", gvmi), mapname );
+	Cvar_Get( va("sv_mvWorld_%i", gvmi), va("%i", gvmi), CVAR_TAGGED_SPECIFIC );
+	Cvar_Set( va("sv_mvWorld_%i", gvmi), va("%i", gvmi) );
 #endif
 
 	Sys_SetStatus( "Loading map %s", mapname );
@@ -933,9 +935,10 @@ void SV_Init( void )
 	sv_gametype = Cvar_Get ("g_gametype", "0", CVAR_SERVERINFO | CVAR_LATCH );
 	Cvar_Get ("sv_keywords", "", CVAR_SERVERINFO);
 	//Cvar_Get ("protocol", va("%i", PROTOCOL_VERSION), CVAR_SERVERINFO | CVAR_ROM);
-	sv_mapname = Cvar_Get ("mapname", "nomap", CVAR_SERVERINFO | CVAR_ROM);
 #ifdef USE_MULTIVM_SERVER
-  sv_mapname->flags |= CVAR_TAGGED_ORIGINAL;
+	sv_mapname = Cvar_Get ("mapname", "nomap", CVAR_SERVERINFO | CVAR_ROM | CVAR_TAGGED_ORIGINAL);
+#else
+	sv_mapname = Cvar_Get ("mapname", "nomap", CVAR_SERVERINFO | CVAR_ROM);
 #endif
 	sv_privateClients = Cvar_Get( "sv_privateClients", "0", CVAR_SERVERINFO );
 	Cvar_CheckRange( sv_privateClients, "0", va( "%i", MAX_CLIENTS-1 ), CV_INTEGER );
@@ -968,7 +971,7 @@ void SV_Init( void )
 #endif
 #endif
 #ifdef USE_MULTIVM_SERVER
-	sv_mvWorld = Cvar_Get("sv_mvWorld", "1", CVAR_ARCHIVE | CVAR_SERVERINFO);
+	sv_mvWorld = Cvar_Get("sv_mvWorld", "1", CVAR_ARCHIVE | CVAR_SERVERINFO | CVAR_TAGGED_ORIGINAL);
 	Cvar_CheckRange( sv_mvWorld, "0", "1", CV_INTEGER );
 	sv_mvSyncPS = Cvar_Get("sv_mvSyncPS", "0", CVAR_ARCHIVE);
 	Cvar_CheckRange( sv_mvSyncPS, "0", "1", CV_INTEGER );
@@ -1030,14 +1033,16 @@ void SV_Init( void )
   sv_gamedir = Cvar_Get("fs_game", "", 0);
 #ifdef BUILD_GAME_STATIC
   sv_fps = Cvar_Get ("sv_fps", "100", CVAR_TEMP | CVAR_SYSTEMINFO );
+	Cvar_CheckRange( sv_fps, "10", "300", CV_INTEGER );
 #else
 #ifdef USE_MULTIVM_SERVER
 	sv_fps = Cvar_Get ("sv_fps", "40", CVAR_TEMP | CVAR_SYSTEMINFO );
+	Cvar_CheckRange( sv_fps, "10", "200", CV_INTEGER );
 #else
 	sv_fps = Cvar_Get ("sv_fps", "20", CVAR_TEMP | CVAR_SYSTEMINFO );
-#endif
-#endif
 	Cvar_CheckRange( sv_fps, "10", "125", CV_INTEGER );
+#endif
+#endif
 	sv_timeout = Cvar_Get( "sv_timeout", "200", CVAR_TEMP );
 	Cvar_CheckRange( sv_timeout, "4", NULL, CV_INTEGER );
 	sv_zombietime = Cvar_Get( "sv_zombietime", "2", CVAR_TEMP );

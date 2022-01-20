@@ -985,6 +985,7 @@ static void SVC_Info( const netadr_t *from ) {
 	Info_SetValueForKey( infostring, "hostname", sv_hostname->string );
 #ifdef USE_MULTIVM_SERVER
   Info_SetValueForKey( infostring, "mapname", Cvar_VariableString(va("mapname_%i", gvmi)) );
+  Info_SetValueForKey( infostring, "sv_mvWorld", va("%i", gvmi) );
 #else
 	Info_SetValueForKey( infostring, "mapname", sv_mapname->string );
 #endif

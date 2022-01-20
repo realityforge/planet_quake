@@ -742,7 +742,7 @@ void CL_ParseServerInfo( int igs )
 	size_t	len;
 
   serverInfo = cl.gameState.stringData + cl.gameState.stringOffsets[ CS_SERVERINFO ];
-	//Com_Printf("Gamestate (%i): %.*s\n", igs, (int)strlen(serverInfo), serverInfo);
+	Com_Printf("Gamestate (%i): %.*s\n", igs, (int)strlen(serverInfo), serverInfo);
 
   if(clc.demoplaying) {
     qboolean serverOverride = qfalse;
@@ -821,11 +821,6 @@ void CL_ParseServerInfo( int igs )
 
   clc.isMultiGame = strcmp(Info_ValueForKey(serverInfo, "gamename"), "multigame") == 0;
 
-#ifdef USE_MULTIVM_CLIENT
-  if(clc.world) Z_Free(clc.world);
-	clc.world = CopyString(Info_ValueForKey( serverInfo, "sv_mvWorld" ));
-#endif
-
 	/* remove ending slash in URLs */
 	len = strlen( clc.sv_dlURL );
 	if ( len > 0 &&  clc.sv_dlURL[len-1] == '/' )
@@ -864,16 +859,13 @@ static void CL_ParseGamestate( msg_t *msg ) {
   int igs = 0;
 	CL_ClearState();
 #else
-  int igs = clientGames[cgvmi];
-	if(cl.snapWorlds[0].multiview) {
-		clc.currentView = cgvmi = igs = MSG_ReadByte( msg );
-	}
-	if(cgvmi == 0 && !cgvmWorlds[0]) {
+  int igs = clientGames[clc.currentView];
+	if(igs == 0 && !cgvm) {
 		CL_ClearState();
 	}
-	memset(&cl.snapWorlds[cgvmi], 0, sizeof(cl.snapWorlds[cgvmi]));
-	memset(cl.snapshotWorlds[cgvmi], 0, sizeof(cl.snapshotWorlds[cgvmi]));
-  Com_Printf("Received new gamestate: %i\n", cgvmi);    
+	//memset(&cl.snapWorlds[igs], 0, sizeof(cl.snapWorlds[igs]));
+	//memset(cl.snapshotWorlds[igs], 0, sizeof(cl.snapshotWorlds[igs]));
+	//Com_Printf("Received new gamestate: %i\n", igs);    
 #endif
 
 	// all configstring updates received before new gamestate must be discarded
@@ -914,6 +906,19 @@ static void CL_ParseGamestate( msg_t *msg ) {
 
 //Com_Printf("cs %i (%i,%i): %s\n", i, igs, cgvmi, s);
 			// append it to the gameState string buffer
+#ifdef USE_MULTIVM_CLIENT
+			if(i == CS_SERVERINFO) {
+				if(atoi(Info_ValueForKey( s, "mvproto" ))) {
+					if(clc.world) Z_Free(clc.world);
+					clc.world = CopyString(Info_ValueForKey( s, "sv_mvWorld" ));
+					igs = atoi(clc.world);
+					clc.currentView = clientGames[igs] = igs;
+					memset(&cl.snapWorlds[igs], 0, sizeof(cl.snapWorlds[igs]));
+					memset(cl.snapshotWorlds[igs], 0, sizeof(cl.snapshotWorlds[igs]));
+					Com_Printf("Received new gamestate: %i\n", igs);    
+				}
+			}
+#endif
 			cl.gameState.stringOffsets[ i ] = cl.gameState.dataCount;
 			Com_Memcpy( cl.gameState.stringData + cl.gameState.dataCount, s, len + 1 );
 			cl.gameState.dataCount += len + 1;

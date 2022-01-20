@@ -575,7 +575,7 @@ rescan:
 		clc.serverCommandsIgnore[ index ] = qtrue;
 		cls.lastVidRestart = Sys_Milliseconds();
 		cvar_modifiedFlags |= CVAR_USERINFO;
-		Cbuf_ExecuteText(EXEC_INSERT, va("world %s", Cmd_ArgsFrom(1)));
+		Cbuf_ExecuteText(EXEC_INSERT, va("wait ; world %s\n", Cmd_ArgsFrom(1)));
 		Cmd_Clear();
 		return qfalse;
 	}

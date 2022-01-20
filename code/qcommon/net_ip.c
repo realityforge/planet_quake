@@ -712,6 +712,9 @@ static qboolean NET_GetPacket( netadr_t *net_from, msg_t *net_message, const fd_
 	sockaddr_t	from;
 	socklen_t	fromlen;
 	int		err;
+#ifdef USE_MULTI_PORT
+	//Com_Printf( "NET_GetPacket: %i -> %i\n", ip_socket, igvm );
+#endif
 
 	if(ip_socket != INVALID_SOCKET && FD_ISSET(ip_socket, fdr))
 	{
@@ -2034,7 +2037,7 @@ NET_Event
 Called from NET_Sleep which uses select() to determine which sockets have seen action.
 ====================
 */
-#ifdef USE_MULTI_PORT
+#ifdef USE_MULTIVM_SERVER
 static void NET_Event( const fd_set *fdr, int igvm )
 #else
 static void NET_Event( const fd_set *fdr )
@@ -2105,14 +2108,26 @@ qboolean NET_Sleep( int timeout )
 
 	FD_ZERO( &fdr );
 
-#ifdef USE_MULTI_PORT
+#ifdef USE_MULTIVM_SERVER
   for(int igvm = 0; igvm < MAX_NUM_PORTS; igvm++)
 #endif
 	if ( ip_socket != INVALID_SOCKET )
 	{
 		FD_SET( ip_socket, &fdr );
 
+#ifdef USE_MULTIVM_SERVER
+		if ( highestfd == INVALID_SOCKET || ip_socket > highestfd ) {
+			tv.tv_sec = timeout / 1000000;
+			tv.tv_usec = timeout - tv.tv_sec * 1000000;
+			retval = select( ip_socket + 1, &fdr, NULL, NULL, &tv );
+			if ( retval > 0 ) {
+				NET_Event( &fdr, igvm );
+				return qfalse;
+			}
+		}
+#else
 		highestfd = ip_socket;
+#endif
 	}
 
 #ifdef USE_IPV6
@@ -2141,36 +2156,25 @@ qboolean NET_Sleep( int timeout )
 #endif
 	}
 
+#ifndef USE_MULTIVM_SERVER
 	tv.tv_sec = timeout / 1000000;
 	tv.tv_usec = timeout - tv.tv_sec * 1000000;
 
-#ifdef USE_MULTI_PORT
-	qboolean result;
-	for(int igvm = 0; igvm < MAX_NUM_PORTS; igvm++) {
-		retval = select( ip_socket + 1, &fdr, NULL, NULL, &tv );
-		if ( retval > 0 ) {
-			NET_Event( &fdr, igvm );
-			result = qtrue;
-		}
-	}
-	if(result)
-		return qfalse;
-#else
 	retval = select( highestfd + 1, &fdr, NULL, NULL, &tv );
 
 	if ( retval > 0 ) {
 		NET_Event( &fdr );
 		return qfalse;
-	}
+	} else 
 #endif
-	else if (usingSocks && socks_socket != INVALID_SOCKET) {
+	if (usingSocks && socks_socket != INVALID_SOCKET) {
     // alternate between the two sockets
     FD_SET( socks_socket, &fdr );
 
     retval = select( socks_socket + 1, &fdr, NULL, NULL, &tv );
     
   	if ( retval > 0 ) {
-#ifdef USE_MULTI_PORT
+#ifdef USE_MULTIVM_SERVER
       NET_Event( &fdr, 0 );
 #else
   		NET_Event( &fdr );

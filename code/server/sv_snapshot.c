@@ -251,7 +251,9 @@ static void SV_WriteSnapshotToClient( const client_t *client, msg_t *msg ) {
 			MSG_WriteBits( msg, 0, 1 );
 		}
 #ifdef USE_MULTIVM_SERVER
-		MSG_WriteByte( msg, gvmi );
+		if(client->multiview.protocol > 1) {
+			MSG_WriteByte( msg, gvmi );
+		}
 #endif
 
 		// emit skip-merge mask
@@ -268,7 +270,7 @@ static void SV_WriteSnapshotToClient( const client_t *client, msg_t *msg ) {
 		MSG_entMergeMask = 0; // don't forget to reset that! 
 	} else {
 #endif
-;
+
 	// send over the areabits
 	MSG_WriteByte (msg, frame->areabytes);
 	MSG_WriteData (msg, frame->areabits, frame->areabytes);
@@ -728,7 +730,7 @@ static void SV_MarkClientPortalPVS( const vec3_t origin, int clientNum, int port
 
 		// mark the portal as being in view so the other world snapshot can always send entities from this point
 		//   when the portals have the same name in both maps, and the same location, entities will be sent
-		Com_Printf("otherwordly portal found: %i\n", numMultiworldEntities);
+		//Com_Printf("otherwordly portal found: %i\n", numMultiworldEntities);
 		for(int j = 0; j < numMultiworldEntities; j++) {
 			if(multiworldEntities[j].worldFrom != gvmi) continue; // skip portals not from this world
 			if(multiworldEntities[j].world == gvmi) continue; // skip portals that lead to this world
@@ -1394,8 +1396,7 @@ void SV_SendClientSnapshot( client_t *client, qboolean includeBaselines ) {
 		if(ent->s.eType == 0 
 			&& gvmi != client->gameWorld && gvmi != client->newWorld) continue;
 		//Com_Printf("Sending snapshot %i %i >= %i\n", gvmi, client->mvAck, client->messageAcknowledge);
-		if(gvmi != 0 && (client->mvAck == 0 
-			|| client->mvAck >= client->messageAcknowledge)) continue;
+		//if(gvmi != 0 && (client->mvAck == 0 
     // remove this line when MULTIIVM is working
 		//if(gvmi != 0) continue;
 		//if(gvmi != client->gameWorld) continue;
@@ -1408,7 +1409,11 @@ void SV_SendClientSnapshot( client_t *client, qboolean includeBaselines ) {
 	// bots need to have their snapshots build, but
 	// the query them directly without needing to be sent
 	if ( client->netchan.remoteAddress.type == NA_BOT ) {
+#ifdef USE_MULTIVM_SERVER
+		continue;
+#else
 		return;
+#endif
 	}
 #endif
 
@@ -1481,6 +1486,9 @@ void SV_SendClientSnapshot( client_t *client, qboolean includeBaselines ) {
 
 #ifdef USE_MULTIVM_SERVER
 		sv.time++;
+		if(client->multiview.protocol == 0 || client->mvAck == 0) {
+			break;
+		}
 	}
 #endif
 }

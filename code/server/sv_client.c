@@ -592,7 +592,11 @@ void SV_DirectConnect( const netadr_t *from ) {
 	qboolean	compat = qfalse;
 	qboolean	longstr;
 
+//#ifdef USE_MULTIVM_SERVER
+//	Com_Printf( "SVC_DirectConnect(%i)\n", from->netWorld );
+//#else
 	Com_DPrintf( "SVC_DirectConnect()\n" );
+//#endif
 
 #ifdef USE_BANS
 	// Check whether this client is banned.
@@ -894,7 +898,8 @@ gotnewcl:
 
 #ifdef USE_MULTIVM_SERVER
 	//if(from->type == NA_LOOPBACK) {
-		gvmi = newcl->gameWorld = newcl->newWorld = 0;
+		gvmi = newcl->gameWorld = newcl->newWorld = from->netWorld;
+	Com_Printf( "SVC_DirectConnect(%i)\n", from->netWorld );
 	//} else {
 	//	gvmi = newcl->gameWorld = newcl->newWorld = 1;
 	//}
@@ -927,16 +932,19 @@ gotnewcl:
 	}
 
 #ifdef USE_MULTIVM_SERVER
+	newcl->netchan.remoteAddress.netWorld = from->netWorld;
   // add new clients to all worlds
-	if(sv_mvOmnipresent->integer != 0) {
-		if(atoi(Info_ValueForKey( userinfo, "mvproto" )) != MV_PROTOCOL_VERSION) {
-			NET_OutOfBandPrint( NS_SERVER, from, "print\nSorry, but this server requires multiview %i\n", MV_PROTOCOL_VERSION );
-			Com_DPrintf( "Multiview rejected a regular client.\n" );
-			return;
-		} else {
-			newcl->multiview.protocol = MV_PROTOCOL_VERSION;
-			newcl->multiview.scoreQueryTime = 0;
+	if(atoi(Info_ValueForKey( userinfo, "mvproto" )) != MV_PROTOCOL_VERSION) {
+		if(sv_mvOmnipresent->integer != 0) {
+				NET_OutOfBandPrint( NS_SERVER, from, "print\nSorry, but this server requires multiview %i\n", MV_PROTOCOL_VERSION );
+				Com_DPrintf( "Multiview rejected a regular client.\n" );
+				return;
 		}
+	} else {
+		// start multiview automatically in the case where multiview client starts on a different port and doesn't take up the wrong slot.
+		// TODO: too soon! must have at least 1 frame sent
+		//newcl->multiview.protocol = atoi(Info_ValueForKey( userinfo, "mvproto" ));
+		//newcl->multiview.scoreQueryTime = 0;
 	}
 	for(int igvm = 0; igvm < MAX_NUM_VMS; igvm++) {
 		if(!gvmWorlds[igvm]) continue;
@@ -1273,6 +1281,12 @@ static void SV_SendClientGameState( client_t *client ) {
 	const svEntity_t *svEnt;
 	msg_t		msg;
 	byte		msgBuffer[ MAX_MSGLEN_BUF ];
+#ifdef USE_MULTIVM_SERVER
+	int prevGvm = gvmi;
+	gvmi = client->newWorld;
+	CM_SwitchMap(gameWorlds[gvmi]);
+	SV_SetAASgvm(gvmi);
+#endif
 
 	Com_DPrintf( "SV_SendClientGameState() for %s\n", client->name );
 
@@ -1318,11 +1332,7 @@ static void SV_SendClientGameState( client_t *client ) {
 
 	// send the gamestate
 	MSG_WriteByte( &msg, svc_gamestate );
-#ifdef USE_MULTIVM_SERVER
-	if(client->multiview.protocol > 0) {
-		MSG_WriteByte( &msg, client->newWorld );
-	}
-#endif
+
 	MSG_WriteLong( &msg, client->reliableSequence );
 
 	// write the configstrings
@@ -1360,6 +1370,12 @@ static void SV_SendClientGameState( client_t *client ) {
  	}
 #endif
 
+#ifdef USE_MULTIVM_SERVER
+	gvmi = prevGvm;
+	CM_SwitchMap(gameWorlds[gvmi]);
+	SV_SetAASgvm(gvmi);
+#endif
+
 	// it is important to handle gamestate overflow
 	// but at this stage client can't process any reliable commands
 	// so at least try to inform him in console and release connection slot
@@ -1375,8 +1391,7 @@ static void SV_SendClientGameState( client_t *client ) {
 
 	// deliver this to the client
 	SV_SendMessageToClient( &msg, client );
-	
-	
+
 }
 
 
@@ -1396,7 +1411,7 @@ void SV_ClientEnterWorld( client_t *client, usercmd_t *cmd ) {
 #endif
 	client->state = CS_ACTIVE;
 #ifdef USE_MULTIVM_SERVER
-	if(sv_mvWorld->integer && client->multiview.protocol > 0) {
+	if(sv_mvWorld->integer && client->multiview.protocol > 1) {
 		SV_SendServerCommand(client, "world %i", client->newWorld);
 	}
 #endif
@@ -2318,6 +2333,8 @@ void SV_LoadVM( client_t *cl ) {
 		Sys_SetStatus( "Loading map %s", mapname );
     Cvar_Get( va("mapname_%i", gvmi), mapname, CVAR_TAGGED_SPECIFIC );
     Cvar_Set( va("mapname_%i", gvmi), mapname );
+    Cvar_Get( va("sv_mvWorld_%i", gvmi), va("%i", gvmi), CVAR_TAGGED_SPECIFIC );
+    Cvar_Set( va("sv_mvWorld_%i", gvmi), va("%i", gvmi) );
 		gameWorlds[gvmi] = CM_LoadMap( va( "maps/%s.bsp", mapname ), qfalse, &checksum );
 		Cvar_Set( va("sv_mapChecksum_%i", gvmi), va( "%i", checksum ) );
     Cvar_Get( va("sv_mapChecksum_%i", gvmi), "", CVAR_TAGGED_SPECIFIC );
@@ -2882,7 +2899,7 @@ void SV_Game_f( client_t *client ) {
 			// send a new gamestate just like normal, every time they go through a portal they have to load games
 		}
 	} else {
-		client->multiview.protocol = MV_PROTOCOL_VERSION;
+		client->multiview.protocol = atoi(Info_ValueForKey( client->userinfo, "mvproto" ));;
 		client->multiview.scoreQueryTime = 0;
 	}
 	clientNum = client - svs.clients;
@@ -3444,18 +3461,7 @@ void SV_ExecuteClientMessage( client_t *cl, msg_t *msg ) {
 		if ( cl->state != CS_ACTIVE && cl->messageAcknowledge > cl->gamestateMessageNum ) {
 			if ( !SVC_RateLimit( &cl->gamestate_rate, 4, 1000 ) ) {
 				Com_DPrintf( "%s : dropped gamestate, resending\n", cl->name );
-#ifdef USE_MULTIVM_SERVER
-				int prevGvm = gvmi;
-				gvmi = cl->newWorld;
-				CM_SwitchMap(gameWorlds[gvmi]);
-				SV_SetAASgvm(gvmi);
 				SV_SendClientGameState( cl );
-				gvmi = prevGvm;
-				CM_SwitchMap(gameWorlds[gvmi]);
-				SV_SetAASgvm(gvmi);
-#else
-				SV_SendClientGameState( cl );
-#endif
 			}
 		}
 		return;
@@ -3469,19 +3475,9 @@ void SV_ExecuteClientMessage( client_t *cl, msg_t *msg ) {
 	}
 	
 #ifdef USE_MULTIVM_SERVER
-	int igvm = 0;
-	if(cl->multiview.protocol > 0
-		&& cl->mvAck > 0 && cl->mvAck <= cl->messageAcknowledge
-	) {
-		igvm = MSG_ReadByte( msg );
-		if(igvm > 9 || igvm < 0) {
-			Com_Printf("Error: %li (%i)\n", cl - svs.clients, gvmi);
-#ifndef NDEBUG
-			SV_DropClient( cl, "DEBUG: illegible world message" );
-#endif
-			return;
-		}
-	}
+	gvmi = cl->gameWorld;
+	CM_SwitchMap(gameWorlds[gvmi]);
+	SV_SetAASgvm(gvmi);
 #endif
 
 	// read optional clientCommand strings
@@ -3505,19 +3501,20 @@ void SV_ExecuteClientMessage( client_t *cl, msg_t *msg ) {
 	}
 #endif
 
-#ifdef USE_MULTIVM_SERVER
-	if(cl->state >= CS_CONNECTED && cl->multiview.protocol > 0) {
-		gvmi = igvm;
-		CM_SwitchMap(gameWorlds[gvmi]);
-		SV_SetAASgvm(gvmi);
-	} else {
-		gvmi = cl->gameWorld;
-		CM_SwitchMap(gameWorlds[gvmi]);
-		SV_SetAASgvm(gvmi);
-	}
-#endif
-
 	// read the usercmd_t
+#ifdef USE_MULTIVM_SERVER
+	if ( c == clc_mvMove ) {
+		gvmi = MSG_ReadByte( msg );
+		CM_SwitchMap(gameWorlds[gvmi]);
+		SV_SetAASgvm(gvmi);
+		SV_UserMove( cl, msg, qtrue );
+	} else if ( c == clc_mvMoveNoDelta ) {
+		gvmi = MSG_ReadByte( msg );
+		CM_SwitchMap(gameWorlds[gvmi]);
+		SV_SetAASgvm(gvmi);
+		SV_UserMove( cl, msg, qfalse );
+	} else
+#endif
 	if ( c == clc_move ) {
 		SV_UserMove( cl, msg, qtrue );
 	} else if ( c == clc_moveNoDelta ) {

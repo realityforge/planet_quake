@@ -568,7 +568,7 @@ void SV_MultiView_f( client_t *client ) {
 			return;
 		}
 
-		client->multiview.protocol = MV_PROTOCOL_VERSION;
+		client->multiview.protocol = atoi(Info_ValueForKey( client->userinfo, "mvproto" ));;
 		client->multiview.scoreQueryTime = 0;
 #ifdef USE_MV_ZCMD
 		client->multiview.z.deltaSeq = 0; // reset on transition to multiview
