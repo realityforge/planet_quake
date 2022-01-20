@@ -1485,7 +1485,7 @@ CL_CGameRendering
 */
 void CL_CGameRendering( stereoFrame_t stereo ) {
 #ifdef USE_MULTIVM_CLIENT
-  VM_Call( cgvm, 3, CG_DRAW_ACTIVE_FRAME, cl.serverTimes[clientGames[cgvmi]], stereo, clc.demoplaying );
+  VM_Call( cgvm, 3, CG_DRAW_ACTIVE_FRAME, cl.serverTimes[clientGames[clc.currentView]], stereo, clc.demoplaying );
 #else
   VM_Call( cgvm, 3, CG_DRAW_ACTIVE_FRAME, cl.serverTime, stereo, clc.demoplaying );
 #endif
@@ -1535,10 +1535,10 @@ static void CL_AdjustTimeDelta( void ) {
 	deltaDelta = abs( newDelta - cl.serverTimeDelta );
 
 	if ( deltaDelta > RESET_TIME ) {
-		cl.serverTimeDelta = newDelta;
+		cl.serverTimeDelta = deltaDelta; //newDelta;
 		cl.oldServerTime = cl.snap.serverTime;	// FIXME: is this a problem for cgame?
 #ifdef USE_MULTIVM_CLIENT
-		cl.serverTimes[igs] = cl.snap.serverTime;
+		cl.serverTimes[0] = cl.snap.serverTime;
 #else
     cl.serverTime = cl.snap.serverTime;
 #endif
@@ -1550,7 +1550,7 @@ static void CL_AdjustTimeDelta( void ) {
 		if ( cl_showTimeDelta->integer ) {
 			Com_Printf( "<FAST> " );
 		}
-		cl.serverTimeDelta = ( cl.serverTimeDelta + newDelta ) >> 1;
+		cl.serverTimeDelta = 100; //( cl.serverTimeDelta + newDelta ) >> 1;
 	} else {
 		// slow drift adjust, only move 1 or 2 msec
 
@@ -1744,11 +1744,18 @@ void CL_SetCGameTime( void ) {
 		// or less latency to be added in the interest of better
 		// smoothness or better responsiveness.
 #ifdef USE_MULTIVM_CLIENT
-    cl.serverTimes[igs] = cls.realtime + cl.serverTimeDelta - CL_TimeNudge();
-		if ( cl.serverTimes[igs] < cl.oldServerTime ) {
-			cl.serverTimes[igs] = cl.oldServerTime;
+    cl.serverTimes[0] = cls.realtime + cl.serverTimeDelta - CL_TimeNudge();
+		/*if(cl.serverTimes[igs] > cl.serverTimes[clientGames[clc.currentView]]) {
+			Com_Printf("updating times: %i -> %i: %i\n", igs, clientGames[clc.currentView], cl.serverTimes[igs]);
+			cl.oldServerTime = cl.serverTimes[clientGames[clc.currentView]] = cl.serverTimes[igs];
+		}*/
+		if ( cl.serverTimes[0] < cl.snap.serverTime ) {
+			cl.serverTimes[0] = cl.snap.serverTime + 2;
 		}
-		cl.oldServerTime = cl.serverTimes[igs];
+		if ( cl.serverTimes[0] < cl.oldServerTime ) {
+			cl.serverTimes[0] = cl.oldServerTime;
+		}
+		cl.oldServerTime = cl.serverTimes[0];
 #else
 		cl.serverTime = cls.realtime + cl.serverTimeDelta - CL_TimeNudge();
 
@@ -1792,14 +1799,14 @@ void CL_SetCGameTime( void ) {
     }
     clc.timeDemoFrames++;
 #ifdef USE_MULTIVM_CLIENT
-    cl.serverTimes[igs] = clc.timeDemoBaseTime + clc.timeDemoFrames * 50;
+    cl.serverTimes[0] = clc.timeDemoBaseTime + clc.timeDemoFrames * 50;
 #else
     cl.serverTime = clc.timeDemoBaseTime + clc.timeDemoFrames * 50;
 #endif
   }
 
 #ifdef USE_MULTIVM_CLIENT
-  while ( cl.serverTimes[igs] >= cl.snapWorlds[igs].serverTime )
+  while ( cl.serverTimes[0] >= cl.snapWorlds[igs].serverTime )
 #else
   while ( cl.serverTime >= cl.snap.serverTime )
 #endif

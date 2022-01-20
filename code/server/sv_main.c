@@ -1824,7 +1824,7 @@ void SV_Frame( int msec ) {
 			CM_SwitchMap(gameWorlds[gvmi]);
 			SV_SetAASgvm(gvmi);
 			VM_Call( gvm, 1, GAME_RUN_FRAME, sv.time );
-			sv.time += 1;
+			//sv.time += 1;
 		}
 		gvmi = 0;
 		CM_SwitchMap(gameWorlds[gvmi]);

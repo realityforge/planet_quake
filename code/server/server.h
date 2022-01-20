@@ -260,8 +260,8 @@ typedef struct client_s {
 	int				challenge;
 
 #ifdef USE_MULTIVM_SERVER
-	usercmd_t		lastUsercmd[MAX_NUM_VMS];
-#define lastUsercmd lastUsercmd[gvmi]
+	usercmd_t		lastUsercmds[MAX_NUM_VMS];
+#define lastUsercmd lastUsercmds[gvmi]
 #else
   usercmd_t		lastUsercmd;
 #endif

@@ -1184,7 +1184,7 @@ static void CL_Rewind_f( void ) {
 	FS_Seek(clc.demofile, clc.demoIndex[nearest].offset, FS_SEEK_SET);
 	memcpy(cl.entityBaselines, clc.demoIndex[nearest].entities, MAX_GENTITIES * sizeof(entityState_t));
 #ifdef USE_MULTIVM_CLIENT
-  cl.serverTimes[igs] = cl.snap.serverTime - serverShift;
+  cl.serverTimes[0] = cl.snap.serverTime - serverShift;
 #else
 	cl.serverTime = cl.snap.serverTime - serverShift;
 #endif

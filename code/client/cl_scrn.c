@@ -632,7 +632,7 @@ static void CL_CalculatePing( int ms ) {
 	}
 
 #ifdef USE_MULTIVM_CLIENT
-	offset = cl.serverTimes[igs] - cl.snapWorlds[igs].serverTime;
+	offset = cl.serverTimes[0] - cl.snapWorlds[igs].serverTime;
 #else
 	offset = cl.serverTime - cl.snap.serverTime;
 #endif

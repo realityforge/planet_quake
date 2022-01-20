@@ -599,7 +599,8 @@ static void CL_FinishMove( usercmd_t *cmd, int igvm ) {
 	// send the current server time so the amount of movement
 	// can be determined without allowing cheating
 #ifdef USE_MULTIVM_CLIENT
-  cmd->serverTime = cl.serverTimes[igvm];
+	//int igs = clientGames[igvm];
+  cmd->serverTime = cl.serverTimes[0];
 #else
 	cmd->serverTime = cl.serverTime;
 #endif
@@ -804,16 +805,16 @@ void CL_WritePacket( void ) {
 	for(int igvm = 0; igvm < MAX_NUM_VMS; igvm++) {
 		// TODO: only send from clientWorlds[clc.currentView]
 		if(clientGames[igvm] == -1
-			|| (igvm > 0 && clientWorlds[igvm] != clc.clientNum)
-			|| (igvm > 0 && clc.world && clc.world[0] != '\0')
+			|| (igvm != clc.currentView && clientWorlds[igvm] != clc.clientNum)
+			|| (igvm != clc.currentView && clc.world && clc.world[0] != '\0')
 		) {
 			continue;
 		}
 		int igs = clientGames[igvm];
 		//int oldCmdNum = cl.clCmdNumbers[igvm];
 		CL_CreateNewCommands(igvm);
-		//Com_Printf("input: %i -> %i\n", igvm, igs);
-		if(igvm != 0) {
+		//Com_Printf("input: %i -> %i: %i, %i\n", igvm, igs, cl.serverTimes[0], cl.serverTimeDelta);
+		/*if(igvm != 0) {
       // choose which client to extract movement commands from, cl.currentView?
 			cl.cmds[cl.clCmdNumbers[igvm] & CMD_MASK].forwardmove = 
 				cl.cmdWorlds[0][cl.clCmdNumbers[0] & CMD_MASK].forwardmove;
@@ -821,7 +822,7 @@ void CL_WritePacket( void ) {
 				cl.cmdWorlds[0][cl.clCmdNumbers[0] & CMD_MASK].rightmove;
 			cl.cmds[cl.clCmdNumbers[igvm] & CMD_MASK].upmove = 
 				cl.cmdWorlds[0][cl.clCmdNumbers[0] & CMD_MASK].upmove;
-		}
+		}*/
 #endif
 
 	oldcmd = &nullcmd;
@@ -921,7 +922,8 @@ void CL_WritePacket( void ) {
 	cl.outPackets[ packetNum ].p_realtime = cls.realtime;
 	cl.outPackets[ packetNum ].p_serverTime = oldcmd->serverTime;
 #ifdef USE_MULTIVM_CLIENT
-	//cl.outPackets[ packetNum ].p_serverTime = cl.serverTimes[igvm];
+	//int igs = clientGames[igvm]
+	//cl.outPackets[ packetNum ].p_serverTime = cl.serverTimes[igs];
   cl.outPackets[ packetNum ].p_cmdNumber = cl.clCmdNumbers[igvm];
 #else
 	cl.outPackets[ packetNum ].p_cmdNumber = cl.cmdNumber;

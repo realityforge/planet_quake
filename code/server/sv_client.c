@@ -1443,6 +1443,12 @@ void SV_ClientEnterWorld( client_t *client, usercmd_t *cmd ) {
 		memcpy(&client->lastUsercmd, cmd, sizeof(usercmd_t));
 	else
 		memset(&client->lastUsercmd, '\0', sizeof(usercmd_t));
+#ifdef USE_MULTIVM_SERVER
+	if(sv_mvWorld->integer) {
+		// always uses 0 slot :(
+		memset(&client->lastUsercmds[client->gameWorld], '\0', sizeof(usercmd_t));
+	}
+#endif
 
 	// call the game begin function
 	VM_Call( gvm, 1, GAME_CLIENT_BEGIN, client - svs.clients );
@@ -2472,7 +2478,10 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
     } else if (sv_mvOmnipresent->integer == -1) {
       SV_ExecuteClientCommand(client, "team s");
     }
+		client->lastSnapshotTime = svs.time - 9999; // generate a snapshot immediately
+		//client->state = CS_ZOMBIE; // skip delta generation
 		SV_SendClientSnapshot( client, qfalse );
+		//client->state = CS_CONNECTED;
 
 		gvmi = newWorld;
 		CM_SwitchMap(gameWorlds[gvmi]);
@@ -2495,6 +2504,7 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
 				// also prevents server from sending snapshots from this world
 			}
 			//if(!client->multiview.protocol) {
+				client->oldServerTime = sv.time;
 				client->state = CS_CONNECTED;
 				client->gamestateMessageNum = -1; // send a new gamestate
 			//} else {
@@ -2507,6 +2517,7 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
 			VM_Call( gvm, 3, GAME_CLIENT_CONNECT, clientNum, qfalse, qfalse );	// firstTime = qfalse
 			// not the first time they have entered, automatically connect
 			client->gameWorld = newWorld;
+			client->state = CS_PRIMED;
 			//client->deltaMessage = -1;
 			//client->lastSnapshotTime = svs.time - 9999; // generate a snapshot immediately
 			// notify the client of the secondary map
@@ -2527,6 +2538,7 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
 #ifdef USE_MULTIVM_SERVER
 	if(client->newWorld == client->gameWorld) {
 		VM_Call( gvm, 1, GAME_CLIENT_BEGIN, clientNum );
+		client->state = CS_ACTIVE;
 	}
 #else
 	VM_Call( gvm, 1, GAME_CLIENT_BEGIN, clientNum );
@@ -3339,18 +3351,21 @@ static void SV_UserMove( client_t *cl, msg_t *msg, qboolean delta ) {
 			return;
 		}
 #ifdef USE_MULTIVM_SERVER
-		//if(cl->newWorld != cl->gameWorld) {
 		int prevGvm = gvmi; // hopefully it is the same but maybe not
 		gvmi = cl->gameWorld = cl->newWorld;
 		CM_SwitchMap(gameWorlds[gvmi]);
 		SV_SetAASgvm(gvmi);
-		SV_ClientEnterWorld( cl, &cmds[0] ); // NULL );
+		if(cl->newWorld != cl->gameWorld) {
+			// If we don't reset client->lastUsercmd and are restarting during map load,
+			// the client will hang because we'll use the last Usercmd from the previous map,
+			// which is wrong obviously.
+			SV_ClientEnterWorld( cl, NULL );
+		} else {
+			SV_ClientEnterWorld( cl, &cmds[0] );
+		}
 		gvmi = prevGvm;
 		CM_SwitchMap(gameWorlds[gvmi]);
 		SV_SetAASgvm(gvmi);
-		//} else {
-
-		//}
 #else
 		SV_ClientEnterWorld( cl, &cmds[0] );
 #endif
@@ -3383,10 +3398,10 @@ static void SV_UserMove( client_t *cl, msg_t *msg, qboolean delta ) {
 		// don't execute if this is an old cmd which is already executed
 		// these old cmds are included when cl_packetdup > 0
 		if ( cmds[i].serverTime <= cl->lastUsercmd.serverTime ) {
-			Com_Printf("skipping! %i: %i <= %i\n", gvmi, cmds[i].serverTime, cl->lastUsercmd.serverTime);
+			//Com_Printf("skipping! %i: %i <= %i\n", gvmi, cmds[i].serverTime, cl->lastUsercmd.serverTime);
 			continue;
 		}
-		Com_Printf("thinking! %i\n", gvmi);
+		//Com_Printf("thinking! %i\n", gvmi);
 		SV_ClientThink (cl, &cmds[ i ]);
 	}
 }

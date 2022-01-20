@@ -138,11 +138,11 @@ typedef struct {
 int			serverTimes[MAX_NUM_VMS];
 // can't use pre-compile because serverTime also exists in cl.snap.serverTime
 int			oldServerTimes[MAX_NUM_VMS];
-#define oldServerTime oldServerTimes[igs]
+#define oldServerTime oldServerTimes[0]
 int			oldFrameServerTimes[MAX_NUM_VMS];
 #define oldFrameServerTime oldFrameServerTimes[igs]
 int			serverTimeDeltas[MAX_NUM_VMS];
-#define serverTimeDelta serverTimeDeltas[igs]
+#define serverTimeDelta serverTimeDeltas[0]
 #else
 	clSnapshot_t	snap;			// latest received from server
   int			serverTime;			// may be paused during play
