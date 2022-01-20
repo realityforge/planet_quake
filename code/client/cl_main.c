@@ -2865,24 +2865,25 @@ static void CL_DownloadsComplete( void ) {
 	// force the client to load a new VM using sv_mvWorld
 	// this only loads a VM the first time, decoupling game state from loading
 	// TODO: exec world 0:0 asynchronously
-	if(((!clientGames[clc.currentView] || clientGames[clc.currentView] < 0)
-		&& clc.currentView == 0)
+	//if(((!clientGames[clc.currentView] || clientGames[clc.currentView] < 0)
+	//	&& clc.currentView == 0)
 		// server controls world view
-		|| (clc.world && clc.world[0] != '\0')
+		// || (clc.world && clc.world[0] != '\0')
 		// client auto loads world, default autoload
 		// || cl_mvWorld->integer
-	) {
+	//) {
 		cgvmi = clc.currentView;
-#ifdef USE_LAZY_LOAD
+#if 0 //def USE_LAZY_LOAD
 		if(clc.currentView != 0)
 			Cvar_Set( "cl_lazyLoad", "2" ); // TODO: 4
 		else
 			Cvar_Set( "cl_lazyLoad", "1" );
 #endif
+		// added restart fancy-ness to this function automatically
 		CL_InitCGame(cgvmi);
-	} else {
-		Com_Error(ERR_DROP, "what to do?");
-	}
+	//} else {
+	//	Com_Error(ERR_DROP, "what to do?");
+	//}
 #else
 	clientGames[0] = 0;
 	clientWorlds[0] = clc.clientNum;
@@ -3713,7 +3714,7 @@ A packet has arrived from the main event loop
 void CL_PacketEvent( const netadr_t *from, msg_t *msg ) {
 	int		headerBytes;
 #ifdef USE_MULTIVM_CLIENT
-	cgvmi = 0;
+	cgvmi = clc.currentView;
 	CM_SwitchMap(clientMaps[cgvmi]);
 #endif
 
@@ -3891,7 +3892,7 @@ void CL_Frame( int msec, int realMsec ) {
 	float frameDuration;
 
 #ifdef USE_MULTIVM_CLIENT
-	cgvmi = 0;
+	cgvmi = clc.currentView;
 	CM_SwitchMap(clientMaps[cgvmi]);
 #endif
 
@@ -3951,7 +3952,7 @@ void CL_Frame( int msec, int realMsec ) {
 			}
 		}
 	}
-	cgvmi = 0;
+	cgvmi = clc.currentView;
 	CM_SwitchMap(clientMaps[cgvmi]);
 #endif
 #endif
@@ -4114,8 +4115,8 @@ void CL_Frame( int msec, int realMsec ) {
 #endif
 	
 #ifdef USE_MULTIVM_CLIENT
-	cgvmi = 0;
-	CM_SwitchMap(clientMaps[0]);
+	cgvmi = clc.currentView;
+	CM_SwitchMap(clientMaps[cgvmi]);
 #endif
 }
 

@@ -1336,7 +1336,7 @@ static void SV_SendClientGameState( client_t *client ) {
 	MSG_WriteLong( &msg, client->reliableSequence );
 
 #ifdef USE_MULTIVM_SERVER
-	if(client->multiview.protocol > 1) {
+	if(atoi(Info_ValueForKey( client->userinfo, "mvproto" )) > 1) {
 		MSG_WriteByte( &msg, svc_mvWorld );
 		MSG_WriteByte( &msg, gvmi );
 	}
@@ -1418,7 +1418,10 @@ void SV_ClientEnterWorld( client_t *client, usercmd_t *cmd ) {
 #endif
 	client->state = CS_ACTIVE;
 #ifdef USE_MULTIVM_SERVER
-	if(sv_mvWorld->integer && client->multiview.protocol > 1) {
+	if(sv_mvWorld->integer 
+		// check client is multiworld capable, even if it's not enabled
+		//   we still send world command to set the right starting world
+		&& atoi(Info_ValueForKey( client->userinfo, "mvproto" )) > 1) {
 		SV_SendServerCommand(client, "world %i", client->newWorld);
 	}
 #endif
@@ -3380,10 +3383,10 @@ static void SV_UserMove( client_t *cl, msg_t *msg, qboolean delta ) {
 		// don't execute if this is an old cmd which is already executed
 		// these old cmds are included when cl_packetdup > 0
 		if ( cmds[i].serverTime <= cl->lastUsercmd.serverTime ) {
-			//Com_Printf("skipping! %i\n", gvmi);
+			Com_Printf("skipping! %i: %i <= %i\n", gvmi, cmds[i].serverTime, cl->lastUsercmd.serverTime);
 			continue;
 		}
-		//Com_Printf("thinking! %i\n", gvmi);
+		Com_Printf("thinking! %i\n", gvmi);
 		SV_ClientThink (cl, &cmds[ i ]);
 	}
 }

@@ -864,6 +864,7 @@ static void CL_ParseGamestate( msg_t *msg ) {
 		CL_ClearState();
 		memset(&cl.snapWorlds[igs], 0, sizeof(cl.snapWorlds[igs]));
 		memset(cl.snapshotWorlds[igs], 0, sizeof(cl.snapshotWorlds[igs]));
+		cl.gameState.dataCount = 1;
 	}
 #endif
 
@@ -879,7 +880,9 @@ static void CL_ParseGamestate( msg_t *msg ) {
 	clc.serverCommandSequence = MSG_ReadLong( msg );
 
 	// parse all the configstrings and baselines
+#ifndef USE_MULTIVM_SERVER
 	cl.gameState.dataCount = 1;	// leave a 0 at the beginning for uninitialized configstrings
+#endif
 	while ( 1 ) {
 		cmd = MSG_ReadByte( msg );
 
@@ -890,10 +893,15 @@ static void CL_ParseGamestate( msg_t *msg ) {
 #ifdef USE_MULTIVM_CLIENT
 		if ( cmd == svc_mvWorld ) {
 			igs = MSG_ReadByte( msg );
-			clientGames[igs] = clc.currentView = igs;
+			if(clc.world) Z_Free(clc.world);
+			clc.world = CopyString(va("%i", igs));
+			cgvmi = clc.currentView = igs;
+			clientGames[igs] = clc.currentView;
+			clientWorlds[igs] = clc.clientNum;
 			memset(&cl.snapWorlds[igs], 0, sizeof(cl.snapWorlds[igs]));
 			memset(cl.snapshotWorlds[igs], 0, sizeof(cl.snapshotWorlds[igs]));
-			Com_Printf("Received new gamestate: %i\n", igs);
+			cl.gameState.dataCount = 1;
+			Com_Printf("Received new gamestate: %i\n", igs); 
 		} else
 #endif
 
@@ -935,10 +943,6 @@ static void CL_ParseGamestate( msg_t *msg ) {
 
 	clc.clientNum = MSG_ReadLong(msg);
 	
-#ifdef USE_MULTIVM_CLIENT
-	clientGames[clc.currentView] = clc.currentView;
-	clientWorlds[clc.currentView] = clc.clientNum;
-#endif
 #ifdef USE_MV
 	clc.zexpectDeltaSeq = 0; // that will reset compression context
 #endif

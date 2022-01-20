@@ -243,13 +243,12 @@ static qboolean CL_GetSnapshot( int snapshotNumber, snapshot_t *snapshot ) {
 	snapshot->serverTime = clSnap->serverTime;
 
 #ifdef USE_MV
-	int cv;
-	cv = clientWorlds[cgvmi];
 	if ( clSnap->multiview ) {
 		int		entityNum;
 		int		startIndex;
 		int		parsedIndex;
 		byte	*entMask;
+		int cv = clientWorlds[cgvmi];
 
 		if ( clSnap->clps[ cv ].valid ) {
 		} else {
@@ -572,6 +571,7 @@ rescan:
 
 #ifdef USE_MULTIVM_CLIENT
 	if ( !strcmp( cmd, "world" ) ) {
+		// prevent multiple VMs from processing this command
 		clc.serverCommandsIgnore[ index ] = qtrue;
 		cls.lastVidRestart = Sys_Milliseconds();
 		cvar_modifiedFlags |= CVAR_USERINFO;
@@ -1453,7 +1453,7 @@ qboolean CL_GameCommand( int igvm ) {
 
 #ifdef USE_MULTIVM_CLIENT
 	int prevGvm = cgvmi;
-	cgvmi = igvm;
+	cgvmi = clc.currentView;
 	CM_SwitchMap(clientMaps[cgvmi]);
 #endif
 

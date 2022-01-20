@@ -802,15 +802,17 @@ void CL_WritePacket( void ) {
 	//   e.g. dead world versus living world, like respawn in WoW, 
 	//     different enemies in dead world for powerups like in Prey
 	for(int igvm = 0; igvm < MAX_NUM_VMS; igvm++) {
+		// TODO: only send from clientWorlds[clc.currentView]
 		if(clientGames[igvm] == -1
-		//	|| clientWorlds[igvm] != clc.clientNum
+			|| (igvm > 0 && clientWorlds[igvm] != clc.clientNum)
+			|| (igvm > 0 && clc.world && clc.world[0] != '\0')
 		) {
 			continue;
 		}
 		int igs = clientGames[igvm];
 		//int oldCmdNum = cl.clCmdNumbers[igvm];
 		CL_CreateNewCommands(igvm);
-		Com_Printf("input: %i -> %i\n", igvm, igs);
+		//Com_Printf("input: %i -> %i\n", igvm, igs);
 		if(igvm != 0) {
       // choose which client to extract movement commands from, cl.currentView?
 			cl.cmds[cl.clCmdNumbers[igvm] & CMD_MASK].forwardmove = 

@@ -527,7 +527,7 @@ void Cvar_SetServerDescriptions( void ) {
   Cvar_SetDescription( "sv_mvPassword", "Set the password for multiview clients\nDefault: empty");
   Cvar_SetDescription( "sv_mvFileCount", "Set the maximum number of multiview recordings before it reuses numeric names\nDefault: 1024");
 	Cvar_SetDescription( "sv_mvFolderSize", "Set the multiview folder size for automatic recordings, rotate when maxed out\nDefault: 768");
-	Cvar_SetDescription( "sv_mvWorld", "Micromanage the client view by sending world commands that update which camera view should be visible on screen. This gives servers/games/admins a more scripted control over client displays. Turn off to force clients to manage their own displays by using the `tile` or `popout` commands.\nDefault: 1");
+	Cvar_SetDescription( "sv_mvWorld", "Micromanage the client view by sending `world` commands that update which camera view should be visible on screen. This gives servers/games/admins a more scripted control over client displays. Turn off to force clients to manage their own displays by using the `tile`, `dvr` or `popout` commands.\nDefault: 1");
 	Cvar_SetDescription( "sv_mvSyncPS", "Synchronize player state across worlds. If a player picks up a weapon in one world, that weapon slot will be filled in every other world. Only works with the same mods.\nDefault: 0");
 	Cvar_SetDescription( "sv_mvSyncXYZ", "Force players to occupy the same XYZ coordinates in every world. Useful in shadow/mirror dimension type games.\nDefault: 0");
 	Cvar_SetDescription( "sv_mvSyncMove", "Sync movement across multiple worlds, copy movement from the active screen.\nDefault: 0");
