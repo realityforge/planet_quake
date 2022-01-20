@@ -859,13 +859,12 @@ static void CL_ParseGamestate( msg_t *msg ) {
   int igs = 0;
 	CL_ClearState();
 #else
-  int igs = clientGames[clc.currentView];
+  int igs = clc.currentView = clientGames[0] = 0;
 	if(igs == 0 && !cgvm) {
 		CL_ClearState();
+		memset(&cl.snapWorlds[igs], 0, sizeof(cl.snapWorlds[igs]));
+		memset(cl.snapshotWorlds[igs], 0, sizeof(cl.snapshotWorlds[igs]));
 	}
-	//memset(&cl.snapWorlds[igs], 0, sizeof(cl.snapWorlds[igs]));
-	//memset(cl.snapshotWorlds[igs], 0, sizeof(cl.snapshotWorlds[igs]));
-	//Com_Printf("Received new gamestate: %i\n", igs);    
 #endif
 
 	// all configstring updates received before new gamestate must be discarded
@@ -887,7 +886,17 @@ static void CL_ParseGamestate( msg_t *msg ) {
 		if ( cmd == svc_EOF ) {
 			break;
 		}
-		
+
+#ifdef USE_MULTIVM_CLIENT
+		if ( cmd == svc_mvWorld ) {
+			igs = MSG_ReadByte( msg );
+			clientGames[igs] = clc.currentView = igs;
+			memset(&cl.snapWorlds[igs], 0, sizeof(cl.snapWorlds[igs]));
+			memset(cl.snapshotWorlds[igs], 0, sizeof(cl.snapshotWorlds[igs]));
+			Com_Printf("Received new gamestate: %i\n", igs);
+		} else
+#endif
+
 		if ( cmd == svc_configstring ) {
 			int		len;
 
@@ -906,19 +915,6 @@ static void CL_ParseGamestate( msg_t *msg ) {
 
 //Com_Printf("cs %i (%i,%i): %s\n", i, igs, cgvmi, s);
 			// append it to the gameState string buffer
-#ifdef USE_MULTIVM_CLIENT
-			if(i == CS_SERVERINFO) {
-				if(atoi(Info_ValueForKey( s, "mvproto" ))) {
-					if(clc.world) Z_Free(clc.world);
-					clc.world = CopyString(Info_ValueForKey( s, "sv_mvWorld" ));
-					igs = atoi(clc.world);
-					clc.currentView = clientGames[igs] = igs;
-					memset(&cl.snapWorlds[igs], 0, sizeof(cl.snapWorlds[igs]));
-					memset(cl.snapshotWorlds[igs], 0, sizeof(cl.snapshotWorlds[igs]));
-					Com_Printf("Received new gamestate: %i\n", igs);    
-				}
-			}
-#endif
 			cl.gameState.stringOffsets[ i ] = cl.gameState.dataCount;
 			Com_Memcpy( cl.gameState.stringData + cl.gameState.dataCount, s, len + 1 );
 			cl.gameState.dataCount += len + 1;

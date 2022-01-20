@@ -1335,6 +1335,13 @@ static void SV_SendClientGameState( client_t *client ) {
 
 	MSG_WriteLong( &msg, client->reliableSequence );
 
+#ifdef USE_MULTIVM_SERVER
+	if(client->multiview.protocol > 1) {
+		MSG_WriteByte( &msg, svc_mvWorld );
+		MSG_WriteByte( &msg, gvmi );
+	}
+#endif
+
 	// write the configstrings
 	for ( start = 0 ; start < MAX_CONFIGSTRINGS ; start++ ) {
 		if (sv.configstrings[start][0]) {
@@ -3504,14 +3511,20 @@ void SV_ExecuteClientMessage( client_t *cl, msg_t *msg ) {
 	// read the usercmd_t
 #ifdef USE_MULTIVM_SERVER
 	if ( c == clc_mvMove ) {
-		gvmi = MSG_ReadByte( msg );
-		CM_SwitchMap(gameWorlds[gvmi]);
-		SV_SetAASgvm(gvmi);
+		int igs = MSG_ReadByte( msg );
+		if(!sv_mvWorld->integer) {
+			gvmi = igs;
+			CM_SwitchMap(gameWorlds[gvmi]);
+			SV_SetAASgvm(gvmi);
+		}
 		SV_UserMove( cl, msg, qtrue );
 	} else if ( c == clc_mvMoveNoDelta ) {
-		gvmi = MSG_ReadByte( msg );
-		CM_SwitchMap(gameWorlds[gvmi]);
-		SV_SetAASgvm(gvmi);
+		int igs = MSG_ReadByte( msg );
+		if(!sv_mvWorld->integer) {
+			gvmi = igs;
+			CM_SwitchMap(gameWorlds[gvmi]);
+			SV_SetAASgvm(gvmi);
+		}
 		SV_UserMove( cl, msg, qfalse );
 	} else
 #endif

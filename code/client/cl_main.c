@@ -2868,7 +2868,7 @@ static void CL_DownloadsComplete( void ) {
 	if(((!clientGames[clc.currentView] || clientGames[clc.currentView] < 0)
 		&& clc.currentView == 0)
 		// server controls world view
-		|| (clc.world && atoi(clc.world))
+		|| (clc.world && clc.world[0] != '\0')
 		// client auto loads world, default autoload
 		// || cl_mvWorld->integer
 	) {

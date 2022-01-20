@@ -1939,7 +1939,8 @@ const char *Cvar_InfoString_Big( int bit, qboolean *truncated )
 #if defined(USE_MULTIVM_CLIENT) || defined(USE_MULTIVM_SERVER)
       if(var->flags & CVAR_TAGGED_ORIGINAL) {
         cvar_t *otherVar = Cvar_FindVar(va("%s_%i", var->name, tagged));
-        if(otherVar && otherVar->flags & CVAR_TAGGED_SPECIFIC) { // both names should be tagged because of this test
+				// both names should be tagged because of this test
+        if(otherVar && otherVar->flags & CVAR_TAGGED_SPECIFIC) {
           allSet &= Info_SetValueForKey_s( info, sizeof( info ), var->name, otherVar->string );
           continue; // prefer the other vars value
         }

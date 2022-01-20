@@ -444,6 +444,9 @@ enum svc_ops_e {
 	svc_zcmd = 17,      // LZ-compressed version of svc_serverCommand
 #endif
 #endif
+#if defined(USE_MULTIVM_CLIENT) || defined(USE_MULTIVM_SERVER)
+	svc_mvWorld = 18, // 1.32e multiview extension
+#endif
 
 };
 
