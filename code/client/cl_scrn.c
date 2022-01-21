@@ -615,7 +615,7 @@ static void CL_CalculatePing( int ms ) {
 	int count, i, v;
   int			offset;
 #ifdef USE_MULTIVM_CLIENT
-  int igs = clientGames[cgvmi];
+  int igs = clientGames[clc.currentView];
 #endif
 	cls.meanPing = 0;
 

@@ -502,6 +502,8 @@ void Sys_FileReady(const char *filename) {
 	const char *loading;
   downloadLazy_t* *downloadTable;
   downloadLazy_t *download;
+	// TODO: check index need to download
+	return;
   qboolean found = qfalse;
   loading = Cvar_VariableString("r_loadingShader");
 	if(!loading[0]) {

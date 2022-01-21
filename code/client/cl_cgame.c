@@ -43,9 +43,9 @@ int clientMaps[MAX_NUM_VMS] = {
 };
 
 int worldMaps[MAX_NUM_VMS] = {
-  0
+  -1
 #ifdef USE_MULTIVM_CLIENT
-	,0,0,0,0,0,0,0,0,0
+	,-1,-1,-1,-1,-1,-1,-1,-1,-1
 #endif
 };
 
@@ -1535,7 +1535,7 @@ static void CL_AdjustTimeDelta( void ) {
 	deltaDelta = abs( newDelta - cl.serverTimeDelta );
 
 	if ( deltaDelta > RESET_TIME ) {
-		cl.serverTimeDelta = deltaDelta; //newDelta;
+		cl.serverTimeDelta = newDelta;
 		cl.oldServerTime = cl.snap.serverTime;	// FIXME: is this a problem for cgame?
 #ifdef USE_MULTIVM_CLIENT
 		cl.serverTimes[0] = cl.snap.serverTime;
@@ -1550,7 +1550,7 @@ static void CL_AdjustTimeDelta( void ) {
 		if ( cl_showTimeDelta->integer ) {
 			Com_Printf( "<FAST> " );
 		}
-		cl.serverTimeDelta = 100; //( cl.serverTimeDelta + newDelta ) >> 1;
+		cl.serverTimeDelta = ( cl.serverTimeDelta + newDelta ) >> 1;
 	} else {
 		// slow drift adjust, only move 1 or 2 msec
 
@@ -1749,7 +1749,7 @@ void CL_SetCGameTime( void ) {
 			Com_Printf("updating times: %i -> %i: %i\n", igs, clientGames[clc.currentView], cl.serverTimes[igs]);
 			cl.oldServerTime = cl.serverTimes[clientGames[clc.currentView]] = cl.serverTimes[igs];
 		}*/
-		if ( cl.serverTimes[0] < cl.snap.serverTime ) {
+		if ( cl.serverTimes[0] <= cl.snap.serverTime ) {
 			cl.serverTimes[0] = cl.snap.serverTime + 2;
 		}
 		if ( cl.serverTimes[0] < cl.oldServerTime ) {

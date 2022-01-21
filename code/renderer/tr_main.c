@@ -845,6 +845,12 @@ static qboolean R_GetPortalOrientations( const drawSurf_t *drawSurf, int entityN
 
 #ifdef USE_MULTIVM_CLIENT
 	*world = e->e.oldframe >> 8;
+#ifdef USE_LAZY_LOAD
+	if(ri.worldMaps[*world] > -1) {
+		*world = ri.worldMaps[*world];
+	}
+#endif
+	
 #else
 	if((e->e.oldframe >> 8) > 0) {
 		return qfalse;

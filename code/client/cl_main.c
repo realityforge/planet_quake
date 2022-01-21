@@ -4533,6 +4533,9 @@ static void CL_InitRef( void ) {
 	rimp.Trace = CL_CM_Trace;
 
 #ifdef USE_LAZY_LOAD
+#ifdef USE_MULTIVM_CLIENT
+	rimp.worldMaps = worldMaps;
+#endif
 	rimp.FS_FOpenFileRead = FS_FOpenFileRead;
 #endif
 #ifdef USE_VID_FAST

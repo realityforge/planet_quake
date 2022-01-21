@@ -2504,7 +2504,7 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
 				// also prevents server from sending snapshots from this world
 			}
 			//if(!client->multiview.protocol) {
-				client->oldServerTime = sv.time;
+			//	client->oldServerTime = sv.time;
 				client->state = CS_CONNECTED;
 				client->gamestateMessageNum = -1; // send a new gamestate
 			//} else {
