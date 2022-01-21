@@ -849,8 +849,7 @@ static qboolean R_GetPortalOrientations( const drawSurf_t *drawSurf, int entityN
 	if(ri.worldMaps[*world] > -1) {
 		*world = ri.worldMaps[*world];
 	}
-#endif
-	
+#endif	
 #else
 	if((e->e.oldframe >> 8) > 0) {
 		return qfalse;

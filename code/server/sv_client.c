@@ -898,7 +898,7 @@ gotnewcl:
 
 #ifdef USE_MULTIVM_SERVER
 	//if(from->type == NA_LOOPBACK) {
-		gvmi = newcl->gameWorld = newcl->newWorld = from->netWorld;
+	gvmi = newcl->gameWorld = newcl->newWorld = from->netWorld;
 	Com_Printf( "SVC_DirectConnect(%i)\n", from->netWorld );
 	//} else {
 	//	gvmi = newcl->gameWorld = newcl->newWorld = 1;
@@ -3401,7 +3401,7 @@ static void SV_UserMove( client_t *cl, msg_t *msg, qboolean delta ) {
 			//Com_Printf("skipping! %i: %i <= %i\n", gvmi, cmds[i].serverTime, cl->lastUsercmd.serverTime);
 			continue;
 		}
-		//Com_Printf("thinking! %i\n", gvmi);
+		//Com_Printf("thinking! [%i] %i\n", (int)(cl - svs.clients), gvmi);
 		SV_ClientThink (cl, &cmds[ i ]);
 	}
 }

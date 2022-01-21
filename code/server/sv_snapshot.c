@@ -266,42 +266,37 @@ static void SV_WriteSnapshotToClient( const client_t *client, msg_t *msg ) {
 
 		SV_EmitPlayerStates( client - svs.clients, oldframe, frame, msg, frame->mergeMask );
 		MSG_entMergeMask = frame->mergeMask; // emit packet entities with skipmask
+		Com_Printf("ents [%i]: %i -> %i\n", (int)(client - svs.clients), gvmi, frame->num_entities);
 		SV_EmitPacketEntities( oldframe, frame, msg );
 		MSG_entMergeMask = 0; // don't forget to reset that! 
-	} else {
+	} else
 #endif
+	{
+		// send over the areabits
+		MSG_WriteByte (msg, frame->areabytes);
+		MSG_WriteData (msg, frame->areabits, frame->areabytes);
 
-	// send over the areabits
-	MSG_WriteByte (msg, frame->areabytes);
-	MSG_WriteData (msg, frame->areabits, frame->areabytes);
+		// don't send any changes to zombies
+		if ( client->state <= CS_ZOMBIE ) {
+			// playerstate
+			MSG_WriteByte( msg, 0 ); // # of changes
+			MSG_WriteBits( msg, 0, 1 ); // no array changes
+			// packet entities
+			MSG_WriteBits( msg, (MAX_GENTITIES-1), GENTITYNUM_BITS );
+			return;
+		}
 
-	// don't send any changes to zombies
-	if ( client->state <= CS_ZOMBIE ) {
-		// playerstate
-		MSG_WriteByte( msg, 0 ); // # of changes
-		MSG_WriteBits( msg, 0, 1 ); // no array changes
-		// packet entities
-		MSG_WriteBits( msg, (MAX_GENTITIES-1), GENTITYNUM_BITS );
-		return;
-	}
+		// delta encode the playerstate
+		if ( oldframe ) {
+			MSG_WriteDeltaPlayerstate( msg, &oldframe->ps, &frame->ps );
+		} else {
+			MSG_WriteDeltaPlayerstate( msg, NULL, &frame->ps );
+		}
 
-	// delta encode the playerstate
-	if ( oldframe ) {
-		MSG_WriteDeltaPlayerstate( msg, &oldframe->ps, &frame->ps );
-	} else {
-		MSG_WriteDeltaPlayerstate( msg, NULL, &frame->ps );
-	}
-
-	// delta encode the entities
-	SV_EmitPacketEntities( oldframe, frame, msg );
-#ifdef USE_MV
+		// delta encode the entities
+		Com_Printf("ents [%i]: %i -> %i, %i, %i\n", (int)(client - svs.clients), gvmi, frame->num_entities, client->gameWorld, client->newWorld);
+		SV_EmitPacketEntities( oldframe, frame, msg );
 	} // !client->MVProtocol
-#ifdef USE_MULTIVM_SERVER
-	gvmi = 0;
-	CM_SwitchMap(gameWorlds[gvmi]);
-	SV_SetAASgvm(gvmi);
-#endif
-#endif
 
 	// padding for rate debugging
 	if ( sv_padPackets->integer ) {
@@ -1379,7 +1374,7 @@ void SV_SendClientSnapshot( client_t *client, qboolean includeBaselines ) {
 		gvmi = igvm;
 		ent = SV_GentityNum( client - svs.clients );
 		// they must at least be a spectator even to "peer" into this world from another
-		if(ent->s.eType == 0 
+		if((ent->s.eType == 0 || sv_mvWorld->integer != 0)
 			&& gvmi != client->gameWorld && gvmi != client->newWorld) continue;
 		CM_SwitchMap(gameWorlds[gvmi]);
 		SV_MarkClientPortalPVS( SV_GameClientNum(client - svs.clients)->origin, client - svs.clients, 0 );
@@ -1393,7 +1388,7 @@ void SV_SendClientSnapshot( client_t *client, qboolean includeBaselines ) {
 		playerState_t	*ps = SV_GameClientNum( client - svs.clients );
 		ent = SV_GentityNum( ps->clientNum );
 		// skip worlds client hasn't entered yet
-		if(ent->s.eType == 0 
+		if((ent->s.eType == 0 || sv_mvWorld->integer != 0)
 			&& gvmi != client->gameWorld && gvmi != client->newWorld) continue;
 		//Com_Printf("Sending snapshot %i %i >= %i\n", gvmi, client->mvAck, client->messageAcknowledge);
 		//if(gvmi != 0 && (client->mvAck == 0 

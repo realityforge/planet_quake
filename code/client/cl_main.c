@@ -5023,6 +5023,7 @@ void CL_World_f( void ) {
 		} else {
 			// slot is taken
 			if(clientGames[i] == clgame) {
+				Com_Printf("World found: %i\n", clientWorlds[i]);
 				// if it a game exists and is unused it can switch clients
 				if(clientWorlds[i] == clworld
           || clientWorlds[i] == -1) {
@@ -5034,6 +5035,7 @@ void CL_World_f( void ) {
 		}
 	}
 	if(!found) {
+		Com_Printf("World not found, creating new game.\n");
 		if(empty == -1) {
 			Com_Error(ERR_DROP, "Too many worlds: \n");
 			return;
@@ -5042,7 +5044,7 @@ void CL_World_f( void ) {
 		i = clc.currentView = empty;
 		clientGames[clc.currentView] = clgame;
 		clientWorlds[clc.currentView] = clworld;
-		Cbuf_ExecuteText( EXEC_APPEND, "load cgame\n" );
+		CL_InitCGame(i);
 	}
 	serverWorld = qtrue;
 	Cbuf_ExecuteText(EXEC_APPEND, va("tile -1 -1 -1\n"));

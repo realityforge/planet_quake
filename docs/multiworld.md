@@ -39,7 +39,7 @@ Finally, I want to use multiworld for streaming game content to clients. Where t
 
 ## TODO
 
-  * One final bug in single player mode `\map` and another client connection starting on second world through port #2
+  * One final bug in single player mode `\map` and another client connection starting on second world through port #2, even weirder only the first time the client connects
   * Add rendering to a texture http://www.opengl-tutorial.org/intermediate-tutorials/tutorial-14-render-to-texture/
   * Add `target_microphone` that speakers can target in different worlds, spatial and volume controls close to projected surfaces. Then go back and automatically add it for misc_portal_surface and misc_portal_cameras in an extra field.
   * Fix interpolation in portal using relative direction and distance from where the portal was triggered, i.e. enter top left, player and projectiles should come out top left of center.

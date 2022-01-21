@@ -231,7 +231,7 @@ void CL_ParseSnapshot( msg_t *msg, qboolean multiview ) {
 	int			commandTime;
 #ifdef USE_MV
 #ifdef USE_MULTIVM_CLIENT
-  int     igs = clientGames[cgvmi];
+  int     igs = clientGames[clc.currentView] = clc.currentView;
 #else
   int     igs = 0;
 #endif
@@ -311,6 +311,9 @@ void CL_ParseSnapshot( msg_t *msg, qboolean multiview ) {
 	}
 
 #ifdef USE_MV
+#ifdef USE_MULTIVM_CLIENT
+	newSnap.world = igs;
+#endif
 	if ( multiview ) {
 
 		if ( !clc.demoplaying && clc.recordfile != FS_INVALID_HANDLE )
@@ -333,7 +336,6 @@ void CL_ParseSnapshot( msg_t *msg, qboolean multiview ) {
 		if ( MSG_ReadBits( msg, 1 ) ) {
 			newSnap.version = MSG_ReadByte( msg );
 			newSnap.valid = qtrue;
-//Com_Printf("Multiview: %i (%i)\n", clc.serverMessageSequence, cgvmi);
 			old = NULL;
 		}
 
@@ -535,7 +537,7 @@ void CL_ParseSnapshot( msg_t *msg, qboolean multiview ) {
 	}
 	for ( ; oldMessageNum < newSnap.messageNum ; oldMessageNum++ ) {
 //		if(cl.snapshots[oldMessageNum & PACKET_MASK].valid)
-//Com_Printf("Invalidated (%i): %i == %i\n", oldMessageNum, igs, clientGames[cgvmi]);
+//Com_Printf("Invalidated (%i): %i\n", oldMessageNum, igs);
 		cl.snapshots[oldMessageNum & PACKET_MASK].valid = qfalse;
 	}
 
@@ -588,7 +590,7 @@ void CL_SystemInfoChanged( qboolean onlyGame, int igs ) {
 	if(igs == -1) {
 		// called from common.c
 #ifdef USE_MULTIVM_CLIENT  
-		igs = clientGames[cgvmi];
+		igs = clientGames[clc.currentView];
 #else
     igs = 0;
 #endif
@@ -897,7 +899,6 @@ static void CL_ParseGamestate( msg_t *msg ) {
 			clc.world = CopyString(va("%i", igs));
 			cgvmi = clc.currentView = igs;
 			clientGames[igs] = clc.currentView;
-			clientWorlds[igs] = clc.clientNum;
 			memset(&cl.snapWorlds[igs], 0, sizeof(cl.snapWorlds[igs]));
 			memset(cl.snapshotWorlds[igs], 0, sizeof(cl.snapshotWorlds[igs]));
 			cl.gameState.dataCount = 1;
@@ -921,7 +922,6 @@ static void CL_ParseGamestate( msg_t *msg ) {
 					len + 1 + cl.gameState.dataCount );
 			}
 
-//Com_Printf("cs %i (%i,%i): %s\n", i, igs, cgvmi, s);
 			// append it to the gameState string buffer
 			cl.gameState.stringOffsets[ i ] = cl.gameState.dataCount;
 			Com_Memcpy( cl.gameState.stringData + cl.gameState.dataCount, s, len + 1 );
@@ -942,7 +942,10 @@ static void CL_ParseGamestate( msg_t *msg ) {
 	clc.eventMask |= EM_GAMESTATE;
 
 	clc.clientNum = MSG_ReadLong(msg);
-	
+
+#ifdef USE_MULTIVM_CLIENT
+	clientWorlds[igs] = clc.clientNum;
+#endif
 #ifdef USE_MV
 	clc.zexpectDeltaSeq = 0; // that will reset compression context
 #endif
@@ -1281,7 +1284,7 @@ CL_ParseServerMessage
 void CL_ParseServerMessage( msg_t *msg ) {
 	int			cmd;
 #ifdef USE_MULTIVM_CLIENT
-  int igs = clientGames[cgvmi];
+  int igs = clientGames[clc.currentView];
 #endif
 
 	if ( cl_shownet && cl_shownet->integer == 1 ) {
