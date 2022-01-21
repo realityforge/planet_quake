@@ -5,10 +5,10 @@ This is an incomplete list of features added.
 Use `USE_FEATURE=1` with make to enable.
 
 ### USE_DEMO_CLIENTS
-TheDoctors method of recording a demo file for every single client. This creates a separate `.dm_68` demo file for each client that connects and each match.
+TheDoctors method of recording a demo file for every single client using `\set sv_autoRecord 1` cvar or the `\cl_record` command. This creates a separate `.dm_68` demo file for each client that connects and each match. Use `set sv_autoRecordThreshold .9` to set the accuracy threshold for saving the client recording, otherwise it will be automatically removed. Useful for admins to only record the most ub3r of players.
 
 ### USE_DEMO_SERVER
-lrq3000 method of server side demos. Works by sending entity states to every client while spectating. TODO: NPC demo clients instead of resizing max players. TODO: replay and record using the multiview format instead.
+lrq3000 method of server side demos using `set sv_autoDemo 1` cvar or the `\demo_record` command. Works by sending entity states to every client while spectating. TODO: NPC demo clients instead of resizing max players. TODO: replay and record using the multiview format instead.
 
 ### USE_RECENT_EVENTS
 Event streaming. When specific things happen on the server, rcon can query the list of events and get a JSON style response of what happened since the last time it was checked. E.g. `{"type":1,"value":"q3dm1"}` where type `1` is SV_EVENT_MAPCHANGE. This is also used for the discord integration, and rankings. TODO: piped output for "pushing" events (as opposed to polling). TODO: add location information capable of making a heatmap. TODO: add pipe output

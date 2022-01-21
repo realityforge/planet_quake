@@ -948,11 +948,14 @@ gotnewcl:
 	}
 	for(int igvm = 0; igvm < MAX_NUM_VMS; igvm++) {
 		if(!gvmWorlds[igvm]) continue;
-		// only join 1 world
-		if(sv_mvOmnipresent->integer == 0 && igvm != newcl->gameWorld) continue;
 		gvmi = igvm;
 		CM_SwitchMap(gameWorlds[gvmi]);
 		SV_SetAASgvm(gvmi);
+		// only join 1 world
+		if(sv_mvOmnipresent->integer <= 0 && igvm != newcl->gameWorld) {
+			SV_SetConfigstring(CS_PLAYERS + clientNum, "");
+			continue;
+		}
 		denied = VM_Call( gvm, 3, GAME_CLIENT_CONNECT, clientNum, qtrue, qfalse ); // firstTime = qtrue
 		if ( denied ) {
 #ifndef BUILD_GAME_STATIC
@@ -1111,7 +1114,9 @@ void SV_DropClient( client_t *drop, const char *reason ) {
 		CM_SwitchMap(gameWorlds[gvmi]);
 		SV_SetAASgvm(gvmi);
 		VM_Call( gvm, 1, GAME_CLIENT_DISCONNECT, drop - svs.clients );
-    //SV_GentityNum( clientNum )->s.eType = 0;
+		// also clear the entity type because this is how multiworld 
+		//   figures out of a client has been there before to send gamestates
+    SV_SetConfigstring(CS_PLAYERS + (int)(drop - svs.clients), "");
     // happens in SV_CheckTimeouts
 	}
 	gvmi = 0;
@@ -2414,10 +2419,6 @@ typedef enum {
 void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, vec3_t *newOrigin ) {
 	int		clientNum; //, i;
 	int oldDelta[3];
-	sharedEntity_t *ent;
-#ifdef USE_MULTIVM_SERVER
-	sharedEntity_t *prevEnt;
-#endif
 	playerState_t	*ps, oldps;
 	vec3_t newAngles;
 	//gentity_t *gent, oldEnt;
@@ -2458,7 +2459,6 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
 		gvmi = newWorld;
 		CM_SwitchMap(gameWorlds[gvmi]);
 		SV_SetAASgvm(gvmi);
-		ent = SV_GentityNum( clientNum );
 		// keep the same origin in the new world as if you've switched worlds
 		//   but haven't moved, default behavior
 		if(changeOrigin == SAMEORIGIN) {
@@ -2474,35 +2474,32 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
 		SV_SetAASgvm(gvmi);
     if(sv_mvOmnipresent->integer == 0) {
       VM_Call( gvm, 1, GAME_CLIENT_DISCONNECT, clientNum );	// firstTime = qfalse
-			prevEnt = SV_GentityNum( clientNum );
+			// clear entity type so we know they are no longer present in this world
+			SV_SetConfigstring( CS_PLAYERS + clientNum, "" );
+			// also prevents server from sending snapshots from this world
     } else if (sv_mvOmnipresent->integer == -1) {
       SV_ExecuteClientCommand(client, "team s");
     }
 		client->lastSnapshotTime = svs.time - 9999; // generate a snapshot immediately
 		//client->state = CS_ZOMBIE; // skip delta generation
-		SV_SendClientSnapshot( client, qfalse );
+		//SV_SendClientSnapshot( client, qfalse );
 		//client->state = CS_CONNECTED;
 
 		gvmi = newWorld;
 		CM_SwitchMap(gameWorlds[gvmi]);
 		SV_SetAASgvm(gvmi);
 		client->newWorld = newWorld;
-		if(ent->s.eType == 0 || !client->multiview.protocol) {
+		if(!SV_PlayerPresent(clientNum) || !client->multiview.protocol) {
 			// if the client is new to the world, the only option is SPAWNORIGIN
 			if(changeOrigin != COPYORIGIN) {
 				changeOrigin = SPAWNORIGIN;
 			}
 			// above must come before this because there is a filter 
 			//   to only send commands from a game to the client of the same world
-			VM_Call( gvm, 3, GAME_CLIENT_CONNECT, clientNum, qtrue, qfalse );	// firstTime = qfalse
+			VM_Call( gvm, 3, GAME_CLIENT_CONNECT, clientNum, qfalse, qfalse );	// firstTime = qfalse
 			// if this is the first time they are entering a world, send a gamestate
 			//client->deltaMessage = -1;
 			//client->lastSnapshotTime = svs.time - 9999; // generate a snapshot immediately
-			if(sv_mvOmnipresent->integer == 0) {
-				// clear entity type so we know they are no longer present in this world
-				prevEnt->s.eType = 0; 
-				// also prevents server from sending snapshots from this world
-			}
 			//if(!client->multiview.protocol) {
 			//	client->oldServerTime = sv.time;
 				client->state = CS_CONNECTED;
@@ -2525,39 +2522,44 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
 				SV_SendServerCommand(client, "world %i", client->newWorld);
 			}
 		}
+		Com_Printf("Switching worlds (client: %i, origin: %i): %i -> %i\n", clientNum, changeOrigin, client->gameWorld, client->newWorld);
 	}
 #endif
 
 	//SV_UpdateConfigstrings( client );
-	ent = SV_GentityNum( clientNum );
-	ps = SV_GameClientNum( clientNum );
-	ent->s.eFlags ^= EF_TELEPORT_BIT;
-	ps->eFlags ^= EF_TELEPORT_BIT;
-	ent->s.number = clientNum;
-	client->gentity = ent;
+	// modify location
+	{
+		sharedEntity_t *ent = SV_GentityNum( clientNum );
+		ps = SV_GameClientNum( clientNum );
+		ent->s.eFlags ^= EF_TELEPORT_BIT;
+		ps->eFlags ^= EF_TELEPORT_BIT;
+		ent->s.number = clientNum;
+		client->gentity = ent;
 #ifdef USE_MULTIVM_SERVER
-	if(client->newWorld == client->gameWorld) {
-		VM_Call( gvm, 1, GAME_CLIENT_BEGIN, clientNum );
-		client->state = CS_ACTIVE;
-	}
+		if(client->newWorld == client->gameWorld) {
+			VM_Call( gvm, 1, GAME_CLIENT_BEGIN, clientNum );
+			client->state = CS_ACTIVE;
+		}
 #else
-	VM_Call( gvm, 1, GAME_CLIENT_BEGIN, clientNum );
+		VM_Call( gvm, 1, GAME_CLIENT_BEGIN, clientNum );
 #endif
+		
 
-	// if copy, keeping the original/same, or moving origins,
-	//   we need to reset a few things
-	if(changeOrigin > SPAWNORIGIN) {
-		// put up a little so it can drop to the floor on the next frame and 
-		//   doesn't bounce with tracing/lerping to the floor
-		memcpy(ps->origin, newOrigin, sizeof(vec3_t));
-		memcpy(ps->viewangles, newAngles, sizeof(vec3_t));
-		//ps->origin[2] = *newOrigin[2] + 9.0f;
-		memcpy(ent->r.currentOrigin, ps->origin, sizeof(vec3_t));
-		memcpy(ent->r.currentAngles, ps->viewangles, sizeof(vec3_t));
-		// keep the same view angles if changing origins
-    SV_SetClientViewAngle(clientNum, ((playerState_t*)ps)->viewangles);
+		// if copy, keeping the original/same, or moving origins,
+		//   we need to reset a few things
+		if(changeOrigin > SPAWNORIGIN) {
+			// put up a little so it can drop to the floor on the next frame and 
+			//   doesn't bounce with tracing/lerping to the floor
+			memcpy(ps->origin, newOrigin, sizeof(vec3_t));
+			memcpy(ps->viewangles, newAngles, sizeof(vec3_t));
+			//ps->origin[2] = *newOrigin[2] + 9.0f;
+			memcpy(ent->r.currentOrigin, ps->origin, sizeof(vec3_t));
+			memcpy(ent->r.currentAngles, ps->viewangles, sizeof(vec3_t));
+			// keep the same view angles if changing origins
+			SV_SetClientViewAngle(clientNum, ((playerState_t*)ps)->viewangles);
+		}
 	}
-
+	
 	// TODO: restore player stats
 	//memcpy(&ps->stats, &oldps.stats, sizeof(ps->stats));
 	//memcpy(&ps->ammo, &oldps.ammo, sizeof(ps->ammo));
@@ -2966,7 +2968,6 @@ resetwithcount:
 		return;
 	}
 	
-	Com_Printf("Switching worlds (client: %i, origin: %i): %i -> %i\n", clientNum, changeOrigin, client->gameWorld, i);
 	SV_Teleport(client, i, changeOrigin, &newOrigin);
 }
 #endif

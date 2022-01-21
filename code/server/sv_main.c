@@ -1423,7 +1423,7 @@ static void SV_CheckTimeouts( void ) {
 				SV_SetAASgvm(gvmi);
         // also clear the entity type because this is how multiworld 
         //   figures out of a client has been there before to send gamestates
-				SV_GentityNum( i )->s.eType = 0;
+				SV_SetConfigstring(CS_PLAYERS + i, "");
 			}
 			gvmi = prevGvm;
 			CM_SwitchMap(gameWorlds[gvmi]);

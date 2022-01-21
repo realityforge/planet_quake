@@ -266,7 +266,7 @@ static void SV_WriteSnapshotToClient( const client_t *client, msg_t *msg ) {
 
 		SV_EmitPlayerStates( client - svs.clients, oldframe, frame, msg, frame->mergeMask );
 		MSG_entMergeMask = frame->mergeMask; // emit packet entities with skipmask
-		Com_Printf("ents [%i]: %i -> %i\n", (int)(client - svs.clients), gvmi, frame->num_entities);
+		//Com_Printf("ents [%i]: %i -> %i, %i, %i\n", (int)(client - svs.clients), gvmi, frame->num_entities, client->gameWorld, client->newWorld);
 		SV_EmitPacketEntities( oldframe, frame, msg );
 		MSG_entMergeMask = 0; // don't forget to reset that! 
 	} else
@@ -294,7 +294,7 @@ static void SV_WriteSnapshotToClient( const client_t *client, msg_t *msg ) {
 		}
 
 		// delta encode the entities
-		Com_Printf("ents [%i]: %i -> %i, %i, %i\n", (int)(client - svs.clients), gvmi, frame->num_entities, client->gameWorld, client->newWorld);
+		//Com_Printf("ents [%i]: %i -> %i, %i, %i\n", (int)(client - svs.clients), gvmi, frame->num_entities, client->gameWorld, client->newWorld);
 		SV_EmitPacketEntities( oldframe, frame, msg );
 	} // !client->MVProtocol
 
@@ -1364,7 +1364,6 @@ void SV_SendClientSnapshot( client_t *client, qboolean includeBaselines ) {
 
 #ifdef USE_MULTIVM_SERVER
 	int igvm;
-	sharedEntity_t *ent;
 	//entityState_t nullstate;
 	//const svEntity_t *svEnt;
 	// mark portal PVS ahead of time, sucks to do extra math, but then all worlds can refer to each other easily
@@ -1372,9 +1371,8 @@ void SV_SendClientSnapshot( client_t *client, qboolean includeBaselines ) {
 	for(igvm = 0; igvm < MAX_NUM_VMS; igvm++) {
 		if(!gvmWorlds[igvm]) continue;
 		gvmi = igvm;
-		ent = SV_GentityNum( client - svs.clients );
 		// they must at least be a spectator even to "peer" into this world from another
-		if((ent->s.eType == 0 || sv_mvWorld->integer != 0)
+		if(sv_mvWorld->integer != 0 && !SV_PlayerPresent(client - svs.clients)
 			&& gvmi != client->gameWorld && gvmi != client->newWorld) continue;
 		CM_SwitchMap(gameWorlds[gvmi]);
 		SV_MarkClientPortalPVS( SV_GameClientNum(client - svs.clients)->origin, client - svs.clients, 0 );
@@ -1385,12 +1383,11 @@ void SV_SendClientSnapshot( client_t *client, qboolean includeBaselines ) {
 		gvmi = igvm; // TODO remove need for gvmi and pass igvm
 		CM_SwitchMap(gameWorlds[gvmi]);
 		SV_SetAASgvm(gvmi);
-		playerState_t	*ps = SV_GameClientNum( client - svs.clients );
-		ent = SV_GentityNum( ps->clientNum );
+		//playerState_t	*ps = SV_GameClientNum( client - svs.clients );
 		// skip worlds client hasn't entered yet
-		if((ent->s.eType == 0 || sv_mvWorld->integer != 0)
+		if(sv_mvWorld->integer != 0 && !SV_PlayerPresent(client - svs.clients)
 			&& gvmi != client->gameWorld && gvmi != client->newWorld) continue;
-		//Com_Printf("Sending snapshot %i %i >= %i\n", gvmi, client->mvAck, client->messageAcknowledge);
+		//Com_Printf("Sending snapshot %i -> %i, %i, %i\n", (int)(client - svs.clients), gvmi, SV_PlayerPresent(client - svs.clients), SV_GentityNum(client - svs.clients)->s.eType);
 		//if(gvmi != 0 && (client->mvAck == 0 
     // remove this line when MULTIIVM is working
 		//if(gvmi != 0) continue;

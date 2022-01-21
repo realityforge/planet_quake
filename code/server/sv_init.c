@@ -143,6 +143,10 @@ void SV_SetConfigstring (int index, const char *val) {
     // still starting up
     return;
   }
+	if(index >= CS_PLAYERS && index < CS_PLAYERS + MAX_CLIENTS) {
+		Com_Printf("SV_SetConfigstring: client configstring %i: %.*s\n", index,
+			(int)strlen(sv.configstrings[index]), sv.configstrings[index]);
+	}
 #endif
 
 	// send it to all the clients if we aren't
@@ -661,6 +665,12 @@ void SV_SpawnServer( const char *mapname, qboolean killBots ) {
 	SV_CreateBaseline();
 
 	for ( i = 0; i < sv_maxclients->integer; i++ ) {
+#ifdef USE_MULTIVM_SERVER
+		// also clear the entity type because this is how multiworld 
+		//   figures out of a client has been there before to send gamestates
+		SV_SetConfigstring(CS_PLAYERS + i, "");
+#endif
+
 		// send the new gamestate to all connected clients
 		if ( svs.clients[i].state >= CS_CONNECTED ) {
 			const char *denied;
@@ -1119,12 +1129,17 @@ void SV_Init( void )
 
 	sv_demoState = Cvar_Get ("sv_demoState", "0", CVAR_ROM );
 	sv_democlients = Cvar_Get ("sv_democlients", "0", CVAR_ROM );
+
+#ifdef USE_DEMO_SERVER
 	sv_autoDemo = Cvar_Get ("sv_autoDemo", "0", CVAR_ARCHIVE );
-	sv_autoRecord = Cvar_Get ("sv_autoRecord", "0", CVAR_ARCHIVE );
-	sv_autoRecordThreshold = Cvar_Get("sv_autoRecordThreshold", "0.9", CVAR_ARCHIVE );
 	// port from client-side to freeze server-side demos
 	cl_freezeDemo = Cvar_Get("cl_freezeDemo", "0", CVAR_TEMP);
 	sv_demoTolerant = Cvar_Get ("sv_demoTolerant", "0", CVAR_ARCHIVE );
+#endif
+#ifdef USE_DEMO_CLIENTS
+	sv_autoRecord = Cvar_Get ("sv_autoRecord", "0", CVAR_ARCHIVE );
+	sv_autoRecordThreshold = Cvar_Get("sv_autoRecordThreshold", "0.9", CVAR_ARCHIVE );
+#endif
 
 	sv_levelTimeReset = Cvar_Get( "sv_levelTimeReset", "0", CVAR_ARCHIVE_ND );
 
