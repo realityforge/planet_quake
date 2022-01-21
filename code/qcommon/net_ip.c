@@ -1751,9 +1751,8 @@ void NET_OpenIP( int igvm )
 		for( i = 0 ; i < MAX_NUM_VMS * 10 ; i++ ) {
 			ip_socket = NET_IPSocket( net_ip->string, port + i, &err );
 			if (ip_socket != INVALID_SOCKET) {
-				Com_Printf("binding to %i - %s:%i\n", igvm, net_ip->string, port + i);
-
 #ifdef USE_MULTI_PORT
+				Com_Printf("binding to %i - %s:%i\n", igvm, net_ip->string, port + i);
 				if(igvm == 0)
 #endif
 				Cvar_SetIntegerValue( "net_port", port + i );
