@@ -845,11 +845,6 @@ static qboolean R_GetPortalOrientations( const drawSurf_t *drawSurf, int entityN
 
 #ifdef USE_MULTIVM_CLIENT
 	*world = e->e.oldframe >> 8;
-#ifdef USE_LAZY_LOAD
-	if(ri.worldMaps[*world] > -1) {
-		*world = ri.worldMaps[*world];
-	}
-#endif	
 #else
 	if((e->e.oldframe >> 8) > 0) {
 		return qfalse;
@@ -1275,9 +1270,6 @@ static qboolean R_MirrorViewBySurface( const drawSurf_t *drawSurf, int entityNum
 	newParms = tr.viewParms;
 	newParms.portalView = PV_NONE;
   newParms.portalEntity = 0;
-#ifdef USE_MULTIVM_CLIENT
-	newParms.newWorld = 0;
-#endif
 
 	if ( !R_GetPortalOrientations( drawSurf, entityNum, &surface, &camera, 
 		newParms.pvsOrigin, &newParms.portalView, 
@@ -1331,12 +1323,18 @@ static qboolean R_MirrorViewBySurface( const drawSurf_t *drawSurf, int entityNum
 #ifdef USE_MULTIVM_CLIENT
 	if(newParms.newWorld != oldParms.newWorld
 		&& rwi != newParms.newWorld) {
+#ifdef USE_LAZY_LOAD
+		RE_SwitchWorld(ri.worldMaps[newParms.newWorld]);
+#else
 		RE_SwitchWorld(newParms.newWorld);
+#endif
 		if(rwi != newParms.newWorld) {
 			// TODO: sucks to do all this math and the exit out, can't this happen earlier?
 			return qfalse; // world isn't loaded?
 		}
+		ri.UpdateCGame(newParms.newWorld);
 	}
+	Com_Printf("entities: %i -> %i\n", rwi, tr.refdef.num_entities);
 #endif
 	// render the mirror view
 	R_RenderView( &newParms );

@@ -4381,6 +4381,7 @@ void	CL_CM_Trace( trace_t *results, const vec3_t start, const vec3_t mins, const
 	CM_BoxTrace(results, start, end, mins, maxs, 0, contentmask, qfalse);
 	CM_SwitchMap(prev);
 }
+void CL_UpdateCGame( int cgvmi );
 #else
 byte	*CL_CM_ClusterPVS (int cluster) {
 	return CM_ClusterPVS(cluster);
@@ -4532,6 +4533,9 @@ static void CL_InitRef( void ) {
 
 	rimp.Trace = CL_CM_Trace;
 
+#ifdef USE_MULTIVM_CLIENT
+	rimp.UpdateCGame = CL_UpdateCGame;
+#endif
 #ifdef USE_LAZY_LOAD
 #ifdef USE_MULTIVM_CLIENT
 	rimp.worldMaps = worldMaps;

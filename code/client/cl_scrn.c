@@ -833,7 +833,14 @@ void SCR_DrawCurrentView( void ) {
 	// left
 	re.DrawStretchPic( clientScreens[cgvmi][0] * wf, clientScreens[cgvmi][1] * yf, 2, clientScreens[cgvmi][3] * yf, 0, 0, 1, 1, cls.whiteShader);
 }
+
+static int lastSubWorld[MAX_NUM_VMS] = {0,0,0,0,0,0,0,0,0,0};
+
+void CL_UpdateCGame(int cgvmi) {
+	lastSubWorld[cgvmi] = 0;
+}
 #endif
+
 
 
 //=======================================================
@@ -1010,15 +1017,20 @@ void SCR_UpdateScreen( qboolean fromVM ) {
 		
 		if(!cgvm && !uivm) continue;
 #ifdef USE_MULTIVM_CLIENT
-		static int lastSubWorld[MAX_NUM_VMS] = {0,0,0,0,0,0,0,0,0,0};
 		// skip if we haven't received a snapshot in a while
-		if(cl.serverTimes[0] - cl.snapWorlds[clientGames[cgvmi]].serverTime > 1000 && clientScreens[cgvmi][0] == -1) continue;
+		if(cl.serverTimes[0] - cl.snapWorlds[clientGames[cgvmi]].serverTime > 1000
+			&& clientScreens[cgvmi][0] == -1) continue;
 		// skip if we are in world mode, multiworld renderer calls screen refresh
 		//   when the portal is visible
-		if(clc.world && clc.world[0] != '\0' && cgvmi != atoi(clc.world)
-			&& ms - lastSubWorld[cgvmi] < 13) continue;
-		lastSubWorld[cgvmi] = ms;
-		//Com_Printf("rendering: %i\n", cgvmi);
+		if(clc.world && clc.world[0] != '\0' && clientScreens[cgvmi][0] == -1) {
+			if(ms - lastSubWorld[cgvmi] < 13) continue;
+			lastSubWorld[cgvmi] = ms;
+			// tired renderer :(
+			clientScreens[cgvmi][0] =
+			clientScreens[cgvmi][1] =
+			clientScreens[cgvmi][2] =
+			clientScreens[cgvmi][3] = 0;
+		}
 #endif
 
 

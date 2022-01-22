@@ -264,6 +264,9 @@ typedef struct {
 
   void	(*Cmd_SetDescription)( const char *name, char *description );
 	void  (*GLimp_UpdateMode)( glconfig_t *config );
+#ifdef USE_MULTIVM_CLIENT
+	void  (*UpdateCGame)( int igs );
+#endif
 #if defined(USE_MULTIVM_CLIENT) || defined(USE_MULTIVM_SERVER)
 	void	(*Trace)( trace_t *results, const vec3_t start, const vec3_t mins, const vec3_t maxs, const vec3_t end, int passEntityNum, int contentmask, int cmi );
 #ifdef USE_LAZY_LOAD

@@ -1087,10 +1087,9 @@ static clientPVS_t *SV_BuildClientPVS( int clientSlot, const playerState_t *ps, 
 		SV_AddEntitiesVisibleFromPoint( org, pvs, EPV_NOTPORTAL );
 #else
 		// only add point of view if player is present
-		//if(!sv_mvWorld->integer || SV_PlayerPresent(ps->clientNum)) {
+		if(!sv_mvWorld->integer || SV_PlayerPresent(ps->clientNum)) {
 			SV_AddEntitiesVisibleFromPoint( org, pvs, EPV_NOTPORTAL );
-		//}
-		/*
+		}
 		for(int j = 0; j < numMultiworldEntities; j++) {
 			if(multiworldInView[j] 
 				&& multiworldEntities[j].world == gvmi) {
@@ -1099,7 +1098,6 @@ static clientPVS_t *SV_BuildClientPVS( int clientSlot, const playerState_t *ps, 
 				pvs->numbers.unordered = qtrue;
 			}
 		}
-		*/
 #endif
 		// if there were portals visible, there may be out of order entities
 		// in the list which will need to be resorted for the delta compression
