@@ -503,7 +503,7 @@ extern	cvar_t	*sv_mvFolderSize;
 
 #endif // USE_MV
 #ifdef USE_MULTIVM_SERVER
-#define SV_PlayerPresent(x) ( SV_GentityNum(x)->s.eType >= ET_PLAYER && sv.configstrings[CS_PLAYERS + (int)(x)][0] != '\0' )
+#define SV_PlayerPresent(x) ( SV_GentityNum(x)->s.eType >= ET_PLAYER || sv.configstrings[CS_PLAYERS + (int)(x)][0] != '\0' )
 extern  cvar_t  *sv_mvWorld;
 extern  cvar_t  *sv_mvSyncPS;
 extern  cvar_t  *sv_mvSyncXYZ;

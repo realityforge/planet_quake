@@ -1010,7 +1010,15 @@ void SCR_UpdateScreen( qboolean fromVM ) {
 		
 		if(!cgvm && !uivm) continue;
 #ifdef USE_MULTIVM_CLIENT
-		//if(clientScreens[cgvmi][0] == -1) continue;
+		static int lastSubWorld[MAX_NUM_VMS] = {0,0,0,0,0,0,0,0,0,0};
+		// skip if we haven't received a snapshot in a while
+		if(cl.serverTimes[0] - cl.snapWorlds[clientGames[cgvmi]].serverTime > 1000 && clientScreens[cgvmi][0] == -1) continue;
+		// skip if we are in world mode, multiworld renderer calls screen refresh
+		//   when the portal is visible
+		if(clc.world && clc.world[0] != '\0' && cgvmi != atoi(clc.world)
+			&& ms - lastSubWorld[cgvmi] < 16) continue;
+		lastSubWorld[cgvmi] = ms;
+		//Com_Printf("rendering: %i\n", cgvmi);
 #endif
 
 

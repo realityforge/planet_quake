@@ -855,7 +855,7 @@ void CL_WritePacket( void ) {
 
 #ifdef USE_MULTIVM_CLIENT
 	oldPacketNum = (clc.netchan.outgoingSequence - 2) & PACKET_MASK;
-	count = 1;
+	count = 2;
 #else
   if(!cl_packetdup)
     oldPacketNum = (clc.netchan.outgoingSequence - 2) & PACKET_MASK;
