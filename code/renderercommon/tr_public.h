@@ -25,6 +25,20 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "tr_types.h"
 #include "vulkan/vulkan.h"
 
+#ifdef USE_MULTIVM_CLIENT
+// Adds a few additional Cvar for MAX_RENDER_COMMANDS, and one major change
+//   to auto expand the command buffer, and max poly lists.
+// 
+// TODO: The auto expansion is also important for multiworld CMD
+//   replay features that allow a lot of processing to be cut out when the FPS 
+//   is lowered for subordinate VMs.
+// 
+// This expansion is slightly larger than the original Quake III Arena size. 
+//   So assets built are guaranteed to fit within the first memory allocation. 
+#define USE_UNLOCKED_CVARS 1
+// 
+#endif
+
 #define	REF_API_VERSION		8
 
 //

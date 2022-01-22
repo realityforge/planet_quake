@@ -175,6 +175,9 @@ cvar_t	*r_screenshotJpegQuality;
 cvar_t	*r_maxpolys;
 cvar_t	*r_maxpolyverts;
 cvar_t	*r_maxpolybuffers;
+#ifdef USE_UNLOCKED_CVARS
+cvar_t  *r_maxcmds;
+#endif
 
 cvar_t	*r_developer;
 
@@ -1517,6 +1520,42 @@ static void R_Register( void )
 	ri.Cvar_CheckRange( r_maxpolyverts, va("%d", MAX_POLYVERTS), NULL, CV_INTEGER );
 	r_maxpolybuffers = ri.Cvar_Get( "r_maxpolybuffers", va("%d", MAX_POLYBUFFERS), 0);
 	ri.Cvar_CheckRange( r_maxpolybuffers, va("%d", MAX_POLYBUFFERS), NULL, CV_INTEGER );
+#ifdef USE_UNLOCKED_CVARS
+	{
+		float rounding;
+		r_maxcmds = ri.Cvar_Get( "r_maxcmds", va("%d", MAX_RENDER_COMMANDS), 0);
+		ri.Cvar_CheckRange( r_maxcmds, va("%d", MAX_RENDER_COMMANDS), NULL, CV_INTEGER );
+
+		rounding = ceil(r_maxcmds->value / MAX_RENDER_DIVISOR) * MAX_RENDER_DIVISOR;
+		if(rounding != r_maxcmds->integer) {
+			ri.Printf(PRINT_WARNING, "r_maxcmds %d is not a multiple of %d,"
+				" rounding up to %d\n", r_maxcmds->integer, MAX_RENDER_DIVISOR, (int)rounding);
+			ri.Cvar_SetValue("r_maxcmds", rounding);
+
+		}
+
+		rounding = ceil(r_maxpolys->value / MAX_POLYS_DIVISOR) * MAX_POLYS_DIVISOR;
+		if(rounding != r_maxpolys->integer) {
+			ri.Printf(PRINT_WARNING, "r_maxpolys %d is not a multiple of %d, "
+				"rounding up to %d\n", r_maxpolys->integer, MAX_POLYS_DIVISOR, (int)rounding);
+			ri.Cvar_SetValue("r_maxpolys", rounding);
+		}
+
+		rounding = ceil(r_maxpolyverts->value / MAX_POLYVERTS_DIVISOR) * MAX_POLYVERTS_DIVISOR;
+		if(rounding != r_maxpolyverts->integer) {
+			ri.Printf(PRINT_WARNING, "r_maxpolyverts %d is not a multiple of %d, "
+				"rounding up to %d\n", r_maxpolyverts->integer, MAX_POLYVERTS_DIVISOR, (int)rounding);
+			ri.Cvar_SetValue("r_maxpolyverts", rounding);
+		}
+
+		rounding = ceil(r_maxpolybuffers->value / MAX_POLYBUFFERS_DIVISOR) * MAX_POLYBUFFERS_DIVISOR;
+		if(rounding != r_maxpolybuffers->integer) {
+			ri.Printf(PRINT_WARNING, "r_maxpolybuffers  %d is not a multiple of %d, "
+				"rounding up to %d\n", r_maxpolybuffers->integer, MAX_POLYBUFFERS_DIVISOR, (int)rounding);
+			ri.Cvar_SetValue("r_maxpolybuffers", rounding);
+		}
+	}
+#endif
 
 	//
 	// archived variables that can change at any time
@@ -1767,11 +1806,36 @@ void R_Init( void ) {
 
 	R_Register();
 
+#if 0 //def USE_UNLOCKED_CVARS
+	ptr = ri.Hunk_Alloc( sizeof( *backEndData ) 
+		+ sizeof(int) * MAX_POLYVERTS_DIVISOR
+		+ sizeof(srfPoly_t) * MAX_POLYS_DIVISOR
+		+ sizeof(polyVert_t) * MAX_POLYVERTS_DIVISOR
+		+ sizeof(srfPolyBuffer_t) * MAX_POLYBUFFERS_DIVISOR
+		+ sizeof(byte) * MAX_RENDER_DIVISOR
+		, h_low);
+	backEndData = (backEndData_t *) ptr;
+	ptr += sizeof( *backEndData );
+	backEndData->indexes = (int *) ((char *) ptr);
+	ptr += sizeof(int) * MAX_POLYVERTS_DIVISOR;
+	backEndData->polys = (srfPoly_t *) ((char *) ptr);
+	ptr += sizeof(srfPoly_t) * MAX_POLYS_DIVISOR;
+	backEndData->polyVerts = (polyVert_t *) ((char *) ptr);
+	ptr += sizeof(polyVert_t) * MAX_POLYVERTS_DIVISOR;
+	backEndData->polybuffers = (srfPolyBuffer_t *) ((char *) ptr);
+	ptr += sizeof(srfPolyBuffer_t) * MAX_POLYBUFFERS_DIVISOR;
+	backEndData->commands.cmds = (byte *) ((char *) ptr);
+	ptr += sizeof(byte) * MAX_RENDER_DIVISOR;
+#else
 	ptr = ri.Hunk_Alloc( sizeof( *backEndData ) 
 		+ sizeof(int) * r_maxpolyverts->integer
 		+ sizeof(srfPoly_t) * r_maxpolys->integer 
 		+ sizeof(polyVert_t) * r_maxpolyverts->integer 
-		+ sizeof(srfPolyBuffer_t) * r_maxpolybuffers->integer, h_low);
+		+ sizeof(srfPolyBuffer_t) * r_maxpolybuffers->integer
+#ifdef USE_UNLOCKED_CVARS
+		+ sizeof(byte) * r_maxcmds->integer
+#endif
+		, h_low);
 	backEndData = (backEndData_t *) ptr;
 	ptr += sizeof( *backEndData );
   backEndData->indexes = (int *) ((char *) ptr);
@@ -1782,6 +1846,11 @@ void R_Init( void ) {
 	ptr += sizeof(polyVert_t) * r_maxpolyverts->integer;
 	backEndData->polybuffers = (srfPolyBuffer_t *) ((char *) ptr);
 	ptr += sizeof(srfPolyBuffer_t) * r_maxpolybuffers->integer;
+#ifdef USE_UNLOCKED_CVARS
+	backEndData->commands.cmds = (byte *) ((char *) ptr);
+	ptr += sizeof(byte) * r_maxcmds->integer;
+#endif
+#endif
 
 	R_InitNextFrame();
 

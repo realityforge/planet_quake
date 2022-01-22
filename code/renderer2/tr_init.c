@@ -1637,11 +1637,21 @@ void R_Init( void ) {
 
 	R_Register();
 
+#ifdef USE_UNLOCKED_CVARS
+	ptr = ri.Hunk_Alloc( sizeof( *backEndData ) 
+		+ sizeof(int) * r_maxpolyverts->integer
+		+ sizeof(srfPoly_t) * r_maxpolys->integer 
+		+ sizeof(polyVert_t) * r_maxpolyverts->integer 
+		+ sizeof(srfPolyBuffer_t) * max_polybuffers, h_low
+		+ sizeof(byte) * r_maxcmds->integer
+	);
+#else
 	ptr = ri.Hunk_Alloc( sizeof( *backEndData ) 
 		+ sizeof(int) * r_maxpolyverts->integer
 		+ sizeof(srfPoly_t) * r_maxpolys->integer 
 		+ sizeof(polyVert_t) * r_maxpolyverts->integer 
 		+ sizeof(srfPolyBuffer_t) * max_polybuffers, h_low);
+#endif
 	backEndData = (backEndData_t *) ptr;
 	ptr += sizeof( *backEndData );
   backEndData->indexes = (int *) ((char *) ptr);
@@ -1652,6 +1662,10 @@ void R_Init( void ) {
 	ptr += sizeof(polyVert_t) * r_maxpolyverts->integer;
 	backEndData->polybuffers = (srfPolyBuffer_t *) ((char *) ptr);
 	ptr += sizeof(srfPolyBuffer_t) * r_maxpolybuffers->integer;
+#ifdef USE_UNLOCKED_CVARS
+	backEndData->commands.cmds = (byte *) ((char *) ptr);
+	ptr += sizeof(byte) * r_maxcmds->integer;
+#endif
 
 	R_InitNextFrame();
 

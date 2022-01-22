@@ -2406,7 +2406,7 @@ RENDERER BACK END COMMAND QUEUE
 =============================================================
 */
 
-#define	MAX_RENDER_COMMANDS	0x40000
+#define	MAX_RENDER_COMMANDS	0x80000
 
 typedef struct {
 	byte	cmds[MAX_RENDER_COMMANDS];
@@ -2527,8 +2527,9 @@ typedef enum {
 // these are sort of arbitrary limits.
 // the limits apply to the sum of all scenes in a frame --
 // the main view, all the 3D icons, etc
-#define	MAX_POLYS		600
-#define	MAX_POLYVERTS	3000
+#define	MAX_POLYS		8192
+#define	MAX_POLYVERTS	32768
+#define MAX_POLYBUFFERS	256
 
 // all of the information needed by the back end must be
 // contained in a backEndData_t

@@ -130,6 +130,15 @@ static void *R_GetCommandBufferReserved( int bytes, int reservedBytes ) {
 	bytes = PAD(bytes, sizeof(void *));
 
 	// always leave room for the end of list command
+#ifdef USE_UNLOCKED_CVARS
+	if ( cmdList->used + bytes + sizeof( int ) + reservedBytes > r_maxcmds->integer ) {
+		if ( bytes > r_maxcmds->integer - sizeof( int ) ) {
+			ri.Error( ERR_FATAL, "R_GetCommandBuffer: bad size %i", bytes );
+		}
+		// if we run out of room, just start dropping commands
+		return NULL;
+	}
+#else
 	if ( cmdList->used + bytes + sizeof( int ) + reservedBytes > MAX_RENDER_COMMANDS ) {
 		if ( bytes > MAX_RENDER_COMMANDS - sizeof( int ) ) {
 			ri.Error( ERR_FATAL, "R_GetCommandBuffer: bad size %i", bytes );
@@ -137,6 +146,7 @@ static void *R_GetCommandBufferReserved( int bytes, int reservedBytes ) {
 		// if we run out of room, just start dropping commands
 		return NULL;
 	}
+#endif
 
 	cmdList->used += bytes;
 
@@ -172,7 +182,11 @@ void R_AddDrawSurfCmd( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 	cmd->drawSurfs = drawSurfs;
 	cmd->numDrawSurfs = numDrawSurfs;
 
+#ifdef USE_MULTIVM_CLIENT
+	cmd->refdef = tr.refdefs[rwi];
+#else
 	cmd->refdef = tr.refdef;
+#endif
 	cmd->viewParms = tr.viewParms;
 }
 
@@ -241,7 +255,7 @@ typedef struct {
 void RE_RenderGeometry(void *vertices, int num_vertices, int* indices, 
                         int num_indices, qhandle_t texture, const vec2_t translation) {
   polyIndexedCommand_t	*cmd;
-  rocketVertex_t *rocketVs = (rocketVertex_t *)vertices;
+  rocketVertex_t *rmlVs = (rocketVertex_t *)vertices;
 
   if ( !tr.registered ) {
     return;
@@ -259,15 +273,15 @@ void RE_RenderGeometry(void *vertices, int num_vertices, int* indices,
   cmd->numVerts = num_vertices;
   cmd->verts = &backEndData->polyVerts[ r_numpolyverts ];
 	for(int i = 0; i < num_vertices; i++) {
-    cmd->verts[i].xyz[0] = rocketVs[i].xy[0];
-    cmd->verts[i].xyz[1] = rocketVs[i].xy[1];
+    cmd->verts[i].xyz[0] = rmlVs[i].xy[0];
+    cmd->verts[i].xyz[1] = rmlVs[i].xy[1];
     cmd->verts[i].xyz[2] = 0;
-    cmd->verts[i].st[0] = rocketVs[i].tex_coord[0];
-    cmd->verts[i].st[1] = rocketVs[i].tex_coord[1];
-    cmd->verts[i].modulate.rgba[0] = rocketVs[i].colour.red;
-    cmd->verts[i].modulate.rgba[1] = rocketVs[i].colour.green;
-    cmd->verts[i].modulate.rgba[2] = rocketVs[i].colour.blue;
-    cmd->verts[i].modulate.rgba[3] = rocketVs[i].colour.alpha;
+    cmd->verts[i].st[0] = rmlVs[i].tex_coord[0];
+    cmd->verts[i].st[1] = rmlVs[i].tex_coord[1];
+    cmd->verts[i].modulate.rgba[0] = rmlVs[i].colour.red;
+    cmd->verts[i].modulate.rgba[1] = rmlVs[i].colour.green;
+    cmd->verts[i].modulate.rgba[2] = rmlVs[i].colour.blue;
+    cmd->verts[i].modulate.rgba[3] = rmlVs[i].colour.alpha;
   }
   cmd->numIndexes = num_indices;
   cmd->indexes = &backEndData->indexes[ r_numindexes ];
@@ -474,7 +488,11 @@ void RE_BeginFrame( stereoFrame_t stereoFrame ) {
 		}
 	}
 
+#ifdef USE_MULTIVM_CLIENT
+	tr.refdefs[rwi].stereoFrame = stereoFrame;
+#else
 	tr.refdef.stereoFrame = stereoFrame;
+#endif
 }
 
 

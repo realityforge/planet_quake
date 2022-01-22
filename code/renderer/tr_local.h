@@ -1177,12 +1177,14 @@ typedef struct {
 
 	orientationr_t			or;					// for current entity
 
-	trRefdef_t				refdef;
-
 #ifdef USE_MULTIVM_CLIENT
+	trRefdef_t				refdefs[MAX_NUM_WORLDS];
+
 	int						viewClusters[MAX_NUM_WORLDS];
 #define viewCluster viewClusters[rwi]
 #else
+	trRefdef_t				refdef;
+
 	int						viewCluster;
 #endif
 #ifdef USE_PMLIGHT
@@ -1367,6 +1369,9 @@ extern  cvar_t  *r_paletteMode;
 extern  cvar_t	*r_maxpolys;
 extern  cvar_t	*r_maxpolyverts;
 extern  cvar_t	*r_maxpolybuffers;
+#ifdef USE_UNLOCKED_CVARS
+extern  cvar_t  *r_maxcmds;
+#endif
 
 #ifdef USE_MULTIVM_CLIENT
 extern float dvrXScale;
@@ -1847,10 +1852,19 @@ RENDERER BACK END COMMAND QUEUE
 =============================================================
 */
 
+#ifdef USE_UNLOCKED_CVARS
 #define	MAX_RENDER_COMMANDS	0x80000
+#define MAX_RENDER_DIVISOR  0x10000
+#else
+#define	MAX_RENDER_COMMANDS	0x80000
+#endif
 
 typedef struct {
+#ifdef USE_UNLOCKED_CVARS
+	byte  *cmds;
+#else
 	byte	cmds[MAX_RENDER_COMMANDS];
+#endif
 	int		used;
 } renderCommandList_t;
 
@@ -1951,9 +1965,19 @@ typedef enum {
 // these are sort of arbitrary limits.
 // the limits apply to the sum of all scenes in a frame --
 // the main view, all the 3D icons, etc
+#ifndef USE_UNLOCKED_CVARS
 #define	MAX_POLYS		8192
 #define	MAX_POLYVERTS	32768
 #define MAX_POLYBUFFERS	256
+#else
+#define	MAX_POLYS		4096 * 5
+#define MAX_POLYS_DIVISOR 1024
+#define MAX_POLYVERTS_MULTIPLIER 5
+#define MAX_POLYVERTS_DIVISOR ( MAX_POLYS_DIVISOR * MAX_POLYVERTS_MULTIPLIER )
+#define MAX_POLYVERTS ( r_maxpolys->integer * MAX_POLYVERTS_MULTIPLIER )
+#define MAX_POLYBUFFERS_DIVISOR 64
+#define MAX_POLYBUFFERS 512
+#endif
 
 // all of the information needed by the back end must be
 // contained in a backEndData_t

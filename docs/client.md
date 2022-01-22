@@ -57,7 +57,16 @@ Show "Did you mean?" results for mis-typed map names, cvars, command names, etc.
 ### BUILD_CLIENT_SLIM
 Slim client without extra file formats or server, only for connecting to games or rendering demos.
 
+### define USE_UNLOCKED_CVARS
+Adds a few additional Cvar for MAX_RENDER_COMMANDS, and one major change
+  to auto expand the command buffer, and max poly lists.
 
+TODO: The auto expansion is also important for multiworld CMD
+  replay features that allow a lot of processing to be cut out when the FPS 
+  is lowered for subordinate VMs.
+
+This expansion is slightly larger than the original Quake III Arena size. 
+  So assets built are guaranteed to fit within the first memory allocation. 
 ## Experimental server features
 
 Some server features require changes to the client component and server component. Server features are listed here, [server.md](../docs/server.md).

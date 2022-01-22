@@ -23,6 +23,10 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #include "tr_local.h"
 
+#ifdef USE_MULTIVM_CLIENT
+#define refdef refdefs[rwi]
+#endif
+
 #include <string.h> // memcpy
 
 trGlobals_t		tr;
@@ -1332,7 +1336,8 @@ static qboolean R_MirrorViewBySurface( const drawSurf_t *drawSurf, int entityNum
 			// TODO: sucks to do all this math and the exit out, can't this happen earlier?
 			return qfalse; // world isn't loaded?
 		}
-		ri.UpdateCGame(newParms.newWorld);
+		// this clears the time parameter so that CGame will send new entities by next frame
+		//ri.UpdateCGame(newParms.newWorld);
 	}
 	Com_Printf("entities: %i -> %i\n", rwi, tr.refdef.num_entities);
 #endif

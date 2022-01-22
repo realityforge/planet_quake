@@ -22,6 +22,10 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #include "tr_local.h"
 
+#ifdef USE_MULTIVM_CLIENT
+#define refdef refdefs[rwi]
+#endif
+
 int			r_firstSceneDrawSurf;
 #ifdef USE_PMLIGHT
 int			r_firstSceneLitSurf;
@@ -465,6 +469,21 @@ void RE_RenderScene( const refdef_t *fd ) {
 	if ( r_dynamiclight->integer == 0 || glConfig.hardwareType == GLHW_PERMEDIA2 ) {
 		tr.refdef.num_dlights = 0;
 	}
+
+#ifdef USE_MULTIVM_CLIENT
+	// TODO: renderings can't happen cross-world at different frame-rates,
+	//   so we queue the SCENE with the backend and leave model data in place
+	//   from CGame API calls.
+	// Save refdef for later so the same scene can be rendered in multiple times
+	//   i.e, the main scene is rendering at 160 FPS and portal worlds are rendering
+	//   at only 60 FPS.
+
+	// TODO: in FBO mode, this goes away completely and we store the frame on a surface
+	//   and swap the shader with some backend commands to the old FBO, so the players angle
+	//   on everything only updates at 60 FPS, as opposed to this method that keeps track of
+	//   CGame entities for longer.
+	// It should work both ways for optimization and admins can decide what to use.
+#endif
 
 	// a single frame may have multiple scenes draw inside it --
 	// a 3D game view, 3D status bar renderings, 3D menus, etc.
