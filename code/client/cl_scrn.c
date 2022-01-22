@@ -1016,7 +1016,7 @@ void SCR_UpdateScreen( qboolean fromVM ) {
 		// skip if we are in world mode, multiworld renderer calls screen refresh
 		//   when the portal is visible
 		if(clc.world && clc.world[0] != '\0' && cgvmi != atoi(clc.world)
-			&& ms - lastSubWorld[cgvmi] < 16) continue;
+			&& ms - lastSubWorld[cgvmi] < 13) continue;
 		lastSubWorld[cgvmi] = ms;
 		//Com_Printf("rendering: %i\n", cgvmi);
 #endif

@@ -643,10 +643,9 @@ SV_MarkClientPortalPVS
 ===============
 */
 static void SV_MarkClientPortalPVS( const vec3_t origin, int clientNum, int portal ) {
-	int		e, i;
+	int		i, num;
 	sharedEntity_t *ent;
 	svEntity_t	*svEnt;
-	entityState_t  *es;
 	int		l;
 	int		clientarea, clientcluster;
 	int		leafnum;
@@ -660,14 +659,19 @@ static void SV_MarkClientPortalPVS( const vec3_t origin, int clientNum, int port
 
 	if ( svs.currFrame == NULL ) {
 		// this will always success and setup current frame
-		SV_BuildCommonSnapshot();
+		//SV_BuildCommonSnapshot();
 	}
 
-	for ( e = 0 ; e < svs.currFrame->count; e++ ) {
-		es = svs.currFrame->ents[ e ];
-		ent = SV_GentityNum( es->number );
-		svEnt = &sv.svEntities[ es->number ];
+	for ( num = 0 ; num < sv.num_entitiesWorlds[gvmi] ; num++ ) {
+		ent = SV_GentityNum( num );
+		svEnt = &sv.svEntities[ num ];
+		if ( !ent->r.linked ) {
+			continue;
+		}
 		if ( !(ent->r.svFlags & SVF_PORTAL) ) {
+			continue;
+		}
+		if( !(ent->r.svFlags * SVF_NOCLIENT) ) {
 			continue;
 		}
 		if ( (ent->r.svFlags & SVF_SINGLECLIENT) && ent->r.singleClient != clientNum ) {
@@ -1083,9 +1087,10 @@ static clientPVS_t *SV_BuildClientPVS( int clientSlot, const playerState_t *ps, 
 		SV_AddEntitiesVisibleFromPoint( org, pvs, EPV_NOTPORTAL );
 #else
 		// only add point of view if player is present
-		if(!sv_mvWorld->integer || SV_PlayerPresent(ps->clientNum)) {
+		//if(!sv_mvWorld->integer || SV_PlayerPresent(ps->clientNum)) {
 			SV_AddEntitiesVisibleFromPoint( org, pvs, EPV_NOTPORTAL );
-		}
+		//}
+		/*
 		for(int j = 0; j < numMultiworldEntities; j++) {
 			if(multiworldInView[j] 
 				&& multiworldEntities[j].world == gvmi) {
@@ -1094,6 +1099,7 @@ static clientPVS_t *SV_BuildClientPVS( int clientSlot, const playerState_t *ps, 
 				pvs->numbers.unordered = qtrue;
 			}
 		}
+		*/
 #endif
 		// if there were portals visible, there may be out of order entities
 		// in the list which will need to be resorted for the delta compression
@@ -1394,7 +1400,7 @@ void SV_SendClientSnapshot( client_t *client, qboolean includeBaselines ) {
 		//playerState_t	*ps = SV_GameClientNum( client - svs.clients );
 		// skip worlds client hasn't entered yet
 		if(sv_mvWorld->integer != 0 
-			&& (!SV_PlayerPresent(client - svs.clients) || !hasMultiworldInView[gvmi])
+			&& (!SV_PlayerPresent(client - svs.clients) /* || !hasMultiworldInView[gvmi] */)
 			&& gvmi != client->gameWorld && gvmi != client->newWorld) continue;
 		//Com_Printf("Sending snapshot %i -> %i, %i, %i\n", (int)(client - svs.clients), gvmi, SV_PlayerPresent(client - svs.clients), SV_GentityNum(client - svs.clients)->s.eType);
 		//if(gvmi != 0 && (client->mvAck == 0 
