@@ -1232,7 +1232,12 @@ R_MirrorViewBySurface
 Returns qtrue if another view has been rendered
 ========================
 */
+#ifdef USE_MULTIVM_CLIENT
+extern int r_numdlightWorlds[MAX_NUM_WORLDS];
+#define r_numdlights r_numdlightWorlds[rwi]
+#else
 extern int r_numdlights;
+#endif
 static qboolean R_MirrorViewBySurface( const drawSurf_t *drawSurf, int entityNum ) {
 	viewParms_t		newParms;
 	viewParms_t		oldParms;
@@ -1339,7 +1344,9 @@ static qboolean R_MirrorViewBySurface( const drawSurf_t *drawSurf, int entityNum
 		// this clears the time parameter so that CGame will send new entities by next frame
 		//ri.UpdateCGame(newParms.newWorld);
 	}
-	Com_Printf("entities: %i -> %i\n", rwi, tr.refdef.num_entities);
+	if(!tr.refdef.num_entities) {
+		return qfalse;
+	}
 #endif
 	// render the mirror view
 	R_RenderView( &newParms );
@@ -1867,6 +1874,7 @@ void R_RenderView( const viewParms_t *parms ) {
 	tr.viewParms.frameCount = tr.frameCount;
 #ifdef USE_MULTIVM_CLIENT
 	tr.viewParms.newWorld = tr.world - s_worldDatas;
+	Com_Printf("entities: %i -> %i\n", rwi, tr.refdef.num_entities);
 #endif
 
 	firstDrawSurf = tr.refdef.numDrawSurfs;

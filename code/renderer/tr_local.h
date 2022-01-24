@@ -1853,15 +1853,15 @@ RENDERER BACK END COMMAND QUEUE
 */
 
 #ifdef USE_UNLOCKED_CVARS
-#define	MAX_RENDER_COMMANDS	0x80000
-#define MAX_RENDER_DIVISOR  0x10000
+#define	MAX_RENDER_COMMANDS	0x100000
+#define MAX_RENDER_DIVISOR  0x20000
 #else
 #define	MAX_RENDER_COMMANDS	0x80000
 #endif
 
 typedef struct {
 #ifdef USE_UNLOCKED_CVARS
-	byte  *cmds;
+	byte  **cmds;
 #else
 	byte	cmds[MAX_RENDER_COMMANDS];
 #endif
@@ -1991,14 +1991,26 @@ typedef struct {
 #endif
 
 	trRefEntity_t	entities[MAX_REFENTITIES];
+#ifdef USE_UNLOCKED_CVARS
+	srfPoly_t	**polys;//[MAX_POLYS];
+	polyVert_t	**polyVerts;//[MAX_POLYVERTS];
+	srfPolyBuffer_t **polybuffers; //[MAX_POLYS];
+  int	**indexes;//[MAX_POLYVERTS];
+#else
 	srfPoly_t	*polys;//[MAX_POLYS];
 	polyVert_t	*polyVerts;//[MAX_POLYVERTS];
 	srfPolyBuffer_t *polybuffers; //[MAX_POLYS];
   int	*indexes;//[MAX_POLYVERTS];
+#endif
 	renderCommandList_t	commands;
 } backEndData_t;
 
+#ifdef USE_MULTIVM_CLIENT
+extern backEndData_t	**backEndDatas;
+#define backEndData backEndDatas[rwi]
+#else
 extern	backEndData_t	*backEndData;
+#endif
 
 void RB_ExecuteRenderCommands( const void *data );
 void RB_TakeScreenshot( int x, int y, int width, int height, const char *fileName );

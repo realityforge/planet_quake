@@ -52,3 +52,4 @@ USE_CVAR_UNCHEAT       = 0
 USE_DRAGDROP           = 0
 USE_LAZY_MEMORY        = 0
 USE_LAZY_LOAD          = 0
+USE_UNLOCKED_CVARS     = 0

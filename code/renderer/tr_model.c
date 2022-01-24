@@ -1027,7 +1027,14 @@ void RE_BeginRegistration( glconfig_t *glconfigOut ) {
 
 	tr.viewCluster = -1;		// force markleafs to regenerate
 	R_ClearFlares();
-	RE_ClearScene();
+#ifdef USE_MULTIVM_CLIENT
+	for(int i = 0; i < MAX_NUM_VMS; i++) {
+		rwi = i;
+  	RE_ClearScene();
+	}
+#else
+  RE_ClearScene();
+#endif
 
 	tr.registered = qtrue;
 }

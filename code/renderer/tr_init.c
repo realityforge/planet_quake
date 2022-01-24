@@ -1806,53 +1806,97 @@ void R_Init( void ) {
 
 	R_Register();
 
-#if 0 //def USE_UNLOCKED_CVARS
+#ifdef USE_UNLOCKED_CVARS
+#ifdef USE_MULTIVM_CLIENT
+int backendSize;
+#define BASSIGN(a, t, n, d) \
+		+ sizeof(intptr_t) * (n / d + 1) * MAX_NUM_WORLDS \
+		+ sizeof(t) * d * MAX_NUM_WORLDS
+#define BACKEND \
+	BASSIGN( backEndDatas[i]->indexes, int, r_maxpolyverts->integer, MAX_POLYVERTS_DIVISOR) \
+	BASSIGN( backEndDatas[i]->polys, srfPoly_t, r_maxpolyverts->integer, MAX_POLYS_DIVISOR) \
+	BASSIGN( backEndDatas[i]->polyVerts, polyVert_t, r_maxpolyverts->integer, MAX_POLYVERTS_DIVISOR) \
+	BASSIGN( backEndDatas[i]->polybuffers, srfPolyBuffer_t, r_maxpolyverts->integer, MAX_POLYBUFFERS_DIVISOR) \
+	BASSIGN( backEndDatas[i]->commands.cmds, byte, r_maxpolyverts->integer, MAX_RENDER_DIVISOR)
+	backendSize = sizeof(intptr_t) * MAX_NUM_WORLDS
+		+ sizeof( *backEndData ) * MAX_NUM_WORLDS
+		BACKEND;
+	ptr = ri.Hunk_Alloc(backendSize, h_low);
+	Com_Printf("Allocating %iKB bytes for backend.\n", backendSize / 1024);
+#undef BASSIGN
+#define BASSIGN(a, t, n, d) \
+	a = (t **) ((char *) ptr); \
+	ptr += sizeof(intptr_t) * (n / d + 1); \
+	a[0] = (t *) ((char *) ptr); \
+	ptr += sizeof(t) * d;
+	backEndDatas = (backEndData_t **) ptr;
+	ptr += sizeof(intptr_t) * MAX_NUM_WORLDS;
+	for(int i = 0; i < MAX_NUM_WORLDS; i++) {
+		RE_SwitchWorld(i);
+		backEndDatas[i] = (backEndData_t *) ptr;
+		ptr += sizeof( **backEndDatas );
+		BACKEND
+		rwi = i;
+		R_InitNextFrame();
+	}
+#undef BACKEND
+#undef BASSIGN
+
+#else // !USE_MULTIVM_CLIENT
+
+#define BACKEND \
+	BASSIGN( backEndData->indexes, int, r_maxpolyverts->integer, MAX_POLYVERTS_DIVISOR) \
+	BASSIGN( backEndData->polys, srfPoly_t, r_maxpolyverts->integer, MAX_POLYS_DIVISOR) \
+	BASSIGN( backEndData->polyVerts, polyVert_t, r_maxpolyverts->integer, MAX_POLYVERTS_DIVISOR) \
+	BASSIGN( backEndData->polybuffers, srfPolyBuffer_t, r_maxpolyverts->integer, MAX_POLYBUFFERS_DIVISOR) \
+	BASSIGN( backEndData->commands.cmds, byte, r_maxpolyverts->integer, MAX_RENDER_DIVISOR)
 	ptr = ri.Hunk_Alloc( sizeof( *backEndData ) 
-		+ sizeof(int) * MAX_POLYVERTS_DIVISOR
-		+ sizeof(srfPoly_t) * MAX_POLYS_DIVISOR
-		+ sizeof(polyVert_t) * MAX_POLYVERTS_DIVISOR
-		+ sizeof(srfPolyBuffer_t) * MAX_POLYBUFFERS_DIVISOR
-		+ sizeof(byte) * MAX_RENDER_DIVISOR
+#define BASSIGN(a, t, n, d) \
+		+ sizeof(intptr_t) * (n / d + 1) \
+		+ sizeof(t) * d
+		BACKEND
 		, h_low);
+#undef BASSIGN
 	backEndData = (backEndData_t *) ptr;
 	ptr += sizeof( *backEndData );
-	backEndData->indexes = (int *) ((char *) ptr);
-	ptr += sizeof(int) * MAX_POLYVERTS_DIVISOR;
-	backEndData->polys = (srfPoly_t *) ((char *) ptr);
-	ptr += sizeof(srfPoly_t) * MAX_POLYS_DIVISOR;
-	backEndData->polyVerts = (polyVert_t *) ((char *) ptr);
-	ptr += sizeof(polyVert_t) * MAX_POLYVERTS_DIVISOR;
-	backEndData->polybuffers = (srfPolyBuffer_t *) ((char *) ptr);
-	ptr += sizeof(srfPolyBuffer_t) * MAX_POLYBUFFERS_DIVISOR;
-	backEndData->commands.cmds = (byte *) ((char *) ptr);
-	ptr += sizeof(byte) * MAX_RENDER_DIVISOR;
-#else
-	ptr = ri.Hunk_Alloc( sizeof( *backEndData ) 
-		+ sizeof(int) * r_maxpolyverts->integer
-		+ sizeof(srfPoly_t) * r_maxpolys->integer 
-		+ sizeof(polyVert_t) * r_maxpolyverts->integer 
-		+ sizeof(srfPolyBuffer_t) * r_maxpolybuffers->integer
-#ifdef USE_UNLOCKED_CVARS
-		+ sizeof(byte) * r_maxcmds->integer
-#endif
-		, h_low);
-	backEndData = (backEndData_t *) ptr;
-	ptr += sizeof( *backEndData );
-  backEndData->indexes = (int *) ((char *) ptr);
-	ptr += sizeof(int) * r_maxpolyverts->integer;
-	backEndData->polys = (srfPoly_t *) ((char *) ptr);
-	ptr += sizeof(srfPoly_t) * r_maxpolys->integer;
-	backEndData->polyVerts = (polyVert_t *) ((char *) ptr);
-	ptr += sizeof(polyVert_t) * r_maxpolyverts->integer;
-	backEndData->polybuffers = (srfPolyBuffer_t *) ((char *) ptr);
-	ptr += sizeof(srfPolyBuffer_t) * r_maxpolybuffers->integer;
-#ifdef USE_UNLOCKED_CVARS
-	backEndData->commands.cmds = (byte *) ((char *) ptr);
-	ptr += sizeof(byte) * r_maxcmds->integer;
-#endif
+#define BASSIGN(a, t, n, d) \
+	a = (t **) ((char *) ptr); \
+	ptr += sizeof(intptr_t) * (n / d + 1); \
+	a[0] = (t *) ((char *) ptr); \
+	ptr += sizeof(t) * d;
+	BACKEND
+#undef BACKEND
+#undef BASSIGN
+
 #endif
 
+#else // !USE_UNLOCKED_CVARS
+
+#define BACKEND \
+	BASSIGN( backEndData->indexes, int, r_maxpolyverts->integer) \
+	BASSIGN( backEndData->polys, srfPoly_t, r_maxpolyverts->integer) \
+	BASSIGN( backEndData->polyVerts, polyVert_t, r_maxpolyverts->integer) \
+	BASSIGN( backEndData->polybuffers, srfPolyBuffer_t, r_maxpolyverts->integer)
+	ptr = ri.Hunk_Alloc( sizeof( *backEndData ) 
+#define BASSIGN(a, t, n) \
+		+ sizeof(t) * n
+		BACKEND
+		, h_low);
+#undef BASSIGN
+	backEndData = (backEndData_t *) ptr;
+	ptr += sizeof( *backEndData );
+#define BASSIGN(a, t, n) \
+	a = (t *) ((char *) ptr); \
+	ptr += sizeof(t) * n; \
+	BACKEND
+#undef BACKEND
+#undef BASSIGN
+
+#endif // !USE_UNLOCKED_CVARS
+
+#ifndef USE_MULTIVM_CLIENT // done above in same loop
 	R_InitNextFrame();
+#endif
 
 	InitOpenGL();
 

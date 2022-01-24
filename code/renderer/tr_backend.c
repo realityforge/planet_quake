@@ -21,7 +21,11 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 #include "tr_local.h"
 
+#ifdef USE_MULTIVM_CLIENT
+backEndData_t	**backEndDatas;
+#else
 backEndData_t	*backEndData;
+#endif
 backEndState_t	backEnd;
 
 const float *GL_Ortho( const float left, const float right, const float bottom, const float top, const float znear, const float zfar )

@@ -81,7 +81,13 @@ static void R_IssueRenderCommands( void ) {
 	cmdList = &backEndData->commands;
 
 	// add an end-of-list command
+#ifdef USE_UNLOCKED_CVARS
+	int cmdUsed = cmdList->used % MAX_RENDER_DIVISOR;
+	int cmdSubList = (cmdList->used - cmdUsed) / MAX_RENDER_DIVISOR;
+	*(int *)(cmdList->cmds[ cmdSubList ] + cmdUsed) = RC_END_OF_LIST;
+#else
 	*(int *)(cmdList->cmds + cmdList->used) = RC_END_OF_LIST;
+#endif
 
 	// clear it out, in case this is a sync and not a buffer flip
 	cmdList->used = 0;
@@ -96,7 +102,13 @@ static void R_IssueRenderCommands( void ) {
 	// actually start the commands going
 	if ( !r_skipBackEnd->integer ) {
 		// let it start on the new batch
+#ifdef USE_UNLOCKED_CVARS
+		for(int i = 0; i <= cmdSubList; i++) {
+			RB_ExecuteRenderCommands( cmdList->cmds[i] );
+		}
+#else
 		RB_ExecuteRenderCommands( cmdList->cmds );
+#endif
 	}
 }
 
@@ -138,6 +150,25 @@ static void *R_GetCommandBufferReserved( int bytes, int reservedBytes ) {
 		// if we run out of room, just start dropping commands
 		return NULL;
 	}
+
+	// expand the commands list when necessary
+	int cmdUsed = cmdList->used % MAX_RENDER_DIVISOR;
+	int cmdSubList = (cmdList->used - cmdUsed) / MAX_RENDER_DIVISOR;
+	if(cmdUsed + bytes >= MAX_RENDER_DIVISOR) {
+		if(!cmdList->cmds[cmdSubList + 1]) {
+			Com_Printf("Expanding the command list one time.\n");
+			cmdList->cmds[cmdSubList + 1] = ri.Hunk_Alloc(sizeof(byte) * MAX_RENDER_DIVISOR, h_low);
+		}
+
+		*(int *)(cmdList->cmds[cmdSubList] + cmdUsed) = RC_END_OF_LIST;
+		cmdList->used = (cmdSubList + 1) * MAX_RENDER_DIVISOR + bytes;
+
+		return cmdList->cmds[cmdSubList + 1] + 0;
+	} else {
+		cmdList->used += bytes;
+
+		return cmdList->cmds[cmdSubList] + cmdUsed;
+	}
 #else
 	if ( cmdList->used + bytes + sizeof( int ) + reservedBytes > MAX_RENDER_COMMANDS ) {
 		if ( bytes > MAX_RENDER_COMMANDS - sizeof( int ) ) {
@@ -146,11 +177,11 @@ static void *R_GetCommandBufferReserved( int bytes, int reservedBytes ) {
 		// if we run out of room, just start dropping commands
 		return NULL;
 	}
-#endif
 
 	cmdList->used += bytes;
 
 	return cmdList->cmds + cmdList->used - bytes;
+#endif
 }
 
 
@@ -271,7 +302,11 @@ void RE_RenderGeometry(void *vertices, int num_vertices, int* indices,
   cmd->commandId = RC_POLY2D_INDEXED;
   cmd->shader = R_GetShaderByHandle( texture );
   cmd->numVerts = num_vertices;
+#ifdef USE_UNLOCKED_CVARS
+  cmd->verts = &backEndData->polyVerts[0][ r_numpolyverts ];
+#else
   cmd->verts = &backEndData->polyVerts[ r_numpolyverts ];
+#endif
 	for(int i = 0; i < num_vertices; i++) {
     cmd->verts[i].xyz[0] = rmlVs[i].xy[0];
     cmd->verts[i].xyz[1] = rmlVs[i].xy[1];
@@ -284,7 +319,11 @@ void RE_RenderGeometry(void *vertices, int num_vertices, int* indices,
     cmd->verts[i].modulate.rgba[3] = rmlVs[i].colour.alpha;
   }
   cmd->numIndexes = num_indices;
+#ifdef USE_UNLOCKED_CVARS
+  cmd->indexes = &backEndData->indexes[0][ r_numindexes ];
+#else
   cmd->indexes = &backEndData->indexes[ r_numindexes ];
+#endif
 	memcpy( cmd->indexes, indices, sizeof( int ) * num_indices );
   cmd->translation[0] = translation[0];
   cmd->translation[1] = translation[1];
@@ -519,9 +558,20 @@ void RE_EndFrame( int *frontEndMsec, int *backEndMsec ) {
 
 	R_PerformanceCounters();
 
+#ifdef USE_MULTIVM_CLIENT
+	for(int i = 0; i < MAX_NUM_VMS; i++) {
+		RE_SwitchWorld(i);
+	  if(s_worldDatas[i].name[0] != '\0') {
+			R_IssueRenderCommands();
+
+			R_InitNextFrame();
+		}
+	}
+#else
 	R_IssueRenderCommands();
 
 	R_InitNextFrame();
+#endif
 
 	if ( frontEndMsec ) {
 		*frontEndMsec = tr.frontEndMsec;

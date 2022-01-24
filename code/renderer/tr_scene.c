@@ -24,8 +24,38 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #ifdef USE_MULTIVM_CLIENT
 #define refdef refdefs[rwi]
+int			r_firstSceneDrawSurfs[MAX_NUM_WORLDS];
+#define r_firstSceneDrawSurf r_firstSceneDrawSurfs[rwi]
+#ifdef USE_PMLIGHT
+int			r_firstSceneLitSurfWorlds[MAX_NUM_WORLDS];
+#define r_firstSceneLitSurf r_firstSceneLitSurfWorlds[rwi]
 #endif
 
+int			r_numdlightWorlds[MAX_NUM_WORLDS];
+#define r_numdlights r_numdlightWorlds[rwi]
+int			r_firstSceneDlights[MAX_NUM_WORLDS];
+#define r_firstSceneDlight r_firstSceneDlights[rwi]
+
+int			r_numentityWorlds[MAX_NUM_WORLDS];
+#define r_numentities r_numentityWorlds[rwi]
+int			r_firstSceneEntities[MAX_NUM_WORLDS];
+#define r_firstSceneEntity r_firstSceneEntities[rwi]
+
+int			r_numpolyWorlds[MAX_NUM_WORLDS];
+#define r_numpolys r_numpolyWorlds[rwi]
+int			r_firstScenePolys[MAX_NUM_WORLDS];
+#define r_firstScenePoly r_firstScenePolys[rwi]
+
+int			r_numpolyvertWorlds[MAX_NUM_WORLDS];
+#define r_numpolyverts r_numpolyvertWorlds[rwi]
+int     r_numindexWorlds[MAX_NUM_WORLDS];
+#define r_numindexes r_numindexWorlds[rwi]
+
+int r_firstScenePolybuffers[MAX_NUM_WORLDS];
+#define r_firstScenePolybuffer r_firstScenePolybuffers[rwi]
+int r_numpolybufferWorlds[MAX_NUM_WORLDS];
+#define r_numpolybuffers r_numpolybufferWorlds[rwi]
+#else
 int			r_firstSceneDrawSurf;
 #ifdef USE_PMLIGHT
 int			r_firstSceneLitSurf;
@@ -45,6 +75,7 @@ int     r_numindexes;
 
 int r_firstScenePolybuffer;
 int r_numpolybuffers;
+#endif
 
 /*
 ====================
@@ -53,8 +84,13 @@ R_InitNextFrame
 ====================
 */
 void R_InitNextFrame( void ) {
-
 	backEndData->commands.used = 0;
+#if 0 //def USE_MULTIVM_CLIENT
+	Com_Printf("reset scene: %i\n", rwi);
+}
+
+void R_InitNextFrame_real( void ) {
+#endif
 
 	r_firstSceneDrawSurf = 0;
 #ifdef USE_PMLIGHT
@@ -153,12 +189,20 @@ void RE_AddPolyToScene( qhandle_t hShader, int numVerts, const polyVert_t *verts
 			return;
 		}
 
+#ifdef USE_UNLOCKED_CVARS
+		poly = &backEndData->polys[0][r_numpolys];
+#else
 		poly = &backEndData->polys[r_numpolys];
+#endif
 		poly->surfaceType = SF_POLY;
 		poly->hShader = hShader;
 		poly->numVerts = numVerts;
+#ifdef USE_UNLOCKED_CVARS
+		poly->verts = &backEndData->polyVerts[0][r_numpolyverts];
+#else
 		poly->verts = &backEndData->polyVerts[r_numpolyverts];
-		
+#endif
+
 		Com_Memcpy( poly->verts, &verts[numVerts*j], numVerts * sizeof( *verts ) );
 #if 0
 		if ( glConfig.hardwareType == GLHW_RAGEPRO ) {
@@ -462,7 +506,11 @@ void RE_RenderScene( const refdef_t *fd ) {
 	tr.refdef.dlights = &backEndData->dlights[r_firstSceneDlight];
 
 	tr.refdef.numPolys = r_numpolys - r_firstScenePoly;
+#ifdef USE_UNLOCKED_CVARS
+	tr.refdef.polys = &backEndData->polys[0][r_firstScenePoly];
+#else
 	tr.refdef.polys = &backEndData->polys[r_firstScenePoly];
+#endif
 
 	// turn off dynamic lighting globally by clearing all the
 	// dlights if it needs to be disabled
@@ -549,6 +597,10 @@ void RE_RenderScene( const refdef_t *fd ) {
 	r_firstScenePoly = r_numpolys;
 
 	tr.frontEndMsec += ri.Milliseconds() - startTime;
+
+#ifdef USE_MULTIVM_CLIENT
+	//R_InitNextFrame_real();
+#endif
 }
 
 /*
@@ -568,7 +620,11 @@ void RE_AddPolyBufferToScene( polyBuffer_t* pPolyBuffer ) {
 		return;
 	}
 
+#ifdef USE_UNLOCKED_CVARS
+	pPolySurf = &backEndData->polybuffers[0][r_numpolybuffers];
+#else
 	pPolySurf = &backEndData->polybuffers[r_numpolybuffers];
+#endif
 	r_numpolybuffers++;
 
 	pPolySurf->surfaceType = SF_POLYBUFFER;

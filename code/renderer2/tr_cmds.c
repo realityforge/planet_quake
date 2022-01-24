@@ -88,7 +88,11 @@ void R_IssueRenderCommands( qboolean runPerformanceCounters ) {
 	cmdList = &backEndData->commands;
 	assert(cmdList);
 	// add an end-of-list command
+#ifdef USE_UNLOCKED_CVARS
+	*(int *)(cmdList->cmds[(cmdList->used - (cmdList->used % MAX_RENDER_DIVISOR)) / MAX_RENDER_DIVISOR ] + (cmdList->used % MAX_RENDER_DIVISOR)) = RC_END_OF_LIST;
+#else
 	*(int *)(cmdList->cmds + cmdList->used) = RC_END_OF_LIST;
+#endif
 
 	// clear it out, in case this is a sync and not a buffer flip
 	cmdList->used = 0;
@@ -315,8 +319,8 @@ void RE_RenderGeometry(void *vertices, int num_vertices, int* indices,
   if ( !tr.registered ) {
     return;
   }
-  if ( r_numpolyverts + num_vertices > max_polyverts || r_numindexes + num_indices > max_polyverts ) {
-    ri.Printf( PRINT_DEVELOPER, "WARNING: RE_AddPolyToScene: r_max_polyverts reached\n");
+  if ( r_numpolyverts + num_vertices > r_maxpolyverts->integer || r_numindexes + num_indices > r_maxpolyverts->integer ) {
+    ri.Printf( PRINT_DEVELOPER, "WARNING: RE_AddPolyToScene: r_maxpolyverts reached\n");
     return;
   }
 	cmd = R_GetCommandBuffer( sizeof( *cmd ) );

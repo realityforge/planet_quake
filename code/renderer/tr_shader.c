@@ -2398,7 +2398,14 @@ static void FixRenderCommandList( int newShader ) {
 	renderCommandList_t	*cmdList = &backEndData->commands;
 
 	if( cmdList ) {
+#ifdef USE_UNLOCKED_CVARS
+		int cmdUsed = cmdList->used % MAX_RENDER_DIVISOR;
+		int cmdSubList = (cmdList->used - cmdUsed) / MAX_RENDER_DIVISOR;
+		for(int i = 0; i <= cmdSubList; i++) {
+		const void *curCmd = cmdList->cmds[i];
+#else
 		const void *curCmd = cmdList->cmds;
+#endif
 
 		while ( 1 ) {
 			curCmd = PADP(curCmd, sizeof(void *));
@@ -2485,6 +2492,9 @@ static void FixRenderCommandList( int newShader ) {
 				return;
 			}
 		}
+#ifdef USE_UNLOCKED_CVARS
+		}
+#endif
 	}
 }
 
@@ -3840,7 +3850,15 @@ void RE_ReloadShaders( qboolean createNew ) {
 
   R_IssuePendingRenderCommands();
   tr.viewCluster = -1;
+
+#ifdef USE_MULTIVM_CLIENT
+	for(int i = 0; i < MAX_NUM_VMS; i++) {
+		rwi = i;
+  	RE_ClearScene();
+	}
+#else
   RE_ClearScene();
+#endif
 
   // remove lightmaps
   if(!createNew) {
