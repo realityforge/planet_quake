@@ -349,7 +349,6 @@ static void R_LoadMergedLightmaps( const lump_t *l, byte *image )
 	tr.numLightmaps = len / (LIGHTMAP_SIZE * LIGHTMAP_SIZE * 3);
 
 	// we are about to upload textures
-	//R_IssuePendingRenderCommands();
 
 	tr.numLightmaps = SetLightmapParams( tr.numLightmaps, glConfig.maxTextureSize );
 
@@ -430,7 +429,6 @@ static void R_LoadLightmaps( const lump_t *l ) {
 	}
 
 	// we are about to upload textures
-	//R_IssuePendingRenderCommands();
 
 	s_worldData.lightmaps = tr.lightmaps = ri.Hunk_Alloc( tr.numLightmaps * sizeof(image_t *), h_low );
 	for ( i = 0 ; i < tr.numLightmaps ; i++ ) {
@@ -2172,8 +2170,7 @@ void RE_SwitchWorld(int w) {
 		return;
 	}
 	// TODO: create a switch world command for renderer to know when to switch
-	//R_IssuePendingRenderCommands();
-	RE_SetWorld(w);
+	//RE_SetWorld(w); // so we don't need to use R_IssuePendingRenderCommands in between worlds
 	rwi = w;
 	tr.world = &s_worldDatas[rwi];
 	// reassign bmodels to same position as server entities

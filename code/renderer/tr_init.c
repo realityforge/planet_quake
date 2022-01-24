@@ -1938,7 +1938,6 @@ static void RE_Shutdown( refShutdownCode_t code ) {
 	ri.Cmd_RemoveCommand( "shaderstate" );
 
 	if ( tr.registered ) {
-		//R_IssuePendingRenderCommands();
 		R_DeleteTextures();
 	}
 
@@ -1976,10 +1975,13 @@ Touch all images to make sure they are resident (probably obsolete on modern sys
 */
 static void RE_EndRegistration( void ) {
 	//FBO_BindMain(); // otherwise we may draw images to the back buffer
-	//R_IssuePendingRenderCommands();
 	//if ( !ri.Sys_LowPhysicalMemory() ) {
 	//	RB_ShowImages();
 	//}
+#ifdef USE_MULTIVM_CLIENT
+	tr.registered = qtrue;
+	R_IssuePendingRenderCommands();
+#endif
 }
 
 

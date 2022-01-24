@@ -1008,14 +1008,14 @@ void SCR_UpdateScreen( qboolean fromVM ) {
     cgvmi = i;
 		uivmi = i;
 #endif
-		
+		if(!cgvm && !uivm) continue;
+
 		// if we just switched from a VM, skip it for a few frames so it never times out
 		// otherwise there is a time going backwards error
 		//if(ms - cls.lastVidRestart <= 5) {
 		//	continue;
 		//}
-		
-		if(!cgvm && !uivm) continue;
+
 #ifdef USE_MULTIVM_CLIENT
 		// skip if we haven't received a snapshot in a while
 		if(cl.serverTimes[0] - cl.snapWorlds[clientGames[cgvmi]].serverTime > 1000
@@ -1023,6 +1023,7 @@ void SCR_UpdateScreen( qboolean fromVM ) {
 		// skip if we are in world mode, multiworld renderer calls screen refresh
 		//   when the portal is visible
 		if(clc.world && clc.world[0] != '\0' && clientScreens[cgvmi][0] == -1) {
+			// limit secondary screens to 60 FPS using buffers
 			if(ms - lastSubWorld[cgvmi] < 13) continue;
 			lastSubWorld[cgvmi] = ms;
 			// tired renderer :(
@@ -1049,7 +1050,6 @@ void SCR_UpdateScreen( qboolean fromVM ) {
     if(!re.SwitchWorld) {
       Com_Error(ERR_FATAL, "WARNING: Renderer compiled without multiworld support!");
     } else {
-			// TODO: limit secondary screens to 60 FPS using buffers
 			re.SwitchWorld(worldMaps[cgvmi]);
       re.SetDvrFrame(clientScreens[cgvmi][0], clientScreens[cgvmi][1], clientScreens[cgvmi][2], clientScreens[cgvmi][3]);
     }

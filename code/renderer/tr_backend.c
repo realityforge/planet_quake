@@ -1349,7 +1349,6 @@ static const void *RB_DrawSurfs( const void *data ) {
 
 	// finish any 2D drawing if needed
 	RB_EndSurface();
-
 	cmd = (const drawSurfsCommand_t *)data;
 
 	backEnd.refdef = cmd->refdef;

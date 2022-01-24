@@ -2732,8 +2732,7 @@ void RE_SwitchWorld(int w) {
 	if(s_worldDatas[w].name[0] == '\0') {
 		return;
 	}
-	//R_IssuePendingRenderCommands();
-	RE_SetWorld(w);
+	//RE_SetWorld(w); // so we don't need to use R_IssuePendingRenderCommands
 	rwi = w;
 	tr.world = &s_worldData;
 	// reassign bmodels to same position as server entities

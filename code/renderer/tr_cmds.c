@@ -104,6 +104,11 @@ static void R_IssueRenderCommands( void ) {
 		// let it start on the new batch
 #ifdef USE_UNLOCKED_CVARS
 		for(int i = 0; i <= cmdSubList; i++) {
+#ifdef USE_MULTIVM_CLIENT
+			if(tr.refdefs[rwi].num_entities == 0) continue;
+#else
+			if(tr.refdef.num_entities == 0) continue;
+#endif
 			RB_ExecuteRenderCommands( cmdList->cmds[i] );
 		}
 #else
@@ -563,9 +568,11 @@ void RE_EndFrame( int *frontEndMsec, int *backEndMsec ) {
 		RE_SwitchWorld(i);
 	  if(s_worldDatas[i].name[0] != '\0') {
 			R_IssueRenderCommands();
-
-			R_InitNextFrame();
 		}
+	}
+	for(int i = 0; i < MAX_NUM_VMS; i++) {
+		RE_SwitchWorld(i);
+		R_InitNextFrame();
 	}
 #else
 	R_IssueRenderCommands();

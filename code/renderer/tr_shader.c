@@ -3848,7 +3848,6 @@ void GL_SetDefaultState( void );
 void RE_ReloadShaders( qboolean createNew ) {
   tr.lastRegistrationTime = ri.Milliseconds();
 
-  R_IssuePendingRenderCommands();
   tr.viewCluster = -1;
 
 #ifdef USE_MULTIVM_CLIENT

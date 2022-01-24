@@ -1347,6 +1347,8 @@ static qboolean R_MirrorViewBySurface( const drawSurf_t *drawSurf, int entityNum
 	if(!tr.refdef.num_entities) {
 		return qfalse;
 	}
+	// TODO: comment this out when working
+	return qfalse;
 #endif
 	// render the mirror view
 	R_RenderView( &newParms );
@@ -1874,7 +1876,6 @@ void R_RenderView( const viewParms_t *parms ) {
 	tr.viewParms.frameCount = tr.frameCount;
 #ifdef USE_MULTIVM_CLIENT
 	tr.viewParms.newWorld = tr.world - s_worldDatas;
-	Com_Printf("entities: %i -> %i\n", rwi, tr.refdef.num_entities);
 #endif
 
 	firstDrawSurf = tr.refdef.numDrawSurfs;

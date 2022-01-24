@@ -85,12 +85,6 @@ R_InitNextFrame
 */
 void R_InitNextFrame( void ) {
 	backEndData->commands.used = 0;
-#if 0 //def USE_MULTIVM_CLIENT
-	Com_Printf("reset scene: %i\n", rwi);
-}
-
-void R_InitNextFrame_real( void ) {
-#endif
 
 	r_firstSceneDrawSurf = 0;
 #ifdef USE_PMLIGHT
@@ -499,7 +493,11 @@ void RE_RenderScene( const refdef_t *fd ) {
 	tr.refdef.litSurfs = backEndData->litSurfs;
 #endif
 
+#ifdef USE_MULTIVM_CLIENT
 	tr.refdef.num_entities = r_numentities - r_firstSceneEntity;
+#else
+	tr.refdef.num_entities = r_numentities - r_firstSceneEntity;
+#endif
 	tr.refdef.entities = &backEndData->entities[r_firstSceneEntity];
 
 	tr.refdef.num_dlights = r_numdlights - r_firstSceneDlight;
@@ -598,9 +596,6 @@ void RE_RenderScene( const refdef_t *fd ) {
 
 	tr.frontEndMsec += ri.Milliseconds() - startTime;
 
-#ifdef USE_MULTIVM_CLIENT
-	//R_InitNextFrame_real();
-#endif
 }
 
 /*
