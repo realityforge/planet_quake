@@ -12,6 +12,7 @@ USER INTERFACE MAIN
 #include "ui_local.h"
 
 
+#ifndef MISSIONPACK
 /*
 ================
 vmMain
@@ -70,6 +71,7 @@ DLLEXPORT intptr_t vmMain( int command, int arg0, int arg1, int arg2 )
 
 	return -1;
 }
+#endif
 
 
 /*
@@ -85,6 +87,7 @@ typedef struct {
 	int			cvarFlags;
 } cvarTable_t;
 
+#ifndef MISSIONPACK
 vmCvar_t	ui_ffa_fraglimit;
 vmCvar_t	ui_ffa_timelimit;
 
@@ -233,6 +236,7 @@ void UI_UpdateCvars( void ) {
 		trap_Cvar_Update( cv->vmCvar );
 	}
 }
+#endif
 
 
 /*

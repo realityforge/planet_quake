@@ -373,7 +373,6 @@ typedef struct shader_s {
 										// the same name, we don't try looking for it again
 
 	qboolean	explicitlyDefined;		// found in a .shader file
-  qboolean	noVertexLightingCollapse;
 	qboolean  allowCompress;
 
 	int			surfaceFlags;			// if explicitlyDefined, this will have SURF_* flags
@@ -635,8 +634,11 @@ typedef struct litSurf_s {
 } litSurf_t;
 #endif
 
+#ifdef USE_UNLOCKED_CVARS
 #define	MAX_FACE_POINTS		256 // for Xonotic and ET maps
-//#define	MAX_FACE_POINTS		64
+#else
+#define	MAX_FACE_POINTS		64
+#endif
 
 #define	MAX_PATCH_SIZE		32			// max dimensions of a patch mesh in map file
 #define	MAX_GRID_SIZE		65			// max dimensions of a grid mesh in memory
@@ -795,6 +797,7 @@ typedef struct srfIQModel_s {
 	int		first_triangle, num_triangles;
 	int		first_influence, num_influences;
 } srfIQModel_t;
+
 
 extern	void (*rb_surfaceTable[SF_NUM_SURFACE_TYPES])(void *);
 
@@ -1027,6 +1030,7 @@ typedef struct glstatic_s {
 	int captureWidth;
 	int captureHeight;
 	int initTime;
+	qboolean deviceSupportsGamma;
 } glstatic_t;
 
 typedef struct {
@@ -1120,6 +1124,7 @@ extern world_t s_worldData;
 */
 typedef struct {
 	qboolean				registered;		// cleared at shutdown, set at beginRegistration
+	qboolean				inited;			// cleared at shutdown, set at InitOpenGL
   int							lastRegistrationTime;
 
 #ifdef USE_MULTIVM_CLIENT
@@ -2007,7 +2012,7 @@ typedef struct {
 
 #ifdef USE_MULTIVM_CLIENT
 extern backEndData_t	**backEndDatas;
-#define backEndData backEndDatas[rwi]
+#define backEndData backEndDatas[0]
 #else
 extern	backEndData_t	*backEndData;
 #endif

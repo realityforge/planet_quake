@@ -220,10 +220,10 @@ static void UI_SPLevelMenu_SetMenuArena( int n, int level, const char *arenaInfo
 		levelMenuInfo.item_maps[n].generic.flags |= QMF_GRAYED;
 	}
 	else {
-		levelMenuInfo.item_maps[n].generic.flags &= ~QMF_GRAYED;
+		levelMenuInfo.item_maps[n].generic.flags &= (unsigned int)~QMF_GRAYED;
 	}
 
-	levelMenuInfo.item_maps[n].generic.flags &= ~QMF_INACTIVE;
+	levelMenuInfo.item_maps[n].generic.flags &= (unsigned int)~QMF_INACTIVE;
 }
 
 static void UI_SPLevelMenu_SetMenuItems( void ) {
@@ -310,14 +310,14 @@ static void UI_SPLevelMenu_SetMenuItems( void ) {
 		levelMenuInfo.item_leftarrow.generic.flags |= ( QMF_INACTIVE | QMF_HIDDEN );
 	}
 	else {
-		levelMenuInfo.item_leftarrow.generic.flags &= ~( QMF_INACTIVE | QMF_HIDDEN );
+		levelMenuInfo.item_leftarrow.generic.flags &= (unsigned int)~( QMF_INACTIVE | QMF_HIDDEN );
 	}
 
 	if ( selectedArenaSet == maxTier ) {
 		levelMenuInfo.item_rightarrow.generic.flags |= ( QMF_INACTIVE | QMF_HIDDEN );
 	}
 	else {
-		levelMenuInfo.item_rightarrow.generic.flags &= ~( QMF_INACTIVE | QMF_HIDDEN );
+		levelMenuInfo.item_rightarrow.generic.flags &= (unsigned int)~( QMF_INACTIVE | QMF_HIDDEN );
 	}
 
 	UI_SPLevelMenu_SetBots();

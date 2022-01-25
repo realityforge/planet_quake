@@ -13,7 +13,11 @@
 
 #define POOLSIZE	128 * 1024
 
+#ifndef MISSIONPACK
 int				ui_numBots;
+#else
+extern int ui_numBots;
+#endif
 static char		*ui_botInfos[MAX_BOTS];
 
 static int		ui_numArenas;
@@ -22,10 +26,15 @@ static char		*ui_arenaInfos[MAX_ARENAS];
 static int		ui_numSinglePlayerArenas;
 static int		ui_numSpecialSinglePlayerArenas;
 
+#ifndef MISSIONPACK
 static char		memoryPool[POOLSIZE];
 static int		allocPoint, outOfMemory;
+#else
+extern int		allocPoint, outOfMemory;
+#endif
 
 
+#ifndef MISSIONPACK
 /*
 ===============
 UI_Alloc
@@ -46,6 +55,7 @@ void *UI_Alloc( int size ) {
 	return p;
 }
 
+
 /*
 ===============
 UI_InitMemory
@@ -55,6 +65,7 @@ void UI_InitMemory( void ) {
 	allocPoint = 0;
 	outOfMemory = qfalse;
 }
+
 
 /*
 ===============
@@ -111,6 +122,11 @@ int UI_ParseInfos( char *buf, int max, char *infos[] ) {
 	}
 	return count;
 }
+#else
+void UI_InitMemory( void );
+int UI_ParseInfos( char *buf, int max, char *infos[] );
+#endif
+
 
 /*
 ===============
@@ -369,6 +385,7 @@ static void UI_LoadBots( void ) {
 }
 
 
+#ifndef MISSIONPACK
 /*
 ===============
 UI_GetBotInfoByNumber
@@ -401,6 +418,7 @@ char *UI_GetBotInfoByName( const char *name ) {
 
 	return NULL;
 }
+#endif
 
 
 //
@@ -717,6 +735,7 @@ int UI_GetNumSPTiers( void ) {
 }
 
 
+#ifndef MISSIONPACK
 /*
 ===============
 UI_GetNumBots
@@ -725,6 +744,7 @@ UI_GetNumBots
 int UI_GetNumBots( void ) {
 	return ui_numBots;
 }
+#endif
 
 
 /*

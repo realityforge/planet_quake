@@ -145,7 +145,7 @@
 
 #ifdef BUILD_EXPERIMENTAL
 // mission pack features are enabled
-#define MISSIONPACK 1
+//#define MISSIONPACK 1
 // compile damage plums every time someone gets hit
 #define USE_DAMAGE_PLUMS 1
 // compile item timers, show how long until power-up respawns
@@ -160,8 +160,13 @@
 #define USE_REFEREE_CMDS 1
 // enable freeze tag as a game mode in addition to the chosen CTF/Overload
 #define USE_GAME_FREEZETAG 1
+
 // advanced hud features like player looking in the same direction, 3D guns, etc
-#define USE_ADVANCED_HUD 1
+#define USE_CLASSIC_HUD 1
+// advanced menu features like compatibility with other game VMs
+// can't enable these here because they require additional files, use Makefile.local
+//#define USE_CLASSIC_MENU 1
+
 // draw 3D weapons that rotate slightly
 #define USE_3D_WEAPONS 1
 // weapon vars allow customizing all weapon behavior

@@ -1796,7 +1796,8 @@ static qboolean ParseShader( const char **text )
 			continue;
 		}
 		// sun parms
-		else if ( !Q_stricmp( token, "q3map_sun" ) || !Q_stricmp( token, "q3map_sunExt" ) ) {
+		else if ( !Q_stricmp( token, "q3map_sun" ) || !Q_stricmp( token, "q3map_sunExt" ) ) 
+		{
 			float	a, b;
 
 			token = COM_ParseExt( text, qfalse );
@@ -1864,7 +1865,7 @@ static qboolean ParseShader( const char **text )
 			shader.noPicMip = 1;
 			continue;
 		}
-		else if ( !Q_stricmp( token, "novlcollapse" ) && s_extendedShader )
+		else if ( !Q_stricmp( token, "novlcollapse" ) )
 		{
 			shader.noVLcollapse = 1;
 			continue;
@@ -2002,13 +2003,8 @@ static qboolean ParseShader( const char **text )
 
 			continue;
 		}
-    else if ( !Q_stricmp( token, "novlcollapse" ) )
-    {
-      // new in quakelive
-      shader.noVertexLightingCollapse = qtrue;
-      continue;
-    }
-    else if ( !Q_stricmp( token, "nocompress" ) )   {
+    else if ( !Q_stricmp( token, "nocompress" ) )
+		{
       shader.allowCompress = qfalse;
       continue;
     }
@@ -2023,7 +2019,8 @@ static qboolean ParseShader( const char **text )
 			continue;
 		}
     // ydnar: implicit default mapping to eliminate redundant/incorrect explicit shader stages
-		else if ( !Q_stricmpn( token, "implicit", 8 ) ) {
+		else if ( !Q_stricmpn( token, "implicit", 8 ) ) 
+		{
       if ( s >= MAX_SHADER_STAGES ) {
 				ri.Printf( PRINT_WARNING, "WARNING: too many stages in shader %s (max is %i)\n", shader.name, MAX_SHADER_STAGES );
 				return qfalse;
@@ -2076,6 +2073,7 @@ static qboolean ParseShader( const char **text )
 		  || !Q_stricmp(token, "dpreflectcube")
 		  || !Q_stricmp(token, "dp_water")) {
 			SkipRestOfLine(text);
+			continue;
     }
 		else
 		{
@@ -2937,7 +2935,7 @@ static shader_t *FinishShader( void ) {
 	//
 	// if we are in r_vertexLight mode, never use a lightmap texture
 	//
-	if ( stage > 1 && ( ( r_vertexLight->integer && tr.vertexLightingAllowed && !shader.noVLcollapse ) || glConfig.hardwareType == GLHW_PERMEDIA2 ) && !shader.noVertexLightingCollapse ) {
+	if ( stage > 1 && ( ( r_vertexLight->integer && tr.vertexLightingAllowed && !shader.noVLcollapse ) || glConfig.hardwareType == GLHW_PERMEDIA2 ) ) {
 		VertexLightingCollapse();
 		stage = 1;
 		hasLightmapStage = qfalse;
@@ -3852,7 +3850,7 @@ void RE_ReloadShaders( qboolean createNew ) {
 
 #ifdef USE_MULTIVM_CLIENT
 	for(int i = 0; i < MAX_NUM_VMS; i++) {
-		rwi = i;
+		RE_SwitchWorld(i);
   	RE_ClearScene();
 	}
 #else

@@ -1394,6 +1394,12 @@ void CG_UpdateCvars( void );
 int CG_CrosshairPlayer( void );
 int CG_LastAttacker( void );
 void CG_LoadMenus(const char *menuFile);
+#ifdef MISSIONPACK
+#ifdef USE_CLASSIC_HUD
+void CG_KeyEvent2( int key, qboolean down );
+void CG_MouseEvent2( int x, int y );
+#endif
+#endif
 void CG_KeyEvent( int key, qboolean down );
 void CG_MouseEvent( int x, int y );
 void CG_EventHandling( cgame_event_t type );
@@ -1453,7 +1459,9 @@ void CG_DrawTopBottom(float x, float y, float w, float h, float size);
 void CG_Fade( int a, int time, int duration );
 void CG_DrawFlashFade( void );
 
+#ifdef MISSIONPACK
 #define USE_NEW_FONT_RENDERER
+#endif
 
 // flags for CG_DrawString
 enum {

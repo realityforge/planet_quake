@@ -618,6 +618,13 @@ void _UI_Refresh( int realtime )
 		uiInfo.uiDC.FPS = 1000 * UI_FPS_FRAMES / total;
 	}
 
+#ifdef USE_CLASSIC_MENU
+	if( *UI_Cvar_VariableString("ui_menuFiles") == '\0' ) {
+		UI_Refresh( realtime );
+		return;
+	}
+#endif
+
 #ifdef BUILD_GAME_STATIC
   Init_Display(&uiInfo.uiDC);
 #endif
@@ -935,11 +942,21 @@ void UI_LoadMenus(const char *menuFile, qboolean reset) {
 
 	handle = trap_PC_LoadSource( menuFile );
 	if (!handle) {
+#ifdef USE_CLASSIC_MENU
+		trap_Print( va( S_COLOR_YELLOW "menu file not found: %s, using default\n", menuFile ) );
+		handle = trap_PC_LoadSource( "ui/menus.txt" );
+		if (!handle) {
+			trap_Print( va( S_COLOR_RED "default menu file not found: ui/menus.txt, using vanilla menu!\n", menuFile ) );
+			trap_Cvar_Set( "ui_menuFiles", "" );
+			return;
+		}
+#else
 		trap_Error( va( S_COLOR_YELLOW "menu file not found: %s, using default\n", menuFile ) );
 		handle = trap_PC_LoadSource( "ui/menus.txt" );
 		if (!handle) {
 			trap_Error( va( S_COLOR_RED "default menu file not found: ui/menus.txt, unable to continue!\n", menuFile ) );
 		}
+#endif
 	}
 
 	ui_new.integer = 1;
@@ -5125,15 +5142,14 @@ void _UI_Init( qboolean inGameLoad ) {
 		menuSet = "ui/menus.txt";
 	}
 
-#if 0
-	if (uiInfo.inGameLoad) {
-		UI_LoadMenus("ui/ingame.txt", qtrue);
-	} else { // bk010222: left this: UI_LoadMenus(menuSet, qtrue);
-	}
-#else 
 	UI_LoadMenus(menuSet, qtrue);
-	UI_LoadMenus("ui/ingame.txt", qtrue);
+#ifdef USE_CLASSIC_MENU
+	if(*UI_Cvar_VariableString("ui_menuFiles") == '\0')
+	{
+		UI_Init();
+	} else
 #endif
+	UI_LoadMenus("ui/ingame.txt", qtrue);
 	
 	Menus_CloseAll();
 
@@ -5170,6 +5186,13 @@ UI_KeyEvent
 */
 void _UI_KeyEvent( int key, qboolean down ) {
 
+#ifdef USE_CLASSIC_MENU
+	if( *UI_Cvar_VariableString("ui_menuFiles") == '\0' ) {
+		UI_KeyEvent(key, down);
+		return;
+	}
+#endif
+
   if (Menu_Count() > 0) {
     menuDef_t *menu = Menu_GetFocused();
 		if (menu) {
@@ -5197,6 +5220,14 @@ UI_MouseEvent
 */
 void _UI_MouseEvent( int dx, int dy )
 {
+
+#ifdef USE_CLASSIC_MENU
+	if( *UI_Cvar_VariableString("ui_menuFiles") == '\0' ) {
+		UI_MouseEvent( dx, dy );
+		return;
+	}
+#endif
+
 	// update mouse screen position
 	uiInfo.uiDC.cursorx += dx;
 	if (uiInfo.uiDC.cursorx < 0)
@@ -5229,6 +5260,14 @@ void UI_LoadNonIngame( void ) {
 
 void _UI_SetActiveMenu( uiMenuCommand_t menu ) {
 	char buf[256];
+
+#ifdef USE_CLASSIC_MENU
+	if(*UI_Cvar_VariableString("ui_menuFiles") == '\0')
+	{
+		UI_SetActiveMenu(menu);
+		return;
+	}
+#endif
 
 	// this should be the ONLY way the menu system is brought up
 	// enusure minumum menu data is cached
@@ -5303,6 +5342,13 @@ void _UI_SetActiveMenu( uiMenuCommand_t menu ) {
 
 
 qboolean _UI_IsFullscreen( void ) {
+
+#ifdef USE_CLASSIC_MENU
+	if( *UI_Cvar_VariableString("ui_menuFiles") == '\0' ) {
+		return UI_IsFullscreen();
+	}
+#endif
+
 	return Menus_AnyFullScreenVisible();
 }
 

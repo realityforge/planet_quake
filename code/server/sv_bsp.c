@@ -93,7 +93,7 @@ void SV_MakeSkybox( void ) {
 #ifdef USE_MULTIVM_SERVER
 		int h = CM_InlineModel( 0, 2, gvmi );
 #else
-    int h = CM_InlineModel( 0, 2, 0 );
+    int h = CM_InlineModel( 0 );
 #endif
 		CM_ModelBounds( h, vs[0], vs[1] );
 	}

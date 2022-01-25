@@ -897,16 +897,21 @@ cmodel_t *CM_ClipHandleToModel( clipHandle_t handle ) {
 CM_InlineModel
 ==================
 */
+#if defined(USE_MULTIVM_CLIENT) || defined(USE_MULTIVM_SERVER)
 clipHandle_t CM_InlineModel( int index, int client, int world ) {
 	if ( index < 0 || index >= cm.numSubModels ) {
-#if defined(USE_MULTIVM_SERVER) || defined(USE_MULTIVM_CLIENT)
 		Com_Error (ERR_DROP, "CM_InlineModel: bad number %i in %i (client: %i, world: %i)", index, cmi, client, world);
-#else
-    Com_Error (ERR_DROP, "CM_InlineModel: bad number %i (client: %i, world: %i)", index, client, world);
-#endif
 	}
 	return index;
 }
+#else
+clipHandle_t CM_InlineModel( int index ) {
+	if ( index < 0 || index >= cm.numSubModels ) {
+		Com_Error (ERR_DROP, "CM_InlineModel: bad number");
+	}
+	return index;
+}
+#endif
 
 
 int CM_NumClusters( void ) {

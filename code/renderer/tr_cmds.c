@@ -105,9 +105,9 @@ static void R_IssueRenderCommands( void ) {
 #ifdef USE_UNLOCKED_CVARS
 		for(int i = 0; i <= cmdSubList; i++) {
 #ifdef USE_MULTIVM_CLIENT
-			if(tr.refdefs[rwi].num_entities == 0) continue;
+			if(i > 0 && tr.refdefs[rwi].num_entities == 0) continue;
 #else
-			if(tr.refdef.num_entities == 0) continue;
+			if(i > 0 && tr.refdef.num_entities == 0) continue;
 #endif
 			RB_ExecuteRenderCommands( cmdList->cmds[i] );
 		}
@@ -168,7 +168,7 @@ static void *R_GetCommandBufferReserved( int bytes, int reservedBytes ) {
 		*(int *)(cmdList->cmds[cmdSubList] + cmdUsed) = RC_END_OF_LIST;
 		cmdList->used = (cmdSubList + 1) * MAX_RENDER_DIVISOR + bytes;
 
-		return cmdList->cmds[cmdSubList + 1] + 0;
+		return cmdList->cmds[cmdSubList + 1];
 	} else {
 		cmdList->used += bytes;
 
@@ -566,9 +566,7 @@ void RE_EndFrame( int *frontEndMsec, int *backEndMsec ) {
 #ifdef USE_MULTIVM_CLIENT
 	for(int i = 0; i < MAX_NUM_VMS; i++) {
 		RE_SwitchWorld(i);
-	  if(s_worldDatas[i].name[0] != '\0') {
-			R_IssueRenderCommands();
-		}
+		R_IssueRenderCommands();
 	}
 	for(int i = 0; i < MAX_NUM_VMS; i++) {
 		RE_SwitchWorld(i);

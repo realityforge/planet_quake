@@ -298,6 +298,10 @@ static void UI_CalcPostGameStats() {
 }
 
 
+#ifdef MISSIONPACK
+qboolean UI_ConsoleCommand2( int realTime );
+#endif
+
 /*
 =================
 UI_ConsoleCommand
@@ -360,7 +364,12 @@ qboolean UI_ConsoleCommand( int realTime ) {
 		return qtrue;
 	}
 
+#ifdef USE_CLASSIC_MENU
+	// TODO: merge postgame
+	return UI_ConsoleCommand2( realTime );
+#else
 	return qfalse;
+#endif
 }
 
 /*

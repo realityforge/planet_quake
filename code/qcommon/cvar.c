@@ -236,7 +236,12 @@ static qboolean Cvar_IsIntegral( const char *s ) {
 	if ( *s == '-' && *(s+1) != '\0' )
 		s++;
 
+	if(s[0] == '0' && s[1] == 'x')
+		s += 2;
+
 	while ( *s != '\0' ) {
+		if(*s == 'f' && *(s+1) == '\0') // early out for c-style floats
+			return qtrue;
 		if ( *s < '0' || *s > '9' ) {
 			return qfalse;
 		}
@@ -787,8 +792,18 @@ cvar_t *Cvar_Set2( const char *var_name, const char *value, qboolean force ) {
   //Z_Free (var->string);	// free the old value string
 	
 	var->string = CopyString(value);
-	var->value = Q_atof( var->string );
-	var->integer = atoi (var->string);
+	if(var->string[0] == '0' && var->string[1] == 'x') {
+		sscanf(&var->string[2], "%x", &var->integer);
+		var->value = 1.0f * var->integer;
+	} else if(var->string[strlen(var->string)-2] == 'f') {
+		var->string[strlen(var->string)-2] = 0;
+		var->value = Q_atof( var->string );
+		var->integer = atoi (var->string);
+		var->string[strlen(var->string)-2] = 'f';
+	} else {
+		var->value = Q_atof( var->string );
+		var->integer = atoi (var->string);
+	}
 
   if(var->modifiedFunc) {
     var->modifiedFunc(oldValue, var->string, var);

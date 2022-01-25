@@ -358,7 +358,7 @@ static void GraphicsOptions_UpdateMenuItems( void )
 	}
 	else
 	{
-		s_graphicsoptions.colordepth.generic.flags &= ~QMF_GRAYED;
+		s_graphicsoptions.colordepth.generic.flags &= (unsigned int)~QMF_GRAYED;
 	}
 
 	if ( s_graphicsoptions.allow_extensions.curvalue == 0 )
@@ -373,39 +373,39 @@ static void GraphicsOptions_UpdateMenuItems( void )
 
 	if ( s_ivo.mode != s_graphicsoptions.mode.curvalue )
 	{
-		s_graphicsoptions.apply.generic.flags &= ~(QMF_HIDDEN|QMF_INACTIVE);
+		s_graphicsoptions.apply.generic.flags &= (unsigned int)~(QMF_HIDDEN|QMF_INACTIVE);
 	}
 	if ( s_ivo.fullscreen != s_graphicsoptions.fs.curvalue )
 	{
-		s_graphicsoptions.apply.generic.flags &= ~(QMF_HIDDEN|QMF_INACTIVE);
+		s_graphicsoptions.apply.generic.flags &= (unsigned int)~(QMF_HIDDEN|QMF_INACTIVE);
 	}
 	if ( s_ivo.extensions != s_graphicsoptions.allow_extensions.curvalue )
 	{
-		s_graphicsoptions.apply.generic.flags &= ~(QMF_HIDDEN|QMF_INACTIVE);
+		s_graphicsoptions.apply.generic.flags &= (unsigned int)~(QMF_HIDDEN|QMF_INACTIVE);
 	}
 	if ( s_ivo.tq != s_graphicsoptions.tq.curvalue )
 	{
-		s_graphicsoptions.apply.generic.flags &= ~(QMF_HIDDEN|QMF_INACTIVE);
+		s_graphicsoptions.apply.generic.flags &= (unsigned int)~(QMF_HIDDEN|QMF_INACTIVE);
 	}
 	if ( s_ivo.lighting != s_graphicsoptions.lighting.curvalue )
 	{
-		s_graphicsoptions.apply.generic.flags &= ~(QMF_HIDDEN|QMF_INACTIVE);
+		s_graphicsoptions.apply.generic.flags &= (unsigned int)~(QMF_HIDDEN|QMF_INACTIVE);
 	}
 	if ( s_ivo.colordepth != s_graphicsoptions.colordepth.curvalue )
 	{
-		s_graphicsoptions.apply.generic.flags &= ~(QMF_HIDDEN|QMF_INACTIVE);
+		s_graphicsoptions.apply.generic.flags &= (unsigned int)~(QMF_HIDDEN|QMF_INACTIVE);
 	}
 	if ( s_ivo.texturebits != s_graphicsoptions.texturebits.curvalue )
 	{
-		s_graphicsoptions.apply.generic.flags &= ~(QMF_HIDDEN|QMF_INACTIVE);
+		s_graphicsoptions.apply.generic.flags &= (unsigned int)~(QMF_HIDDEN|QMF_INACTIVE);
 	}
 	if ( s_ivo.geometry != s_graphicsoptions.geometry.curvalue )
 	{
-		s_graphicsoptions.apply.generic.flags &= ~(QMF_HIDDEN|QMF_INACTIVE);
+		s_graphicsoptions.apply.generic.flags &= (unsigned int)~(QMF_HIDDEN|QMF_INACTIVE);
 	}
 	if ( s_ivo.filter != s_graphicsoptions.filter.curvalue )
 	{
-		s_graphicsoptions.apply.generic.flags &= ~(QMF_HIDDEN|QMF_INACTIVE);
+		s_graphicsoptions.apply.generic.flags &= (unsigned int)~(QMF_HIDDEN|QMF_INACTIVE);
 	}
 
 	GraphicsOptions_CheckConfig();

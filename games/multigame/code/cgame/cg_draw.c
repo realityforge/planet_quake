@@ -11,9 +11,13 @@
 // used for scoreboard
 extern displayContextDef_t cgDC;
 menuDef_t *menuScoreboard = NULL;
+#ifdef USE_CLASSIC_HUD
+extern int drawTeamOverlayModificationCount;
+#endif
 #else
 int drawTeamOverlayModificationCount = -1;
 #endif
+
 
 int sortedTeamPlayers[TEAM_MAXOVERLAY];
 int	numSortedTeamPlayers;
@@ -181,7 +185,7 @@ void CG_Text_Paint(float x, float y, float scale, vec4_t color, const char *text
 
 
 
-#if !defined(MISSIONPACK) || defined(USE_ADVANCED_HUD)
+#if !defined(MISSIONPACK) || defined(USE_CLASSIC_HUD)
 /*
 ==============
 CG_DrawField
@@ -450,7 +454,7 @@ void CG_DrawFlagModel( float x, float y, float w, float h, int team, qboolean fo
 }
 
 
-#if !defined(MISSIONPACK) || defined(USE_ADVANCED_HUD)
+#if !defined(MISSIONPACK) || defined(USE_CLASSIC_HUD)
 /*
 ================
 CG_DrawStatusBarHead
@@ -506,6 +510,7 @@ static void CG_DrawStatusBarHead( float x ) {
 
 	CG_DrawHead( x, cgs.screenYmax + 1 - size, size, size, cg.snap->ps.clientNum, angles );
 }
+#endif // MISSIONPACK
 
 
 /*
@@ -514,6 +519,7 @@ CG_DrawStatusBarFlag
 
 ================
 */
+#if !defined(MISSIONPACK) || defined(USE_CLASSIC_HUD)
 static void CG_DrawStatusBarFlag( float x, int team ) {
 	CG_DrawFlagModel( x, cgs.screenYmax + 1 - ICON_SIZE, ICON_SIZE, ICON_SIZE, team, qfalse );
 }
@@ -548,7 +554,7 @@ void CG_DrawTeamBackground( int x, int y, int w, int h, float alpha, int team )
 }
 
 
-#if !defined(MISSIONPACK) || defined(USE_ADVANCED_HUD)
+#if !defined(MISSIONPACK) || defined(USE_CLASSIC_HUD)
 /*
 ================
 CG_DrawStatusBar
@@ -1123,6 +1129,7 @@ static void CG_DrawUpperRight(stereoFrame_t stereoFrame)
 ===========================================================================================
 */
 
+#if !defined(MISSIONPACK) || defined(USE_CLASSIC_HUD)
 /*
 =================
 CG_DrawScores
@@ -1130,7 +1137,6 @@ CG_DrawScores
 Draw the small two score display
 =================
 */
-#ifndef MISSIONPACK
 static float CG_DrawScores( float y ) {
 	const char	*s;
 	int			s1, s2, score;
@@ -1299,7 +1305,7 @@ static float CG_DrawScores( float y ) {
 CG_DrawPowerups
 ================
 */
-#ifndef MISSIONPACK
+#if !defined(MISSIONPACK) || defined(USE_CLASSIC_HUD)
 static float CG_DrawPowerups( float y ) {
 	int		sorted[MAX_POWERUPS];
 	int		sortedTime[MAX_POWERUPS];
@@ -1353,6 +1359,7 @@ static float CG_DrawPowerups( float y ) {
 
 #ifdef USE_RUNES
   // always draw rune first if there is one
+	x = cgs.screenXmax + 1 - ICON_SIZE - CHAR_WIDTH * 2;
   if( cg_entities[cg.clientNum].items[cg_entities[cg.clientNum].rune] ) {
     item = BG_FindItemForRune((cg_entities[cg.clientNum].rune - ITEM_PW_MIN - RUNE_STRENGTH) + 1);
     if ( item ) {
@@ -1440,7 +1447,7 @@ CG_DrawLowerRight
 
 =====================
 */
-#ifndef MISSIONPACK
+#if !defined(MISSIONPACK) || defined(USE_CLASSIC_HUD)
 static void CG_DrawLowerRight( void ) {
 	float	y;
 
@@ -1461,7 +1468,7 @@ static void CG_DrawLowerRight( void ) {
 CG_DrawPickupItem
 ===================
 */
-#ifndef MISSIONPACK
+#if !defined(MISSIONPACK) || defined(USE_CLASSIC_HUD)
 static int CG_DrawPickupItem( int y ) {
 	int		value;
 	float	*fadeColor;
@@ -1505,7 +1512,7 @@ static int CG_DrawPickupItem( int y ) {
 CG_DrawLowerLeft
 =====================
 */
-#ifndef MISSIONPACK
+#if !defined(MISSIONPACK) || defined(USE_CLASSIC_HUD)
 static void CG_DrawLowerLeft( void ) {
 	float	y;
 
@@ -1599,7 +1606,7 @@ static void CG_DrawTeamInfo( void ) {
 CG_DrawHoldableItem
 ===================
 */
-#ifndef MISSIONPACK
+#if !defined(MISSIONPACK) || defined(USE_CLASSIC_HUD)
 static void CG_DrawHoldableItem( void ) { 
 	int		value;
 
@@ -1610,26 +1617,6 @@ static void CG_DrawHoldableItem( void ) {
 	}
 }
 #endif // MISSIONPACK
-
-#ifdef MISSIONPACK
-/*
-===================
-CG_DrawPersistantPowerup
-===================
-*/
-#if 0 // sos001208 - DEAD
-static void CG_DrawPersistantPowerup( void ) { 
-	int		value;
-
-	value = cg.snap->ps.stats[STAT_PERSISTANT_POWERUP];
-	if ( value ) {
-		CG_RegisterItemVisuals( value );
-		CG_DrawPic( 640-ICON_SIZE, (SCREEN_HEIGHT-ICON_SIZE)/2 - ICON_SIZE, ICON_SIZE, ICON_SIZE, cg_items[ value ].icon );
-	}
-}
-#endif
-#endif // MISSIONPACK
-
 
 /*
 ===================
@@ -1827,6 +1814,12 @@ static void CG_DrawLagometer( void ) {
 #ifdef MISSIONPACK
 	x = cgs.screenXmax + 1 - 48;
 	y = cgs.screenYmax + 1 - 144;
+#ifdef USE_CLASSIC_HUD
+	if(cg_hudFiles.string[0] == '\0') {
+		x = cgs.screenXmax + 1 - 48;
+		y = cgs.screenYmax + 1 - 48;
+	}
+#endif
 #else
 	x = cgs.screenXmax + 1 - 48;
 	y = cgs.screenYmax + 1 - 48;
@@ -2789,7 +2782,7 @@ static void CG_Draw2D( stereoFrame_t stereoFrame )
     ) {
 
 #ifdef MISSIONPACK
-#ifdef USE_ADVANCED_HUD
+#ifdef USE_CLASSIC_HUD
       if(cg_hudFiles.string[0] == '\0') {
         CG_DrawStatusBar();
       } else
@@ -2814,6 +2807,11 @@ static void CG_Draw2D( stereoFrame_t stereoFrame )
 #ifndef MISSIONPACK
 			CG_DrawHoldableItem();
 #else
+#ifdef USE_CLASSIC_HUD
+      if(cg_hudFiles.string[0] == '\0') {
+				CG_DrawHoldableItem();
+      }
+#endif
 			//CG_DrawPersistantPowerup();
 #endif
 			CG_DrawReward();
@@ -2842,6 +2840,13 @@ static void CG_Draw2D( stereoFrame_t stereoFrame )
 #ifndef MISSIONPACK
 	CG_DrawLowerRight();
 	CG_DrawLowerLeft();
+#else
+#ifdef USE_CLASSIC_HUD
+	if(cg_hudFiles.string[0] == '\0') {
+		CG_DrawLowerRight();
+		CG_DrawLowerLeft();
+	}
+#endif
 #endif
 
 	if ( !CG_DrawFollow() ) {

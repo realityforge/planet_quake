@@ -500,7 +500,9 @@ void SCR_DrawDebugGraph (void)
 }
 
 //=============================================================================
+#ifdef USE_XDAMAGE
 void X_DMG_Init( void );
+#endif
 
 /*
 ==================
@@ -515,7 +517,9 @@ void SCR_Init( void ) {
 	cl_graphshift = Cvar_Get ("graphshift", "0", CVAR_CHEAT);
 
 	scr_initialized = qtrue;
+#ifdef USE_XDAMAGE
   X_DMG_Init();
+#endif
 }
 
 

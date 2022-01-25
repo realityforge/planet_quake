@@ -2730,7 +2730,11 @@ void RE_SetWorld(int);
 void RE_SwitchWorld(int w) {
   //ri.Printf( PRINT_ALL, "Switching renderers %i -> %i\n", rwi, w );
 	if(s_worldDatas[w].name[0] == '\0') {
-		return;
+		Com_DPrintf("RE_SwitchWorld: no world loaded\n");
+		//return;
+	}
+	if(w == -1) {
+		w = 0;
 	}
 	//RE_SetWorld(w); // so we don't need to use R_IssuePendingRenderCommands
 	rwi = w;

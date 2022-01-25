@@ -12,7 +12,11 @@ sfxHandle_t menu_move_sound;
 sfxHandle_t menu_out_sound;
 sfxHandle_t menu_buzz_sound;
 sfxHandle_t menu_null_sound;
+#ifndef MISSIONPACK
 sfxHandle_t weaponChangeSound;
+#else
+extern sfxHandle_t weaponChangeSound;
+#endif
 
 static qhandle_t	sliderBar;
 static qhandle_t	sliderButton_0;
@@ -1324,7 +1328,7 @@ void Menu_AddItem( menuframework_s *menu, void *item )
 	menu->items[menu->nitems] = item;
 	((menucommon_s*)menu->items[menu->nitems])->parent        = menu;
 	((menucommon_s*)menu->items[menu->nitems])->menuPosition  = menu->nitems;
-	((menucommon_s*)menu->items[menu->nitems])->flags        &= ~QMF_HASMOUSEFOCUS;
+	((menucommon_s*)menu->items[menu->nitems])->flags        &= (unsigned int)~QMF_HASMOUSEFOCUS;
 
 	// perform any item specific initializations
 	itemptr = (menucommon_s*)item;

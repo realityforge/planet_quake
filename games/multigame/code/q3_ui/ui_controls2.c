@@ -554,7 +554,7 @@ static void Controls_Update( void ) {
 	// enable controls in active group (and count number of items for vertical centering)
 	// bk001204 - parentheses
 	for( j = 0;  (control = controls[j]) != NULL ; j++ ) {
-		control->flags &= ~(QMF_GRAYED|QMF_HIDDEN|QMF_INACTIVE);
+		control->flags &= (unsigned int)~(QMF_GRAYED|QMF_HIDDEN|QMF_INACTIVE);
 	}
 
 	// position controls
@@ -576,24 +576,24 @@ static void Controls_Update( void ) {
 		}
 
 		// enable action item
-		((menucommon_s*)(s_controls.menu.items[s_controls.menu.cursor]))->flags &= ~QMF_GRAYED;
+		((menucommon_s*)(s_controls.menu.items[s_controls.menu.cursor]))->flags &= (unsigned int)~QMF_GRAYED;
 
 		// don't gray out player's name
-		s_controls.name.generic.flags &= ~QMF_GRAYED;
+		s_controls.name.generic.flags &= (unsigned int)~QMF_GRAYED;
 
 		return;
 	}
 
 	// enable everybody
 	for( i = 0; i < s_controls.menu.nitems; i++ ) {
-		((menucommon_s*)(s_controls.menu.items[i]))->flags &= ~QMF_GRAYED;
+		((menucommon_s*)(s_controls.menu.items[i]))->flags &= (unsigned int)~QMF_GRAYED;
 	}
 
 	// makes sure flags are right on the group selection controls
-	s_controls.looking.generic.flags  &= ~(QMF_GRAYED|QMF_HIGHLIGHT|QMF_HIGHLIGHT_IF_FOCUS);
-	s_controls.movement.generic.flags &= ~(QMF_GRAYED|QMF_HIGHLIGHT|QMF_HIGHLIGHT_IF_FOCUS);
-	s_controls.weapons.generic.flags  &= ~(QMF_GRAYED|QMF_HIGHLIGHT|QMF_HIGHLIGHT_IF_FOCUS);
-	s_controls.misc.generic.flags     &= ~(QMF_GRAYED|QMF_HIGHLIGHT|QMF_HIGHLIGHT_IF_FOCUS);
+	s_controls.looking.generic.flags  &= (unsigned int)~(QMF_GRAYED|QMF_HIGHLIGHT|QMF_HIGHLIGHT_IF_FOCUS);
+	s_controls.movement.generic.flags &= (unsigned int)~(QMF_GRAYED|QMF_HIGHLIGHT|QMF_HIGHLIGHT_IF_FOCUS);
+	s_controls.weapons.generic.flags  &= (unsigned int)~(QMF_GRAYED|QMF_HIGHLIGHT|QMF_HIGHLIGHT_IF_FOCUS);
+	s_controls.misc.generic.flags     &= (unsigned int)~(QMF_GRAYED|QMF_HIGHLIGHT|QMF_HIGHLIGHT_IF_FOCUS);
 
 	s_controls.looking.generic.flags  |= QMF_PULSEIFFOCUS;
 	s_controls.movement.generic.flags |= QMF_PULSEIFFOCUS;
@@ -603,22 +603,22 @@ static void Controls_Update( void ) {
 	// set buttons
 	switch( s_controls.section ) {
 	case C_MOVEMENT:
-		s_controls.movement.generic.flags &= ~QMF_PULSEIFFOCUS;
+		s_controls.movement.generic.flags &= (unsigned int)~QMF_PULSEIFFOCUS;
 		s_controls.movement.generic.flags |= (QMF_HIGHLIGHT|QMF_HIGHLIGHT_IF_FOCUS);
 		break;
 	
 	case C_LOOKING:
-		s_controls.looking.generic.flags &= ~QMF_PULSEIFFOCUS;
+		s_controls.looking.generic.flags &= (unsigned int)~QMF_PULSEIFFOCUS;
 		s_controls.looking.generic.flags |= (QMF_HIGHLIGHT|QMF_HIGHLIGHT_IF_FOCUS);
 		break;
 	
 	case C_WEAPONS:
-		s_controls.weapons.generic.flags &= ~QMF_PULSEIFFOCUS;
+		s_controls.weapons.generic.flags &= (unsigned int)~QMF_PULSEIFFOCUS;
 		s_controls.weapons.generic.flags |= (QMF_HIGHLIGHT|QMF_HIGHLIGHT_IF_FOCUS);
 		break;		
 
 	case C_MISC:
-		s_controls.misc.generic.flags &= ~QMF_PULSEIFFOCUS;
+		s_controls.misc.generic.flags &= (unsigned int)~QMF_PULSEIFFOCUS;
 		s_controls.misc.generic.flags |= (QMF_HIGHLIGHT|QMF_HIGHLIGHT_IF_FOCUS);
 		break;
 	}

@@ -29,7 +29,11 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 int		CM_LoadMap( const char *name, qboolean clientload, int *checksum);
 int		CM_SwitchMap( int world );
 void		CM_ClearMap( void );
-clipHandle_t CM_InlineModel( int index, int client, int world );		// 0 = world, 1 + are bmodels
+#if defined(USE_MULTIVM_CLIENT) || defined(USE_MULTIVM_SERVER)
+clipHandle_t CM_InlineModel( int index, int client, int world );
+#else
+clipHandle_t CM_InlineModel( int index );		// 0 = world, 1 + are bmodels
+#endif
 clipHandle_t CM_TempBoxModel( const vec3_t mins, const vec3_t maxs, int capsule );
 
 void		CM_ModelBounds( clipHandle_t model, vec3_t mins, vec3_t maxs );
@@ -37,7 +41,6 @@ void		CM_ModelBounds( clipHandle_t model, vec3_t mins, vec3_t maxs );
 int			CM_NumClusters (void);
 int			CM_NumInlineModels( void );
 char		*CM_EntityString (void);
-
 
 // returns an ORed contents mask
 int			CM_PointContents( const vec3_t p, clipHandle_t model );

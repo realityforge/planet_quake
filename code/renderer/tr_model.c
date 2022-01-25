@@ -626,8 +626,12 @@ static qboolean R_LoadMD3( model_t *mod, int lod, void *buffer, int fileSize, co
 
 			sh = R_FindShader( shader->name, LIGHTMAP_NONE, qtrue );
 			if ( sh->defaultShader ) {
+#ifdef USE_MULTIVM_CLIENT
         sh->remappedShader = tr.defaultShader;
         shader->shaderIndex = sh->index;
+#else
+				shader->shaderIndex = 0;
+#endif
 			} else {
 				shader->shaderIndex = sh->index;
 			}
@@ -890,8 +894,12 @@ static qboolean R_LoadMDR( model_t *mod, void *buffer, int filesize, const char 
 			// register the shaders
 			sh = R_FindShader(surf->shader, LIGHTMAP_NONE, qtrue);
 			if ( sh->defaultShader ) {
+#ifdef USE_MULTIVM_CLIENT
         sh->remappedShader = tr.defaultShader;
 				surf->shaderIndex = sh->index;
+#else
+				surf->shaderIndex = 0;
+#endif
 			} else {
 				surf->shaderIndex = sh->index;
 			}
@@ -1025,7 +1033,7 @@ void RE_BeginRegistration( glconfig_t *glconfigOut ) {
 	R_ClearFlares();
 #ifdef USE_MULTIVM_CLIENT
 	for(int i = 0; i < MAX_NUM_VMS; i++) {
-		rwi = i;
+		RE_SwitchWorld(i);
   	RE_ClearScene();
 	}
 #else
@@ -1049,10 +1057,11 @@ void R_ModelInit( void ) {
   // TODO: move this up?
   rwi = 0;
 #endif
-	// leave a space for NULL model
+
   s_worldData.numModels = 0;
 	memset(worldModels, 0, sizeof(worldModels));
 
+	// leave a space for NULL model
 	mod = R_AllocModel();
 	mod->type = MOD_BAD;
 
@@ -1080,7 +1089,7 @@ void R_Modellist_f( void ) {
 	int		lods;
 
 	total = 0;
-	for ( i = 1 ; i < tr.numModels; i++ ) {
+	for ( i = 1 ; i < s_worldData.numModels; i++ ) {
 		mod = tr.models[i];
 		lods = 1;
 		for ( j = 1 ; j < MD3_MAX_LODS ; j++ ) {

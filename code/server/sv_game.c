@@ -157,7 +157,7 @@ static void SV_SetBrushModel( sharedEntity_t *ent, const char *name ) {
 #ifdef USE_MULTIVM_SERVER
 	h = CM_InlineModel( ent->s.modelindex, 4, gvmi );
 #else
-  h = CM_InlineModel( ent->s.modelindex, 4, 0 );
+  h = CM_InlineModel( ent->s.modelindex );
 #endif
 	CM_ModelBounds( h, mins, maxs );
 	VectorCopy (mins, ent->r.mins);

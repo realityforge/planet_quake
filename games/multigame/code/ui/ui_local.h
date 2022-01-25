@@ -830,7 +830,7 @@ extern uiInfo_t uiInfo;
 
 extern void			UI_Init( void );
 extern void			UI_Shutdown( void );
-extern void			UI_KeyEvent( int key );
+extern void			UI_KeyEvent( int key, int down );
 extern void			UI_MouseEvent( int dx, int dy );
 extern void			UI_Refresh( int realtime );
 extern qboolean		UI_ConsoleCommand( int realTime );
@@ -861,7 +861,6 @@ extern void			UI_ForceMenuOff (void);
 extern char			*UI_Argv( int arg );
 extern char			*UI_Cvar_VariableString( const char *var_name );
 extern void			UI_Refresh( int time );
-extern void			UI_KeyEvent( int key );
 extern void			UI_StartDemoLoop( void );
 extern qboolean		m_entersound;
 void UI_LoadBestScores(const char *map, int game);

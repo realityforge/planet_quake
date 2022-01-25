@@ -34,7 +34,12 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 extern	botlib_export_t	*botlib_export;
 
-// connect virtual machines to the correct map, reusing for duplicate loads
+extern qboolean loadCamera(const char *name);
+extern void startCamera(int camNum, int time);
+extern qboolean getCameraInfo(int camNum, int time, vec3_t *origin, vec3_t *angles, float *fov);
+extern void stopCamera(int camNum);
+
+// connect virtual machines to the correct cm_* map
 int clientMaps[MAX_NUM_VMS] = {
   0
 #ifdef USE_MULTIVM_CLIENT
@@ -42,6 +47,7 @@ int clientMaps[MAX_NUM_VMS] = {
 #endif
 };
 
+// connect VMs to the correct ri.LoadWorld() map
 int worldMaps[MAX_NUM_VMS] = {
   -1
 #ifdef USE_MULTIVM_CLIENT
@@ -57,7 +63,7 @@ int clientGames[MAX_NUM_VMS] = {
 #endif
 };
 
-// connect a specific screen to a client inside a game
+// connect a specific screen to a player/client inside a game
 int clientWorlds[MAX_NUM_VMS] = {
 	-1
 #ifdef USE_MULTIVM_CLIENT
@@ -70,11 +76,6 @@ vec3_t clientCameras[MAX_NUM_VMS];
 #ifdef USE_MULTIVM_CLIENT
 extern refdef_t views[MAX_NUM_VMS];
 #endif
-
-extern qboolean loadCamera(const char *name);
-extern void startCamera(int camNum, int time);
-extern qboolean getCameraInfo(int camNum, int time, vec3_t *origin, vec3_t *angles, float *fov);
-extern void stopCamera(int camNum);
 
 /*
 ====================
@@ -111,13 +112,13 @@ static qboolean CL_GetUserCmd( int cmdNumber, usercmd_t *ucmd ) {
 	// cmds[cmdNumber] is the last properly generated command
 
 	// can't return anything that we haven't created yet
-	if ( cmdNumber > cl.cmdNumber ) {
+	if ( cl.cmdNumber - cmdNumber < 0 ) {
 		Com_Error( ERR_DROP, "%s: %i >= %i", __func__, cmdNumber, cl.cmdNumber );
 	}
 
 	// the usercmd has been overwritten in the wrapping
 	// buffer because it is too far out of date
-	if ( cmdNumber <= cl.cmdNumber - CMD_BACKUP ) {
+	if ( cl.cmdNumber - cmdNumber >= CMD_BACKUP ) {
 		return qfalse;
 	}
 
@@ -176,10 +177,12 @@ static int CL_GetParsedEntityIndexByID( const clSnapshot_t *clSnap, int entityID
 #endif // USE_MV
 
 
+#ifdef USE_XDAMAGE
 void X_DMG_DrawDamage(const refdef_t* fd);
 //void X_DMG_PushDamageForDirectHit(int clientNum, vec3_t origin);
 //void X_DMG_UpdateClientOrigin(refEntity_t* ref);
 void X_DMG_ParseSnapshotDamage( void );
+#endif
 
 /*
 ====================
@@ -198,7 +201,7 @@ static qboolean CL_GetSnapshot( int snapshotNumber, snapshot_t *snapshot ) {
 #endif
 #endif
 
-	if ( snapshotNumber > cl.snap.messageNum ) {
+	if ( cl.snap.messageNum - snapshotNumber < 0 ) {
 		Com_Error( ERR_DROP, "%s: snapshotNumber > cl.snapshot.messageNum", __func__ );
 	}
 
@@ -304,7 +307,9 @@ static qboolean CL_GetSnapshot( int snapshotNumber, snapshot_t *snapshot ) {
 		}
 		snapshot->numEntities = count;
 
+#ifdef USE_XDAMAGE
     X_DMG_ParseSnapshotDamage();
+#endif
 
 		return qtrue;
 	}
@@ -352,7 +357,9 @@ static qboolean CL_GetSnapshot( int snapshotNumber, snapshot_t *snapshot ) {
 	}
 
 	// FIXME: configstring changes and server commands!!!
-  X_DMG_ParseSnapshotDamage();
+#ifdef USE_XDAMAGE
+	X_DMG_ParseSnapshotDamage();
+#endif
 
 	return qtrue;
 }
@@ -369,6 +376,16 @@ static void CL_SetUserCmdValue( int userCmdValue, float sensitivityScale ) {
 #endif
 	cl.cgameUserCmdValue = userCmdValue;
 	cl.cgameSensitivity = sensitivityScale;
+}
+
+
+/*
+=====================
+CL_AddCgameCommand
+=====================
+*/
+static void CL_AddCgameCommand( const char *cmdName ) {
+	Cmd_AddCommand( cmdName, NULL );
 }
 
 
@@ -602,8 +619,6 @@ rescan:
 #endif
 
 #ifdef USE_CMD_CONNECTOR
-  // TODO: we may want to put a "connect to other server" command here for load balancing
-
 	// if it came from the server it was meant for cgame
 	if( Q_stristr(cmd, "print") ) {
 		return qtrue;
@@ -620,6 +635,8 @@ rescan:
 		return qfalse;
 	}
 #endif
+
+	// we may want to put a "connect to other server" command here
 
 	// cgame can now act on the command
 	return qtrue;
@@ -840,7 +857,7 @@ static intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 #endif
 		return 0;
 	case CG_ADDCOMMAND:
-		Cmd_AddCommandSafe( VMA(1) );
+		CL_AddCgameCommand( VMA(1) );
 		return 0;
 	case CG_REMOVECOMMAND:
 		Cmd_RemoveCommandSafe( VMA(1) );
@@ -868,7 +885,7 @@ static intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 #ifdef USE_MULTIVM_CLIENT
 		return CM_InlineModel( args[1], 1, cgvmi );
 #else
-    return CM_InlineModel( args[1], 1, 0 );
+    return CM_InlineModel( args[1] );
 #endif
 	case CG_CM_TEMPBOXMODEL:
 		return CM_TempBoxModel( VMA(1), VMA(2), /*int capsule*/ qfalse );
@@ -927,8 +944,10 @@ static intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 		return 0;
 	case CG_S_UPDATEENTITYPOSITION:
 		S_UpdateEntityPosition( args[1], VMA(2) );
+#ifdef USE_XDAMAGE
     //if(args[1] >= 0 && args[1] < MAX_CLIENTS)
     //  X_DMG_PushDamageForDirectHit( args[1], VMA(2) );
+#endif
 		return 0;
 	case CG_S_RESPATIALIZE:
 #ifdef USE_MULTIVM_CLIENT
@@ -966,7 +985,9 @@ static intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 		if(clientScreens[cgvmi][0] > -1)
 #endif
 		re.AddRefEntityToScene( VMA(1), qfalse );
+#ifdef USE_XDAMAGE
     //X_DMG_UpdateClientOrigin((refEntity_t*)VMA(1));
+#endif
 		return 0;
 	case CG_R_ADDPOLYTOSCENE:
 #ifdef USE_MULTIVM_CLIENT

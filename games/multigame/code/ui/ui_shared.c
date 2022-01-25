@@ -67,7 +67,10 @@ static qboolean Menu_OverActiveItem(menuDef_t *menu, float x, float y);
 #endif // BUILD_GAME_STATIC
 
 static char		memoryPool[MEM_POOL_SIZE];
-static int		allocPoint, outOfMemory;
+#ifndef USE_CLASSIC_MENU
+static 
+#endif
+int		allocPoint, outOfMemory;
 
 
 /*

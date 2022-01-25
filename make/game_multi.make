@@ -2,6 +2,9 @@ ifndef MOD
 MOD             := multigame
 endif
 
+#USE_CLASSIC_MENU = 1
+#MISSIONPACK       = 1
+
 BUILD_GAME_QVM  ?= 1
 BUILD_BASEQ3A   := 1
 BUILD_MULTIGAME := 1
@@ -15,6 +18,9 @@ endif
 MOD_CFLAGS    :=
 ifeq ($(MISSIONPACK),1)
 MOD_CFLAGS    += -DMISSIONPACK
+endif
+ifeq ($(USE_CLASSIC_MENU),1)
+MOD_CFLAGS    += -DUSE_CLASSIC_MENU
 endif
 ifeq ($(USE_REFEREE_CMDS),1)
 MOD_CFLAGS    += -DUSE_REFEREE_CMDS
@@ -144,6 +150,7 @@ makegamedirs:
 	@if [ ! -d $(B)/$(MOD)/cgame ];then $(MKDIR) $(B)/$(MOD)/cgame;fi
 	@if [ ! -d $(B)/$(MOD)/game ];then $(MKDIR) $(B)/$(MOD)/game;fi
 	@if [ ! -d $(B)/$(MOD)/ui ];then $(MKDIR) $(B)/$(MOD)/ui;fi
+	@if [ ! -d $(B)/$(MOD)/q3_ui ];then $(MKDIR) $(B)/$(MOD)/q3_ui;fi
 	@if [ ! -d $(B)/$(MOD)/vm ];then $(MKDIR) $(B)/$(MOD)/vm;fi
 
 endif
@@ -251,61 +258,78 @@ endif
 #############################################################################
 ## BASEQ3 UI
 #############################################################################
+UIOBJ_  = 
 ifeq ($(MISSIONPACK),1)
 UIOBJ_  = $(B)/$(MOD)/ui/ui_main.o \
           $(B)/$(MOD)/ui/ui_atoms.o \
           $(B)/$(MOD)/ui/ui_gameinfo.o \
           $(B)/$(MOD)/ui/ui_players.o \
           $(B)/$(MOD)/ui/ui_shared.o
-else
-UIOBJ_  = $(B)/$(MOD)/ui/ui_main.o \
-          $(B)/$(MOD)/ui/ui_addbots.o \
-          $(B)/$(MOD)/ui/ui_atoms.o \
-          $(B)/$(MOD)/ui/ui_cdkey.o \
-          $(B)/$(MOD)/ui/ui_cinematics.o \
-          $(B)/$(MOD)/ui/ui_confirm.o \
-          $(B)/$(MOD)/ui/ui_connect.o \
-          $(B)/$(MOD)/ui/ui_controls2.o \
-          $(B)/$(MOD)/ui/ui_credits.o \
-          $(B)/$(MOD)/ui/ui_demo2.o \
-          $(B)/$(MOD)/ui/ui_display.o \
-          $(B)/$(MOD)/ui/ui_gameinfo.o \
-          $(B)/$(MOD)/ui/ui_ingame.o \
-          $(B)/$(MOD)/ui/ui_loadconfig.o \
-          $(B)/$(MOD)/ui/ui_menu.o \
-          $(B)/$(MOD)/ui/ui_mfield.o \
-          $(B)/$(MOD)/ui/ui_mods.o \
-          $(B)/$(MOD)/ui/ui_network.o \
-          $(B)/$(MOD)/ui/ui_options.o \
-          $(B)/$(MOD)/ui/ui_playermodel.o \
-          $(B)/$(MOD)/ui/ui_players.o \
-          $(B)/$(MOD)/ui/ui_playersettings.o \
-          $(B)/$(MOD)/ui/ui_preferences.o \
-          $(B)/$(MOD)/ui/ui_qmenu.o \
-          $(B)/$(MOD)/ui/ui_removebots.o \
-          $(B)/$(MOD)/ui/ui_saveconfig.o \
-          $(B)/$(MOD)/ui/ui_serverinfo.o \
-          $(B)/$(MOD)/ui/ui_servers2.o \
-          $(B)/$(MOD)/ui/ui_setup.o \
-          $(B)/$(MOD)/ui/ui_sound.o \
-          $(B)/$(MOD)/ui/ui_sparena.o \
-          $(B)/$(MOD)/ui/ui_specifyserver.o \
-          $(B)/$(MOD)/ui/ui_splevel.o \
-          $(B)/$(MOD)/ui/ui_sppostgame.o \
-          $(B)/$(MOD)/ui/ui_spskill.o \
-          $(B)/$(MOD)/ui/ui_startserver.o \
-          $(B)/$(MOD)/ui/ui_team.o \
-          $(B)/$(MOD)/ui/ui_teamorders.o \
-          $(B)/$(MOD)/ui/ui_video.o
 endif
 
-UIOBJ   = $(UIOBJ_) $(B)/$(MOD)/ui/ui_syscalls.o
-UIVMOBJ = $(addprefix $(B)/$(MOD)/ui/,$(notdir $(UIOBJ_:%.o=%.asm)))
+ifneq ($(MISSIONPACK),1)
+INCLUDE_VANILLA := 1
+endif
+
+ifeq ($(USE_CLASSIC_MENU),1)
+INCLUDE_VANILLA := 1
+endif
+
+ifeq ($(INCLUDE_VANILLA),1)
+UIOBJ_ += $(B)/$(MOD)/q3_ui/ui_main.o \
+          $(B)/$(MOD)/q3_ui/ui_addbots.o \
+          $(B)/$(MOD)/q3_ui/ui_atoms.o \
+          $(B)/$(MOD)/q3_ui/ui_cdkey.o \
+          $(B)/$(MOD)/q3_ui/ui_cinematics.o \
+          $(B)/$(MOD)/q3_ui/ui_confirm.o \
+          $(B)/$(MOD)/q3_ui/ui_connect.o \
+          $(B)/$(MOD)/q3_ui/ui_controls2.o \
+          $(B)/$(MOD)/q3_ui/ui_credits.o \
+          $(B)/$(MOD)/q3_ui/ui_demo2.o \
+          $(B)/$(MOD)/q3_ui/ui_display.o \
+          $(B)/$(MOD)/q3_ui/ui_gameinfo.o \
+          $(B)/$(MOD)/q3_ui/ui_ingame.o \
+          $(B)/$(MOD)/q3_ui/ui_loadconfig.o \
+          $(B)/$(MOD)/q3_ui/ui_menu.o \
+          $(B)/$(MOD)/q3_ui/ui_mfield.o \
+          $(B)/$(MOD)/q3_ui/ui_mods.o \
+          $(B)/$(MOD)/q3_ui/ui_network.o \
+          $(B)/$(MOD)/q3_ui/ui_options.o \
+          $(B)/$(MOD)/q3_ui/ui_playermodel.o \
+          $(B)/$(MOD)/q3_ui/ui_players.o \
+          $(B)/$(MOD)/q3_ui/ui_playersettings.o \
+          $(B)/$(MOD)/q3_ui/ui_preferences.o \
+          $(B)/$(MOD)/q3_ui/ui_qmenu.o \
+          $(B)/$(MOD)/q3_ui/ui_removebots.o \
+          $(B)/$(MOD)/q3_ui/ui_saveconfig.o \
+          $(B)/$(MOD)/q3_ui/ui_serverinfo.o \
+          $(B)/$(MOD)/q3_ui/ui_servers2.o \
+          $(B)/$(MOD)/q3_ui/ui_setup.o \
+          $(B)/$(MOD)/q3_ui/ui_sound.o \
+          $(B)/$(MOD)/q3_ui/ui_sparena.o \
+          $(B)/$(MOD)/q3_ui/ui_specifyserver.o \
+          $(B)/$(MOD)/q3_ui/ui_splevel.o \
+          $(B)/$(MOD)/q3_ui/ui_sppostgame.o \
+          $(B)/$(MOD)/q3_ui/ui_spskill.o \
+          $(B)/$(MOD)/q3_ui/ui_startserver.o \
+          $(B)/$(MOD)/q3_ui/ui_team.o \
+          $(B)/$(MOD)/q3_ui/ui_teamorders.o \
+          $(B)/$(MOD)/q3_ui/ui_video.o
+endif
+
+UIOBJ   = $(UIOBJ_)
+ifeq ($(MISSIONPACK),1)
+UIOBJ  += $(B)/$(MOD)/ui/ui_syscalls.o
+else
+UIOBJ  += $(B)/$(MOD)/q3_ui/ui_syscalls.o
+endif
+UIVMOBJ = $(UIOBJ_:%.o=%.asm)
 
 ifneq ($(BUILD_CLIENT),1)
 UIOBJ  += $(B)/$(MOD)/ui/bg_misc.o \
           $(B)/$(MOD)/ui/q_math.o \
           $(B)/$(MOD)/ui/q_shared.o
+
 UIVMOBJ += $(B)/$(MOD)/ui/bg_lib.asm \
            $(B)/$(MOD)/ui/bg_misc.asm \
            $(B)/$(MOD)/ui/q_math.asm \
@@ -376,8 +400,10 @@ $(B)/$(MOD)/ui/q_%.o: $(QADIR)/q_%.c
 ifeq ($(MISSIONPACK),1)
 $(B)/$(MOD)/ui/ui_%.o: $(SUIDIR)/ui_%.c
 	$(DO_UI_CC)
-else
-$(B)/$(MOD)/ui/%.o: $(UIDIR)/%.c
+endif
+
+ifeq ($(INCLUDE_VANILLA),1)
+$(B)/$(MOD)/q3_ui/%.o: $(UIDIR)/%.c
 	$(DO_UI_CC)
 endif
 
@@ -407,10 +433,12 @@ $(B)/$(MOD)/ui/q_%.asm: $(QADIR)/q_%.c $(Q3LCC)
 ifeq ($(MISSIONPACK),1)
 $(B)/$(MOD)/ui/ui_%.asm: $(SUIDIR)/ui_%.c $(Q3LCC)
 	$(DO_UI_LCC)
-else
-$(B)/$(MOD)/ui/%.asm: $(UIDIR)/%.c $(Q3LCC)
+endif
+
+ifeq ($(INCLUDE_VANILLA),1)
+$(B)/$(MOD)/q3_ui/%.asm: $(UIDIR)/%.c $(Q3LCC)
 	$(DO_UI_LCC)
-endif # missionpack
+endif
 
 endif # build qvm
 

@@ -301,5 +301,7 @@ typedef char GLchar;
 #undef GLE
 
 #endif // !__APPLE__
+
 #endif
+
 #endif // __QGL_H__

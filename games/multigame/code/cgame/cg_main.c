@@ -300,7 +300,11 @@ static const cvarTable_t cvarTable[] = {
 	{ &cg_drawTimer, "cg_drawTimer", "0", CVAR_ARCHIVE },
 	{ &cg_drawFPS, "cg_drawFPS", "0", CVAR_ARCHIVE },
 	{ &cg_drawSnapshot, "cg_drawSnapshot", "0", CVAR_ARCHIVE  },
+#ifdef USE_3D_WEAPONS
+	{ &cg_draw3dIcons, "cg_draw3dIcons", "2", CVAR_ARCHIVE },
+#else
 	{ &cg_draw3dIcons, "cg_draw3dIcons", "1", CVAR_ARCHIVE },
+#endif
 	{ &cg_drawIcons, "cg_drawIcons", "1", CVAR_ARCHIVE },
 	{ &cg_drawAmmoWarning, "cg_drawAmmoWarning", "1", CVAR_ARCHIVE },
 	{ &cg_drawAttacker, "cg_drawAttacker", "1", CVAR_ARCHIVE },
@@ -1487,29 +1491,6 @@ void CG_StartMusic( void ) {
 	trap_S_StartBackgroundTrack( parm1, parm2 );
 }
 #ifdef MISSIONPACK
-char *CG_GetMenuBuffer(const char *filename) {
-	int	len;
-	fileHandle_t	f;
-	static char buf[MAX_MENUFILE];
-
-	len = trap_FS_FOpenFile( filename, &f, FS_READ );
-	if ( !f ) {
-		trap_Print( va( S_COLOR_RED "menu file not found: %s, using default\n", filename ) );
-		return NULL;
-	}
-	if ( len >= MAX_MENUFILE ) {
-		trap_Print( va( S_COLOR_RED "menu file too large: %s is %i, max allowed is %i\n", filename, len, MAX_MENUFILE ) );
-		trap_FS_FCloseFile( f );
-		return NULL;
-	}
-
-	trap_FS_Read( buf, len, f );
-	buf[len] = 0;
-	trap_FS_FCloseFile( f );
-
-	return buf;
-}
-
 //
 // ==============================
 // new hud stuff ( mission pack )
@@ -1746,6 +1727,17 @@ void CG_LoadMenus(const char *menuFile) {
 	start = trap_Milliseconds();
 
 	len = trap_FS_FOpenFile( menuFile, &f, FS_READ );
+#ifdef USE_CLASSIC_HUD
+	if ( !f ) {
+		trap_Print( va( S_COLOR_YELLOW "menu file not found: %s, using default\n", menuFile ) );
+		len = trap_FS_FOpenFile( "ui/hud.txt", &f, FS_READ );
+		if (!f) {
+			trap_Print( va( S_COLOR_RED "default menu file not found: ui/hud.txt, using vanilla hud!\n", menuFile ) );
+			trap_Cvar_Set( "cg_hudFiles", "" );
+			return;
+		}
+	}
+#else
 	if ( !f ) {
 		trap_Error( va( S_COLOR_YELLOW "menu file not found: %s, using default\n", menuFile ) );
 		len = trap_FS_FOpenFile( "ui/hud.txt", &f, FS_READ );
@@ -1753,6 +1745,7 @@ void CG_LoadMenus(const char *menuFile) {
 			trap_Error( va( S_COLOR_RED "default menu file not found: ui/hud.txt, unable to continue!\n", menuFile ) );
 		}
 	}
+#endif
 
 	if ( len >= MAX_MENUDEFFILE ) {
 		trap_FS_FCloseFile( f );
@@ -2385,8 +2378,12 @@ void CG_SetScoreCatcher( qboolean enable )
 }
 
 
-#ifndef MISSIONPACK
+#if !defined(MISSIONPACK) || defined(USE_CLASSIC_HUD)
+#if defined(MISSIONPACK) && defined(USE_CLASSIC_HUD)
+void CG_KeyEvent2( int key, qboolean down ) 
+#else
 void CG_KeyEvent( int key, qboolean down ) 
+#endif
 {
 	// process scoreboard clicks etc.
 	if ( cgs.score_catched && down ) 
@@ -2400,8 +2397,11 @@ void CG_KeyEvent( int key, qboolean down )
 	}
 }
 
-
+#if defined(MISSIONPACK) && defined(USE_CLASSIC_HUD)
+void CG_MouseEvent2( int x, int y )
+#else
 void CG_MouseEvent( int x, int y )
+#endif
 {
 	cgs.cursorX += x * cgs.cursorScaleR;
 	cgs.cursorY += y * cgs.cursorScaleR;

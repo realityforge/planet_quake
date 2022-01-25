@@ -42,8 +42,11 @@ Freezing a player like freeze tag with `\freeze` in the console. TODO: freeze wh
 
 ![F1](../docs/freeze.png?raw=true)
 
-### USE_ADVANCED_HUD
-Advanced hud features like player looking in the same direction, 3D guns, etc
+### USE_CLASSIC_HUD
+Loads the standard Q3 hud if the mod is missing a huds.txt file.
+
+### USE_CLASSIC_MENU
+Loads the standard Q3 menu if the mod is missing a menus.txt file.
 
 ### USE_3D_WEAPONS
 Draw 3D weapons that rotate back and forth slightly while your switching weapons.

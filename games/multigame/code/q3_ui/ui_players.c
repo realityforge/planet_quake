@@ -21,9 +21,9 @@
 #define COAST_TIME				1000
 
 
+#ifndef MISSIONPACK
 static int			dp_realtime;
 static float		jumpHeight;
-
 
 /*
 ===============
@@ -338,7 +338,6 @@ static void UI_SetLerpFrameAnimation( playerInfo_t *ci, lerpFrame_t *lf, int new
 	lf->animationTime = lf->frameTime + anim->initialLerp;
 }
 
-
 /*
 ===============
 UI_RunLerpFrame
@@ -545,8 +544,6 @@ static float UI_MovedirAdjustment( playerInfo_t *pi ) {
 
 	return -22;
 }
-
-
 /*
 ===============
 UI_PlayerAngles
@@ -1248,3 +1245,4 @@ void UI_PlayerInfo_SetInfo( playerInfo_t *pi, int legsAnim, int torsoAnim, vec3_
 		UI_ForceTorsoAnim( pi, torsoAnim );
 	}
 }
+#endif

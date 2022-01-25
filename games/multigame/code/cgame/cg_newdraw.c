@@ -1714,6 +1714,12 @@ void CG_OwnerDraw(float x, float y, float w, float h, float text_x, float text_y
 
 void CG_MouseEvent(int x, int y) {
 	int n;
+#ifdef USE_CLASSIC_HUD
+		if(cg_hudFiles.string[0] == '\0') {
+			CG_MouseEvent2(x, y);
+			return;
+		}
+#endif
 
 	if ( (cg.predictedPlayerState.pm_type == PM_NORMAL || cg.predictedPlayerState.pm_type == PM_SPECTATOR) && cg.showScores == qfalse) {
     trap_Key_SetCatcher(0);
@@ -1782,6 +1788,12 @@ CG_EventHandling
 
 */
 void CG_EventHandling(cgame_event_t type) {
+#ifdef USE_CLASSIC_HUD
+	if(cg_hudFiles.string[0] == '\0') {
+		return;
+	}
+#endif
+
 	cgs.eventHandling = type > CGAME_EVENT_NONE;
   if (type == CGAME_EVENT_NONE) {
     CG_HideTeamMenu();
@@ -1795,6 +1807,12 @@ void CG_EventHandling(cgame_event_t type) {
 
 
 void CG_KeyEvent(int key, qboolean down) {
+#ifdef USE_CLASSIC_HUD
+		if(cg_hudFiles.string[0] == '\0') {
+			CG_KeyEvent2(key, down);
+			return;
+		}
+#endif
 
 	if (!down) {
 		return;

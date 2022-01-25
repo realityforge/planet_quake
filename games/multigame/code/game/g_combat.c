@@ -374,9 +374,11 @@ char	*modNames[] = {
 	"MOD_GRAPPLE"
 };
 
-#ifdef MISSIONPACK
+#ifdef USE_PORTALS
 void PortalDestroy( gentity_t *self );
+#endif
 
+#ifdef MISSIONPACK
 /*
 ==================
 Kamikaze_DeathActivate

@@ -537,9 +537,9 @@ static void ArenaServers_UpdateMenu( void ) {
 			//g_arenaservers.sortkey.generic.flags	&= ~QMF_GRAYED;
 			//g_arenaservers.showempty.generic.flags&= ~QMF_GRAYED;
 			//g_arenaservers.showfull.generic.flags	&= ~QMF_GRAYED;
-			g_arenaservers.list.generic.flags		&= ~QMF_GRAYED;
-			g_arenaservers.refresh.generic.flags	&= ~QMF_GRAYED;
-			g_arenaservers.go.generic.flags			&= ~QMF_GRAYED;
+			g_arenaservers.list.generic.flags		&= (unsigned int)~QMF_GRAYED;
+			g_arenaservers.refresh.generic.flags	&= (unsigned int)~QMF_GRAYED;
+			g_arenaservers.go.generic.flags			&= (unsigned int)~QMF_GRAYED;
 			//g_arenaservers.punkbuster.generic.flags &= ~QMF_GRAYED;
 
 			// update status bar
@@ -581,13 +581,13 @@ static void ArenaServers_UpdateMenu( void ) {
 			}
 
 			// end of refresh - set control state
-			g_arenaservers.master.generic.flags		&= ~QMF_GRAYED;
-			g_arenaservers.gametype.generic.flags	&= ~QMF_GRAYED;
-			g_arenaservers.sortkey.generic.flags	&= ~QMF_GRAYED;
-			g_arenaservers.showempty.generic.flags	&= ~QMF_GRAYED;
-			g_arenaservers.showfull.generic.flags	&= ~QMF_GRAYED;
+			g_arenaservers.master.generic.flags		&= (unsigned int)~QMF_GRAYED;
+			g_arenaservers.gametype.generic.flags	&= (unsigned int)~QMF_GRAYED;
+			g_arenaservers.sortkey.generic.flags	&= (unsigned int)~QMF_GRAYED;
+			g_arenaservers.showempty.generic.flags	&= (unsigned int)~QMF_GRAYED;
+			g_arenaservers.showfull.generic.flags	&= (unsigned int)~QMF_GRAYED;
 			g_arenaservers.list.generic.flags		|= QMF_GRAYED;
-			g_arenaservers.refresh.generic.flags	&= ~QMF_GRAYED;
+			g_arenaservers.refresh.generic.flags	&= (unsigned int)~QMF_GRAYED;
 			g_arenaservers.go.generic.flags			|= QMF_GRAYED;
 		}
 
@@ -1224,7 +1224,7 @@ void ArenaServers_SetType( int type )
 		break;
 
 	case AS_FAVORITES:
-		g_arenaservers.remove.generic.flags &= ~(QMF_INACTIVE|QMF_HIDDEN);
+		g_arenaservers.remove.generic.flags &= (unsigned int)~(QMF_INACTIVE|QMF_HIDDEN);
 		g_arenaservers.serverlist = g_favoriteserverlist;
 		g_arenaservers.numservers = &g_numfavoriteservers;
 		g_arenaservers.maxservers = MAX_FAVORITESERVERS;

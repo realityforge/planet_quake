@@ -8,6 +8,7 @@
 #include "ui_local.h"
 
 uiStatic_t		uis;
+#if !defined(MISSIONPACK)
 qboolean		m_entersound;		// after a frame, so caching won't disrupt the sound
 
 #ifndef BUILD_GAME_STATIC
@@ -57,6 +58,7 @@ UI_StartDemoLoop
 void UI_StartDemoLoop( void ) {
 	trap_Cmd_ExecuteText( EXEC_APPEND, "d1\n" );
 }
+#endif
 
 /*
 =================
@@ -911,7 +913,7 @@ void UI_MouseEvent( int dx, int dy )
 		if (uis.activemenu->cursor != i)
 		{
 			Menu_SetCursor( uis.activemenu, i );
-			((menucommon_s*)(uis.activemenu->items[uis.activemenu->cursor_prev]))->flags &= ~QMF_HASMOUSEFOCUS;
+			((menucommon_s*)(uis.activemenu->items[uis.activemenu->cursor_prev]))->flags &= (unsigned int)~QMF_HASMOUSEFOCUS;
 
 			if ( !(((menucommon_s*)(uis.activemenu->items[uis.activemenu->cursor]))->flags & QMF_SILENT ) ) {
 				trap_S_StartLocalSound( menu_move_sound, CHAN_LOCAL_SOUND );
@@ -924,11 +926,12 @@ void UI_MouseEvent( int dx, int dy )
 
 	if (uis.activemenu->nitems > 0) {
 		// out of any region
-		((menucommon_s*)(uis.activemenu->items[uis.activemenu->cursor]))->flags &= ~QMF_HASMOUSEFOCUS;
+		((menucommon_s*)(uis.activemenu->items[uis.activemenu->cursor]))->flags &= (unsigned int)~QMF_HASMOUSEFOCUS;
 	}
 }
 
 
+#ifndef MISSIONPACK
 char *UI_Argv( int arg ) {
 	static char	buffer[MAX_STRING_CHARS];
 
@@ -945,6 +948,7 @@ char *UI_Cvar_VariableString( const char *var_name ) {
 
 	return buffer;
 }
+#endif
 
 
 /*
@@ -992,7 +996,12 @@ void UI_Cache_f( void ) {
 UI_ConsoleCommand
 =================
 */
-qboolean UI_ConsoleCommand( int realTime ) {
+#ifdef MISSIONPACK
+qboolean UI_ConsoleCommand2( int realTime ) 
+#else
+qboolean UI_ConsoleCommand( int realTime ) 
+#endif
+{
 	char	*cmd;
 
 	uis.frametime = realTime - uis.realtime;
@@ -1047,6 +1056,7 @@ qboolean UI_ConsoleCommand( int realTime ) {
 }
 
 
+#ifndef MISSIONPACK
 /*
 =================
 UI_Shutdown
@@ -1054,6 +1064,7 @@ UI_Shutdown
 */
 void UI_Shutdown( void ) {
 }
+#endif
 
 
 /*
@@ -1077,6 +1088,7 @@ void UI_Init( void ) {
 }
 
 
+#ifndef MISSIONPACK
 /*
 ================
 UI_AdjustFrom640
@@ -1131,6 +1143,7 @@ void UI_DrawHandlePic( float x, float y, float w, float h, qhandle_t hShader ) {
 	UI_AdjustFrom640( &x, &y, &w, &h );
 	trap_R_DrawStretchPic( x, y, w, h, s0, t0, s1, t1, hShader );
 }
+#endif
 
 
 static void UI_DrawCursor( float x, float y, float w, float h ) {
@@ -1140,6 +1153,7 @@ static void UI_DrawCursor( float x, float y, float w, float h ) {
 }
 
 
+#ifndef MISSIONPACK
 /*
 ================
 UI_FillRect
@@ -1155,6 +1169,7 @@ void UI_FillRect( float x, float y, float width, float height, const float *colo
 
 	trap_R_SetColor( NULL );
 }
+
 
 /*
 ================
@@ -1176,6 +1191,7 @@ void UI_DrawRect( float x, float y, float width, float height, const float *colo
 	trap_R_SetColor( NULL );
 }
 
+
 void UI_SetColor( const float *rgba ) {
 	trap_R_SetColor( rgba );
 }
@@ -1183,6 +1199,7 @@ void UI_SetColor( const float *rgba ) {
 void UI_UpdateScreen( void ) {
 	trap_UpdateScreen();
 }
+#endif
 
 /*
 =================
@@ -1246,6 +1263,8 @@ void UI_Refresh( int realtime )
 	}
 }
 
+
+#ifndef MISSIONPACK
 void UI_DrawTextBox (int x, int y, int width, int lines)
 {
 	UI_FillRect( x + BIGCHAR_WIDTH/2, y + BIGCHAR_HEIGHT/2, ( width + 1 ) * BIGCHAR_WIDTH, ( lines + 1 ) * BIGCHAR_HEIGHT, colorBlack );
@@ -1262,3 +1281,4 @@ qboolean UI_CursorInRect (int x, int y, int width, int height)
 
 	return qtrue;
 }
+#endif

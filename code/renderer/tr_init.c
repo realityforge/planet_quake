@@ -36,7 +36,11 @@ glstatic_t	gls;
 
 static void GfxInfo( void );
 static void VarInfo( void );
+#ifdef USE_LAZY_MEMORY
 void GL_SetDefaultState( void );
+#else
+static void GL_SetDefaultState( void );
+#endif
 
 cvar_t	*r_flareSize;
 cvar_t	*r_flareFade;
@@ -58,7 +62,7 @@ cvar_t	*r_anaglyphMode;
 
 cvar_t	*r_greyscale;
 
-cvar_t	*r_ignorehwgamma;
+static cvar_t *r_ignorehwgamma;
 
 cvar_t	*r_fastsky;
 cvar_t	*r_neatsky;
@@ -630,8 +634,7 @@ static void InitOpenGL( void )
 
 		ri.GLimp_InitGamma( &glConfig );
 
-		if ( fboEnabled )
-			glConfig.deviceSupportsGamma = qtrue;
+		gls.deviceSupportsGamma = glConfig.deviceSupportsGamma;
 
 		if ( r_ignorehwgamma->integer )
 			glConfig.deviceSupportsGamma = qfalse;
@@ -666,6 +669,8 @@ static void InitOpenGL( void )
 
 	// set default state
 	GL_SetDefaultState();
+
+	tr.inited = qtrue;
 }
 
 
@@ -834,8 +839,7 @@ void RB_TakeScreenshot( int x, int y, int width, int height, const char *fileNam
 
 	memcount = linelen * height;
 
-	// gamma correct
-	if ( glConfig.deviceSupportsGamma )
+	// gamma correction
 		R_GammaCorrect( allbuf + offset, memcount );
 
 	ri.FS_WriteFile( fileName, buffer, memcount + header_size );
@@ -858,8 +862,7 @@ void RB_TakeScreenshotJPEG( int x, int y, int width, int height, const char *fil
 	buffer = RB_ReadPixels(x, y, width, height, &offset, &padlen, 0);
 	memcount = (width * 3 + padlen) * height;
 
-	// gamma correct
-	if ( glConfig.deviceSupportsGamma )
+	// gamma correction
 		R_GammaCorrect( buffer + offset, memcount );
 
 	ri.CL_SaveJPG( fileName, r_screenshotJpegQuality->integer, width, height, buffer + offset, padlen );
@@ -976,8 +979,7 @@ void RB_TakeScreenshotBMP( int x, int y, int width, int height, const char *file
 	// fill this last to avoid data overwrite in case when we're moving destination buffer forward
 	FillBMPHeader( buffer - header_size, width, height, memcount, header_size );
 
-	// gamma correct
-	if ( glConfig.deviceSupportsGamma )
+	// gamma correction
 		R_GammaCorrect( buffer, memcount );
 
 	if ( clipboardOnly ) {
@@ -1069,10 +1071,8 @@ static void R_LevelShot( void ) {
 		}
 	}
 
-	// gamma correct
-	if ( glConfig.deviceSupportsGamma ) {
+	// gamma correction
 		R_GammaCorrect( buffer + 18, 128 * 128 * 3 );
-	}
 
 	ri.FS_WriteFile( checkname, buffer, 128 * 128*3 + 18 );
 
@@ -1198,8 +1198,7 @@ const void *RB_TakeVideoFrameCmd( const void *data )
 
 	memcount = padwidth * cmd->height;
 
-	// gamma correct
-	if ( glConfig.deviceSupportsGamma )
+	// gamma correction
 		R_GammaCorrect( cBuf, memcount );
 
 	if ( cmd->motionJpeg )
@@ -1248,6 +1247,9 @@ const void *RB_TakeVideoFrameCmd( const void *data )
 /*
 ** GL_SetDefaultState
 */
+#ifndef USE_LAZY_MEMORY
+static 
+#endif
 void GL_SetDefaultState( void )
 {
 	int i;
@@ -1486,7 +1488,7 @@ static void R_Register( void )
 	r_simpleMipMaps = ri.Cvar_Get( "r_simpleMipMaps", "1", CVAR_ARCHIVE_ND | CVAR_LATCH );
 	r_vertexLight = ri.Cvar_Get( "r_vertexLight", "0", CVAR_ARCHIVE | CVAR_LATCH );
 
-	r_picmip = ri.Cvar_Get( "r_picmip", "1", CVAR_ARCHIVE | CVAR_LATCH );
+	r_picmip = ri.Cvar_Get( "r_picmip", "0", CVAR_ARCHIVE | CVAR_LATCH );
 	ri.Cvar_CheckRange( r_picmip, "0", "16", CV_INTEGER );
 	ri.Cvar_SetDescription( r_picmip, "Set texture quality, lower is better" );
 
@@ -1502,10 +1504,10 @@ static void R_Register( void )
 
 #ifdef USE_LAZY_LOAD
 	// turn off lightmap merge so they can be updated every time the world loads
-	r_mergeLightmaps = ri.Cvar_Get( "r_mergeLightmaps", "0", CVAR_ARCHIVE | CVAR_LATCH );
+	r_mergeLightmaps = ri.Cvar_Get( "r_mergeLightmaps", "0", CVAR_ROM );
 	ri.Cvar_CheckRange( r_mergeLightmaps, "0", "0", CV_INTEGER );
 #else
-	r_mergeLightmaps = ri.Cvar_Get( "r_mergeLightmaps", "1", CVAR_ARCHIVE | CVAR_LATCH );
+	r_mergeLightmaps = ri.Cvar_Get( "r_mergeLightmaps", "1", CVAR_ARCHIVE_ND | CVAR_LATCH );
 #endif
 	r_vbo = ri.Cvar_Get( "r_vbo", "0", CVAR_ARCHIVE_ND | CVAR_LATCH );
 
@@ -1514,17 +1516,17 @@ static void R_Register( void )
 
 	r_subdivisions = ri.Cvar_Get( "r_subdivisions", "4", CVAR_ARCHIVE_ND | CVAR_LATCH );
 
-	r_maxpolys = ri.Cvar_Get( "r_maxpolys", va("%d", MAX_POLYS), 0);
-	ri.Cvar_CheckRange( r_maxpolys, va("%d", MAX_POLYS), NULL, CV_INTEGER );
-	r_maxpolyverts = ri.Cvar_Get( "r_maxpolyverts", va("%d", MAX_POLYVERTS), 0);
-	ri.Cvar_CheckRange( r_maxpolyverts, va("%d", MAX_POLYVERTS), NULL, CV_INTEGER );
-	r_maxpolybuffers = ri.Cvar_Get( "r_maxpolybuffers", va("%d", MAX_POLYBUFFERS), 0);
-	ri.Cvar_CheckRange( r_maxpolybuffers, va("%d", MAX_POLYBUFFERS), NULL, CV_INTEGER );
+	r_maxpolys = ri.Cvar_Get( "r_maxpolys", XSTRING( MAX_POLYS ), CVAR_LATCH);
+	r_maxpolyverts = ri.Cvar_Get( "r_maxpolyverts", XSTRING(MAX_POLYVERTS), CVAR_LATCH);
+	r_maxpolybuffers = ri.Cvar_Get( "r_maxpolybuffers", XSTRING(MAX_POLYBUFFERS), CVAR_LATCH);
+	ri.Cvar_CheckRange( r_maxpolys, XSTRING( MAX_POLYS ), NULL, CV_INTEGER );
+	ri.Cvar_CheckRange( r_maxpolyverts, XSTRING(MAX_POLYVERTS), NULL, CV_INTEGER );
+	ri.Cvar_CheckRange( r_maxpolybuffers, XSTRING(MAX_POLYBUFFERS), NULL, CV_INTEGER );
 #ifdef USE_UNLOCKED_CVARS
 	{
 		float rounding;
-		r_maxcmds = ri.Cvar_Get( "r_maxcmds", va("%d", MAX_RENDER_COMMANDS), 0);
-		ri.Cvar_CheckRange( r_maxcmds, va("%d", MAX_RENDER_COMMANDS), NULL, CV_INTEGER );
+		r_maxcmds = ri.Cvar_Get( "r_maxcmds", XSTRING(MAX_RENDER_COMMANDS), CVAR_LATCH);
+		ri.Cvar_CheckRange( r_maxcmds, XSTRING(MAX_RENDER_COMMANDS), NULL, CV_INTEGER );
 
 		rounding = ceil(r_maxcmds->value / MAX_RENDER_DIVISOR) * MAX_RENDER_DIVISOR;
 		if(rounding != r_maxcmds->integer) {
@@ -1701,14 +1703,17 @@ static void R_Register( void )
 	r_ext_compiled_vertex_array = ri.Cvar_Get( "r_ext_compiled_vertex_array", "1", CVAR_ARCHIVE_ND | CVAR_LATCH | CVAR_DEVELOPER );
 	r_ext_texture_env_add = ri.Cvar_Get( "r_ext_texture_env_add", "1", CVAR_ARCHIVE_ND | CVAR_LATCH | CVAR_DEVELOPER );
 
-	r_ext_texture_filter_anisotropic = ri.Cvar_Get( "r_ext_texture_filter_anisotropic",	"0", CVAR_ARCHIVE_ND | CVAR_LATCH );
+	r_ext_texture_filter_anisotropic = ri.Cvar_Get( "r_ext_texture_filter_anisotropic",	"1", CVAR_ARCHIVE_ND | CVAR_LATCH );
 	ri.Cvar_CheckRange( r_ext_texture_filter_anisotropic, "0", "1", CV_INTEGER );
 
-	r_ext_max_anisotropy = ri.Cvar_Get( "r_ext_max_anisotropy", "2", CVAR_ARCHIVE_ND | CVAR_LATCH );
+	r_ext_max_anisotropy = ri.Cvar_Get( "r_ext_max_anisotropy", "8", CVAR_ARCHIVE_ND | CVAR_LATCH );
 	ri.Cvar_CheckRange( r_ext_max_anisotropy, "1", NULL, CV_INTEGER );
 
 	r_stencilbits = ri.Cvar_Get( "r_stencilbits", "8", CVAR_ARCHIVE_ND | CVAR_LATCH );
+
 	r_ignorehwgamma = ri.Cvar_Get( "r_ignorehwgamma", "0", CVAR_ARCHIVE_ND | CVAR_LATCH );
+	ri.Cvar_SetDescription( r_ignorehwgamma, "overrides hardware gamma capabilities" );
+	ri.Cvar_CheckRange( r_ignorehwgamma, "0", "1", CV_INTEGER );
 
 	r_flares = ri.Cvar_Get( "r_flares", "0", CVAR_ARCHIVE_ND | CVAR_LATCH );
 
@@ -1746,6 +1751,7 @@ static void R_Register( void )
 
 }
 
+#define EPSILON 1e-6
 
 /*
 ===============
@@ -1776,26 +1782,32 @@ void R_Init( void ) {
 	//
 	// init function tables
 	//
-	for ( i = 0; i < FUNCTABLE_SIZE; i++ )
-	{
+	for ( i = 0; i < FUNCTABLE_SIZE; i++ ) {
+		if ( i == 0 ) {
+			tr.sinTable[i] = EPSILON;
+		} else if ( i == (FUNCTABLE_SIZE - 1) ) {
+			tr.sinTable[i] = -EPSILON;
+		} else {
 		tr.sinTable[i]		= sin( DEG2RAD( i * 360.0f / ( ( float ) ( FUNCTABLE_SIZE - 1 ) ) ) );
+		}
 		tr.squareTable[i]	= ( i < FUNCTABLE_SIZE/2 ) ? 1.0f : -1.0f;
+		if ( i == 0 ) {
+			tr.sawToothTable[i] = EPSILON;
+		} else {
 		tr.sawToothTable[i] = (float)i / FUNCTABLE_SIZE;
+		}
 		tr.inverseSawToothTable[i] = 1.0f - tr.sawToothTable[i];
-
-		if ( i < FUNCTABLE_SIZE / 2 )
-		{
-			if ( i < FUNCTABLE_SIZE / 4 )
-			{
+		if ( i < FUNCTABLE_SIZE / 2 ) {
+			if ( i < FUNCTABLE_SIZE / 4 ) {
+				if ( i == 0 ) {
+					tr.triangleTable[i] = EPSILON;
+				} else {
 				tr.triangleTable[i] = ( float ) i / ( FUNCTABLE_SIZE / 4 );
 			}
-			else
-			{
+			} else {
 				tr.triangleTable[i] = 1.0f - tr.triangleTable[i-FUNCTABLE_SIZE / 4];
 			}
-		}
-		else
-		{
+		} else {
 			tr.triangleTable[i] = -tr.triangleTable[i-FUNCTABLE_SIZE/2];
 		}
 	}
@@ -1813,11 +1825,11 @@ int backendSize;
 		+ sizeof(intptr_t) * (n / d + 1) * MAX_NUM_WORLDS \
 		+ sizeof(t) * d * MAX_NUM_WORLDS
 #define BACKEND \
-	BASSIGN( backEndDatas[i]->indexes, int, r_maxpolyverts->integer, MAX_POLYVERTS_DIVISOR) \
-	BASSIGN( backEndDatas[i]->polys, srfPoly_t, r_maxpolyverts->integer, MAX_POLYS_DIVISOR) \
-	BASSIGN( backEndDatas[i]->polyVerts, polyVert_t, r_maxpolyverts->integer, MAX_POLYVERTS_DIVISOR) \
-	BASSIGN( backEndDatas[i]->polybuffers, srfPolyBuffer_t, r_maxpolyverts->integer, MAX_POLYBUFFERS_DIVISOR) \
-	BASSIGN( backEndDatas[i]->commands.cmds, byte, r_maxpolyverts->integer, MAX_RENDER_DIVISOR)
+	BASSIGN( backEndData->indexes, int, r_maxpolyverts->integer, MAX_POLYVERTS_DIVISOR) \
+	BASSIGN( backEndData->polys, srfPoly_t, r_maxpolyverts->integer, MAX_POLYS_DIVISOR) \
+	BASSIGN( backEndData->polyVerts, polyVert_t, r_maxpolyverts->integer, MAX_POLYVERTS_DIVISOR) \
+	BASSIGN( backEndData->polybuffers, srfPolyBuffer_t, r_maxpolyverts->integer, MAX_POLYBUFFERS_DIVISOR) \
+	BASSIGN( backEndData->commands.cmds, byte, r_maxpolyverts->integer, MAX_RENDER_DIVISOR)
 	backendSize = sizeof(intptr_t) * MAX_NUM_WORLDS
 		+ sizeof( *backEndData ) * MAX_NUM_WORLDS
 		BACKEND;
@@ -1833,7 +1845,7 @@ int backendSize;
 	ptr += sizeof(intptr_t) * MAX_NUM_WORLDS;
 	for(int i = 0; i < MAX_NUM_WORLDS; i++) {
 		RE_SwitchWorld(i);
-		backEndDatas[i] = (backEndData_t *) ptr;
+		backEndData = (backEndData_t *) ptr;
 		ptr += sizeof( **backEndDatas );
 		BACKEND
 		rwi = i;
@@ -1869,7 +1881,7 @@ int backendSize;
 #undef BASSIGN
 
 #endif
-
+//#error not ready yet
 #else // !USE_UNLOCKED_CVARS
 
 #define BACKEND \
@@ -1887,7 +1899,7 @@ int backendSize;
 	ptr += sizeof( *backEndData );
 #define BASSIGN(a, t, n) \
 	a = (t *) ((char *) ptr); \
-	ptr += sizeof(t) * n; \
+	ptr += sizeof(t) * n;
 	BACKEND
 #undef BACKEND
 #undef BASSIGN
@@ -1963,6 +1975,7 @@ static void RE_Shutdown( refShutdownCode_t code ) {
 	ri.FreeAll();
 
 	tr.registered = qfalse;
+	tr.inited = qfalse;
 }
 
 

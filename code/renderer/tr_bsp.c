@@ -111,19 +111,22 @@ void R_ColorShiftLightingBytes( const byte in[4], byte out[4] ) {
 	shift = r_mapOverBrightBits->integer - tr.overbrightBits;
 
 	// shift the data based on overbright range
+	if ( shift >= 0 ) {
 	r = in[0] << shift;
 	g = in[1] << shift;
 	b = in[2] << shift;
-	
 	// normalize by color instead of saturating to white
 	if ( ( r | g | b ) > 255 ) {
-		int		max;
-
-		max = r > g ? r : g;
+			int max = r > g ? r : g;
 		max = max > b ? max : b;
 		r = r * 255 / max;
 		g = g * 255 / max;
 		b = b * 255 / max;
+	}
+	} else {
+		r = in[0] >> -shift;
+		g = in[1] >> -shift;
+		b = in[2] >> -shift;
 	}
 
 	if ( r_mapGreyScale->integer ) {
@@ -525,8 +528,11 @@ static shader_t *ShaderForShaderNum( int shaderNum, int lightmapNum ) {
 
 	// if the shader had errors, just use default shader
 	if ( shader->defaultShader ) {
-		//return tr.defaultShader;
+#ifdef USE_LAZY_LOAD
     shader->remappedShader = tr.defaultShader;
+#else
+		return tr.defaultShader;
+#endif
 	}
 
 	return shader;
@@ -2167,7 +2173,11 @@ void RE_SwitchWorld(int w) {
 	//if(w != rwi)
 	//  ri.Printf( PRINT_ALL, "Switching renderers %i -> %i\n", rwi, w );
 	if(s_worldDatas[w].name[0] == '\0') {
-		return;
+		Com_DPrintf("RE_SwitchWorld: no world loaded\n");
+	//	return;
+	}
+	if(w == -1) {
+		w = 0;
 	}
 	// TODO: create a switch world command for renderer to know when to switch
 	//RE_SetWorld(w); // so we don't need to use R_IssuePendingRenderCommands in between worlds

@@ -852,7 +852,7 @@ static void G_InitGame( int levelTime, int randomSeed, int restart ) {
 	trap_Cvar_VariableStringBuffer( "//trap_GetValue", value, sizeof( value ) );
 	if ( value[0] ) {
 #ifdef Q3_VM
-		trap_GetValue = (void*)~atoi( value );
+		trap_GetValue = (void*)(int)~atoi( value );
 #else
 		dll_com_trapGetValue = atoi( value );
 #endif

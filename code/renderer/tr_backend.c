@@ -1032,7 +1032,7 @@ void RE_UploadCinematic( int w, int h, int cols, int rows, byte *data, int clien
 }
 
 
-#ifdef USE_MULTIVM_CLIENT
+#if 0 //def USE_MULTIVM_CLIENT
 /*
 =============
 RB_SetWorld
@@ -1349,6 +1349,7 @@ static const void *RB_DrawSurfs( const void *data ) {
 
 	// finish any 2D drawing if needed
 	RB_EndSurface();
+
 	cmd = (const drawSurfsCommand_t *)data;
 
 	backEnd.refdef = cmd->refdef;
@@ -1686,7 +1687,7 @@ void RB_ExecuteRenderCommands( const void *data ) {
 		data = PADP(data, sizeof(void *));
 
 		switch ( *(const int *)data ) {
-#ifdef USE_MULTIVM_CLIENT
+#if 0 //def USE_MULTIVM_CLIENT
 		case RC_SET_WORLD:
 			data = RB_SetWorld( data );
 			break;

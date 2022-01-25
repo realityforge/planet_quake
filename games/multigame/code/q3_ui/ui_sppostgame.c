@@ -347,9 +347,9 @@ static void UI_SPPostgameMenu_MenuDraw( void ) {
 			return;
 		}
 
-		postgameMenuInfo.item_again.generic.flags &= ~QMF_INACTIVE;
-		postgameMenuInfo.item_next.generic.flags &= ~QMF_INACTIVE;
-		postgameMenuInfo.item_menu.generic.flags &= ~QMF_INACTIVE;
+		postgameMenuInfo.item_again.generic.flags &= (unsigned int)~QMF_INACTIVE;
+		postgameMenuInfo.item_next.generic.flags &= (unsigned int)~QMF_INACTIVE;
+		postgameMenuInfo.item_menu.generic.flags &= (unsigned int)~QMF_INACTIVE;
 
 		UI_SPPostgameMenu_DrawAwardsMedals( postgameMenuInfo.numAwards );
 

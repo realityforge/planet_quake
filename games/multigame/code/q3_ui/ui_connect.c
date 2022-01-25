@@ -13,6 +13,7 @@ CONNECTION SCREEN
 //qboolean	passwordNeeded = qtrue;
 //menufield_s passwordField;
 
+#ifndef MISSIONPACK
 static connstate_t	lastConnState;
 static char			lastLoadingText[MAX_INFO_VALUE];
 
@@ -160,6 +161,7 @@ static void UI_DisplayDownloadInfo( const char *downloadName ) {
 	}
 }
 
+
 /*
 ========================
 UI_DrawConnectScreen
@@ -263,6 +265,7 @@ void UI_DrawConnectScreen( qboolean overlay ) {
 
 	// password required / connection rejected information goes here
 }
+#endif
 
 
 /*

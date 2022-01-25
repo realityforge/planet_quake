@@ -84,6 +84,7 @@ R_InitNextFrame
 ====================
 */
 void R_InitNextFrame( void ) {
+
 	backEndData->commands.used = 0;
 
 	r_firstSceneDrawSurf = 0;
@@ -469,7 +470,7 @@ void RE_RenderScene( const refdef_t *fd ) {
 
 		// compare the area bits
 		areaDiff = 0;
-		for (i = 0 ; i < MAX_MAP_AREA_BYTES/4 ; i++) {
+		for ( i = 0; i < MAX_MAP_AREA_BYTES/sizeof(int); i++ ) {
 			areaDiff |= ((int *)tr.refdef.areamask)[i] ^ ((int *)fd->areamask)[i];
 			((int *)tr.refdef.areamask)[i] = ((int *)fd->areamask)[i];
 		}
@@ -493,11 +494,7 @@ void RE_RenderScene( const refdef_t *fd ) {
 	tr.refdef.litSurfs = backEndData->litSurfs;
 #endif
 
-#ifdef USE_MULTIVM_CLIENT
 	tr.refdef.num_entities = r_numentities - r_firstSceneEntity;
-#else
-	tr.refdef.num_entities = r_numentities - r_firstSceneEntity;
-#endif
 	tr.refdef.entities = &backEndData->entities[r_firstSceneEntity];
 
 	tr.refdef.num_dlights = r_numdlights - r_firstSceneDlight;
