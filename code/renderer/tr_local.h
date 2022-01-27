@@ -1097,11 +1097,7 @@ typedef struct {
 
 
 #ifdef USE_MULTIVM_CLIENT
-extern world_t s_worldDatas[MAX_NUM_WORLDS];
 extern int     rwi;
-#define s_worldData s_worldDatas[rwi]
-#else
-extern world_t s_worldData;
 #endif
 
 
@@ -1215,7 +1211,12 @@ typedef struct {
 } trGlobals_t;
 
 extern backEndState_t	backEnd;
+#ifdef USE_MULTIVM_CLIENT
+extern trGlobals_t	trWorlds[MAX_NUM_WORLDS];
+#define tr trWorlds[rwi]
+#else
 extern trGlobals_t	tr;
+#endif
 
 extern int					gl_clamp_mode;
 

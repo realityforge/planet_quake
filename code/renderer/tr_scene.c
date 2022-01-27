@@ -22,7 +22,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #include "tr_local.h"
 
-#if 0 //def USE_MULTIVM_CLIENT
+#ifdef USE_MULTIVM_CLIENT
 int			r_firstSceneDrawSurfs[MAX_NUM_WORLDS];
 #define r_firstSceneDrawSurf r_firstSceneDrawSurfs[rwi]
 #ifdef USE_PMLIGHT

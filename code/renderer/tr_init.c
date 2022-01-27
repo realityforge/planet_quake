@@ -1516,17 +1516,17 @@ static void R_Register( void )
 
 	r_subdivisions = ri.Cvar_Get( "r_subdivisions", "4", CVAR_ARCHIVE_ND | CVAR_LATCH );
 
-	r_maxpolys = ri.Cvar_Get( "r_maxpolys", XSTRING( MAX_POLYS ), CVAR_LATCH);
-	r_maxpolyverts = ri.Cvar_Get( "r_maxpolyverts", XSTRING(MAX_POLYVERTS), CVAR_LATCH);
-	r_maxpolybuffers = ri.Cvar_Get( "r_maxpolybuffers", XSTRING(MAX_POLYBUFFERS), CVAR_LATCH);
-	ri.Cvar_CheckRange( r_maxpolys, XSTRING( MAX_POLYS ), NULL, CV_INTEGER );
-	ri.Cvar_CheckRange( r_maxpolyverts, XSTRING(MAX_POLYVERTS), NULL, CV_INTEGER );
-	ri.Cvar_CheckRange( r_maxpolybuffers, XSTRING(MAX_POLYBUFFERS), NULL, CV_INTEGER );
+	r_maxpolys = ri.Cvar_Get( "r_maxpolys", va("%i", MAX_POLYS ), CVAR_LATCH);
+	r_maxpolyverts = ri.Cvar_Get( "r_maxpolyverts", va("%i", MAX_POLYVERTS), CVAR_LATCH);
+	r_maxpolybuffers = ri.Cvar_Get( "r_maxpolybuffers", va("%i", MAX_POLYBUFFERS), CVAR_LATCH);
+	ri.Cvar_CheckRange( r_maxpolys, va("%i", MAX_POLYS ), NULL, CV_INTEGER );
+	ri.Cvar_CheckRange( r_maxpolyverts, va("%i", MAX_POLYVERTS), NULL, CV_INTEGER );
+	ri.Cvar_CheckRange( r_maxpolybuffers, va("%i", MAX_POLYBUFFERS), NULL, CV_INTEGER );
 #ifdef USE_UNLOCKED_CVARS
 	{
 		float rounding;
-		r_maxcmds = ri.Cvar_Get( "r_maxcmds", XSTRING(MAX_RENDER_COMMANDS), CVAR_LATCH);
-		ri.Cvar_CheckRange( r_maxcmds, XSTRING(MAX_RENDER_COMMANDS), NULL, CV_INTEGER );
+		r_maxcmds = ri.Cvar_Get( "r_maxcmds", va("%i", MAX_RENDER_COMMANDS), CVAR_LATCH);
+		ri.Cvar_CheckRange( r_maxcmds, va("%i", MAX_RENDER_COMMANDS), NULL, CV_INTEGER );
 
 		rounding = ceil(r_maxcmds->value / MAX_RENDER_DIVISOR) * MAX_RENDER_DIVISOR;
 		if(rounding != r_maxcmds->integer) {
@@ -1766,10 +1766,17 @@ void R_Init( void ) {
 	ri.Printf( PRINT_ALL, "----- R_Init (renderer1) -----\n" );
 
 	// clear all our internal state
+#ifdef USE_MULTIVM_CLIENT
+	Com_Memset( &trWorlds, 0, sizeof( trWorlds ) );
+	Com_Memset( &backEnd, 0, sizeof( backEnd ) );
+	Com_Memset( &tess, 0, sizeof( tess ) );
+	Com_Memset( &glState, 0, sizeof( glState ) );
+#else
 	Com_Memset( &tr, 0, sizeof( tr ) );
 	Com_Memset( &backEnd, 0, sizeof( backEnd ) );
 	Com_Memset( &tess, 0, sizeof( tess ) );
 	Com_Memset( &glState, 0, sizeof( glState ) );
+#endif
 
 	if (sizeof(glconfig_t) != 11332)
 		ri.Error( ERR_FATAL, "Mod ABI incompatible: sizeof(glconfig_t) == %u != 11332", (unsigned int) sizeof(glconfig_t));
@@ -1843,14 +1850,13 @@ int backendSize;
 	ptr += sizeof(t) * d;
 	backEndDatas = (backEndData_t **) ptr;
 	ptr += sizeof(intptr_t) * MAX_NUM_WORLDS;
-	for(int i = 0; i < MAX_NUM_WORLDS; i++) {
-		RE_SwitchWorld(i);
+	for(rwi = 0; rwi < MAX_NUM_WORLDS; rwi++) {
 		backEndData = (backEndData_t *) ptr;
 		ptr += sizeof( **backEndDatas );
 		BACKEND
-		rwi = i;
 		R_InitNextFrame();
 	}
+	rwi = 0;
 #undef BACKEND
 #undef BASSIGN
 

@@ -25,7 +25,11 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #include <string.h> // memcpy
 
+#ifdef USE_MULTIVM_CLIENT
+trGlobals_t		trWorlds[MAX_NUM_WORLDS];
+#else
 trGlobals_t		tr;
+#endif
 
 static const float s_flipMatrix[16] = {
 	// convert from our coordinate system (looking down X)
@@ -1008,7 +1012,8 @@ static qboolean IsMirror( const drawSurf_t *drawSurf, int entityNum,
 		// if the entity is just a mirror, don't use as a camera point
 		if ( e->e.oldorigin[0] == e->e.origin[0] && 
 			e->e.oldorigin[1] == e->e.origin[1] && 
-			e->e.oldorigin[2] == e->e.origin[2] ) {
+			e->e.oldorigin[2] == e->e.origin[2] ) 
+		{
 			VectorScale( plane.normal, plane.dist, surface->origin );
 			*entity = e;
 			//Com_Printf("mirror found!\n");
@@ -1228,7 +1233,7 @@ R_MirrorViewBySurface
 Returns qtrue if another view has been rendered
 ========================
 */
-#if 0 //def USE_MULTIVM_CLIENT
+#ifdef USE_MULTIVM_CLIENT
 extern int r_numdlightWorlds[MAX_NUM_WORLDS];
 #define r_numdlights r_numdlightWorlds[rwi]
 #else
@@ -1253,7 +1258,11 @@ static qboolean R_MirrorViewBySurface( const drawSurf_t *drawSurf, int entityNum
 	}
 #endif
 
-	if ( r_noportals->integer > 1 /*|| r_fastsky->integer == 1 */ ) {
+	if ( r_noportals->integer > 1 
+#ifdef THIS_IS_A_SLOW_COMPUTER
+		|| r_fastsky->integer == 1
+#endif
+	) {
 		return qfalse;
 	}
 
@@ -1325,13 +1334,14 @@ static qboolean R_MirrorViewBySurface( const drawSurf_t *drawSurf, int entityNum
 	R_MirrorVector (oldParms.or.axis[2], &surface, &camera, newParms.or.axis[2]);
 
 	// OPTIMIZE: restrict the viewport on the mirrored view
+
 #ifdef USE_MULTIVM_CLIENT
 	if(newParms.newWorld != oldParms.newWorld
 		&& rwi != newParms.newWorld) {
 #ifdef USE_LAZY_LOAD
-		RE_SwitchWorld(ri.worldMaps[newParms.newWorld]);
+		rwi = ri.worldMaps[newParms.newWorld];
 #else
-		RE_SwitchWorld(newParms.newWorld);
+		rwi = newParms.newWorld;
 #endif
 		if(rwi != newParms.newWorld) {
 			// TODO: sucks to do all this math and the exit out, can't this happen earlier?
@@ -1353,7 +1363,7 @@ static qboolean R_MirrorViewBySurface( const drawSurf_t *drawSurf, int entityNum
 	// switch back
 	if(newParms.newWorld != oldParms.newWorld
 		&& rwi != oldParms.newWorld) {
-		RE_SwitchWorld(oldParms.newWorld);
+		rwi = oldParms.newWorld;
 	}
 #endif
 
@@ -1666,7 +1676,6 @@ static void R_SortDrawSurfs( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 	// check for any pass through drawing, which
 	// may cause another view to be rendered first
 	for ( i = 0 ; i < numDrawSurfs ; i++ ) {
-		entityNum = 0;
 		R_DecomposeSort( (drawSurfs+i)->sort, &entityNum, &shader, &fogNum, &dlighted );
 
 		if ( shader->sort > SS_PORTAL ) {
@@ -1737,15 +1746,6 @@ void R_AddEntitySurfaces( void ) {
 #endif
 		// preshift the value we are going to OR into the drawsurf sort
 		tr.shiftedEntityNum = tr.currentEntityNum << QSORT_REFENTITYNUM_SHIFT;
-
-    if(//tr.viewParms.portalView != PV_NONE
-      //&& tr.viewParms.portalEntity
-      ((ent->e.frame && ent->e.frame == tr.viewParms.portalEntity)
-      || (ent->e.oldframe && ent->e.oldframe == tr.viewParms.portalEntity))
-    ) {
-      //Com_Printf("skipping portal %i\n", ent->e.reType);
-      //continue;
-    }
 
 		//
 		// the weapon model must be handled special --
@@ -1858,6 +1858,8 @@ void R_RenderView( const viewParms_t *parms ) {
 	if ( parms->viewportWidth <= 0 || parms->viewportHeight <= 0 ) {
 		return;
 	}
+
+	//Com_Printf("rendering: %i -> %i\n", rwi, tr.refdef.num_entities);
 
 	tr.viewCount++;
 

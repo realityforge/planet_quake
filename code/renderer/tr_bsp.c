@@ -34,11 +34,12 @@ int RE_LoadWorldMap( const char *name );
 */
 
 #ifdef USE_MULTIVM_CLIENT
-world_t		s_worldDatas[MAX_NUM_WORLDS];
+static 		world_t		s_worldDatas[MAX_NUM_WORLDS];
 int       rwi = 0; // render world, should match number of loaded clip maps, 
                    //   since they are reusable
+#define s_worldData s_worldDatas[rwi]
 #else
-world_t		s_worldData;
+static 		world_t		s_worldData;
 #endif
 
 static	byte		*fileBase;
@@ -2172,18 +2173,15 @@ void RE_SetWorld(int);
 void RE_SwitchWorld(int w) {
 	//if(w != rwi)
 	//  ri.Printf( PRINT_ALL, "Switching renderers %i -> %i\n", rwi, w );
-	if(s_worldDatas[w].name[0] == '\0') {
-		Com_DPrintf("RE_SwitchWorld: no world loaded\n");
-	//	return;
+	if(s_worldDatas[w].name[0] == '\0'
+		|| w < 0 || w >= MAX_NUM_WORLDS) {
+		Com_DPrintf("RE_SwitchWorld: no world loaded on %i\n", w);
+		// allow engine to prep renderer
+		if(w < 0 || w >= MAX_NUM_WORLDS)
+			rwi = 0; 
+		return;
 	}
-	if(w == -1) {
-		w = 0;
-	}
-	// TODO: create a switch world command for renderer to know when to switch
-	//RE_SetWorld(w); // so we don't need to use R_IssuePendingRenderCommands in between worlds
 	rwi = w;
-	tr.world = &s_worldDatas[rwi];
-	//GLSL_InitGPUShaders();
 }
 #endif
 #endif
@@ -2231,9 +2229,7 @@ int RE_LoadWorldMap( const char *name ) {
 		if ( !Q_stricmp( s_worldDatas[j].name, name ) ) {
 			// TODO: PRINT_DEVELOPER
 			ri.Printf( PRINT_ALL, "RE_LoadWorldMap( Already loaded %s )\n", name );
-#ifdef USE_LAZY_MEMORY
-			RE_SwitchWorld(j);
-#endif
+			rwi = j;
 			return j;
 		} else if (s_worldDatas[j].name[0] == '\0' && empty == -1) {
 			// load additional world in to next slot

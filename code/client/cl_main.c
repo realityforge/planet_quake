@@ -2873,6 +2873,9 @@ static void CL_DownloadsComplete( void ) {
 		// || cl_mvWorld->integer
 	//) {
 		cgvmi = clc.currentView;
+		// FIXME: don't know what slot the renderer is on,
+		//   otherwise we could replace `worldMaps` by reversing powerups in snapshot
+		//re.SwitchWorld(clientMaps[cgvmi]);
 #ifdef USE_LAZY_LOAD
 		if(clc.world && clc.world[0] != '\0') {
 			if(clientMaps[clc.currentView] != 0)

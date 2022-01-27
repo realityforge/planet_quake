@@ -1080,16 +1080,6 @@ void SCR_UpdateScreen( qboolean fromVM ) {
 	}
 
 #ifdef USE_MULTIVM_CLIENT
-  cgvmi = clc.currentView;
-	uivmi = 0;
-  CM_SwitchMap(clientMaps[cgvmi]);
-#ifdef USE_LAZY_MEMORY
-  re.SwitchWorld(worldMaps[cgvmi]);
-  re.SetDvrFrame(0, 0, 1, 1);
-#endif
-#endif
-
-#ifdef USE_MULTIVM_CLIENT
 #ifdef USE_LAZY_MEMORY
 #if 0
   for(i = 0; i < MAX_NUM_VMS; i++) {
@@ -1143,6 +1133,16 @@ void SCR_UpdateScreen( qboolean fromVM ) {
 #endif
 
 donewithupdate:
+
+#ifdef USE_MULTIVM_CLIENT
+  cgvmi = clc.currentView;
+	uivmi = 0;
+  CM_SwitchMap(clientMaps[cgvmi]);
+#ifdef USE_LAZY_MEMORY
+  re.SwitchWorld(worldMaps[cgvmi]);
+  re.SetDvrFrame(0, 0, 1, 1);
+#endif
+#endif
 
 #ifdef USE_LNBITS
 	int igs = clientGames[cgvmi];

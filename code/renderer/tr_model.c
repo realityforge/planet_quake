@@ -23,8 +23,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #include "tr_local.h"
 
-model_t *worldModels[MAX_MOD_KNOWN*MAX_NUM_WORLDS];
-
 #define	LL(x) x=LittleLong(x)
 
 static qboolean R_LoadMD3(model_t *mod, int lod, void *buffer, int fileSize, const char *name );
@@ -78,7 +76,7 @@ qhandle_t R_RegisterMD3(const char *name, model_t *mod)
 			ri.FS_FreeFile( buf.v );
 			break;
 		}
-		
+
 		ident = LittleLong( *buf.u );
 		if ( ident == MD3_IDENT )
 			loaded = R_LoadMD3( mod, lod, buf.v, fileSize, name );
@@ -237,24 +235,14 @@ model_t	*R_GetModelByHandle( qhandle_t index ) {
 ** R_AllocModel
 */
 model_t *R_AllocModel( void ) {
-  model_t		*mod = NULL;
+	model_t		*mod;
 
 	if ( tr.numModels >= MAX_MOD_KNOWN ) {
 		// TODO: same pattern as images, find oldest and free/replace
 		return NULL;
 	}
 
-	for(int i = 0; i < ARRAY_LEN(worldModels); i++) {
-		if(!worldModels[i]) {
-			mod = worldModels[i] = ri.Hunk_Alloc( sizeof( model_t ), h_low );
-			break;
-		} else if (i > 0 && !worldModels[i]->name[0]) {
-			mod = worldModels[i];
-			break;
-		}
-	}
-	if(mod == NULL) return NULL;
-
+	mod = ri.Hunk_Alloc( sizeof( *tr.models[tr.numModels] ), h_low );
 	mod->index = tr.numModels;
 	tr.models[tr.numModels] = mod;
 	tr.numModels++;
@@ -302,25 +290,48 @@ qhandle_t RE_RegisterModel( const char *name )
 	//
 	// search the currently loaded models
 	//
-	for ( hModel = 1 ; hModel < ARRAY_LEN(worldModels); hModel++ ) {
-		mod = worldModels[hModel];
-		if ( mod && !strcmp( mod->name, name ) 
-      // make sure brush models are referenced properly
-      && (name[0] != '*' || tr.models[mod->index] == mod) ) {
-      found = qtrue;
-      // check it is loaded in world models
-      if(tr.models[mod->index] != mod) {
-				mod->index = tr.numModels;
-				tr.models[tr.numModels] = mod;
-				tr.numModels++;
-			}      
-      if( mod->type != MOD_BAD ) {
+	for ( hModel = 1 ; hModel < tr.numModels; hModel++ ) {
+		mod = tr.models[hModel];
+		if ( !strcmp( mod->name, name ) ) {
+#ifdef USE_LAZY_LOAD
+			found = qtrue;
+			// break instead in-case its time to re-load the model after download
+			if( mod->type != MOD_BAD || !updateModels ) {
 				return mod->index;
 			} else {
-        break;
-      }
+				break;
+			}
+#else
+			if( mod->type == MOD_BAD ) {
+				return 0;
+			}
+			return hModel;
+#endif
 		}
 	}
+#ifdef USE_MULTIVM_CLIENT
+	// check each world for a loaded model we can copy over
+	// TODO: reload the shaders for the model on each load
+	// TODO: make models out of BSPs (halves of CTF levels) 
+	//   and load shaders and lightmaps on the model
+	if(!found) {
+		for(int i = 0; i < MAX_NUM_WORLDS; i++) {
+			for ( hModel = 1 ; hModel < trWorlds[i].numModels; hModel++ ) {
+				if ( mod && !strcmp( mod->name, name ) ) {
+					found = qtrue;
+					tr.models[tr.numModels] = mod;
+					mod->index = tr.numModels;
+					tr.numModels++;
+					if( mod->type != MOD_BAD || !updateModels ) {
+						return mod->index;
+					} else {
+						break;
+					}
+				}
+			}
+		}
+	}
+#endif
 
 	// allocate a new model_t
 
@@ -1024,6 +1035,7 @@ static qboolean R_LoadMDR( model_t *mod, void *buffer, int filesize, const char 
 ** RE_BeginRegistration
 */
 void RE_BeginRegistration( glconfig_t *glconfigOut ) {
+  tr.lastRegistrationTime = ri.Milliseconds();
 
 	R_Init();
 
@@ -1032,12 +1044,13 @@ void RE_BeginRegistration( glconfig_t *glconfigOut ) {
 	tr.viewCluster = -1;		// force markleafs to regenerate
 	R_ClearFlares();
 #ifdef USE_MULTIVM_CLIENT
-	for(int i = 0; i < MAX_NUM_VMS; i++) {
-		RE_SwitchWorld(i);
-  	RE_ClearScene();
+	for(rwi = 0; rwi < MAX_NUM_VMS; rwi++) {
+		tr.viewCluster = -1;
+		RE_ClearScene();
 	}
+	rwi = 0;
 #else
-  RE_ClearScene();
+	RE_ClearScene();
 #endif
 
 	tr.registered = qtrue;
@@ -1055,7 +1068,6 @@ void R_ModelInit( void ) {
 
 	// leave a space for NULL model
 	tr.numModels = 0;
-	memset(worldModels, 0, sizeof(worldModels));
 
 	// leave a space for NULL model
 	mod = R_AllocModel();
@@ -1066,8 +1078,8 @@ void R_ModelInit( void ) {
   //   this is just a few pointers afterall
 #ifdef USE_MULTIVM_CLIENT
 	for(int i = 0; i < MAX_NUM_WORLDS; i++) {
-	//	tr[i].models[0] = mod;
-	//	tr[i].numModels = 1;
+		trWorlds[i].models[0] = mod;
+		trWorlds[i].numModels = 1;
 	}
 #endif
 }

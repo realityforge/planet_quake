@@ -1827,7 +1827,6 @@ void RE_Shutdown( refShutdownCode_t code ) {
 			FBO_Shutdown();
 		R_DeleteTextures();
 		R_ShutdownVaos();
-		Com_Memset(&s_worldData, 0, sizeof(s_worldData));
 	}
 
 	R_DoneFreeType();

@@ -1503,12 +1503,9 @@ typedef struct {
 
 
 #ifdef USE_MULTIVM_CLIENT
-extern world_t s_worldDatas[MAX_NUM_WORLDS];
 extern int     rwi;
-#define s_worldData s_worldDatas[rwi]
-#else
-extern world_t s_worldData;
 #endif
+
 
 /*
 ** trGlobals_t 
