@@ -22,6 +22,9 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 // tr_map.c
 
 #include "tr_local.h"
+
+#if 0
+
 extern void R_LoadShaders( lump_t *l );
 extern void R_LoadPlanes( lump_t *l );
 extern void R_LoadSurfaces( lump_t *surfs, lump_t *verts, lump_t *indexLump );
@@ -49,3 +52,4 @@ void LoadBspMin(const char *name) {
   R_LoadNodesAndLeafs (&header->lumps[LUMP_NODES], &header->lumps[LUMP_LEAFS]);
 	R_LoadSubmodels (&header->lumps[LUMP_MODELS]);
 }
+#endif

@@ -24,10 +24,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #include "tr_local.h"
 
-#ifdef USE_MULTIVM_CLIENT
-#define refdef refdefs[rwi]
-#endif
-
 #define	LL(x) x=LittleLong(x)
 
 // 3x4 identity matrix

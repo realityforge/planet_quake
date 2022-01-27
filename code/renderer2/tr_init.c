@@ -211,6 +211,9 @@ cvar_t	*r_screenshotJpegQuality;
 cvar_t	*r_maxpolys;
 cvar_t	*r_maxpolyverts;
 cvar_t	*r_maxpolybuffers;
+#ifdef USE_UNLOCKED_CVARS
+cvar_t  *r_maxcmds;
+#endif
 
 cvar_t	*r_developer;
 
@@ -1511,11 +1514,47 @@ void R_Register( void )
 	r_screenshotJpegQuality = ri.Cvar_Get("r_screenshotJpegQuality", "90", CVAR_ARCHIVE);
 
 	r_maxpolys = ri.Cvar_Get( "r_maxpolys", va("%d", MAX_POLYS), 0);
-	ri.Cvar_CheckRange( r_maxpolys, va("%d", MAX_POLYS), NULL, CV_INTEGER );
 	r_maxpolyverts = ri.Cvar_Get( "r_maxpolyverts", va("%d", MAX_POLYVERTS), 0);
-	ri.Cvar_CheckRange( r_maxpolyverts, va("%d", MAX_POLYVERTS), NULL, CV_INTEGER );
 	r_maxpolybuffers = ri.Cvar_Get( "r_maxpolybuffers", va("%d", MAX_POLYBUFFERS), 0);
+	ri.Cvar_CheckRange( r_maxpolys, va("%d", MAX_POLYS), NULL, CV_INTEGER );
+	ri.Cvar_CheckRange( r_maxpolyverts, va("%d", MAX_POLYVERTS), NULL, CV_INTEGER );
 	ri.Cvar_CheckRange( r_maxpolybuffers, va("%d", MAX_POLYBUFFERS), NULL, CV_INTEGER );
+#ifdef USE_UNLOCKED_CVARS
+	{
+		float rounding;
+		r_maxcmds = ri.Cvar_Get( "r_maxcmds", XSTRING(MAX_RENDER_COMMANDS), CVAR_LATCH);
+		ri.Cvar_CheckRange( r_maxcmds, XSTRING(MAX_RENDER_COMMANDS), NULL, CV_INTEGER );
+
+		rounding = ceil(r_maxcmds->value / MAX_RENDER_DIVISOR) * MAX_RENDER_DIVISOR;
+		if(rounding != r_maxcmds->integer) {
+			ri.Printf(PRINT_WARNING, "r_maxcmds %d is not a multiple of %d,"
+				" rounding up to %d\n", r_maxcmds->integer, MAX_RENDER_DIVISOR, (int)rounding);
+			ri.Cvar_SetValue("r_maxcmds", rounding);
+
+		}
+
+		rounding = ceil(r_maxpolys->value / MAX_POLYS_DIVISOR) * MAX_POLYS_DIVISOR;
+		if(rounding != r_maxpolys->integer) {
+			ri.Printf(PRINT_WARNING, "r_maxpolys %d is not a multiple of %d, "
+				"rounding up to %d\n", r_maxpolys->integer, MAX_POLYS_DIVISOR, (int)rounding);
+			ri.Cvar_SetValue("r_maxpolys", rounding);
+		}
+
+		rounding = ceil(r_maxpolyverts->value / MAX_POLYVERTS_DIVISOR) * MAX_POLYVERTS_DIVISOR;
+		if(rounding != r_maxpolyverts->integer) {
+			ri.Printf(PRINT_WARNING, "r_maxpolyverts %d is not a multiple of %d, "
+				"rounding up to %d\n", r_maxpolyverts->integer, MAX_POLYVERTS_DIVISOR, (int)rounding);
+			ri.Cvar_SetValue("r_maxpolyverts", rounding);
+		}
+
+		rounding = ceil(r_maxpolybuffers->value / MAX_POLYBUFFERS_DIVISOR) * MAX_POLYBUFFERS_DIVISOR;
+		if(rounding != r_maxpolybuffers->integer) {
+			ri.Printf(PRINT_WARNING, "r_maxpolybuffers  %d is not a multiple of %d, "
+				"rounding up to %d\n", r_maxpolybuffers->integer, MAX_POLYBUFFERS_DIVISOR, (int)rounding);
+			ri.Cvar_SetValue("r_maxpolybuffers", rounding);
+		}
+	}
+#endif
 
   r_developer = ri.Cvar_Get( "developer", "0", 0 );
 #ifdef USE_LAZY_LOAD
@@ -1637,36 +1676,96 @@ void R_Init( void ) {
 	R_Register();
 
 #ifdef USE_UNLOCKED_CVARS
+#ifdef USE_MULTIVM_CLIENT
+int backendSize;
+#define BASSIGN(a, t, n, d) \
+		+ sizeof(intptr_t) * (n / d + 1) * MAX_NUM_WORLDS \
+		+ sizeof(t) * d * MAX_NUM_WORLDS
+#define BACKEND \
+	BASSIGN( backEndData->indexes, int, r_maxpolyverts->integer, MAX_POLYVERTS_DIVISOR) \
+	BASSIGN( backEndData->polys, srfPoly_t, r_maxpolyverts->integer, MAX_POLYS_DIVISOR) \
+	BASSIGN( backEndData->polyVerts, polyVert_t, r_maxpolyverts->integer, MAX_POLYVERTS_DIVISOR) \
+	BASSIGN( backEndData->polybuffers, srfPolyBuffer_t, r_maxpolyverts->integer, MAX_POLYBUFFERS_DIVISOR) \
+	BASSIGN( backEndData->commands.cmds, byte, r_maxpolyverts->integer, MAX_RENDER_DIVISOR)
+	backendSize = sizeof(intptr_t) * MAX_NUM_WORLDS
+		+ sizeof( *backEndData ) * MAX_NUM_WORLDS
+		BACKEND;
+	ptr = ri.Hunk_Alloc(backendSize, h_low);
+	Com_Printf("Allocating %iKB bytes for backend.\n", backendSize / 1024);
+#undef BASSIGN
+#define BASSIGN(a, t, n, d) \
+	a = (t **) ((char *) ptr); \
+	ptr += sizeof(intptr_t) * (n / d + 1); \
+	a[0] = (t *) ((char *) ptr); \
+	ptr += sizeof(t) * d;
+	backEndDatas = (backEndData_t **) ptr;
+	ptr += sizeof(intptr_t) * MAX_NUM_WORLDS;
+	for(int i = 0; i < MAX_NUM_WORLDS; i++) {
+		RE_SwitchWorld(i);
+		backEndData = (backEndData_t *) ptr;
+		ptr += sizeof( **backEndDatas );
+		BACKEND
+		rwi = i;
+		R_InitNextFrame();
+	}
+#undef BACKEND
+#undef BASSIGN
+
+#else // !USE_MULTIVM_CLIENT
+
+#define BACKEND \
+	BASSIGN( backEndData->indexes, int, r_maxpolyverts->integer, MAX_POLYVERTS_DIVISOR) \
+	BASSIGN( backEndData->polys, srfPoly_t, r_maxpolyverts->integer, MAX_POLYS_DIVISOR) \
+	BASSIGN( backEndData->polyVerts, polyVert_t, r_maxpolyverts->integer, MAX_POLYVERTS_DIVISOR) \
+	BASSIGN( backEndData->polybuffers, srfPolyBuffer_t, r_maxpolyverts->integer, MAX_POLYBUFFERS_DIVISOR) \
+	BASSIGN( backEndData->commands.cmds, byte, r_maxpolyverts->integer, MAX_RENDER_DIVISOR)
 	ptr = ri.Hunk_Alloc( sizeof( *backEndData ) 
-		+ sizeof(int) * r_maxpolyverts->integer
-		+ sizeof(srfPoly_t) * r_maxpolys->integer 
-		+ sizeof(polyVert_t) * r_maxpolyverts->integer 
-		+ sizeof(srfPolyBuffer_t) * max_polybuffers, h_low
-		+ sizeof(byte) * r_maxcmds->integer
-	);
-#else
-	ptr = ri.Hunk_Alloc( sizeof( *backEndData ) 
-		+ sizeof(int) * r_maxpolyverts->integer
-		+ sizeof(srfPoly_t) * r_maxpolys->integer 
-		+ sizeof(polyVert_t) * r_maxpolyverts->integer 
-		+ sizeof(srfPolyBuffer_t) * max_polybuffers, h_low);
-#endif
+#define BASSIGN(a, t, n, d) \
+		+ sizeof(intptr_t) * (n / d + 1) \
+		+ sizeof(t) * d
+		BACKEND
+		, h_low);
+#undef BASSIGN
 	backEndData = (backEndData_t *) ptr;
 	ptr += sizeof( *backEndData );
-  backEndData->indexes = (int *) ((char *) ptr);
-	ptr += sizeof(int) * r_maxpolyverts->integer;
-	backEndData->polys = (srfPoly_t *) ((char *) ptr);
-	ptr += sizeof(srfPoly_t) * r_maxpolys->integer;
-	backEndData->polyVerts = (polyVert_t *) ((char *) ptr);
-	ptr += sizeof(polyVert_t) * r_maxpolyverts->integer;
-	backEndData->polybuffers = (srfPolyBuffer_t *) ((char *) ptr);
-	ptr += sizeof(srfPolyBuffer_t) * r_maxpolybuffers->integer;
-#ifdef USE_UNLOCKED_CVARS
-	backEndData->commands.cmds = (byte *) ((char *) ptr);
-	ptr += sizeof(byte) * r_maxcmds->integer;
-#endif
+#define BASSIGN(a, t, n, d) \
+	a = (t **) ((char *) ptr); \
+	ptr += sizeof(intptr_t) * (n / d + 1); \
+	a[0] = (t *) ((char *) ptr); \
+	ptr += sizeof(t) * d;
+	BACKEND
+#undef BACKEND
+#undef BASSIGN
 
+#endif
+//#error not ready yet
+#else // !USE_UNLOCKED_CVARS
+
+#define BACKEND \
+	BASSIGN( backEndData->indexes, int, r_maxpolyverts->integer) \
+	BASSIGN( backEndData->polys, srfPoly_t, r_maxpolyverts->integer) \
+	BASSIGN( backEndData->polyVerts, polyVert_t, r_maxpolyverts->integer) \
+	BASSIGN( backEndData->polybuffers, srfPolyBuffer_t, r_maxpolyverts->integer)
+	ptr = ri.Hunk_Alloc( sizeof( *backEndData ) 
+#define BASSIGN(a, t, n) \
+		+ sizeof(t) * n
+		BACKEND
+		, h_low);
+#undef BASSIGN
+	backEndData = (backEndData_t *) ptr;
+	ptr += sizeof( *backEndData );
+#define BASSIGN(a, t, n) \
+	a = (t *) ((char *) ptr); \
+	ptr += sizeof(t) * n;
+	BACKEND
+#undef BACKEND
+#undef BASSIGN
+
+#endif // !USE_UNLOCKED_CVARS
+
+#ifndef USE_MULTIVM_CLIENT // done above in same loop
 	R_InitNextFrame();
+#endif
 
 	InitOpenGL();
 

@@ -855,33 +855,6 @@ typedef struct {
 	int			numSurfaces;
 } bmodel_t;
 
-
-//======================================================================
-
-#define	MAX_MOD_KNOWN	1024
-
-
-typedef enum {
-	MOD_BAD,
-	MOD_BRUSH,
-	MOD_MESH,
-	MOD_MDR,
-	MOD_IQM
-} modtype_t;
-
-typedef struct model_s {
-	char		name[MAX_QPATH];
-	modtype_t	type;
-	int			index;		// model = tr.models[model->index]
-
-	int			dataSize;	// just for listing purposes
-	bmodel_t	*bmodel;		// only if type == MOD_BRUSH
-	md3Header_t	*md3[MD3_MAX_LODS];	// only if type == MOD_MESH
-	void	*modelData;			// only if type == (MOD_MDR | MOD_IQM)
-
-	int			 numLods;
-} model_t;
-
 typedef struct {
 	char		name[MAX_QPATH];		// ie: maps/tim_dm2.bsp
 	char		baseName[MAX_QPATH];	// ie: tim_dm2
@@ -924,14 +897,32 @@ typedef struct {
 
 	char		*entityString;
 	const char	*entityParsePoint;
-
-  // backup lightmaps so they can be reapplied when the world changes
-	int						numLightmaps;
-	int						lightmapSize;
-	image_t				**lightmaps;
-	model_t				*models[MAX_MOD_KNOWN];
-	int						numModels;
 } world_t;
+
+//======================================================================
+
+typedef enum {
+	MOD_BAD,
+	MOD_BRUSH,
+	MOD_MESH,
+	MOD_MDR,
+	MOD_IQM
+} modtype_t;
+
+typedef struct model_s {
+	char		name[MAX_QPATH];
+	modtype_t	type;
+	int			index;		// model = tr.models[model->index]
+
+	int			dataSize;	// just for listing purposes
+	bmodel_t	*bmodel;		// only if type == MOD_BRUSH
+	md3Header_t	*md3[MD3_MAX_LODS];	// only if type == MOD_MESH
+	void	*modelData;			// only if type == (MOD_MDR | MOD_IQM)
+
+	int			 numLods;
+} model_t;
+
+#define	MAX_MOD_KNOWN	1024
 
 void		R_ModelInit (void);
 model_t		*R_GetModelByHandle( qhandle_t hModel );
@@ -1127,12 +1118,7 @@ typedef struct {
 	qboolean				inited;			// cleared at shutdown, set at InitOpenGL
   int							lastRegistrationTime;
 
-#ifdef USE_MULTIVM_CLIENT
-	int						visCounts[MAX_NUM_WORLDS];		// incremented every time a new vis cluster is entered
-#define visCount visCounts[rwi]
-#else
 	int						visCount;		// incremented every time a new vis cluster is entered
-#endif
 	int						frameCount;		// incremented every frame
 	int						sceneCount;		// incremented every scene
 	int						viewCount;		// incremented every view (twice a scene if portaled)
@@ -1182,16 +1168,9 @@ typedef struct {
 
 	orientationr_t			or;					// for current entity
 
-#ifdef USE_MULTIVM_CLIENT
-	trRefdef_t				refdefs[MAX_NUM_WORLDS];
-
-	int						viewClusters[MAX_NUM_WORLDS];
-#define viewCluster viewClusters[rwi]
-#else
 	trRefdef_t				refdef;
 
 	int						viewCluster;
-#endif
 #ifdef USE_PMLIGHT
 	dlight_t				*light;				// current light during R_RecursiveLightNode
 #endif
@@ -1880,11 +1859,6 @@ typedef struct {
 
 typedef struct {
 	int		commandId;
-	int 	world;
-} setWorldCommand_t;
-
-typedef struct {
-	int		commandId;
 	int		buffer;
 } drawBufferCommand_t;
 
@@ -1954,7 +1928,6 @@ typedef struct
 typedef enum {
 	RC_END_OF_LIST,
 	RC_SET_COLOR,
-	RC_SET_WORLD,
   RC_POLY2D_INDEXED,
 	RC_STRETCH_PIC,
 	RC_DRAW_SURFS,

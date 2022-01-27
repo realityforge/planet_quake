@@ -42,13 +42,12 @@ world_t		s_worldDatas[MAX_NUM_WORLDS];
 int       rwi = 0; // render world, should match number of loaded clip maps, 
                    //   since they are reusable
 #else
-world_t		s_worldData;
+static		world_t		s_worldData;
 #endif
 
-byte		*fileBase;
+static		byte		*fileBase;
 
-int			c_subdivisions;
-int			c_gridVerts;
+static int	c_gridVerts;
 
 //===============================================================================
 
@@ -2803,7 +2802,7 @@ int RE_LoadWorldMap( const char *name ) {
 #ifdef USE_LAZY_MEMORY
 			RE_SwitchWorld(j);
 #endif
-			return;
+			return j;
 		} else if (s_worldDatas[j].name[0] == '\0' && empty == -1) {
 			// load additional world in to next slot
 			empty = j;
@@ -3130,5 +3129,10 @@ int RE_LoadWorldMap( const char *name ) {
 		R_RenderMissingCubemaps();
 	}
 
-    ri.FS_FreeFile( buffer.v );
+	ri.FS_FreeFile( buffer.v );
+#ifdef USE_MULTIVM_CLIENT
+	return rwi;
+#else
+  return 0;
+#endif
 }

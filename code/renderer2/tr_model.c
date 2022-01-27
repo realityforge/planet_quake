@@ -1302,9 +1302,8 @@ void R_Modellist_f( void ) {
 	int		lods;
 
 	total = 0;
-	for ( i = 0 ; i < ARRAY_LEN(worldModels); i++ ) {
-		mod = worldModels[i];
-		if(!mod) continue;
+	for ( i = 1 ; i < tr.numModels; i++ ) {
+		mod = tr.models[i];
 		lods = 1;
 		for ( j = 1 ; j < MD3_MAX_LODS ; j++ ) {
 			if ( mod->mdv[j] && mod->mdv[j] != mod->mdv[j-1] ) {

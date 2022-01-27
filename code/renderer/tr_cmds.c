@@ -104,11 +104,7 @@ static void R_IssueRenderCommands( void ) {
 		// let it start on the new batch
 #ifdef USE_UNLOCKED_CVARS
 		for(int i = 0; i <= cmdSubList; i++) {
-#ifdef USE_MULTIVM_CLIENT
-			if(i > 0 && tr.refdefs[rwi].num_entities == 0) continue;
-#else
 			if(i > 0 && tr.refdef.num_entities == 0) continue;
-#endif
 			RB_ExecuteRenderCommands( cmdList->cmds[i] );
 		}
 #else
@@ -218,32 +214,10 @@ void R_AddDrawSurfCmd( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 	cmd->drawSurfs = drawSurfs;
 	cmd->numDrawSurfs = numDrawSurfs;
 
-#ifdef USE_MULTIVM_CLIENT
-	cmd->refdef = tr.refdefs[rwi];
-#else
 	cmd->refdef = tr.refdef;
-#endif
 	cmd->viewParms = tr.viewParms;
 }
 
-#ifdef USE_MULTIVM_CLIENT
-/*
-=============
-RE_SetWorld
-
-Passing NULL will set the color to white
-=============
-*/
-void RE_SetWorld( int w ) {
-	setWorldCommand_t	*cmd;
-	cmd = R_GetCommandBuffer( sizeof( *cmd ) );
-	if ( !cmd ) {
-		return;
-	}
-	cmd->commandId = RC_SET_WORLD;
-	cmd->world = w;
-}
-#endif
 
 /*
 =============
@@ -532,11 +506,7 @@ void RE_BeginFrame( stereoFrame_t stereoFrame ) {
 		}
 	}
 
-#ifdef USE_MULTIVM_CLIENT
-	tr.refdefs[rwi].stereoFrame = stereoFrame;
-#else
 	tr.refdef.stereoFrame = stereoFrame;
-#endif
 }
 
 
@@ -567,9 +537,7 @@ void RE_EndFrame( int *frontEndMsec, int *backEndMsec ) {
 	for(int i = 0; i < MAX_NUM_VMS; i++) {
 		RE_SwitchWorld(i);
 		R_IssueRenderCommands();
-	}
-	for(int i = 0; i < MAX_NUM_VMS; i++) {
-		RE_SwitchWorld(i);
+
 		R_InitNextFrame();
 	}
 #else

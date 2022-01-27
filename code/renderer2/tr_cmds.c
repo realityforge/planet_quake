@@ -89,7 +89,9 @@ void R_IssueRenderCommands( qboolean runPerformanceCounters ) {
 	assert(cmdList);
 	// add an end-of-list command
 #ifdef USE_UNLOCKED_CVARS
-	*(int *)(cmdList->cmds[(cmdList->used - (cmdList->used % MAX_RENDER_DIVISOR)) / MAX_RENDER_DIVISOR ] + (cmdList->used % MAX_RENDER_DIVISOR)) = RC_END_OF_LIST;
+	int cmdUsed = cmdList->used % MAX_RENDER_DIVISOR;
+	int cmdSubList = (cmdList->used - cmdUsed) / MAX_RENDER_DIVISOR;
+	*(int *)(cmdList->cmds[ cmdSubList ] + cmdUsed) = RC_END_OF_LIST;
 #else
 	*(int *)(cmdList->cmds + cmdList->used) = RC_END_OF_LIST;
 #endif
@@ -104,7 +106,14 @@ void R_IssueRenderCommands( qboolean runPerformanceCounters ) {
 	// actually start the commands going
 	if ( !r_skipBackEnd->integer ) {
 		// let it start on the new batch
+#ifdef USE_UNLOCKED_CVARS
+		for(int i = 0; i <= cmdSubList; i++) {
+			if(i > 0 && tr.refdef.num_entities == 0) continue;
+			RB_ExecuteRenderCommands( cmdList->cmds[i] );
+		}
+#else
 		RB_ExecuteRenderCommands( cmdList->cmds );
+#endif
 	}
 }
 
@@ -130,7 +139,7 @@ R_GetCommandBufferReserved
 make sure there is enough command space
 ============
 */
-void *R_GetCommandBufferReserved( int bytes, int reservedBytes ) {
+static void *R_GetCommandBufferReserved( int bytes, int reservedBytes ) {
 	renderCommandList_t	*cmdList;
 
 	cmdList = &backEndData->commands;
@@ -145,6 +154,25 @@ void *R_GetCommandBufferReserved( int bytes, int reservedBytes ) {
 		// if we run out of room, just start dropping commands
 		return NULL;
 	}
+
+	// expand the commands list when necessary
+	int cmdUsed = cmdList->used % MAX_RENDER_DIVISOR;
+	int cmdSubList = (cmdList->used - cmdUsed) / MAX_RENDER_DIVISOR;
+	if(cmdUsed + bytes >= MAX_RENDER_DIVISOR) {
+		if(!cmdList->cmds[cmdSubList + 1]) {
+			Com_Printf("Expanding the command list one time.\n");
+			cmdList->cmds[cmdSubList + 1] = ri.Hunk_Alloc(sizeof(byte) * MAX_RENDER_DIVISOR, h_low);
+		}
+
+		*(int *)(cmdList->cmds[cmdSubList] + cmdUsed) = RC_END_OF_LIST;
+		cmdList->used = (cmdSubList + 1) * MAX_RENDER_DIVISOR + bytes;
+
+		return cmdList->cmds[cmdSubList + 1];
+	} else {
+		cmdList->used += bytes;
+
+		return cmdList->cmds[cmdSubList] + cmdUsed;
+	}
 #else
 	if ( cmdList->used + bytes + sizeof( int ) + reservedBytes > MAX_RENDER_COMMANDS ) {
 		if ( bytes > MAX_RENDER_COMMANDS - sizeof( int ) ) {
@@ -153,12 +181,13 @@ void *R_GetCommandBufferReserved( int bytes, int reservedBytes ) {
 		// if we run out of room, just start dropping commands
 		return NULL;
 	}
-#endif
 
 	cmdList->used += bytes;
 
 	return cmdList->cmds + cmdList->used - bytes;
+#endif
 }
+
 
 /*
 =============
@@ -234,24 +263,6 @@ void	R_AddPostProcessCmd( void ) {
 	cmd->viewParms = tr.viewParms;
 }
 
-#ifdef USE_MULTIVM_CLIENT
-/*
-=============
-RE_SetWorld
-
-Passing NULL will set the color to white
-=============
-*/
-void RE_SetWorld( int w ) {
-	setWorldCommand_t	*cmd;
-	cmd = R_GetCommandBuffer( sizeof( *cmd ) );
-	if ( !cmd ) {
-		return;
-	}
-	cmd->commandId = RC_SET_WORLD;
-	cmd->world = w;
-}
-#endif
 
 /*
 =============
@@ -330,7 +341,11 @@ void RE_RenderGeometry(void *vertices, int num_vertices, int* indices,
   cmd->commandId = RC_POLY2D_INDEXED;
   cmd->shader = R_GetShaderByHandle( texture );
   cmd->numVerts = num_vertexes;
+#ifdef USE_UNLOCKED_CVARS
+  cmd->verts = &backEndData->polyVerts[0][ r_numpolyverts ];
+#else
   cmd->verts = &backEndData->polyVerts[ r_numpolyverts ];
+#endif
 	for(int i = 0; i < num_vertexes; i++) {
     cmd->verts[i].xyz[0] = rmlVs[i].position[0];
     cmd->verts[i].xyz[1] = rmlVs[i].position[1];

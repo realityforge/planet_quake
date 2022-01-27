@@ -2873,11 +2873,13 @@ static void CL_DownloadsComplete( void ) {
 		// || cl_mvWorld->integer
 	//) {
 		cgvmi = clc.currentView;
-#if 0 //def USE_LAZY_LOAD
-		if(clc.currentView != 0)
-			Cvar_Set( "cl_lazyLoad", "2" ); // TODO: 4
-		else
-			Cvar_Set( "cl_lazyLoad", "1" );
+#ifdef USE_LAZY_LOAD
+		if(clc.world && clc.world[0] != '\0') {
+			if(clientMaps[clc.currentView] != 0)
+				Cvar_Set( "cl_lazyLoad", "2" ); // TODO: 4
+			else
+				Cvar_Set( "cl_lazyLoad", "1" );
+		}
 #endif
 		// added restart fancy-ness to this function automatically
 		CL_InitCGame(cgvmi);

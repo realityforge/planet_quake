@@ -23,10 +23,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #include "tr_local.h"
 
-#ifdef USE_MULTIVM_CLIENT
-#define refdef refdefs[rwi]
-#endif
-
 #include <string.h> // memcpy
 
 trGlobals_t		tr;
@@ -1232,7 +1228,7 @@ R_MirrorViewBySurface
 Returns qtrue if another view has been rendered
 ========================
 */
-#ifdef USE_MULTIVM_CLIENT
+#if 0 //def USE_MULTIVM_CLIENT
 extern int r_numdlightWorlds[MAX_NUM_WORLDS];
 #define r_numdlights r_numdlightWorlds[rwi]
 #else
@@ -1348,10 +1344,9 @@ static qboolean R_MirrorViewBySurface( const drawSurf_t *drawSurf, int entityNum
 		return qfalse;
 	}
 	// TODO: comment this out when working
-	return qfalse;
 #endif
 	// render the mirror view
-	R_RenderView( &newParms );
+	//R_RenderView( &newParms );
 
 	tr.viewParms = oldParms;
 #ifdef USE_MULTIVM_CLIENT
@@ -1764,11 +1759,6 @@ void R_AddEntitySurfaces( void ) {
 		// simple generated models, like sprites and beams, are not culled
 		switch ( ent->e.reType ) {
 		case RT_PORTALSURFACE:
-			if(r_developer->integer) {
-				R_RotateForEntity( ent, &tr.viewParms, &tr.or );
-				tr.currentModel = s_worldData.models[0];
-				R_AddDrawSurf( &entitySurface, tr.defaultShader, 0, 0 );
-			}
 			break;		// don't draw anything
 		case RT_SPRITE:
 		case RT_BEAM:
@@ -1875,7 +1865,7 @@ void R_RenderView( const viewParms_t *parms ) {
 	tr.viewParms.frameSceneNum = tr.frameSceneNum;
 	tr.viewParms.frameCount = tr.frameCount;
 #ifdef USE_MULTIVM_CLIENT
-	tr.viewParms.newWorld = tr.world - s_worldDatas;
+	tr.viewParms.newWorld = rwi;
 #endif
 
 	firstDrawSurf = tr.refdef.numDrawSurfs;

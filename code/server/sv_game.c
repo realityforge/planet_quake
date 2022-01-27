@@ -416,7 +416,7 @@ static qboolean SV_GetValue( char* value, int valueSize, const char* key )
 }
 
 
-#ifdef USE_MULTIVM_SERVER
+#if 0 //def USE_MULTIVM_SERVER
 static cvar_t *SV_Cvar_Get(const char *name, const char *defaultValue, int tagged) {
   cvar_t *unTagged;
   cvar_t *cvTagged;
@@ -431,7 +431,6 @@ static cvar_t *SV_Cvar_Get(const char *name, const char *defaultValue, int tagge
   cvTagged->tag    = tagged;
   return cvTagged;
 }
-
 static void SV_Cvar_Register( vmCvar_t *vmCvar, const char *varName, const char *defaultValue, int flags, int privateFlag, int tagged ) {
   cvar_t *cvTagged = SV_Cvar_Get(varName, defaultValue, tagged);
   Cvar_Register(vmCvar, cvTagged->name, defaultValue, flags, privateFlag);

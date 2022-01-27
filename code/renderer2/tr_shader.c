@@ -132,6 +132,7 @@ void RE_RemapShader(const char *shaderName, const char *newShaderName, const cha
       && (index == 0 || sh->lightmapSearchIndex == index) 
 #endif
     ) {
+			sh->defaultShader = qfalse;
 			if (sh != sh2) {
 				sh->remappedShader = sh2;
 			} else {

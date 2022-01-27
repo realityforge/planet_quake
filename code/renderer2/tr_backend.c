@@ -23,7 +23,11 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "tr_fbo.h"
 #include "tr_dsa.h"
 
+#ifdef USE_MULTIVM_CLIENT
+backEndData_t	**backEndDatas;
+#else
 backEndData_t	*backEndData;
+#endif
 backEndState_t	backEnd;
 
 
@@ -764,25 +768,6 @@ void RE_UploadCinematic (int w, int h, int cols, int rows, byte *data, int clien
 			qglTextureSubImage2DEXT(texture, GL_TEXTURE_2D, 0, 0, 0, cols, rows, GL_RGBA, GL_UNSIGNED_BYTE, data);
 		}
 	}
-}
-
-
-/*
-=============
-RB_SetWorld
-=============
-*/
-static const void *RB_SetWorld( const void *data ) {
-	const setWorldCommand_t	*cmd;
-
-	cmd = (const setWorldCommand_t *)data;
-
-	rwi = cmd->world;
-	tr.world = &s_worldData;
-	tr.numLightmaps = s_worldData.numLightmaps;
-	tr.lightmaps = s_worldData.lightmaps;
-
-	return (const void *)(cmd + 1);
 }
 
 
@@ -1769,9 +1754,6 @@ void RB_ExecuteRenderCommands( const void *data ) {
 		data = PADP(data, sizeof(void *));
 
 		switch ( *(const int *)data ) {
-		case RC_SET_WORLD:
-			data = RB_SetWorld( data );
-			break;
 		case RC_SET_COLOR:
 			data = RB_SetColor( data );
 			break;

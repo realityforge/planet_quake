@@ -2019,8 +2019,7 @@ static qboolean ParseShader( const char **text )
 			continue;
 		}
     // ydnar: implicit default mapping to eliminate redundant/incorrect explicit shader stages
-		else if ( !Q_stricmpn( token, "implicit", 8 ) ) 
-		{
+		else if ( !Q_stricmpn( token, "implicit", 8 ) ) {
       if ( s >= MAX_SHADER_STAGES ) {
 				ri.Printf( PRINT_WARNING, "WARNING: too many stages in shader %s (max is %i)\n", shader.name, MAX_SHADER_STAGES );
 				return qfalse;
@@ -2766,7 +2765,7 @@ from the current global working shader
 =========================
 */
 static shader_t *FinishShader( void ) {
-	int			stage, i;
+	int			stage, i, n, m;
 	qboolean	hasLightmapStage;
 	qboolean	vertexLightmap;
 	qboolean	colorBlend;
@@ -2994,6 +2993,26 @@ static shader_t *FinishShader( void ) {
 	FindLightingStages();
 #endif
 
+	// make sure that amplitude for TMOD_STRETCH is not zero
+	for ( i = 0; i < shader.numUnfoggedPasses; i++ ) {
+		if ( !stages[i].active ) {
+			continue;
+		}
+		for ( n = 0; n < 2; n++ ) {
+			for ( m = 0; m < stages[i].bundle[n].numTexMods; m++ ) {
+				if ( stages[i].bundle[n].texMods[m].type == TMOD_STRETCH ) {
+					if ( fabsf( stages[i].bundle[n].texMods[m].wave.amplitude ) < 1e-6 ) {
+						if ( stages[i].bundle[n].texMods[m].wave.amplitude >= 0.0f ) {
+							stages[i].bundle[n].texMods[m].wave.amplitude = 1e-6;
+						} else {
+							stages[i].bundle[n].texMods[m].wave.amplitude = -1e-6;
+						}
+					}
+				}
+			}
+		}
+	}
+
 	// determine which stage iterator function is appropriate
 	ComputeStageIteratorFunc();
 
@@ -3202,7 +3221,6 @@ shader_t *R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImag
 	COM_StripExtension(name, strippedName, sizeof(strippedName));
 
 	hash = generateHashValue(strippedName, FILE_HASH_SIZE);
-
 
 	//
 	// see if the shader is already loaded
@@ -3548,7 +3566,7 @@ static int loadShaderBuffers( char **shaderFiles, const int numShaderFiles, char
 	for ( i = 0; i < numShaderFiles; i++ )
 	{
 		Com_sprintf( filename, sizeof( filename ), "scripts/%s", shaderFiles[i] );
-		ri.Printf( PRINT_DEVELOPER, "...loading '%s'\n", filename );
+		//ri.Printf( PRINT_DEVELOPER, "...loading '%s'\n", filename );
 		summand = ri.FS_ReadFile( filename, (void **)&buffers[i] );
 
 		if ( !buffers[i] )

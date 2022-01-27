@@ -433,13 +433,13 @@ static void R_LoadLightmaps( const lump_t *l ) {
 
 	// we are about to upload textures
 
-	s_worldData.lightmaps = tr.lightmaps = ri.Hunk_Alloc( tr.numLightmaps * sizeof(image_t *), h_low );
+	tr.lightmaps = ri.Hunk_Alloc( tr.numLightmaps * sizeof(image_t *), h_low );
 	for ( i = 0 ; i < tr.numLightmaps ; i++ ) {
 		maxIntensity = R_ProcessLightmap( image, buf + i * LIGHTMAP_SIZE * LIGHTMAP_SIZE * 3, maxIntensity );
 #ifdef USE_MULTIVM_CLIENT
-		s_worldData.lightmaps[i] = tr.lightmaps[i] = R_CreateImage(va("*lightmap_%d_%d", rwi, i), NULL, image, LIGHTMAP_SIZE, LIGHTMAP_SIZE, lightmapFlags | IMGFLAG_CLAMPTOEDGE );
+		tr.lightmaps[i] = R_CreateImage(va("*lightmap_%d_%d", rwi, i), NULL, image, LIGHTMAP_SIZE, LIGHTMAP_SIZE, lightmapFlags | IMGFLAG_CLAMPTOEDGE );
 #else
-		s_worldData.lightmaps[i] = tr.lightmaps[i] = R_CreateImage( va( "*lightmap%d", i ), NULL, image, LIGHTMAP_SIZE, LIGHTMAP_SIZE,
+		tr.lightmaps[i] = R_CreateImage( va( "*lightmap%d", i ), NULL, image, LIGHTMAP_SIZE, LIGHTMAP_SIZE,
 			lightmapFlags | IMGFLAG_CLAMPTOEDGE );
 #endif
 	}
@@ -2183,9 +2183,6 @@ void RE_SwitchWorld(int w) {
 	//RE_SetWorld(w); // so we don't need to use R_IssuePendingRenderCommands in between worlds
 	rwi = w;
 	tr.world = &s_worldDatas[rwi];
-	// reassign bmodels to same position as server entities
-	tr.numLightmaps = s_worldData.numLightmaps;
-	tr.lightmaps = s_worldData.lightmaps;
 	//GLSL_InitGPUShaders();
 }
 #endif

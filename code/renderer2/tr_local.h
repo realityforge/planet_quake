@@ -828,6 +828,9 @@ typedef struct {
 	qboolean	isPortal;			// true if this view is through a portal
 	qboolean	isMirror;			// the portal is a mirror, invert the face culling
   int       portalEntity;
+#ifdef USE_MULTIVM_CLIENT
+	int       newWorld;  // switch to a different world when rendering a camera view
+#endif
 	viewParmFlags_t flags;
 	int			frameSceneNum;		// copied from tr.frameSceneNum
 	int			frameCount;			// copied from tr.frameCount
@@ -880,7 +883,11 @@ typedef struct drawSurf_s {
 	surfaceType_t		*surface;		// any of surface*_t
 } drawSurf_t;
 
-#define	MAX_FACE_POINTS		256
+#ifdef USE_UNLOCKED_CVARS
+#define	MAX_FACE_POINTS		256 // for Xonotic and ET maps
+#else
+#define	MAX_FACE_POINTS		64
+#endif
 
 #define	MAX_PATCH_SIZE		32			// max dimensions of a patch mesh in map file
 #define	MAX_GRID_SIZE		65			// max dimensions of a grid mesh in memory
@@ -895,6 +902,11 @@ typedef struct srfPoly_s {
 	polyVert_t		*verts;
 } srfPoly_t;
 
+typedef struct srfPolyBuffer_s {
+	surfaceType_t surfaceType;
+	int fogIndex;
+	polyBuffer_t*   pPolyBuffer;
+} srfPolyBuffer_t;
 
 typedef struct srfFlare_s {
 	surfaceType_t	surfaceType;
@@ -1290,17 +1302,17 @@ typedef struct {
 
 	char		*entityString;
 	char		*entityParsePoint;
-	
-	// backup lightmaps so they can be reapplied when the world changes
+
+	// TODO: remove these and make tr. an array like tr[rwi].
+	// backup lightmap references so they can be reapplied when the world changes
 	int						numLightmaps;
 	int						lightmapSize;
 	image_t				**lightmaps;
+
 	model_t				*models[MAX_MOD_KNOWN];
 	int						numModels;
 
 } world_t;
-
-extern model_t *worldModels[MAX_MOD_KNOWN*MAX_NUM_WORLDS];
 
 void		R_ModelInit (void);
 model_t		*R_GetModelByHandle( qhandle_t hModel );
@@ -1648,6 +1660,9 @@ typedef struct {
 	// put large tables at the end, so most elements will be
 	// within the +/32K indexed range on risc processors
 	//
+	model_t					*models[MAX_MOD_KNOWN];
+	int						numModels;
+
 	int						numImages;
 	image_t					*images[MAX_DRAWIMAGES];
 
@@ -1853,6 +1868,13 @@ extern cvar_t	*r_lazyLoad;
 
 extern  cvar_t  *r_paletteMode;
 extern  cvar_t  *r_seeThroughWalls;
+
+extern  cvar_t	*r_maxpolys;
+extern  cvar_t	*r_maxpolyverts;
+extern  cvar_t	*r_maxpolybuffers;
+#ifdef USE_UNLOCKED_CVARS
+extern  cvar_t  *r_maxcmds;
+#endif
 
 #ifdef USE_MULTIVM_CLIENT
 extern float dvrXScale;
@@ -2144,7 +2166,6 @@ WORLD MAP
 void R_AddBrushModelSurfaces( trRefEntity_t *e );
 void R_AddWorldSurfaces( void );
 qboolean R_inPVS( const vec3_t p1, const vec3_t p2 );
-extern byte		*fileBase;
 void HSVtoRGB( float h, float s, float v, float rgb[3] );
 void R_ColorShiftLightingBytes( byte in[4], byte out[4] );
 void R_SetParent (mnode_t *node, mnode_t *parent);
@@ -2406,10 +2427,19 @@ RENDERER BACK END COMMAND QUEUE
 =============================================================
 */
 
+#ifdef USE_UNLOCKED_CVARS
+#define	MAX_RENDER_COMMANDS	0x100000
+#define MAX_RENDER_DIVISOR  0x20000
+#else
 #define	MAX_RENDER_COMMANDS	0x80000
+#endif
 
 typedef struct {
+#ifdef USE_UNLOCKED_CVARS
+	byte  **cmds;
+#else
 	byte	cmds[MAX_RENDER_COMMANDS];
+#endif
 	int		used;
 } renderCommandList_t;
 
@@ -2527,9 +2557,19 @@ typedef enum {
 // these are sort of arbitrary limits.
 // the limits apply to the sum of all scenes in a frame --
 // the main view, all the 3D icons, etc
+#ifndef USE_UNLOCKED_CVARS
 #define	MAX_POLYS		8192
 #define	MAX_POLYVERTS	32768
 #define MAX_POLYBUFFERS	256
+#else
+#define	MAX_POLYS		4096 * 5
+#define MAX_POLYS_DIVISOR 1024
+#define MAX_POLYVERTS_MULTIPLIER 5
+#define MAX_POLYVERTS_DIVISOR ( MAX_POLYS_DIVISOR * MAX_POLYVERTS_MULTIPLIER )
+#define MAX_POLYVERTS ( r_maxpolys->integer * MAX_POLYVERTS_MULTIPLIER )
+#define MAX_POLYBUFFERS_DIVISOR 64
+#define MAX_POLYBUFFERS 512
+#endif
 
 // all of the information needed by the back end must be
 // contained in a backEndData_t
@@ -2537,16 +2577,29 @@ typedef struct {
 	drawSurf_t	drawSurfs[MAX_DRAWSURFS];
 	dlight_t	dlights[MAX_DLIGHTS];
 	trRefEntity_t	entities[MAX_REFENTITIES];
+#ifdef USE_UNLOCKED_CVARS
+	srfPoly_t	**polys;//[MAX_POLYS];
+	polyVert_t	**polyVerts;//[MAX_POLYVERTS];
+	srfPolyBuffer_t **polybuffers; //[MAX_POLYS];
+  int	**indexes;//[MAX_POLYVERTS];
+#else
 	srfPoly_t	*polys;//[MAX_POLYS];
 	polyVert_t	*polyVerts;//[MAX_POLYVERTS];
+	srfPolyBuffer_t *polybuffers; //[MAX_POLYS];
+  int	*indexes;//[MAX_POLYVERTS];
+#endif
 	pshadow_t pshadows[MAX_CALC_PSHADOWS];
 	renderCommandList_t	commands;
 } backEndData_t;
 
-extern	int		max_polys;
-extern	int		max_polyverts;
 
-extern	backEndData_t	*backEndData;	// the second one may not be allocated
+#ifdef USE_MULTIVM_CLIENT
+extern backEndData_t	**backEndDatas;
+#define backEndData backEndDatas[0]
+#else
+extern	backEndData_t	*backEndData;
+#endif
+
 
 
 void *R_GetCommandBuffer( int bytes );

@@ -1757,6 +1757,9 @@ void R_RenderView (viewParms_t *parms) {
 	tr.viewParms = *parms;
 	tr.viewParms.frameSceneNum = tr.frameSceneNum;
 	tr.viewParms.frameCount = tr.frameCount;
+#ifdef USE_MULTIVM_CLIENT
+	tr.viewParms.newWorld = rwi;
+#endif
 
 	firstDrawSurf = tr.refdef.numDrawSurfs;
 

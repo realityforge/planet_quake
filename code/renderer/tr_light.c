@@ -23,10 +23,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #include "tr_local.h"
 
-#ifdef USE_MULTIVM_CLIENT
-#define refdef refdefs[rwi]
-#endif
-
 #define	DLIGHT_AT_RADIUS		16
 // at the edge of a dlight's influence, this amount of light will be added
 
@@ -117,9 +113,6 @@ void R_DlightBmodel( bmodel_t *bmodel ) {
 }
 #endif // USE_LEGACY_DLIGHTS
 
-#ifdef USE_MULTIVM_CLIENT
-#undef refdef
-#endif
 
 /*
 =============================================================================

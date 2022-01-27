@@ -222,11 +222,11 @@ model_t	*R_GetModelByHandle( qhandle_t index ) {
 	model_t		*mod;
 
 	// out of range gets the defualt model
-	if ( index < 1 || index >= s_worldData.numModels ) {
-		return s_worldData.models[0];
+	if ( index < 1 || index >= tr.numModels ) {
+		return tr.models[0];
 	}
 
-	mod = s_worldData.models[index];
+	mod = tr.models[index];
 
 	return mod;
 }
@@ -239,7 +239,7 @@ model_t	*R_GetModelByHandle( qhandle_t index ) {
 model_t *R_AllocModel( void ) {
   model_t		*mod = NULL;
 
-	if ( s_worldData.numModels == MAX_MOD_KNOWN ) {
+	if ( tr.numModels >= MAX_MOD_KNOWN ) {
 		// TODO: same pattern as images, find oldest and free/replace
 		return NULL;
 	}
@@ -255,9 +255,9 @@ model_t *R_AllocModel( void ) {
 	}
 	if(mod == NULL) return NULL;
 
-	mod->index = s_worldData.numModels;
-	s_worldData.models[s_worldData.numModels] = mod;
-	s_worldData.numModels++;
+	mod->index = tr.numModels;
+	tr.models[tr.numModels] = mod;
+	tr.numModels++;
 
 	return mod;
 }
@@ -306,13 +306,13 @@ qhandle_t RE_RegisterModel( const char *name )
 		mod = worldModels[hModel];
 		if ( mod && !strcmp( mod->name, name ) 
       // make sure brush models are referenced properly
-      && (name[0] != '*' || s_worldData.models[mod->index] == mod) ) {
+      && (name[0] != '*' || tr.models[mod->index] == mod) ) {
       found = qtrue;
       // check it is loaded in world models
-      if(s_worldData.models[mod->index] != mod) {
-				mod->index = s_worldData.numModels;
-				s_worldData.models[s_worldData.numModels] = mod;
-				s_worldData.numModels++;
+      if(tr.models[mod->index] != mod) {
+				mod->index = tr.numModels;
+				tr.models[tr.numModels] = mod;
+				tr.numModels++;
 			}      
       if( mod->type != MOD_BAD ) {
 				return mod->index;
@@ -1053,12 +1053,8 @@ R_ModelInit
 void R_ModelInit( void ) {
 	model_t		*mod;
 
-#ifdef USE_MULTIVM_CLIENT
-  // TODO: move this up?
-  rwi = 0;
-#endif
-
-  s_worldData.numModels = 0;
+	// leave a space for NULL model
+	tr.numModels = 0;
 	memset(worldModels, 0, sizeof(worldModels));
 
 	// leave a space for NULL model
@@ -1069,9 +1065,9 @@ void R_ModelInit( void ) {
   //   subsequent worlds will just continue to load new models in addition
   //   this is just a few pointers afterall
 #ifdef USE_MULTIVM_CLIENT
-	for(int i = 1; i < MAX_NUM_WORLDS; i++) {
-		s_worldDatas[i].models[0] = mod;
-		s_worldDatas[i].numModels = 1;
+	for(int i = 0; i < MAX_NUM_WORLDS; i++) {
+	//	tr[i].models[0] = mod;
+	//	tr[i].numModels = 1;
 	}
 #endif
 }
@@ -1089,7 +1085,7 @@ void R_Modellist_f( void ) {
 	int		lods;
 
 	total = 0;
-	for ( i = 1 ; i < s_worldData.numModels; i++ ) {
+	for ( i = 1 ; i < tr.numModels; i++ ) {
 		mod = tr.models[i];
 		lods = 1;
 		for ( j = 1 ; j < MD3_MAX_LODS ; j++ ) {

@@ -1032,27 +1032,6 @@ void RE_UploadCinematic( int w, int h, int cols, int rows, byte *data, int clien
 }
 
 
-#if 0 //def USE_MULTIVM_CLIENT
-/*
-=============
-RB_SetWorld
-=============
-*/
-static const void *RB_SetWorld( const void *data ) {
-	const setWorldCommand_t	*cmd;
-
-	cmd = (const setWorldCommand_t *)data;
-
-	rwi = cmd->world;
-	tr.world = &s_worldData;
-	tr.numLightmaps = s_worldData.numLightmaps;
-	tr.lightmaps = s_worldData.lightmaps;
-
-	return (const void *)(cmd + 1);
-}
-#endif
-
-
 /*
 =============
 RB_SetColor
@@ -1687,11 +1666,6 @@ void RB_ExecuteRenderCommands( const void *data ) {
 		data = PADP(data, sizeof(void *));
 
 		switch ( *(const int *)data ) {
-#if 0 //def USE_MULTIVM_CLIENT
-		case RC_SET_WORLD:
-			data = RB_SetWorld( data );
-			break;
-#endif
 		case RC_SET_COLOR:
 			data = RB_SetColor( data );
 			break;

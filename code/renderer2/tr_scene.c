@@ -128,7 +128,7 @@ void RE_AddPolyToScene( qhandle_t hShader, int numVerts, const polyVert_t *verts
 	}
 
 	for ( j = 0; j < numPolys; j++ ) {
-		if ( r_numpolyverts + numVerts > max_polyverts || r_numpolys >= max_polys ) {
+		if ( r_numpolyverts + numVerts > r_maxpolyverts->integer || r_numpolys >= r_maxpolys->integer ) {
       /*
       NOTE TTimo this was initially a PRINT_WARNING
       but it happens a lot with high fighting scenes and particles
@@ -139,11 +139,19 @@ void RE_AddPolyToScene( qhandle_t hShader, int numVerts, const polyVert_t *verts
 			return;
 		}
 
+#ifdef USE_UNLOCKED_CVARS
+		poly = &backEndData->polys[0][r_numpolys];
+#else
 		poly = &backEndData->polys[r_numpolys];
+#endif
 		poly->surfaceType = SF_POLY;
 		poly->hShader = hShader;
 		poly->numVerts = numVerts;
+#ifdef USE_UNLOCKED_CVARS
+		poly->verts = &backEndData->polyVerts[0][r_numpolyverts];
+#else
 		poly->verts = &backEndData->polyVerts[r_numpolyverts];
+#endif
 		
 		Com_Memcpy( poly->verts, &verts[numVerts*j], numVerts * sizeof( *verts ) );
 
@@ -313,7 +321,7 @@ void RE_BeginScene(const refdef_t *fd)
 
 		// compare the area bits
 		areaDiff = 0;
-		for (i = 0 ; i < MAX_MAP_AREA_BYTES/4 ; i++) {
+		for ( i = 0; i < MAX_MAP_AREA_BYTES/sizeof(int); i++ ) {
 			areaDiff |= ((int *)tr.refdef.areamask)[i] ^ ((int *)fd->areamask)[i];
 			((int *)tr.refdef.areamask)[i] = ((int *)fd->areamask)[i];
 		}
@@ -413,7 +421,11 @@ void RE_BeginScene(const refdef_t *fd)
 	tr.refdef.dlights = &backEndData->dlights[r_firstSceneDlight];
 
 	tr.refdef.numPolys = r_numpolys - r_firstScenePoly;
+#ifdef USE_UNLOCKED_CVARS
+	tr.refdef.polys = &backEndData->polys[0][r_firstScenePoly];
+#else
 	tr.refdef.polys = &backEndData->polys[r_firstScenePoly];
+#endif
 
 	tr.refdef.num_pshadows = 0;
 	tr.refdef.pshadows = &backEndData->pshadows[0];
