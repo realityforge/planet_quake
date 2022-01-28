@@ -131,6 +131,9 @@ void RE_RemapShader(const char *shaderName, const char *newShaderName, const cha
 #ifdef USE_LAZY_LOAD
       && (index == 0 || sh->lightmapSearchIndex == index) 
 #endif
+#ifdef USE_MULTIVM_CLIENT
+			&& sh->lastTimeUsed == tr.lastRegistrationTime
+#endif
     ) {
 			sh->defaultShader = qfalse;
 			if (sh != sh2) {
@@ -2552,7 +2555,11 @@ static shader_t *GeneratePermanentShader( void ) {
 	*newShader = shader;
 
 	tr.shaders[ tr.numShaders ] = newShader;
+#ifdef USE_MULTIVM_CLIENT
+	newShader->index = (rwi * MAX_SHADERS) + tr.numShaders;
+#else
 	newShader->index = tr.numShaders;
+#endif
 
 	tr.sortedShaders[ tr.numShaders ] = newShader;
 	newShader->sortedIndex = tr.numShaders;
@@ -3093,6 +3100,9 @@ shader_t *R_FindShaderByName( const char *name )
 #ifdef USE_LAZY_LOAD
       && sh->defaultShader == isDefault
 #endif
+#ifdef USE_MULTIVM_CLIENT
+			&& sh->lastTimeUsed == tr.lastRegistrationTime
+#endif
     ) {
 			// match found
 			return sh;
@@ -3230,24 +3240,28 @@ shader_t *R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImag
 		// then a default shader is created with lightmapIndex == LIGHTMAP_NONE, so we
 		// have to check all default shaders otherwise for every call to R_FindShader
 		// with that same strippedName a new default shader is created.
-		if ( (sh->lightmapSearchIndex == lightmapIndex || sh->defaultShader) 
-      && !Q_stricmp(sh->name, strippedName)
+		if ( (sh->lightmapSearchIndex == lightmapIndex || sh->defaultShader) && !Q_stricmp(sh->name, strippedName) ) {
 #ifdef USE_LAZY_LOAD
 			// if not mapping shaders and lightmaps match, leave default index
 			//   out of this decision because the default shader might be 
 			//   replaced this round if all images load
-      && (!mapShaders && sh->lightmapSearchIndex == lightmapIndex)
-#endif
+      if(!mapShaders && sh->lightmapSearchIndex == lightmapIndex) {
 #ifdef USE_MULTIVM_CLIENT
-			// add the additional requirement that the shader comes from the same world
-			//   we will have duplicate named shaders in the hash table. Shaders need to
-			//   use their own world mappings because they might have lightmaps
-			&& (sh->lightmapSearchIndex <= 0 || 
-				sh->lastTimeUsed == tr.lastRegistrationTime)
+				// add the additional requirement that the shader comes from the same world
+				//   we will have duplicate named shaders in the hash table. Shaders need to
+				//   use their own world mappings because they might have lightmaps
+				if(sh->lastTimeUsed == tr.lastRegistrationTime) {
+					return sh;
+				}
+#else
+				// match found
+				return sh;
 #endif
-    ) {
+			}
+#else
 			// match found
 			return sh;
+#endif
 		}
 	}
 
@@ -3278,8 +3292,7 @@ shader_t *R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImag
 			// had errors, so use default shader
 			shader.defaultShader = qtrue;
 		}
-		sh = FinishShader();
-		return sh;
+		return FinishShader();
 	}
 
 	//
@@ -3346,7 +3359,11 @@ qhandle_t RE_RegisterShaderFromImage(const char *name, int lightmapIndex, image_
 		// then a default shader is created with lightmapIndex == LIGHTMAP_NONE, so we
 		// have to check all default shaders otherwise for every call to R_FindShader
 		// with that same strippedName a new default shader is created.
-		if ( (sh->lightmapSearchIndex == lightmapIndex || sh->defaultShader) && !Q_stricmp(sh->name, name)) {
+		if ( (sh->lightmapSearchIndex == lightmapIndex || sh->defaultShader) && !Q_stricmp(sh->name, name)
+#ifdef USE_MULTIVM_CLIENT
+			&& sh->lastTimeUsed == tr.lastRegistrationTime
+#endif
+		) {
 			// match found
 			return sh->index;
 		}
@@ -3486,15 +3503,28 @@ it and returns a valid (possibly default) shader_t to be used internally.
 ====================
 */
 shader_t *R_GetShaderByHandle( qhandle_t hShader ) {
+#ifdef USE_MULTIVM_CLIENT
+	int i;
+	//if(hShader >= MAX_SHADERS) {
+		i = floor(hShader / MAX_SHADERS);
+		hShader = hShader % MAX_SHADERS;
+		if(!trWorlds[i].shaders[hShader]) {
+			ri.Printf( PRINT_WARNING, "R_GetShaderByHandle (%i): out of range hShader '%d'\n", rwi, hShader );
+			return tr.defaultShader;
+		}
+		return trWorlds[i].shaders[hShader];
+	//}
+#else
 	if ( hShader < 0 ) {
-	  //ri.Printf( PRINT_WARNING, "R_GetShaderByHandle (%i): out of range hShader '%d'\n", rwi, hShader );
+	  ri.Printf( PRINT_WARNING, "R_GetShaderByHandle (%i): out of range hShader '%d'\n", rwi, hShader );
 		return tr.defaultShader;
 	}
 	if ( hShader >= tr.numShaders ) {
-		//ri.Printf( PRINT_WARNING, "R_GetShaderByHandle (%i): out of range hShader '%d'\n", rwi, hShader );
+		ri.Printf( PRINT_WARNING, "R_GetShaderByHandle (%i): out of range hShader '%d'\n", rwi, hShader );
 		return tr.defaultShader;
 	}
 	return tr.shaders[hShader];
+#endif
 }
 
 /*
@@ -3811,11 +3841,15 @@ static void CreateInternalShaders( void ) {
 	stages[0].bundle[0].image[0] = tr.defaultImage;
 	stages[0].active = qtrue;
 	stages[0].stateBits = GLS_DEFAULT;
-	tr.defaultShader = FinishShader();
 #ifdef USE_MULTIVM_CLIENT
+	trWorlds[0].defaultShader = FinishShader();
 	for(int i = 0; i < MAX_NUM_WORLDS; i++) {
+		tr.numShaders = 1;
+		trWorlds[i].shaders[0] = 
 		trWorlds[i].defaultShader = trWorlds[0].defaultShader;
 	}
+#else
+	tr.defaultShader = FinishShader();
 #endif
 
 	// shadow shader is just a marker
@@ -3876,6 +3910,15 @@ void RE_UpdateShader(char *shaderName, int lightmapIndex) {
 void GL_SetDefaultState( void );
 
 void RE_ReloadShaders( qboolean createNew ) {
+#ifdef USE_MULTIVM_CLIENT
+	if(createNew) {
+		for(rwi = 0; rwi < MAX_NUM_WORLDS; rwi++) {
+			if(!tr.world) {
+				break;
+			}
+		}
+	}
+#endif
   tr.lastRegistrationTime = ri.Milliseconds();
 
   tr.viewCluster = -1;

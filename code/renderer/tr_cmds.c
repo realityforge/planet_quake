@@ -103,7 +103,6 @@ static void R_IssueRenderCommands( void ) {
 	if ( !r_skipBackEnd->integer ) {
 		// let it start on the new batch
 #ifdef USE_UNLOCKED_CVARS
-//printf("cmds: %i -> %i\n", rwi, cmdUsed);
 		for(int i = 0; i <= cmdSubList; i++) {
 			if(i > 0 && tr.refdef.num_entities == 0) continue;
 			RB_ExecuteRenderCommands( cmdList->cmds[i] );
@@ -535,9 +534,10 @@ void RE_EndFrame( int *frontEndMsec, int *backEndMsec ) {
 	R_PerformanceCounters();
 
 #ifdef USE_MULTIVM_CLIENT
-	for(rwi = 0; rwi < MAX_NUM_VMS; rwi++) {
+	for(int i = 0; i < MAX_NUM_VMS; i++) {
+		rwi = i;
 		R_IssueRenderCommands();
-
+		rwi = i;
 		R_InitNextFrame();
 	}
 	rwi = 0;

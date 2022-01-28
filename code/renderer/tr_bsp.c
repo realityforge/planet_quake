@@ -2179,7 +2179,6 @@ void RE_SwitchWorld(int w) {
 		// allow engine to prep renderer
 		if(w < 0 || w >= MAX_NUM_WORLDS)
 			rwi = 0; 
-		return;
 	}
 	rwi = w;
 }

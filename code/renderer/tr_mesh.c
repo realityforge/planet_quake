@@ -396,7 +396,14 @@ void R_AddMD3Surfaces( trRefEntity_t *ent ) {
 		} else {
 			md3Shader = (md3Shader_t *) ( (byte *)surface + surface->ofsShaders );
 			md3Shader += ent->e.skinNum % surface->numShaders;
+#if 0 //def USE_MULTIVM_CLIENT
+			// lookup by original world the model was created on
+			// TODO: remap?
+			int i = floor(tr.currentModel->index / MAX_MOD_KNOWN);
+			shader = trWorlds[i].shaders[ md3Shader->shaderIndex ];
+#else
 			shader = tr.shaders[ md3Shader->shaderIndex ];
+#endif
 		}
 
 
@@ -421,8 +428,7 @@ void R_AddMD3Surfaces( trRefEntity_t *ent ) {
 
 		// don't add third_person objects if not viewing through a portal
 		if ( !personalModel ) {
-			printf("crash %i\n", shader);
-			//R_AddDrawSurf( (void *)surface, shader, fogNum, 0 );
+			R_AddDrawSurf( (void *)surface, shader, fogNum, 0 );
 		}
 
 #ifdef USE_PMLIGHT

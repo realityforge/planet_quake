@@ -218,7 +218,17 @@ static int numModelLoaders = ARRAY_LEN(modelLoaders);
 */
 model_t	*R_GetModelByHandle( qhandle_t index ) {
 	model_t		*mod;
+#ifdef USE_MULTIVM_CLIENT
+	int i = floor(index / MAX_MOD_KNOWN);
+	index = index % MAX_MOD_KNOWN;
+	if(!trWorlds[i].models[index]) {
+		return tr.models[0];
+	}
 
+	mod = trWorlds[i].models[index];
+
+	return mod;
+#else
 	// out of range gets the defualt model
 	if ( index < 1 || index >= tr.numModels ) {
 		return tr.models[0];
@@ -227,6 +237,7 @@ model_t	*R_GetModelByHandle( qhandle_t index ) {
 	mod = tr.models[index];
 
 	return mod;
+#endif
 }
 
 //===============================================================================
@@ -243,7 +254,11 @@ model_t *R_AllocModel( void ) {
 	}
 
 	mod = ri.Hunk_Alloc( sizeof( *tr.models[tr.numModels] ), h_low );
+#ifdef USE_MULTIVM_CLIENT
+	mod->index = rwi * MAX_MOD_KNOWN + tr.numModels;
+#else
 	mod->index = tr.numModels;
+#endif
 	tr.models[tr.numModels] = mod;
 	tr.numModels++;
 
@@ -309,18 +324,18 @@ qhandle_t RE_RegisterModel( const char *name )
 #endif
 		}
 	}
-#ifdef USE_MULTIVM_CLIENT
+#if 0 //def USE_MULTIVM_CLIENT
 	// check each world for a loaded model we can copy over
 	// TODO: reload the shaders for the model on each load
 	// TODO: make models out of BSPs (halves of CTF levels) 
 	//   and load shaders and lightmaps on the model
 	if(!found) {
 		for(int i = 0; i < MAX_NUM_WORLDS; i++) {
+			if(i == rwi) continue;
 			for ( hModel = 1 ; hModel < trWorlds[i].numModels; hModel++ ) {
 				if ( mod && !strcmp( mod->name, name ) ) {
 					found = qtrue;
 					tr.models[tr.numModels] = mod;
-					mod->index = tr.numModels;
 					tr.numModels++;
 					if( mod->type != MOD_BAD || !updateModels ) {
 						return mod->index;
@@ -439,7 +454,7 @@ qhandle_t RE_RegisterModel( const char *name )
 #ifdef USE_LAZY_LOAD
 	ri.Cvar_Set("r_loadingModel", "");
 #endif
-  return hModel;
+  return mod->index;
 }
 
 #ifdef USE_LAZY_LOAD

@@ -2844,10 +2844,10 @@ static void CL_DownloadsComplete( void ) {
 #ifdef USE_LAZY_MEMORY
 	S_DisableSounds();
 	re.ReloadShaders(qtrue);
-	cls.charSetShader = re.RegisterShader( "gfx/2d/bigchars" );
-	cls.whiteShader = re.RegisterShader( "white" );
-	cls.consoleShader = re.RegisterShader( "console" );
-  cls.lagometerShader = re.RegisterShader( "lagometer" );
+	//cls.charSetShader = re.RegisterShader( "gfx/2d/bigchars" );
+	//cls.whiteShader = re.RegisterShader( "white" );
+	//cls.consoleShader = re.RegisterShader( "console" );
+  //cls.lagometerShader = re.RegisterShader( "lagometer" );
 #ifndef __WASM__
 	cls.soundRegistered = qtrue;
 	S_BeginRegistration();
@@ -2876,7 +2876,7 @@ static void CL_DownloadsComplete( void ) {
 		// FIXME: don't know what slot the renderer is on,
 		//   otherwise we could replace `worldMaps` by reversing powerups in snapshot
 		//re.SwitchWorld(clientMaps[cgvmi]);
-#ifdef USE_LAZY_LOAD
+#if 0 //def USE_LAZY_LOAD
 		if(clc.world && clc.world[0] != '\0') {
 			if(clientMaps[clc.currentView] != 0)
 				Cvar_Set( "cl_lazyLoad", "2" ); // TODO: 4

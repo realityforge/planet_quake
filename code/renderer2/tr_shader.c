@@ -3649,6 +3649,9 @@ shader_t *R_FindShaderByName( const char *name )
 #ifdef USE_LAZY_LOAD
       && sh->defaultShader == isDefault
 #endif
+#ifdef USE_MULTIVM_CLIENT
+			&& sh->lastTimeUsed == tr.lastRegistrationTime
+#endif
     ) {
 			// match found
 			return sh;
@@ -3733,6 +3736,9 @@ shader_t *R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImag
       && !Q_stricmp(sh->name, strippedName)
 #ifdef USE_LAZY_LOAD
       && (!mapShaders && sh->lightmapSearchIndex == lightmapIndex)
+#endif
+#ifdef USE_MULTIVM_CLIENT
+			&& sh->lastTimeUsed == tr.lastRegistrationTime
 #endif
     ) {
 			// match found
@@ -3878,7 +3884,11 @@ qhandle_t RE_RegisterShaderFromImage(const char *name, int lightmapIndex, image_
 		// then a default shader is created with lightmapIndex == LIGHTMAP_NONE, so we
 		// have to check all default shaders otherwise for every call to R_FindShader
 		// with that same strippedName a new default shader is created.
-		if ( (sh->lightmapSearchIndex == lightmapIndex || sh->defaultShader) && !Q_stricmp(sh->name, name)) {
+		if ( (sh->lightmapSearchIndex == lightmapIndex || sh->defaultShader) && !Q_stricmp(sh->name, name)
+#ifdef USE_MULTIVM_CLIENT
+			&& sh->lastTimeUsed == tr.lastRegistrationTime
+#endif
+		) {
 			// match found
 			return sh->index;
 		}

@@ -1780,6 +1780,9 @@ R_InitSkins
 */
 void	R_InitSkins( void ) {
 	skin_t		*skin;
+#ifdef USE_MULTIVM_CLIENT
+	rwi = 0;
+#endif
 
 	tr.numSkins = 1;
 
@@ -1789,6 +1792,12 @@ void	R_InitSkins( void ) {
 	skin->numSurfaces = 1;
 	skin->surfaces = ri.Hunk_Alloc( sizeof( skinSurface_t ), h_low );
 	skin->surfaces[0].shader = tr.defaultShader;
+#ifdef USE_MULTIVM_CLIENT
+	for(int i = 0; i < MAX_NUM_WORLDS; i++) {
+		trWorlds[i].skins[0] = trWorlds[0].skins[0];
+		trWorlds[i].numSkins = 1;
+	}
+#endif
 }
 
 

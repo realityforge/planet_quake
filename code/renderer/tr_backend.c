@@ -1333,6 +1333,9 @@ static const void *RB_DrawSurfs( const void *data ) {
 
 	backEnd.refdef = cmd->refdef;
 	backEnd.viewParms = cmd->viewParms;
+#ifdef USE_MULTIVM_CLIENT
+	//rwi = backEnd.viewParms.newWorld;
+#endif
 
 	VBO_UnBind();
 
