@@ -2582,6 +2582,7 @@ static shader_t *GeneratePermanentShader( void ) {
 		}
 	}
 
+printf("sorting: %i\n", rwi);
 	SortNewShader();
 
 	hash = generateHashValue(newShader->name, FILE_HASH_SIZE);

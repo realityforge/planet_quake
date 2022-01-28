@@ -6,6 +6,9 @@
 /* kindly adapted from XPC32 and breadsticks */
 
 #include "client.h"
+
+#ifdef USE_XDAMAGE
+
 #include "../qcommon/cm_local.h"
 #include "../qcommon/cm_patch.h"
 
@@ -391,3 +394,5 @@ static void draw(visBrushNode_t *brush, qhandle_t shader) {
 		brush = brush->next;
 	}
 }
+
+#endif

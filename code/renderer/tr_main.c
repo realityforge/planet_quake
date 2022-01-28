@@ -1363,7 +1363,11 @@ static qboolean R_MirrorViewBySurface( const drawSurf_t *drawSurf, int entityNum
 	// switch back
 	if(newParms.newWorld != oldParms.newWorld
 		&& rwi != oldParms.newWorld) {
+#ifdef USE_LAZY_LOAD
+		rwi = ri.worldMaps[oldParms.newWorld];
+#else
 		rwi = oldParms.newWorld;
+#endif
 	}
 #endif
 

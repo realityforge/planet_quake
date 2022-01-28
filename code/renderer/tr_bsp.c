@@ -2177,8 +2177,10 @@ void RE_SwitchWorld(int w) {
 		|| w < 0 || w >= MAX_NUM_WORLDS) {
 		Com_DPrintf("RE_SwitchWorld: no world loaded on %i\n", w);
 		// allow engine to prep renderer
-		if(w < 0 || w >= MAX_NUM_WORLDS)
-			rwi = 0; 
+		if(w < 0 || w >= MAX_NUM_WORLDS) {
+			rwi = 0;
+			return;
+		}
 	}
 	rwi = w;
 }
@@ -2227,8 +2229,8 @@ int RE_LoadWorldMap( const char *name ) {
 	for(j = 0; j < MAX_NUM_WORLDS; j++) {
 		if ( !Q_stricmp( s_worldDatas[j].name, name ) ) {
 			// TODO: PRINT_DEVELOPER
-			ri.Printf( PRINT_ALL, "RE_LoadWorldMap( Already loaded %s )\n", name );
 			rwi = j;
+			ri.Printf( PRINT_ALL, "RE_LoadWorldMap (%i): Already loaded %s\n", rwi, name );
 			return j;
 		} else if (s_worldDatas[j].name[0] == '\0' && empty == -1) {
 			// load additional world in to next slot
@@ -2236,6 +2238,7 @@ int RE_LoadWorldMap( const char *name ) {
 		}
 	}
 	rwi = empty;
+	ri.Printf( PRINT_ALL, "RE_LoadWorldMap (%i): Loading %s\n", rwi, name );
 	// TODO: if (empty == -1) FreeOldestClipmap
 #else
 	if ( tr.worldMapLoaded ) {

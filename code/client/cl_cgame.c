@@ -660,7 +660,9 @@ static void CL_CM_LoadMap( const char *mapname ) {
 #else
 	clientMaps[0] = CM_LoadMap( mapname, qtrue, &checksum );
 #endif
+#ifdef USE_XDAMAGE
   tc_vis_init();
+#endif
 }
 
 

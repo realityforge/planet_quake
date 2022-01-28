@@ -1334,6 +1334,7 @@ static const void *RB_DrawSurfs( const void *data ) {
 	backEnd.refdef = cmd->refdef;
 	backEnd.viewParms = cmd->viewParms;
 #ifdef USE_MULTIVM_CLIENT
+//printf("backend: %i -> %i\n", rwi, backEnd.viewParms.newWorld);
 	//rwi = backEnd.viewParms.newWorld;
 #endif
 
@@ -1662,12 +1663,16 @@ RB_ExecuteRenderCommands
 ====================
 */
 void RB_ExecuteRenderCommands( const void *data ) {
-
+#ifdef USE_MULTIVM_CLIENT
+	int prevRW = rwi;
+#endif
 	backEnd.pc.msec = ri.Milliseconds();
 
 	while ( 1 ) {
 		data = PADP(data, sizeof(void *));
-
+#ifdef USE_MULTIVM_CLIENT
+		//rwi = prevRW;
+#endif
 		switch ( *(const int *)data ) {
 		case RC_SET_COLOR:
 			data = RB_SetColor( data );

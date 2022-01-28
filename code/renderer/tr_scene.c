@@ -84,8 +84,6 @@ R_InitNextFrame
 */
 void R_InitNextFrame( void ) {
 
-printf("reset frame: %i\n", rwi);
-
 	backEndData->commands.used = 0;
 
 	r_firstSceneDrawSurf = 0;
@@ -290,6 +288,10 @@ void RE_AddRefEntityToScene( const refEntity_t *ent, qboolean intShaderTime ) {
 	backEndData->entities[r_numentities].intShaderTime = intShaderTime;
 
 	r_numentities++;
+
+#ifdef USE_MULTIVM_CLIENT
+//printf( "RE_AddRefEntityToScene: %i -> %i\n", rwi, r_numentities );
+#endif
 }
 
 
