@@ -1284,7 +1284,11 @@ qboolean SV_GameCommand( int igvm ) {
 	qboolean result;
 #ifdef USE_MULTIVM_SERVER
 	int prevGvm = gvmi;
-	gvmi = igvm;
+	if(igvm == -1) {
+		// gvmi = 0; // unaffected based on netWorld?
+	} else {
+		gvmi = igvm;
+	}
 	CM_SwitchMap(gameWorlds[gvmi]);
 	SV_SetAASgvm(gvmi);
 	if ( !gvm ) {

@@ -859,7 +859,9 @@ This will be called twice if rendering in stereo mode
 void SCR_DrawScreenField( stereoFrame_t stereoFrame ) {
 	qboolean uiFullscreen = qfalse;
 
+printf("crash 1\n");
 	re.BeginFrame( stereoFrame );
+printf("crash 2\n");
 
 	if(uivm) {
 		uiFullscreen = (uivm && VM_Call( uivm, 0, UI_IS_FULLSCREEN ));
@@ -1139,8 +1141,7 @@ donewithupdate:
 	uivmi = 0;
   CM_SwitchMap(clientMaps[cgvmi]);
 #ifdef USE_LAZY_MEMORY
-  re.SwitchWorld(worldMaps[cgvmi]);
-  re.SetDvrFrame(0, 0, 1, 1);
+	re.SwitchWorld(worldMaps[cgvmi]);
 #endif
 #endif
 

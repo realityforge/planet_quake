@@ -49,7 +49,11 @@ SURFACE SHADERS
 =============================================================
 */
 
+#ifdef USE_MULTIVM_CLIENT
+shaderCommands_t	tessWorlds[MAX_NUM_WORLDS];
+#else
 shaderCommands_t	tess;
+#endif
 static qboolean	setArraysOnce;
 
 /*
@@ -73,7 +77,7 @@ void R_BindAnimatedImage( const textureBundle_t *bundle ) {
 	}
 
 	if ( bundle->numImageAnimations <= 1 ) {
-		GL_Bind( bundle->image[0] );
+			GL_Bind( bundle->image[0] );
 		return;
 	}
 
@@ -111,7 +115,9 @@ static void DrawTris( shaderCommands_t *input ) {
 		return;
 
 	GL_ProgramDisable();
+#ifdef USE_PMLIGHT
 	tess.dlightUpdateParams = qtrue;
+#endif
 
 	GL_ClientState( 0, CLS_NONE );
 	qglDisable( GL_TEXTURE_2D );

@@ -3038,7 +3038,21 @@ qboolean SV_ExecuteClientCommand( client_t *cl, const char *s ) {
 	if(cl->netchan.remoteAddress.type == NA_LOOPBACK) {
 		redirectAddress = cl->netchan.remoteAddress;
 		Com_BeginRedirect( sv_outputbuf, sizeof( sv_outputbuf ), SV_FlushRedirect );
-		if(Cmd_ExecuteString(s, qtrue, 0)) {
+		if(
+#ifdef USE_MULTIVM_SERVER
+#ifdef USE_CMD_CONNECTOR
+			Cmd_ExecuteString(s, qtrue, gvmi)
+#else
+			Cmd_ExecuteString(s, gvmi)
+#endif
+#else
+#ifdef USE_CMD_CONNECTOR
+			Cmd_ExecuteString(s, qtrue)
+#else
+			Cmd_ExecuteString(s)
+#endif
+#endif
+		) {
 			Com_EndRedirect();
 			return qtrue;
 		}

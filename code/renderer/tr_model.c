@@ -454,7 +454,7 @@ qhandle_t RE_RegisterModel( const char *name )
 #ifdef USE_LAZY_LOAD
 	ri.Cvar_Set("r_loadingModel", "");
 #endif
-  return mod->index;
+	return hModel;
 }
 
 #ifdef USE_LAZY_LOAD
@@ -652,7 +652,7 @@ static qboolean R_LoadMD3( model_t *mod, int lod, void *buffer, int fileSize, co
 
 			sh = R_FindShader( shader->name, LIGHTMAP_NONE, qtrue );
 			if ( sh->defaultShader ) {
-#ifdef USE_MULTIVM_CLIENT
+#ifdef USE_LAZY_LOAD
         sh->remappedShader = tr.defaultShader;
         shader->shaderIndex = sh->index;
 #else
@@ -1058,15 +1058,7 @@ void RE_BeginRegistration( glconfig_t *glconfigOut ) {
 
 	tr.viewCluster = -1;		// force markleafs to regenerate
 	R_ClearFlares();
-#ifdef USE_MULTIVM_CLIENT
-	for(rwi = 0; rwi < MAX_NUM_VMS; rwi++) {
-		tr.viewCluster = -1;
-		RE_ClearScene();
-	}
-	rwi = 0;
-#else
 	RE_ClearScene();
-#endif
 
 	tr.registered = qtrue;
 }

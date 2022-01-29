@@ -160,7 +160,19 @@ static void Cbuf_ExecuteInternal( cbufExec_t exec_when, const char *text )
 	case EXEC_NOW:
 		if ( text && text[0] != '\0' ) {
 			Com_DPrintf(S_COLOR_YELLOW "EXEC_NOW %s\n", text);
-			Cmd_ExecuteString (text, qfalse, 0);
+#ifdef USE_MULTIVM_CLIENT
+#ifdef USE_CMD_CONNECTOR
+			Cmd_ExecuteString (text, qfalse, -1);
+#else
+			Cmd_ExecuteString (text, -1);
+#endif
+#else
+#ifdef USE_CMD_CONNECTOR
+			Cmd_ExecuteString (text, qfalse);
+#else
+			Cmd_ExecuteString (text);
+#endif
+#endif
 		} else {
 			Cbuf_Execute();
 			Com_DPrintf(S_COLOR_YELLOW "EXEC_NOW %s\n", cmd_text[insCmdI].data);
@@ -256,7 +268,7 @@ void Cbuf_Execute( void )
 
 		if ( i == cmd_text[execCmdI].cursize ) {
 			cmd_text[execCmdI].cursize = 0;
-			cmd_text[execCmdI].tag = 0;
+			cmd_text[execCmdI].tag = -1;
 			cmd_text[execCmdI].filtered = qfalse;
 		} 
 		else
@@ -272,11 +284,28 @@ void Cbuf_Execute( void )
 		}
 
 		// execute the command line
+#if defined(USE_MULTIVM_CLIENT) || defined(USE_MULTIVM_SERVER)
+#ifdef USE_CMD_CONNECTOR
 		if(cmd_text[execCmdI].filtered) {
 			Cmd_ExecuteString( line, qfalse, cmd_text[execCmdI].tag );
 		} else {
-			Cmd_ExecuteString( line, qfalse, 0 );
+			Cmd_ExecuteString( line, qfalse, -1 );
 		}
+#else
+		if(cmd_text[execCmdI].filtered) {
+			Cmd_ExecuteString( line, cmd_text[execCmdI].tag );
+		} else {
+			Cmd_ExecuteString( line, -1 );
+		}
+#endif
+#else
+#ifdef USE_CMD_CONNECTOR
+		Cmd_ExecuteString( line, qfalse );
+#else
+		Cmd_ExecuteString( line );
+#endif
+#endif
+
 #ifdef USE_ASYNCHRONOUS
 		// if an execution invoked a callback event like `\fs_restart`, run the rest next frame
 		if(!FS_Initialized()) {
@@ -906,7 +935,20 @@ Cmd_ExecuteString
 A complete command line has been parsed, so try to execute it
 ============
 */
-qboolean Cmd_ExecuteString( const char *text, qboolean noServer, int tag ) {
+#if defined(USE_MULTIVM_CLIENT) || defined(USE_MULTIVM_SERVER)
+#ifdef USE_CMD_CONNECTOR
+qboolean Cmd_ExecuteString( const char *text, qboolean noServer, int tag)
+#else
+qboolean Cmd_ExecuteString( const char *text, int tag)
+#endif
+#else
+#ifdef USE_CMD_CONNECTOR
+qboolean Cmd_ExecuteString( const char *text )
+#else
+qboolean Cmd_ExecuteString( const char *text )
+#endif
+#endif
+{
 	cmd_function_t *cmd, **prev;
 
 	// execute the command line
@@ -958,7 +1000,11 @@ qboolean Cmd_ExecuteString( const char *text, qboolean noServer, int tag ) {
 	if (com_dedicated->integer)
 #endif
 	// check server game commands
-	if ( !noServer && com_sv_running && com_sv_running->integer && SV_GameCommand(tag) ) {
+	if ( com_sv_running && com_sv_running->integer && SV_GameCommand(tag) 
+#ifdef USE_CMD_CONNECTOR
+		&& !noServer
+#endif
+	) {
 		return qtrue;
 	}
 #endif
@@ -969,13 +1015,21 @@ qboolean Cmd_ExecuteString( const char *text, qboolean noServer, int tag ) {
 		return qtrue;
 	}
 
-	if(noServer && com_dedicated && com_dedicated->integer) {
+	if(com_dedicated && com_dedicated->integer
+#ifdef USE_CMD_CONNECTOR
+		&& !noServer
+#endif
+	) {
 		return qfalse;
 	}
 
 	// send it as a server command if we are connected
 	// this will usually result in a chat message
-	if(!noServer && com_dedicated && !com_dedicated->integer) {
+	if(com_dedicated && !com_dedicated->integer
+#ifdef USE_CMD_CONNECTOR
+		&& !noServer
+#endif
+	) {
 		CL_ForwardCommandToServer( text );
 		return qtrue;		
 	} else {
@@ -1080,7 +1134,7 @@ void Cbuf_ExecuteText( cbufExec_t exec_when, const char *text )
 		}
 	}
 	cmd_text[insCmdI].filtered = qfalse;
-	cmd_text[insCmdI].tag = 0;
+	cmd_text[insCmdI].tag = -1;
 	Cbuf_ExecuteInternal( exec_when, text );
 }
 

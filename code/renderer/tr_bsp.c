@@ -41,11 +41,7 @@ int       rwi = 0; // render world, should match number of loaded clip maps,
 #else
 static 		world_t		s_worldData;
 #endif
-
 static	byte		*fileBase;
-
-int			c_subdivisions;
-int			c_gridVerts;
 
 //===============================================================================
 
@@ -437,12 +433,8 @@ static void R_LoadLightmaps( const lump_t *l ) {
 	tr.lightmaps = ri.Hunk_Alloc( tr.numLightmaps * sizeof(image_t *), h_low );
 	for ( i = 0 ; i < tr.numLightmaps ; i++ ) {
 		maxIntensity = R_ProcessLightmap( image, buf + i * LIGHTMAP_SIZE * LIGHTMAP_SIZE * 3, maxIntensity );
-#ifdef USE_MULTIVM_CLIENT
-		tr.lightmaps[i] = R_CreateImage(va("*lightmap_%d_%d", rwi, i), NULL, image, LIGHTMAP_SIZE, LIGHTMAP_SIZE, lightmapFlags | IMGFLAG_CLAMPTOEDGE );
-#else
 		tr.lightmaps[i] = R_CreateImage( va( "*lightmap%d", i ), NULL, image, LIGHTMAP_SIZE, LIGHTMAP_SIZE,
 			lightmapFlags | IMGFLAG_CLAMPTOEDGE );
-#endif
 	}
 
 	//if ( r_lightmap->integer == 2 )	{
@@ -2282,7 +2274,6 @@ int RE_LoadWorldMap( const char *name ) {
 	COM_StripExtension(s_worldData.baseName, s_worldData.baseName, sizeof(s_worldData.baseName));
 
 	startMarker = ri.Hunk_Alloc(0, h_low);
-	c_gridVerts = 0;
 
 	header = (dheader_t *)buffer.b;
 	fileBase = (byte *)header;

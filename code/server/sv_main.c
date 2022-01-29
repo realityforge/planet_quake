@@ -1164,9 +1164,17 @@ static void SVC_RemoteCommand( const netadr_t *from ) {
 			} else
 #endif
 #ifdef USE_MULTIVM_SERVER
+#ifdef USE_CMD_CONNECTOR
       Cmd_ExecuteString( cmd_aux, qfalse, gvmi );
 #else
-			Cmd_ExecuteString( cmd_aux, qfalse, 0 );
+      Cmd_ExecuteString( cmd_aux, gvmi );
+#endif
+#else
+#ifdef USE_CMD_CONNECTOR
+			Cmd_ExecuteString( cmd_aux, qfalse );
+#else
+			Cmd_ExecuteString( cmd_aux );
+#endif
 #endif
 		}
 	}

@@ -1391,6 +1391,19 @@ static void R_CreateBuiltinImages( void ) {
 
 	R_CreateDlightImage();
 	R_CreateFogImage();
+	
+#ifdef USE_MULTIVM_CLIENT
+	for(int i = 1; i < MAX_NUM_WORLDS; i++) {
+		trWorlds[i].defaultImage = tr.defaultImage;
+		trWorlds[i].whiteImage = tr.whiteImage;
+		trWorlds[i].identityLightImage = tr.identityLightImage;
+		rwi = i;
+		R_SetColorMappings();
+		R_CreateDlightImage();
+		R_CreateFogImage();
+	}
+	rwi = 0;
+#endif
 }
 
 
@@ -1780,14 +1793,15 @@ R_InitSkins
 */
 void	R_InitSkins( void ) {
 	skin_t		*skin;
-#ifdef USE_MULTIVM_CLIENT
-	rwi = 0;
-#endif
 
 	tr.numSkins = 1;
 
 	// make the default skin have all default shaders
+#ifdef USE_MULTIVM_CLIENT
+	skin = trWorlds[0].skins[0] = ri.Hunk_Alloc( sizeof( skin_t ), h_low );
+#else
 	skin = tr.skins[0] = ri.Hunk_Alloc( sizeof( skin_t ), h_low );
+#endif
 	Q_strncpyz( skin->name, "<default skin>", sizeof( skin->name )  );
 	skin->numSurfaces = 1;
 	skin->surfaces = ri.Hunk_Alloc( sizeof( skinSurface_t ), h_low );

@@ -2582,7 +2582,6 @@ static shader_t *GeneratePermanentShader( void ) {
 		}
 	}
 
-printf("sorting: %i\n", rwi);
 	SortNewShader();
 
 	hash = generateHashValue(newShader->name, FILE_HASH_SIZE);
@@ -3155,6 +3154,7 @@ static void R_CreateDefaultShading( image_t *image ) {
 	} else if ( shader.lightmapIndex == LIGHTMAP_WHITEIMAGE ) {
 		// fullbright level
 		stages[0].active = qtrue;
+		//stages[0].bundle[0].image[0] = image;
 		stages[0].bundle[0].image[0] = tr.whiteImage;
 		stages[0].rgbGen = CGEN_IDENTITY_LIGHTING;
 		stages[0].stateBits = GLS_DEFAULT;
@@ -3211,7 +3211,7 @@ shader_t *R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImag
 	char		strippedName[MAX_QPATH];
 	unsigned long hash;
 	const char	*shaderText;
-	image_t		*image = NULL;
+	image_t		*image;
 	shader_t	*sh;
 
   //printf("shader: %i -> %i, %s\n", rwi, tr.numShaders, name);
@@ -3293,7 +3293,8 @@ shader_t *R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImag
 			// had errors, so use default shader
 			shader.defaultShader = qtrue;
 		}
-		return FinishShader();
+		sh = FinishShader();
+		return sh;
 	}
 
 	//
@@ -3517,11 +3518,11 @@ shader_t *R_GetShaderByHandle( qhandle_t hShader ) {
 	//}
 #else
 	if ( hShader < 0 ) {
-	  ri.Printf( PRINT_WARNING, "R_GetShaderByHandle (%i): out of range hShader '%d'\n", rwi, hShader );
+	  ri.Printf( PRINT_WARNING, "R_GetShaderByHandle: out of range hShader '%d'\n", hShader );
 		return tr.defaultShader;
 	}
 	if ( hShader >= tr.numShaders ) {
-		ri.Printf( PRINT_WARNING, "R_GetShaderByHandle (%i): out of range hShader '%d'\n", rwi, hShader );
+		ri.Printf( PRINT_WARNING, "R_GetShaderByHandle: out of range hShader '%d'\n", hShader );
 		return tr.defaultShader;
 	}
 	return tr.shaders[hShader];
@@ -3541,7 +3542,13 @@ void	R_ShaderList_f (void) {
 	int			count;
 	const shader_t *sh;
 
+#ifdef USE_MULTIVM_CLIENT
+	for(rwi = 0; rwi < MAX_NUM_WORLDS; rwi++) {
+	ri.Printf (PRINT_ALL, "-( %i )----------------------\n", rwi);
+	ri.Printf (PRINT_ALL, "%i total shaders\n", tr.numShaders);
+#else
 	ri.Printf (PRINT_ALL, "-----------------------\n");
+#endif
 
 	count = 0;
 	for ( i = 0 ; i < tr.numShaders ; i++ ) {
@@ -3586,6 +3593,9 @@ void	R_ShaderList_f (void) {
 	}
 	ri.Printf (PRINT_ALL, "%i total shaders\n", count);
 	ri.Printf (PRINT_ALL, "------------------\n");
+#ifdef USE_MULTIVM_CLIENT
+	}
+#endif
 }
 
 
@@ -3922,10 +3932,15 @@ void RE_ReloadShaders( qboolean createNew ) {
 #endif
   tr.lastRegistrationTime = ri.Milliseconds();
 
+#ifdef USE_MULTIVM_CLIENT
   tr.viewCluster = -1;
 
   RE_ClearScene();
 
+	tr.registered = qtrue;
+#endif
+
+	/*
   // remove lightmaps
   if(!createNew) {
     // Gets reassigned on subsequent loads
@@ -3946,10 +3961,15 @@ void RE_ReloadShaders( qboolean createNew ) {
 	} else {
 		qglBindTexture( GL_TEXTURE_2D, 0 );
 	}
+	*/
   Com_Memset( glState.currenttextures, 0, sizeof( glState.currenttextures ) );
 
+	//CreateInternalShaders();
+
   ScanAndLoadShaderFiles();
-  
+
+	//CreateExternalShaders();
+
   GL_SetDefaultState();
 }
 #endif

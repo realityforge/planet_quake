@@ -2865,30 +2865,20 @@ static void CL_DownloadsComplete( void ) {
 	// force the client to load a new VM using sv_mvWorld
 	// this only loads a VM the first time, decoupling game state from loading
 	// TODO: exec world 0:0 asynchronously
-	//if(((!clientGames[clc.currentView] || clientGames[clc.currentView] < 0)
-	//	&& clc.currentView == 0)
-		// server controls world view
-		// || (clc.world && clc.world[0] != '\0')
-		// client auto loads world, default autoload
-		// || cl_mvWorld->integer
-	//) {
-		cgvmi = clc.currentView;
-		// FIXME: don't know what slot the renderer is on,
-		//   otherwise we could replace `worldMaps` by reversing powerups in snapshot
-		//re.SwitchWorld(clientMaps[cgvmi]);
-#if 0 //def USE_LAZY_LOAD
-		if(clc.world && clc.world[0] != '\0') {
-			if(clientMaps[clc.currentView] != 0)
-				Cvar_Set( "cl_lazyLoad", "2" ); // TODO: 4
-			else
-				Cvar_Set( "cl_lazyLoad", "1" );
-		}
+	cgvmi = clc.currentView;
+	// FIXME: don't know what slot the renderer is on,
+	//   otherwise we could replace `worldMaps` by reversing powerups in snapshot
+	//re.SwitchWorld(clientMaps[cgvmi]);
+#ifdef USE_LAZY_LOAD
+	if(clc.world && clc.world[0] != '\0') {
+		//Cvar_Set( "cl_lazyLoad", "2" ); // TODO: 4
+	}
 #endif
-		// added restart fancy-ness to this function automatically
-		CL_InitCGame(cgvmi);
-	//} else {
-	//	Com_Error(ERR_DROP, "what to do?");
-	//}
+	// added restart fancy-ness to this function automatically
+	CL_InitCGame(cgvmi);
+#ifdef USE_LAZY_LOAD
+	//Cvar_Set( "cl_lazyLoad", "1" ); // TODO: 4
+#endif
 #else
 	clientGames[0] = 0;
 	clientWorlds[0] = clc.clientNum;
@@ -5032,7 +5022,7 @@ void CL_World_f( void ) {
 		} else {
 			// slot is taken
 			if(clientGames[i] == clgame) {
-				Com_Printf("World found: %i\n", clientWorlds[i]);
+				Com_Printf("World found: %i -> %i:%i\n", i, clientGames[i], clientWorlds[i]);
 				// if it a game exists and is unused it can switch clients
 				if(clientWorlds[i] == clworld
           || clientWorlds[i] == -1) {
@@ -5069,7 +5059,7 @@ void CL_Tile_f( void ) {
 		if(Cmd_Argc() == 1) {
 			for(int i = 0; i < MAX_NUM_VMS; i++) {
 				if(clientScreens[i][0] > -1) {
-					Com_Printf( "[%i] %i %i: %fx%f (%fx%f)\n", 
+					Com_Printf( "[VM:%i] Game: %i:%i, %fx%f (%fx%f)\n", 
 						i, clientGames[i], clientWorlds[i], 
 						clientScreens[i][0], clientScreens[i][1],
 					 	clientScreens[i][2], clientScreens[i][3]);

@@ -497,7 +497,11 @@ static qboolean CL_GetServerCommand( int serverCommandNumber ) {
 	s = clc.serverCommands[ index ];
 	clc.lastExecutedServerCommand = serverCommandNumber;
 
+#ifdef USE_MULTIVM_CLIENT
+	Com_DPrintf( "serverCommand [%i]: %i : %s\n", cgvmi, serverCommandNumber, s );
+#else
 	Com_DPrintf( "serverCommand: %i : %s\n", serverCommandNumber, s );
+#endif
 
 	if ( clc.serverCommandsIgnore[ index ] ) {
 		Cmd_Clear();
@@ -629,7 +633,7 @@ rescan:
 #ifdef USE_MULTIVM_CLIENT
 	if(Cmd_ExecuteString(s, qtrue, cgvmi)) {
 #else
-  if(Cmd_ExecuteString(s, qtrue, 0)) {
+  if(Cmd_ExecuteString(s, qtrue)) {
 #endif
 		Cmd_Clear();
 		return qfalse;
@@ -798,7 +802,11 @@ static intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 		Com_Printf( "%s", (const char*)VMA(1) );
 		return 0;
 	case CG_ERROR:
+#ifdef USE_MULTIVM_CLIENT
+		Com_Error( ERR_DROP, "[%i]: %s", cgvmi, (const char*)VMA(1) );
+#else
 		Com_Error( ERR_DROP, "%s", (const char*)VMA(1) );
+#endif
 		return 0;
 	case CG_MILLISECONDS:
 		return Sys_Milliseconds();
@@ -1471,7 +1479,14 @@ See if the current console command is claimed by the cgame
 qboolean CL_GameCommand( int igvm ) {
 	qboolean result;
 #ifdef USE_MULTIVM_CLIENT
+	int prevGvm = cgvmi;
+	if(igvm == -1) {
+		cgvmi = clc.currentView;
+	} else {
+		cgvmi = igvm;
+	}
   int igs = clientGames[igvm];
+	CM_SwitchMap(clientMaps[cgvmi]);
 #endif
 
 	if ( !cgvm ) {
@@ -1483,12 +1498,6 @@ qboolean CL_GameCommand( int igvm ) {
     Com_Printf("Voting during demo playback is disabled\n");
     return qfalse;
   }
-
-#ifdef USE_MULTIVM_CLIENT
-	int prevGvm = cgvmi;
-	cgvmi = clc.currentView;
-	CM_SwitchMap(clientMaps[cgvmi]);
-#endif
 
 #ifdef USE_ASYNCHRONOUS
 	// it's possible (and happened in Q3F) that the game executes a console command

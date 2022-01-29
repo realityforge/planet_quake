@@ -99,17 +99,10 @@ static void R_IssueRenderCommands( void ) {
 			return; // or throttled on demand
 	}
 
-#ifdef USE_MULTIVM_CLIENT
-	if(rwi > 0 && tr.refdef.num_entities == 0) {
-		//return;
-	}
-#endif
-
 	// actually start the commands going
 	if ( !r_skipBackEnd->integer ) {
 		// let it start on the new batch
 #ifdef USE_UNLOCKED_CVARS
-//printf("cmds: %i -> %i\n", rwi, cmdUsed);
 		for(int i = 0; i <= cmdSubList; i++) {
 			RB_ExecuteRenderCommands( cmdList->cmds[i] );
 		}
@@ -542,6 +535,7 @@ void RE_EndFrame( int *frontEndMsec, int *backEndMsec ) {
 #ifdef USE_MULTIVM_CLIENT
 	for(int i = 0; i < MAX_NUM_VMS; i++) {
 		rwi = i;
+//printf("cmds: %i -> %i\n", rwi, backEndData->commands.used);
 		R_IssueRenderCommands();
 
 		R_InitNextFrame();

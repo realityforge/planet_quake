@@ -682,7 +682,19 @@ char     *Cmd_TokenizeAlphanumeric(const char *text_in, int *count);
 qboolean	Cmd_ExecuteLimitedString( const char *text, qboolean noServer, int role );
 void      Cmd_FilterLimited(char *commandList);
 #endif
-qboolean	Cmd_ExecuteString( const char *text, qboolean noServer, int tag );
+#if defined(USE_MULTIVM_CLIENT) || defined(USE_MULTIVM_SERVER)
+#ifdef USE_CMD_CONNECTOR
+qboolean Cmd_ExecuteString( const char *text, qboolean noServer, int tag);
+#else
+qboolean Cmd_ExecuteString( const char *text, int tag);
+#endif
+#else
+#ifdef USE_CMD_CONNECTOR
+qboolean Cmd_ExecuteString( const char *text );
+#else
+qboolean Cmd_ExecuteString( const char *text );
+#endif
+#endif
 // Parses a single line of text into arguments and tries to execute it
 // as if it was typed at the console
 
