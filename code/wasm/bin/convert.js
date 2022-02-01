@@ -25,7 +25,7 @@ async function convertNonAlpha(inFile, project, output, noOverwrite, palette) {
   var colorCmd = '';
 
   if(palette && typeof palette[inFile] == 'undefined') {
-    // get average image color for pallet
+    // get average image color for palette
     try {
       colorCmd = execSync(`convert "${inFile}" -resize 1x1\! -format "%[fx:int(255*a+.5)],%[fx:int(255*r+.5)],%[fx:int(255*g+.5)],%[fx:int(255*b+.5)]" info:-`, {stdio : 'pipe'}).toString('utf-8')
       palette[inFile] = colorCmd

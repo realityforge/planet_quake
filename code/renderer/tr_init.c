@@ -188,6 +188,7 @@ cvar_t	*r_developer;
 #ifdef USE_LAZY_LOAD
 cvar_t	*r_lazyLoad;
 #endif
+cvar_t  *r_seeThroughWalls;
 cvar_t  *r_paletteMode;
 
 #ifdef USE_MULTIVM_CLIENT
@@ -1642,6 +1643,7 @@ static void R_Register( void )
 	ri.Cvar_CheckRange( r_greyscale, "-1", "1", CV_FLOAT );
 	ri.Cvar_SetGroup( r_greyscale, CVG_RENDERER );
   r_paletteMode = ri.Cvar_Get("r_paletteMode", "0", CVAR_ARCHIVE | CVAR_LATCH);
+	r_seeThroughWalls = ri.Cvar_Get("r_seeThroughWalls", "0", CVAR_ARCHIVE | CVAR_LATCH);
 
 	//
 	// temporary variables that can change at any time

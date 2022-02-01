@@ -225,11 +225,7 @@ for any reason, no changes to the state will be made at all.
 #ifdef USE_MULTIVM_CLIENT
 void CL_ParseSnapshot( msg_t *msg, int multiview ) 
 #else
-#ifdef USE_MV
-void CL_ParseSnapshot( msg_t *msg, qboolean multiview ) 
-#else
 void CL_ParseSnapshot( msg_t *msg ) 
-#endif
 #endif
 {
 	const clSnapshot_t *old;

@@ -551,12 +551,12 @@ void RE_RenderScene( const refdef_t *fd ) {
 	//
 	Com_Memset( &parms, 0, sizeof( parms ) );
 #ifndef USE_MULTIVM_CLIENT
-	parms.newWorld = rwi;
 	parms.viewportX = tr.refdef.x;
 	parms.viewportY = glConfig.vidHeight - ( tr.refdef.y + tr.refdef.height );
 	parms.viewportWidth = tr.refdef.width;
 	parms.viewportHeight = tr.refdef.height;
 #else
+	parms.newWorld = rwi;
 	parms.viewportX = tr.refdef.x * dvrXScale + (dvrXOffset * glConfig.vidWidth);
 	parms.viewportY = glConfig.vidHeight - ( (tr.refdef.y * dvrYScale + (dvrYOffset * glConfig.vidHeight)) + (tr.refdef.height * dvrYScale) );
 	parms.viewportWidth = tr.refdef.width * dvrXScale;

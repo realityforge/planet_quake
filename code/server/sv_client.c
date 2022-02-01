@@ -2480,7 +2480,8 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
     } else if (sv_mvOmnipresent->integer == -1) {
       SV_ExecuteClientCommand(client, "team s");
     }
-		client->lastSnapshotTime = svs.time - 9999; // generate a snapshot immediately
+		//client->deltaMessage = -1;
+		//client->lastSnapshotTime = svs.time - 9999; // generate a snapshot immediately
 		//client->state = CS_ZOMBIE; // skip delta generation
 		//SV_SendClientSnapshot( client, qfalse );
 		//client->state = CS_CONNECTED;

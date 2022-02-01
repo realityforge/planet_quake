@@ -2560,7 +2560,7 @@ image_t *R_FindPalette(const char *name) {
 						data[x][y][0] = palette->r;
 					}
 				}
-				palette->image = R_CreateImage("*pal%i-%i-%i", (byte *)data, 8, 8, IMGTYPE_COLORALPHA, IMGFLAG_NONE, 0);
+				palette->image = R_CreateImage(va("*pal%i-%i-%i", palette->r, palette->g, palette->b), (byte *)data, 8, 8, IMGTYPE_COLORALPHA, IMGFLAG_NONE, 0);
 			}
 			return palette->image;
 		}

@@ -38,6 +38,7 @@ GLint	gl_filter_max = GL_LINEAR;
 
 #define FILE_HASH_SIZE		1024
 static	image_t*		hashTable[FILE_HASH_SIZE];
+static	palette_t*		paletteTable[FILE_HASH_SIZE];
 
 /*
 ================
@@ -1007,6 +1008,56 @@ static const char *R_LoadImage( const char *name, byte **pic, int *width, int *h
 }
 
 
+image_t *R_FindPalette(const char *name) {
+	palette_t *palette;
+	long	hash;
+	char normalName[MAX_QPATH];
+	COM_StripExtension(name, normalName, MAX_QPATH);
+	hash = generateHashValue(normalName);
+	for (palette=paletteTable[hash]; palette; palette=palette->next) {
+		if ( !Q_stricmpn( normalName, palette->imgName, strlen(normalName) ) ) {
+			if(!palette->image) {
+				byte	data[16][16][4];
+				for(int x = 0; x < 16; x++) {
+					for(int y = 0; y < 16; y++) {
+						if(r_seeThroughWalls->integer) {
+							data[x][y][3] = palette->a * 0.5;
+						} else {
+							data[x][y][3] = palette->a;
+						}
+						data[x][y][2] = palette->b;
+						data[x][y][1] = palette->g;
+						data[x][y][0] = palette->r;
+					}
+				}
+				palette->image = R_CreateImage(va("*pal%i-%i-%i", palette->r, palette->g, palette->b), NULL, (byte *)data, 16, 16, IMGFLAG_NONE);
+			}
+			return palette->image;
+		}
+	}
+	return tr.defaultImage;
+}
+
+
+void R_AddPalette(const char *name, int a, int r, int g, int b) {
+	int hash;
+	palette_t *palette;
+	char normalName[MAX_QPATH];
+	COM_StripExtension(name, normalName, MAX_QPATH);
+	int namelen = strlen(normalName);
+	palette = ri.Hunk_Alloc( sizeof( *palette ) + namelen + 1, h_low );
+	palette->imgName = (char *)( palette + 1 );
+	strcpy( palette->imgName, normalName );
+	hash = generateHashValue(normalName);
+	palette->a = a;
+	palette->r = r;
+	palette->g = g;
+	palette->b = b;
+	palette->next = paletteTable[hash];
+	paletteTable[hash] = palette;
+}
+
+
 /*
 ===============
 R_FindImageFile
@@ -1031,16 +1082,14 @@ image_t	*R_FindImageFile( const char *name, imgFlags_t flags )
 #ifdef USE_LAZY_LOAD
 	if((flags & IMGFLAG_FORCELAZY) && name[0] != '*') {
     if(*R_LoadImage( name, &pic, &width, &height, qtrue ) != '\0') {
-			return (void *)1;
+			return R_FindPalette(name); // try to use palette in lazy loading mode as backup
 		} else {
 			return NULL;
 		}
-    /* if(pic == NULL && !(flags & IMGFLAG_PALETTE)) */ 
-		//return R_FindPalette(name); // try to use palette in lazy loading mode as backup
-  } /* else if ((flags & IMGFLAG_PALETTE) && r_paletteMode->integer 
+  } else if ((flags & IMGFLAG_PALETTE) && r_paletteMode->integer 
     && name[0] != '*') {
     return R_FindPalette(name);
-	} */
+	}
 #endif
 
 	hash = generateHashValue( name );
@@ -1513,6 +1562,7 @@ void R_InitImages( void ) {
 	for ( i = 0; i < 256; i++ )
 		s_gammatable_linear[i] = (unsigned char)i;
 
+	Com_Memset(paletteTable, 0, sizeof(paletteTable));
 	Com_Memset( hashTable, 0, sizeof( hashTable ) );
 
 	// build brightness translation tables

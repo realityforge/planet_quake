@@ -182,11 +182,6 @@ static void SV_WriteSnapshotToClient( const client_t *client, msg_t *msg ) {
 			oldframe = NULL;
 			lastframe = 0;
 		}
-#else
-		if (lastframe > 4) {
-			//oldframe = NULL;
-			//lastframe = 0;
-		}
 #endif
 #ifdef USE_MV
 		if ( frame->multiview && oldframe->first_psf <= svs.nextSnapshotPSF - svs.numSnapshotPSF ) {
@@ -1373,6 +1368,7 @@ void SV_SendClientSnapshot( client_t *client, qboolean includeBaselines ) {
 	int     headerBytes;
 
 #ifdef USE_MULTIVM_SERVER
+	qboolean first = qtrue;
 	int igvm;
 	//entityState_t nullstate;
 	//const svEntity_t *svEnt;
@@ -1395,16 +1391,13 @@ void SV_SendClientSnapshot( client_t *client, qboolean includeBaselines ) {
 		gvmi = igvm; // TODO remove need for gvmi and pass igvm
 		CM_SwitchMap(gameWorlds[gvmi]);
 		SV_SetAASgvm(gvmi);
-		//playerState_t	*ps = SV_GameClientNum( client - svs.clients );
+
 		// skip worlds client hasn't entered yet
 		if(sv_mvWorld->integer != 0 
 			&& (!SV_PlayerPresent(client - svs.clients) /* || !hasMultiworldInView[gvmi] */)
 			&& gvmi != client->gameWorld && gvmi != client->newWorld) continue;
 		//Com_Printf("Sending snapshot %i -> %i, %i, %i\n", (int)(client - svs.clients), gvmi, SV_PlayerPresent(client - svs.clients), SV_GentityNum(client - svs.clients)->s.eType);
-		//if(gvmi != 0 && (client->mvAck == 0 
-    // remove this line when MULTIIVM is working
-		//if(gvmi != 0) continue;
-		//if(gvmi != client->gameWorld) continue;
+
 #endif
 
 	// build the snapshot
@@ -1422,6 +1415,15 @@ void SV_SendClientSnapshot( client_t *client, qboolean includeBaselines ) {
 	}
 #endif
 
+#ifdef USE_MULTIVM_CLIENT
+	if(first) {
+		first = qfalse;
+		MSG_Init( &msg, msg_buf, MAX_MSGLEN );
+		msg.allowoverflow = qtrue;
+		headerBytes = msg.cursize;
+		MSG_WriteLong( &msg, client->lastClientCommand );
+	}
+#else
 	MSG_Init( &msg, msg_buf, MAX_MSGLEN );
 	msg.allowoverflow = qtrue;
 	headerBytes = msg.cursize;
@@ -1429,6 +1431,7 @@ void SV_SendClientSnapshot( client_t *client, qboolean includeBaselines ) {
 	// NOTE, MRE: all server->client messages now acknowledge
 	// let the client know which reliable clientCommands we have received
 	MSG_WriteLong( &msg, client->lastClientCommand );
+#endif
 
 	// (re)send any reliable server commands
 	SV_UpdateServerCommandsToClient( client, &msg );
@@ -1481,6 +1484,13 @@ void SV_SendClientSnapshot( client_t *client, qboolean includeBaselines ) {
 #endif
 	}
 
+#ifdef USE_MULTIVM_SERVER
+		if(client->multiview.protocol == 0 || client->mvAck == 0) {
+			break;
+		}
+	}
+#endif
+
 	// check for overflow
 	if ( msg.overflowed ) {
 		Com_Printf( "WARNING: msg overflowed for %s\n", client->name );
@@ -1488,14 +1498,6 @@ void SV_SendClientSnapshot( client_t *client, qboolean includeBaselines ) {
 	}
 
 	SV_SendMessageToClient( &msg, client );
-
-#ifdef USE_MULTIVM_SERVER
-		sv.time++;
-		if(client->multiview.protocol == 0 || client->mvAck == 0) {
-			break;
-		}
-	}
-#endif
 }
 
 

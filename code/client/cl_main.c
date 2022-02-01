@@ -933,7 +933,11 @@ void CL_ReadDemoIndex( void ) {
 			clc.checksumFeed = MSG_ReadLong( &buf );
 
 		} else if (s == svc_snapshot) {
-			CL_ParseSnapshot( &buf, qfalse );
+#ifdef USE_MULTIVM_CLIENT
+			CL_ParseSnapshot( &buf, 0 );
+#else
+			CL_ParseSnapshot( &buf );
+#endif
 			int newcount = floor((cl.snap.serverTime - demoStart) / 1000);
 			if(newcount > count) {
 				count = newcount;
@@ -2873,13 +2877,13 @@ static void CL_DownloadsComplete( void ) {
 	//re.SwitchWorld(clientMaps[cgvmi]);
 #ifdef USE_LAZY_LOAD
 	if(clc.world && clc.world[0] != '\0') {
-		//Cvar_Set( "cl_lazyLoad", "2" ); // TODO: 4
+		Cvar_Set( "cl_lazyLoad", "2" ); // TODO: 4
 	}
 #endif
 	// added restart fancy-ness to this function automatically
 	CL_InitCGame(cgvmi);
 #ifdef USE_LAZY_LOAD
-	//Cvar_Set( "cl_lazyLoad", "1" ); // TODO: 4
+	Cvar_Set( "cl_lazyLoad", "1" ); // TODO: 4
 #endif
 #else
 	clientGames[0] = 0;
@@ -5320,8 +5324,8 @@ void CL_Init( void ) {
 #else
   cl_lazyLoad = Cvar_Get( "cl_lazyLoad", "0", CVAR_TEMP );
 #endif
-	if(cl_lazyLoad->integer > 1)
-		Cvar_Set("cl_lazyLoad", "1");
+	//if(cl_lazyLoad->integer > 1)
+	//	Cvar_Set("cl_lazyLoad", "1");
 #endif
 
 #ifdef __WASM__

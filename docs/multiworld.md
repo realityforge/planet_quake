@@ -40,6 +40,9 @@ Finally, I want to use multiworld for streaming game content to clients. Where t
 ## TODO
 
   * Multiworld entities rendering properly with `set sv_mvOmnipresent -1` for spectate mode or `set sv_mvOmnipresent 1` to occupy multiple worlds at the same time, useful for "mirror dimension" effects.
+  * Fix multiworld deltas... again... or make no-delta the requirement.
+  * Marks on walls in subsequent worlds are not showing up, could be weapon isn't actually firing, only CG_Predict(). Made a change to clc.currentView and executing command on specific VM index.
+  * Fix multiworld lazyloading no longer working with multiple trWorlds.
   * Multiworld CGame interaction, load all the cameras from entities by name using splines.c, and set the cameras in game using the camera API so that CGame is guaranteed to draw entities in place correctly.
   * Add rendering to a texture http://www.opengl-tutorial.org/intermediate-tutorials/tutorial-14-render-to-texture/
   * Add `target_microphone` that speakers can target in different worlds, spatial and volume controls close to projected surfaces. Then go back and automatically add it for misc_portal_surface and misc_portal_cameras in an extra field.

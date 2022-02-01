@@ -990,7 +990,13 @@ qboolean Cmd_ExecuteString( const char *text )
 	
 #ifndef DEDICATED
 	// check client game commands
-	if ( com_dedicated && !com_dedicated->integer && com_cl_running && com_cl_running->integer && CL_GameCommand(tag) ) {
+	if ( com_dedicated && !com_dedicated->integer && com_cl_running && com_cl_running->integer 
+#if defined(USE_MULTIVM_CLIENT) || defined(USE_MULTIVM_SERVER)
+		&& CL_GameCommand(tag) 
+#else
+		&& CL_GameCommand(-1) 
+#endif
+) {
 		return qtrue;
 	}
 #endif
@@ -1000,9 +1006,11 @@ qboolean Cmd_ExecuteString( const char *text )
 	if (com_dedicated->integer)
 #endif
 	// check server game commands
-	if ( com_sv_running && com_sv_running->integer && SV_GameCommand(tag) 
+	if ( com_sv_running && com_sv_running->integer
 #ifdef USE_CMD_CONNECTOR
-		&& !noServer
+		&& !noServer && SV_GameCommand(tag)
+#else
+		&& SV_GameCommand(-1) 
 #endif
 	) {
 		return qtrue;
@@ -1011,7 +1019,13 @@ qboolean Cmd_ExecuteString( const char *text )
 
 #ifndef DEDICATED
 	// check ui commands
-	if ( com_dedicated && !com_dedicated->integer && com_cl_running && com_cl_running->integer && UI_GameCommand(tag) ) {
+	if ( com_dedicated && !com_dedicated->integer && com_cl_running && com_cl_running->integer 
+#if defined(USE_MULTIVM_CLIENT) || defined(USE_MULTIVM_SERVER)
+		&& UI_GameCommand(tag) 
+#else
+		&& UI_GameCommand(-1) 
+#endif
+	) {
 		return qtrue;
 	}
 

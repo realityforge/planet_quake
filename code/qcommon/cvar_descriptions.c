@@ -470,7 +470,7 @@ void Cvar_SetRendererDescriptions( void ) {
   Cvar_SetDescription( "r_screenshotJpegQuality", "Sets the quality for the JPEG video recording\nDefault: 90");
   Cvar_SetDescription( "r_maxpolys", "Max number of polygons\nDefault: " XSTRING(MAX_POLYS));
 	Cvar_SetDescription( "r_maxpolyverts", "Max number of polygon vertices to display at a time\nDefault: " XSTRING(MAX_POLYVERTS));
-  Cvar_SetDescription( "r_paletteMode", "Replace missing images with plain color maps, and import colors from pallete.shader file" );
+  Cvar_SetDescription( "r_paletteMode", "Replace missing images with plain color maps, and import colors from palette.shader file" );
   Cvar_SetDescription( "r_seeThroughWalls", "Make all shaders partially transparent" );
 }
 

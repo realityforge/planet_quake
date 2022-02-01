@@ -496,6 +496,16 @@ typedef struct image_s {
 
 } image_t;
 
+typedef struct palette_s {
+	char		*imgName;
+	struct palette_s *next;
+	int  a;
+	int  r;
+	int  g;
+	int  b;
+	struct image_s *image;
+} palette_t;
+
 
 //=================================================================================
 
@@ -1350,6 +1360,7 @@ extern cvar_t	*r_developer;
 extern cvar_t	*r_lazyLoad;
 #endif
 extern  cvar_t  *r_paletteMode;
+extern  cvar_t  *r_seeThroughWalls;
 
 extern  cvar_t	*r_maxpolys;
 extern  cvar_t	*r_maxpolyverts;

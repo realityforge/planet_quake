@@ -22,7 +22,7 @@ The feature list has become so long that I needed separate README files to descr
 
 More on what makes WebAssembly [difficult to build here](./docs/quakejs.md#reasons-i-quit-working-on-this).
 
-This is not a cheat server. There are experimental features that can be used to make "cosmetic" improvements. For example, the UNCHEAT mod is for moving the weapon position (e.g. `cg_gunX`) on mods that support weapon positioning but have the settings marked as CVAR_CHEAT. But I think we can agree that the position of the gun on **my** screen isn't affecting **your** ability to score against me.
+This is not a cheat server. There are experimental features that can be used to make "cosmetic" improvements. For example, the UNCHEAT mod is for moving the weapon position (e.g. `cg_gunX`) on mods that support weapon positioning but have the settings marked as CVAR_CHEAT. But I think we can agree that the position of the gun on **my** screen isn't affecting **your** ability to score against me. Variables that are unCHEAT protected are sent to server administrators for filtering/temporary blocking. The server kindly asks the player to re-add the CHEAT protection in order to play.
 
 ## New Features
 
