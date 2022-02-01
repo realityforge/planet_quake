@@ -29,7 +29,7 @@ Loads and prepares a map file for scene rendering.
 
 A single entry point:
 
-int RE_LoadWorldMap( const char *name );
+void RE_LoadWorldMap( const char *name );
 
 */
 
@@ -2230,7 +2230,6 @@ int RE_LoadWorldMap( const char *name ) {
 		}
 	}
 	rwi = empty;
-	ri.Printf( PRINT_ALL, "RE_LoadWorldMap (%i): Loading %s\n", rwi, name );
 	// TODO: if (empty == -1) FreeOldestClipmap
 #else
 	if ( tr.worldMapLoaded ) {

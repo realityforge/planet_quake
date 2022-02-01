@@ -1502,10 +1502,9 @@ static void R_Register( void )
 	r_detailTextures = ri.Cvar_Get( "r_detailtextures", "1", CVAR_ARCHIVE_ND | CVAR_LATCH );
 	r_texturebits = ri.Cvar_Get( "r_texturebits", "0", CVAR_ARCHIVE_ND | CVAR_LATCH );
 
-#ifdef USE_LAZY_LOAD
+#ifdef USE_LAZY_MEMORY
 	// turn off lightmap merge so they can be updated every time the world loads
 	r_mergeLightmaps = ri.Cvar_Get( "r_mergeLightmaps", "0", CVAR_ROM );
-	ri.Cvar_CheckRange( r_mergeLightmaps, "0", "0", CV_INTEGER );
 #else
 	r_mergeLightmaps = ri.Cvar_Get( "r_mergeLightmaps", "1", CVAR_ARCHIVE_ND | CVAR_LATCH );
 #endif
@@ -2095,20 +2094,18 @@ refexport_t *GetRefAPI ( int apiVersion, refimport_t *rimp ) {
 
 	re.AddPolyBufferToScene =   RE_AddPolyBufferToScene;
 
+#ifdef USE_MULTIVM_CLIENT
+	re.SetDvrFrame = RE_SetDvrFrame;
+  re.SwitchWorld = RE_SwitchWorld;
+#endif
 #ifdef USE_RMLUI
   re.RegisterImage = RE_RegisterImage;
   re.RenderGeometry = RE_RenderGeometry;
   re.CreateShaderFromRaw = RE_CreateShaderFromRaw;
 #endif
-
 #ifdef USE_LAZY_MEMORY
-#ifdef USE_MULTIVM_CLIENT
-	re.SetDvrFrame = RE_SetDvrFrame;
-  re.SwitchWorld = RE_SwitchWorld;
-#endif
 	re.ReloadShaders = RE_ReloadShaders;
 #endif
-
 #ifdef USE_LAZY_LOAD
 	re.UpdateShader = RE_UpdateShader;
 	re.UpdateModel = R_UpdateModel;

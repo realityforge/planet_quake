@@ -320,7 +320,11 @@ qhandle_t RE_RegisterModel( const char *name )
 			if( mod->type == MOD_BAD ) {
 				return 0;
 			}
+#ifdef USE_MULTIVM_CLIENT
+			return mod->index;
+#else
 			return hModel;
+#endif
 #endif
 		}
 	}

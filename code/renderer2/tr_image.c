@@ -2616,7 +2616,6 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, imgFlags_t flags )
 					ri.Printf( PRINT_DEVELOPER, "WARNING: reused image %s with mixed flags (%i vs %i)\n", name, image->flags, flags );
 				}
 			}
-			image->lastTimeUsed = tr.lastRegistrationTime;
 			return image;
 		}
 	}

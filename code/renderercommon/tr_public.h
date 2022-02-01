@@ -280,16 +280,13 @@ typedef struct {
 	void  (*GLimp_UpdateMode)( glconfig_t *config );
 #ifdef USE_MULTIVM_CLIENT
 	void  (*UpdateCGame)( int igs );
+	int	  *worldMaps;
 #endif
 #if defined(USE_MULTIVM_CLIENT) || defined(USE_MULTIVM_SERVER)
 	void	(*Trace)( trace_t *results, const vec3_t start, const vec3_t mins, const vec3_t maxs, const vec3_t end, int passEntityNum, int contentmask, int cmi );
-#ifdef USE_LAZY_LOAD
-	int	  *worldMaps;
-#endif
 #else
 	void	(*Trace)( trace_t *results, const vec3_t start, const vec3_t mins, const vec3_t maxs, const vec3_t end, int passEntityNum, int contentmask );
 #endif
-
 #ifdef USE_LAZY_LOAD
 	int   (*FS_FOpenFileRead)( const char *filename, fileHandle_t *file, qboolean uniqueFILE );
 #endif

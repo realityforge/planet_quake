@@ -1395,7 +1395,7 @@ void R_Register( void )
 	r_glossType = ri.Cvar_Get("r_glossType", "1", CVAR_ARCHIVE | CVAR_LATCH);
 	r_dlightMode = ri.Cvar_Get( "r_dlightMode", "0", CVAR_ARCHIVE | CVAR_LATCH );
 	r_pshadowDist = ri.Cvar_Get( "r_pshadowDist", "128", CVAR_ARCHIVE );
-#ifdef USE_LAZY_LOAD
+#ifdef USE_LAZY_MEMORY
 	// turn off lightmap merge so they can be updated every time the world loads
 	r_mergeLightmaps = ri.Cvar_Get( "r_mergeLightmaps", "0", CVAR_ARCHIVE | CVAR_LATCH );
 	ri.Cvar_CheckRange( r_mergeLightmaps, "0", "0", CV_INTEGER );

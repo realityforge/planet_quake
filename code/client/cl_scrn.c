@@ -859,9 +859,7 @@ This will be called twice if rendering in stereo mode
 void SCR_DrawScreenField( stereoFrame_t stereoFrame ) {
 	qboolean uiFullscreen = qfalse;
 
-printf("crash 1\n");
 	re.BeginFrame( stereoFrame );
-printf("crash 2\n");
 
 	if(uivm) {
 		uiFullscreen = (uivm && VM_Call( uivm, 0, UI_IS_FULLSCREEN ));
@@ -1024,8 +1022,8 @@ void SCR_UpdateScreen( qboolean fromVM ) {
 
 #ifdef USE_MULTIVM_CLIENT
 		// skip if we haven't received a snapshot in a while
-		//if(cl.serverTimes[0] - cl.snapWorlds[clientGames[cgvmi]].serverTime > 1000
-		//	&& clientScreens[cgvmi][0] == -1) continue;
+		if(cl.serverTimes[0] - cl.snapWorlds[clientGames[cgvmi]].serverTime > 1000
+			&& clientScreens[cgvmi][0] == -1) continue;
 		// skip if we are in world mode, multiworld renderer calls screen refresh
 		//   when the portal is visible
 		if(clc.world && clc.world[0] != '\0' && clientScreens[cgvmi][0] == -1) {

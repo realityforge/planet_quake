@@ -222,7 +222,16 @@ cl.snap and saved in cl.snapshots[].  If the snapshot is invalid
 for any reason, no changes to the state will be made at all.
 ================
 */
-void CL_ParseSnapshot( msg_t *msg, qboolean multiview ) {
+#ifdef USE_MULTIVM_CLIENT
+void CL_ParseSnapshot( msg_t *msg, int multiview ) 
+#else
+#ifdef USE_MV
+void CL_ParseSnapshot( msg_t *msg, qboolean multiview ) 
+#else
+void CL_ParseSnapshot( msg_t *msg ) 
+#endif
+#endif
+{
 	const clSnapshot_t *old;
 	clSnapshot_t	newSnap;
 	int			deltaNum;
@@ -230,11 +239,6 @@ void CL_ParseSnapshot( msg_t *msg, qboolean multiview ) {
 	int			i, packetNum;
 	int			commandTime;
 #ifdef USE_MV
-#ifdef USE_MULTIVM_CLIENT
-  int     igs = clientGames[clc.currentView] = clc.currentView;
-#else
-  int     igs = 0;
-#endif
 	int			clientNum;
 	entityState_t	*es;
 	const playerState_t *oldPs;
@@ -242,6 +246,14 @@ void CL_ParseSnapshot( msg_t *msg, qboolean multiview ) {
 	int firstIndex;
 	int lastIndex;
 #endif // USE_MV
+#ifdef USE_MULTIVM_CLIENT
+	int igs;
+	if(multiview == -1)
+		igs = clientGames[clc.currentView];
+	else
+		igs = multiview;
+	newSnap.world = igs;
+#endif
 
 	// get the reliable sequence acknowledge number
 	// NOTE: now sent with all server to client messages
@@ -284,7 +296,7 @@ void CL_ParseSnapshot( msg_t *msg, qboolean multiview ) {
 		old = &cl.snapshots[newSnap.deltaNum & PACKET_MASK];
 #else
     old = &cl.snapshotWorlds[igs][newSnap.deltaNum & PACKET_MASK];
-		if ( !multiview )
+		if ( igs == -1 )
 #endif
     {
 			if ( !old->valid ) {
@@ -312,10 +324,11 @@ void CL_ParseSnapshot( msg_t *msg, qboolean multiview ) {
 
 #ifdef USE_MV
 #ifdef USE_MULTIVM_CLIENT
-	newSnap.world = igs;
+	if ( multiview > -1 ) 
+#else
+	if ( multiview ) 
 #endif
-	if ( multiview ) {
-
+	{
 		if ( !clc.demoplaying && clc.recordfile != FS_INVALID_HANDLE )
 			clc.dm68compat = qfalse;
 
@@ -340,7 +353,6 @@ void CL_ParseSnapshot( msg_t *msg, qboolean multiview ) {
 		}
 
 #ifdef USE_MULTIVM_CLIENT
-		igs = newSnap.world = MSG_ReadByte( msg );
 		if ( newSnap.deltaNum <= 0 ) {
 			newSnap.valid = qtrue;
 			old = NULL;
@@ -1375,18 +1387,25 @@ void CL_ParseServerMessage( msg_t *msg ) {
 			}
 			break;
 #endif
-		case svc_snapshot:
-			CL_ParseSnapshot( msg, qfalse );
+#ifdef USE_MULTIVM_CLIENT
+		case svc_mvWorld:
+			igs = MSG_ReadByte( msg );
 			break;
-#ifdef USE_MV
+		case svc_snapshot:
+			CL_ParseSnapshot( msg, -1 );
+			break;
 		case svc_multiview:
-			CL_ParseSnapshot( msg, qtrue );
+			CL_ParseSnapshot( msg, igs );
 			break;
 #ifdef USE_MV_ZCMD
 		case svc_zcmd:
 			CL_ParseZCommandString( msg );
 			break;
 #endif
+#else
+		case svc_snapshot:
+			CL_ParseSnapshot( msg );
+			break;
 #endif
 		case svc_download:
 			if ( clc.demofile != FS_INVALID_HANDLE )

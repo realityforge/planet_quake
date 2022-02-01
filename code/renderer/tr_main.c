@@ -1336,9 +1336,10 @@ static qboolean R_MirrorViewBySurface( const drawSurf_t *drawSurf, int entityNum
 	// OPTIMIZE: restrict the viewport on the mirrored view
 
 #ifdef USE_MULTIVM_CLIENT
+return qfalse;
 	if(newParms.newWorld != oldParms.newWorld
 		&& rwi != newParms.newWorld) {
-#ifdef USE_LAZY_LOAD
+#ifdef USE_LAZY_MEMORY
 		rwi = ri.worldMaps[newParms.newWorld];
 #else
 		rwi = newParms.newWorld;
@@ -1363,7 +1364,7 @@ static qboolean R_MirrorViewBySurface( const drawSurf_t *drawSurf, int entityNum
 	// switch back
 	if(newParms.newWorld != oldParms.newWorld
 		&& rwi != oldParms.newWorld) {
-#ifdef USE_LAZY_LOAD
+#ifdef USE_LAZY_MEMORY
 		rwi = ri.worldMaps[oldParms.newWorld];
 #else
 		rwi = oldParms.newWorld;
@@ -1611,7 +1612,11 @@ R_DecomposeLitSort
 */
 void R_DecomposeLitSort( unsigned sort, int *entityNum, shader_t **shader, int *fogNum ) {
 	*fogNum = ( sort >> QSORT_FOGNUM_SHIFT ) & FOGNUM_MASK;
+#ifdef USE_MULTIVM_CLIENT
+	*shader = trWorlds[0].sortedShaders[ ( sort >> QSORT_SHADERNUM_SHIFT ) & SHADERNUM_MASK ];
+#else
 	*shader = tr.sortedShaders[ ( sort >> QSORT_SHADERNUM_SHIFT ) & SHADERNUM_MASK ];
+#endif
 	*entityNum = ( sort >> QSORT_REFENTITYNUM_SHIFT ) & REFENTITYNUM_MASK;
 }
 
@@ -1649,7 +1654,11 @@ R_DecomposeSort
 void R_DecomposeSort( unsigned sort, int *entityNum, shader_t **shader, 
 					 int *fogNum, int *dlightMap ) {
 	*fogNum = ( sort >> QSORT_FOGNUM_SHIFT ) & FOGNUM_MASK;
+#ifdef USE_MULTIVM_CLIENT
+	*shader = trWorlds[0].sortedShaders[ ( sort >> QSORT_SHADERNUM_SHIFT ) & SHADERNUM_MASK ];
+#else
 	*shader = tr.sortedShaders[ ( sort >> QSORT_SHADERNUM_SHIFT ) & SHADERNUM_MASK ];
+#endif
 	*entityNum = ( sort >> QSORT_REFENTITYNUM_SHIFT ) & REFENTITYNUM_MASK;
 	*dlightMap = sort & DLIGHT_MASK;
 }
@@ -1804,7 +1813,6 @@ void R_AddEntitySurfaces( void ) {
 					if ( (ent->e.renderfx & RF_THIRD_PERSON) && (tr.viewParms.portalView == PV_NONE) ) {
 						break;
 					}
-          if(r_developer->integer)
 					  R_AddDrawSurf( &entitySurface, tr.defaultShader, 0, 0 );
 					break;
 				default:

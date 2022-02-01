@@ -673,7 +673,15 @@ extern int cl_connectedToCheatServer;
 
 void CL_ParseServerInfo( int igs );
 void CL_ParseServerMessage( msg_t *msg );
+#ifdef USE_MULTIVM_CLIENT
+void CL_ParseSnapshot( msg_t *msg, int igs );
+#else
+#ifdef USE_MV
 void CL_ParseSnapshot( msg_t *msg, qboolean multiview );
+#else
+void CL_ParseSnapshot( msg_t *msg );
+#endif
+#endif
 
 //====================================================================
 

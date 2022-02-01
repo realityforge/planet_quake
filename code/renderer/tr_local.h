@@ -24,7 +24,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define TR_LOCAL_H
 
 #define USE_LEGACY_DLIGHTS	// vq3 dynamic lights
-//#define USE_PMLIGHT			// promode dynamic lights via \r_dlightMode 1
+#define USE_PMLIGHT			// promode dynamic lights via \r_dlightMode 1
 #define MAX_REAL_DLIGHTS	(MAX_DLIGHTS*2)
 #define MAX_LITSURFS		(MAX_DRAWSURFS)
 

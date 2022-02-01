@@ -152,6 +152,7 @@ void R_ImageList_f( void ) {
 	char *name, buf[MAX_QPATH*2 + 5];
 
 	ri.Printf( PRINT_ALL, "\n -n- --w-- --h-- type  -size- --name-------\n" );
+	ri.Printf( PRINT_ALL, " %i total images\n\n", tr.numImages );
 
 	for ( i = 0; i < tr.numImages; i++ )
 	{
@@ -801,6 +802,9 @@ image_t *R_CreateImage( const char *name, const char *name2, byte *pic, int widt
 	hashTable[ hash ] = image;
 
 	tr.images[ tr.numImages++ ] = image;
+#ifdef USE_MULTIVM_CLIENT
+	trWorlds[0].images[ trWorlds[0].numImages++ ] = image;
+#endif
 
 	image->flags = flags;
 	image->width = width;
@@ -1352,6 +1356,12 @@ static void R_CreateDefaultImage( void ) {
 	}
 
 	tr.defaultImage = R_CreateImage( "*default", NULL, (byte *)data, DEFAULT_SIZE, DEFAULT_SIZE, IMGFLAG_MIPMAP );
+	
+#ifdef USE_MULTIVM_CLIENT
+	for(int i = 1; i < MAX_NUM_WORLDS; i++) {
+		trWorlds[i].defaultImage = tr.defaultImage;
+	}
+#endif
 }
 
 
@@ -1391,18 +1401,13 @@ static void R_CreateBuiltinImages( void ) {
 
 	R_CreateDlightImage();
 	R_CreateFogImage();
-	
 #ifdef USE_MULTIVM_CLIENT
 	for(int i = 1; i < MAX_NUM_WORLDS; i++) {
-		trWorlds[i].defaultImage = tr.defaultImage;
 		trWorlds[i].whiteImage = tr.whiteImage;
 		trWorlds[i].identityLightImage = tr.identityLightImage;
-		rwi = i;
-		R_SetColorMappings();
-		R_CreateDlightImage();
-		R_CreateFogImage();
+		trWorlds[i].dlightImage = tr.dlightImage;
+		trWorlds[i].fogImage = tr.fogImage;
 	}
-	rwi = 0;
 #endif
 }
 
@@ -1797,18 +1802,14 @@ void	R_InitSkins( void ) {
 	tr.numSkins = 1;
 
 	// make the default skin have all default shaders
-#ifdef USE_MULTIVM_CLIENT
-	skin = trWorlds[0].skins[0] = ri.Hunk_Alloc( sizeof( skin_t ), h_low );
-#else
 	skin = tr.skins[0] = ri.Hunk_Alloc( sizeof( skin_t ), h_low );
-#endif
 	Q_strncpyz( skin->name, "<default skin>", sizeof( skin->name )  );
 	skin->numSurfaces = 1;
 	skin->surfaces = ri.Hunk_Alloc( sizeof( skinSurface_t ), h_low );
 	skin->surfaces[0].shader = tr.defaultShader;
 #ifdef USE_MULTIVM_CLIENT
-	for(int i = 0; i < MAX_NUM_WORLDS; i++) {
-		trWorlds[i].skins[0] = trWorlds[0].skins[0];
+	for(int i = 1; i < MAX_NUM_WORLDS; i++) {
+		trWorlds[i].skins[0] = tr.skins[0];
 		trWorlds[i].numSkins = 1;
 	}
 #endif

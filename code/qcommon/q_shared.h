@@ -126,9 +126,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #ifdef USE_MV
 #define MV_PROTOCOL_VERSION	1 // multiview protocol version
-// enable loading multiple QVM images
-//#define USE_MULTIVM_CLIENT 1
-//#define USE_MULTIVM_SERVER 1
 #else // not USE_MV
 #if defined(USE_MULTIVM_CLIENT) || defined(USE_MULTIVM_SERVER)
 #error "USE_MV must be set in order to use MultiVM/MultiWorld"

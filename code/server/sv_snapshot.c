@@ -181,7 +181,12 @@ static void SV_WriteSnapshotToClient( const client_t *client, msg_t *msg ) {
 			Com_Printf( "%s: Delta request from out of date frame.\n", client->name );
 			oldframe = NULL;
 			lastframe = 0;
-		} 
+		}
+#else
+		if (lastframe > 4) {
+			//oldframe = NULL;
+			//lastframe = 0;
+		}
 #endif
 #ifdef USE_MV
 		if ( frame->multiview && oldframe->first_psf <= svs.nextSnapshotPSF - svs.numSnapshotPSF ) {
@@ -253,11 +258,6 @@ static void SV_WriteSnapshotToClient( const client_t *client, msg_t *msg ) {
 		} else {
 			MSG_WriteBits( msg, 0, 1 );
 		}
-#ifdef USE_MULTIVM_SERVER
-		if(client->multiview.protocol > 1) {
-			MSG_WriteByte( msg, gvmi );
-		}
-#endif
 
 		// emit skip-merge mask
 		if ( oldmask != frame->mergeMask ) {

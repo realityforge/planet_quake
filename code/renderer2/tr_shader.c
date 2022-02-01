@@ -3742,7 +3742,6 @@ shader_t *R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImag
 #endif
     ) {
 			// match found
-			sh->lastTimeUsed = tr.lastRegistrationTime;
 			return sh;
 		}
 	}
@@ -3978,16 +3977,16 @@ qhandle_t RE_RegisterShaderLightMap( const char *name, int lightmapIndex ) {
   	sh = R_FindShader( name, lightmapIndex, qtrue );
   }
 
+#ifndef USE_LAZY_LOAD
 	// we want to return 0 if the shader failed to
 	// load for some reason, but R_FindShader should
 	// still keep a name allocated for it, so if
 	// something calls RE_RegisterShader again with
 	// the same name, we don't try looking for it again
 	if ( sh->defaultShader ) {
-#ifndef USE_LAZY_LOAD
 		return 0;
-#endif
 	}
+#endif
 
 	return sh->index;
 }
@@ -4019,16 +4018,16 @@ qhandle_t RE_RegisterShader( const char *name ) {
 
 	sh = R_FindShader( name, LIGHTMAP_2D, qtrue );
 
+#ifndef USE_LAZY_LOAD
 	// we want to return 0 if the shader failed to
 	// load for some reason, but R_FindShader should
 	// still keep a name allocated for it, so if
 	// something calls RE_RegisterShader again with
 	// the same name, we don't try looking for it again
 	if ( sh->defaultShader ) {
-#ifndef USE_LAZY_LOAD
 		return 0;
-#endif
 	}
+#endif
 
 	return sh->index;
 }

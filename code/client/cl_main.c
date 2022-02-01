@@ -2844,10 +2844,12 @@ static void CL_DownloadsComplete( void ) {
 #ifdef USE_LAZY_MEMORY
 	S_DisableSounds();
 	re.ReloadShaders(qtrue);
-	//cls.charSetShader = re.RegisterShader( "gfx/2d/bigchars" );
-	//cls.whiteShader = re.RegisterShader( "white" );
-	//cls.consoleShader = re.RegisterShader( "console" );
-  //cls.lagometerShader = re.RegisterShader( "lagometer" );
+	cls.charSetShader = re.RegisterShader( "gfx/2d/bigchars" );
+	cls.whiteShader = re.RegisterShader( "white" );
+  cls.lagometerShader = re.RegisterShader( "lagometer" );
+#ifndef USE_NO_CONSOLE
+	cls.consoleShader = re.RegisterShader( "console" );
+#endif
 #ifndef __WASM__
 	cls.soundRegistered = qtrue;
 	S_BeginRegistration();
@@ -4530,11 +4532,9 @@ static void CL_InitRef( void ) {
 
 #ifdef USE_MULTIVM_CLIENT
 	rimp.UpdateCGame = CL_UpdateCGame;
-#endif
-#ifdef USE_LAZY_LOAD
-#ifdef USE_MULTIVM_CLIENT
 	rimp.worldMaps = worldMaps;
 #endif
+#ifdef USE_LAZY_LOAD
 	rimp.FS_FOpenFileRead = FS_FOpenFileRead;
 #endif
 #ifdef USE_VID_FAST

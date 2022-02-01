@@ -43,7 +43,12 @@ static	shader_t		shader;
 static	texModInfo_t	texMods[MAX_SHADER_STAGES][TR_MAX_TEXMODS];
 
 #define FILE_HASH_SIZE		1024
+#if 0 //def USE_MULTIVM_CLIENT
+static	shader_t*		hashWorlds[MAX_NUM_WORLDS][FILE_HASH_SIZE];
+#define hashTable hashWorlds[rwi]
+#else
 static	shader_t*		hashTable[FILE_HASH_SIZE];
+#endif
 
 #define MAX_SHADERTEXT_HASH		2048
 static char **shaderTextHashTable[MAX_SHADERTEXT_HASH];
@@ -132,7 +137,7 @@ void RE_RemapShader(const char *shaderName, const char *newShaderName, const cha
       && (index == 0 || sh->lightmapSearchIndex == index) 
 #endif
 #ifdef USE_MULTIVM_CLIENT
-			&& sh->lastTimeUsed == tr.lastRegistrationTime
+			&& tr.lastRegistrationTime == sh->lastTimeUsed
 #endif
     ) {
 			sh->defaultShader = qfalse;
@@ -2515,6 +2520,20 @@ static void SortNewShader( void ) {
 	float	sort;
 	shader_t	*newShader;
 
+#ifdef USE_MULTIVM_CLIENT
+	newShader = trWorlds[0].shaders[ trWorlds[0].numShaders - 1 ];
+	sort = newShader->sort;
+	for ( i = trWorlds[0].numShaders - 2 ; i >= 0 ; i-- ) {
+		if ( trWorlds[0].sortedShaders[ i ]->sort <= sort ) {
+			break;
+		}
+		trWorlds[0].sortedShaders[i+1] = trWorlds[0].sortedShaders[i];
+		trWorlds[0].sortedShaders[i+1]->sortedIndex++;
+	}
+	FixRenderCommandList( i+1 );
+	newShader->sortedIndex = i+1;
+	trWorlds[0].sortedShaders[i+1] = newShader;
+#else
 	newShader = tr.shaders[ tr.numShaders - 1 ];
 	sort = newShader->sort;
 
@@ -2532,6 +2551,7 @@ static void SortNewShader( void ) {
 
 	newShader->sortedIndex = i+1;
 	tr.sortedShaders[i+1] = newShader;
+#endif
 }
 
 
@@ -2554,17 +2574,23 @@ static shader_t *GeneratePermanentShader( void ) {
 
 	*newShader = shader;
 
-	tr.shaders[ tr.numShaders ] = newShader;
 #ifdef USE_MULTIVM_CLIENT
-	newShader->index = (rwi * MAX_SHADERS) + tr.numShaders;
+	trWorlds[0].shaders[ trWorlds[0].numShaders ] = newShader;
+	newShader->index = trWorlds[0].numShaders;
+
+	trWorlds[0].sortedShaders[ trWorlds[0].numShaders ] = newShader;
+	newShader->sortedIndex = trWorlds[0].numShaders;
+
+	trWorlds[0].numShaders++;
 #else
+	tr.shaders[ tr.numShaders ] = newShader;
 	newShader->index = tr.numShaders;
-#endif
 
 	tr.sortedShaders[ tr.numShaders ] = newShader;
 	newShader->sortedIndex = tr.numShaders;
 
 	tr.numShaders++;
+#endif
 
 	for ( i = 0 ; i < newShader->numUnfoggedPasses ; i++ ) {
 		if ( !stages[i].active ) {
@@ -3101,7 +3127,7 @@ shader_t *R_FindShaderByName( const char *name )
       && sh->defaultShader == isDefault
 #endif
 #ifdef USE_MULTIVM_CLIENT
-			&& sh->lastTimeUsed == tr.lastRegistrationTime
+			&& tr.lastRegistrationTime == sh->lastTimeUsed
 #endif
     ) {
 			// match found
@@ -3214,7 +3240,6 @@ shader_t *R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImag
 	image_t		*image;
 	shader_t	*sh;
 
-  //printf("shader: %i -> %i, %s\n", rwi, tr.numShaders, name);
 	if ( name[0] == '\0' ) {
 		return tr.defaultShader;
 	}
@@ -3241,28 +3266,19 @@ shader_t *R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImag
 		// then a default shader is created with lightmapIndex == LIGHTMAP_NONE, so we
 		// have to check all default shaders otherwise for every call to R_FindShader
 		// with that same strippedName a new default shader is created.
-		if ( (sh->lightmapSearchIndex == lightmapIndex || sh->defaultShader) && !Q_stricmp(sh->name, strippedName) ) {
+		if ( (sh->lightmapSearchIndex == lightmapIndex || sh->defaultShader) && !Q_stricmp(sh->name, strippedName) 
+#ifdef USE_MULTIVM_CLIENT
+			&& tr.lastRegistrationTime == sh->lastTimeUsed
+#endif
 #ifdef USE_LAZY_LOAD
 			// if not mapping shaders and lightmaps match, leave default index
 			//   out of this decision because the default shader might be 
 			//   replaced this round if all images load
-      if(!mapShaders && sh->lightmapSearchIndex == lightmapIndex) {
-#ifdef USE_MULTIVM_CLIENT
-				// add the additional requirement that the shader comes from the same world
-				//   we will have duplicate named shaders in the hash table. Shaders need to
-				//   use their own world mappings because they might have lightmaps
-				if(sh->lastTimeUsed == tr.lastRegistrationTime) {
-					return sh;
-				}
-#else
-				// match found
-				return sh;
+      && (!mapShaders && sh->lightmapSearchIndex == lightmapIndex)
 #endif
-			}
-#else
+		) {
 			// match found
 			return sh;
-#endif
 		}
 	}
 
@@ -3361,9 +3377,15 @@ qhandle_t RE_RegisterShaderFromImage(const char *name, int lightmapIndex, image_
 		// then a default shader is created with lightmapIndex == LIGHTMAP_NONE, so we
 		// have to check all default shaders otherwise for every call to R_FindShader
 		// with that same strippedName a new default shader is created.
-		if ( (sh->lightmapSearchIndex == lightmapIndex || sh->defaultShader) && !Q_stricmp(sh->name, name)
+		if ( (sh->lightmapSearchIndex == lightmapIndex || sh->defaultShader) && !Q_stricmp(sh->name, name) 
 #ifdef USE_MULTIVM_CLIENT
-			&& sh->lastTimeUsed == tr.lastRegistrationTime
+			&& tr.lastRegistrationTime == sh->lastTimeUsed
+#endif
+#ifdef USE_LAZY_LOAD
+			// if not mapping shaders and lightmaps match, leave default index
+			//   out of this decision because the default shader might be 
+			//   replaced this round if all images load
+      && (!mapShaders && sh->lightmapSearchIndex == lightmapIndex)
 #endif
 		) {
 			// match found
@@ -3415,6 +3437,7 @@ qhandle_t RE_RegisterShaderLightMap( const char *name, int lightmapIndex ) {
   	sh = R_FindShader( name, lightmapIndex, qtrue );
   }
 
+#ifndef USE_LAZY_LOAD
 	// we want to return 0 if the shader failed to
 	// load for some reason, but R_FindShader should
 	// still keep a name allocated for it, so if
@@ -3423,6 +3446,7 @@ qhandle_t RE_RegisterShaderLightMap( const char *name, int lightmapIndex ) {
 	if ( sh->defaultShader ) {
 		return 0;
 	}
+#endif
 
 	return sh->index;
 }
@@ -3454,6 +3478,7 @@ qhandle_t RE_RegisterShader( const char *name ) {
 
 	sh = R_FindShader( name, LIGHTMAP_2D, qtrue );
 
+#ifndef USE_LAZY_LOAD
 	// we want to return 0 if the shader failed to
 	// load for some reason, but R_FindShader should
 	// still keep a name allocated for it, so if
@@ -3462,6 +3487,7 @@ qhandle_t RE_RegisterShader( const char *name ) {
 	if ( sh->defaultShader ) {
 		return 0;
 	}
+#endif
 
 	return sh->index;
 }
@@ -3484,6 +3510,7 @@ qhandle_t RE_RegisterShaderNoMip( const char *name ) {
 
 	sh = R_FindShader( name, LIGHTMAP_2D, qfalse );
 
+#ifndef USE_LAZY_LOAD
 	// we want to return 0 if the shader failed to
 	// load for some reason, but R_FindShader should
 	// still keep a name allocated for it, so if
@@ -3492,6 +3519,7 @@ qhandle_t RE_RegisterShaderNoMip( const char *name ) {
 	if ( sh->defaultShader ) {
 		return 0;
 	}
+#endif
 
 	return sh->index;
 }
@@ -3506,16 +3534,15 @@ it and returns a valid (possibly default) shader_t to be used internally.
 */
 shader_t *R_GetShaderByHandle( qhandle_t hShader ) {
 #ifdef USE_MULTIVM_CLIENT
-	int i;
-	//if(hShader >= MAX_SHADERS) {
-		i = floor(hShader / MAX_SHADERS);
-		hShader = hShader % MAX_SHADERS;
-		if(!trWorlds[i].shaders[hShader]) {
-			ri.Printf( PRINT_WARNING, "R_GetShaderByHandle (%i): out of range hShader '%d'\n", rwi, hShader );
-			return tr.defaultShader;
-		}
-		return trWorlds[i].shaders[hShader];
-	//}
+	if ( hShader < 0 ) {
+	  ri.Printf( PRINT_WARNING, "R_GetShaderByHandle: out of range hShader '%d'\n", hShader );
+		return tr.defaultShader;
+	}
+	if ( hShader >= trWorlds[0].numShaders ) {
+		ri.Printf( PRINT_WARNING, "R_GetShaderByHandle: out of range hShader '%d'\n", hShader );
+		return tr.defaultShader;
+	}
+	return trWorlds[0].shaders[hShader];
 #else
 	if ( hShader < 0 ) {
 	  ri.Printf( PRINT_WARNING, "R_GetShaderByHandle: out of range hShader '%d'\n", hShader );
@@ -3542,12 +3569,10 @@ void	R_ShaderList_f (void) {
 	int			count;
 	const shader_t *sh;
 
-#ifdef USE_MULTIVM_CLIENT
-	for(rwi = 0; rwi < MAX_NUM_WORLDS; rwi++) {
-	ri.Printf (PRINT_ALL, "-( %i )----------------------\n", rwi);
-	ri.Printf (PRINT_ALL, "%i total shaders\n", tr.numShaders);
-#else
 	ri.Printf (PRINT_ALL, "-----------------------\n");
+#ifdef USE_MULTIVM_CLIENT
+	rwi = 0;
+	ri.Printf (PRINT_ALL, "%i total shaders\n", tr.numShaders);
 #endif
 
 	count = 0;
@@ -3593,9 +3618,6 @@ void	R_ShaderList_f (void) {
 	}
 	ri.Printf (PRINT_ALL, "%i total shaders\n", count);
 	ri.Printf (PRINT_ALL, "------------------\n");
-#ifdef USE_MULTIVM_CLIENT
-	}
-#endif
 }
 
 
@@ -3845,23 +3867,16 @@ CreateInternalShaders
 ====================
 */
 static void CreateInternalShaders( void ) {
+#ifndef USE_MULTIVM_CLIENT
 	tr.numShaders = 0;
+#endif
 
 	// init the default shader
 	InitShader( "<default>", LIGHTMAP_NONE );
 	stages[0].bundle[0].image[0] = tr.defaultImage;
 	stages[0].active = qtrue;
 	stages[0].stateBits = GLS_DEFAULT;
-#ifdef USE_MULTIVM_CLIENT
-	trWorlds[0].defaultShader = FinishShader();
-	for(int i = 0; i < MAX_NUM_WORLDS; i++) {
-		tr.numShaders = 1;
-		trWorlds[i].shaders[0] = 
-		trWorlds[i].defaultShader = trWorlds[0].defaultShader;
-	}
-#else
 	tr.defaultShader = FinishShader();
-#endif
 
 	// shadow shader is just a marker
 	InitShader( "<stencil shadow>", LIGHTMAP_NONE );
@@ -3877,6 +3892,25 @@ static void CreateInternalShaders( void ) {
 	stages[0].rgbGen = CGEN_IDENTITY_LIGHTING;
 	stages[0].stateBits = GLS_DEPTHTEST_DISABLE;
 	tr.cinematicShader = FinishShader();
+
+#if 0 //def USE_MULTIVM_CLIENT
+	for(int i = 1; i < MAX_NUM_WORLDS; i++) {
+		//for(int j = 0; j < MAX_SHADERS; j++) {
+		//	trWorlds[i].shaders[j] = trWorlds[0].shaders[j];
+		//	trWorlds[i].sortedShaders[j] = trWorlds[0].sortedShaders[j];
+		//}
+		trWorlds[i].defaultShader = tr.defaultShader;
+		trWorlds[i].shadowShader = tr.shadowShader;
+		trWorlds[i].cinematicShader = tr.cinematicShader;
+		/*trWorlds[i].shaders[0] = tr.defaultShader;
+		trWorlds[i].sortedShaders[0] = tr.defaultShader;
+		trWorlds[i].shaders[1] = tr.shadowShader;
+		trWorlds[i].sortedShaders[1] = tr.shadowShader;
+		trWorlds[i].shaders[2] = tr.cinematicShader;
+		trWorlds[i].sortedShaders[2] = tr.cinematicShader;
+		trWorlds[i].numShaders = 3;*/
+	}
+#endif
 }
 
 
@@ -3923,20 +3957,54 @@ void GL_SetDefaultState( void );
 void RE_ReloadShaders( qboolean createNew ) {
 #ifdef USE_MULTIVM_CLIENT
 	if(createNew) {
-		for(rwi = 0; rwi < MAX_NUM_WORLDS; rwi++) {
-			if(!tr.world) {
+		int i;
+		for(i = 0; i < MAX_NUM_WORLDS; i++) {
+			if(!trWorlds[i].world) {
 				break;
 			}
 		}
+		rwi = i;
+		//printf("starting world: %i -> %i\n", rwi, tr.numShaders);
 	}
+
+	tr.numShaders = 0;
+	tr.numLightmaps = 0;
+	tr.numModels = 0;
 #endif
+
+	memcpy(&trWorlds[rwi], &trWorlds[0], sizeof(trGlobals_t));
+
   tr.lastRegistrationTime = ri.Milliseconds();
 
+	CreateInternalShaders();
+
+  ScanAndLoadShaderFiles();
+
+	CreateExternalShaders();
+
+#if 0 //def USE_MULTIVM_CLIENT
+	//for(int i = 1; i < MAX_NUM_WORLDS; i++) {
+		for(int j = 0; j < trWorlds[0].numShaders; j++) {
+			tr.shaders[j] = trWorlds[0].shaders[j];
+			tr.sortedShaders[j] = trWorlds[0].sortedShaders[j];
+		}
+		tr.numShaders = trWorlds[0].numShaders;
+
+		for(int j = 0; j < trWorlds[0].numImages; j++) {
+			tr.images[j] = trWorlds[0].images[j];
+			//GL_Bind(tr.images[j]);
+		}
+		tr.numImages = trWorlds[0].numImages;
+	//}
+#endif
+
 #ifdef USE_MULTIVM_CLIENT
-  tr.viewCluster = -1;
+  //tr.viewCluster = -1;
+	R_SetColorMappings();
 
   RE_ClearScene();
 
+	tr.inited = qtrue;
 	tr.registered = qtrue;
 #endif
 
@@ -3962,15 +4030,11 @@ void RE_ReloadShaders( qboolean createNew ) {
 		qglBindTexture( GL_TEXTURE_2D, 0 );
 	}
 	*/
-  Com_Memset( glState.currenttextures, 0, sizeof( glState.currenttextures ) );
+  //Com_Memset( glState.currenttextures, 0, sizeof( glState.currenttextures ) );
 
 	//CreateInternalShaders();
 
-  ScanAndLoadShaderFiles();
-
-	//CreateExternalShaders();
-
-  GL_SetDefaultState();
+  //GL_SetDefaultState();
 }
 #endif
 
@@ -3983,7 +4047,11 @@ R_InitShaders
 void R_InitShaders( void ) {
 	ri.Printf( PRINT_ALL, "Initializing Shaders\n" );
 
+#if 0 //def USE_MULTIVM_CLIENT
+	Com_Memset(hashWorlds, 0, sizeof(hashWorlds));
+#else
 	Com_Memset(hashTable, 0, sizeof(hashTable));
+#endif
 
 	CreateInternalShaders();
 
@@ -3995,19 +4063,6 @@ void R_InitShaders( void ) {
 qhandle_t RE_CreateShaderFromRaw(const char* name, const byte *pic, int width, int height) {
   image_t *image = R_CreateImage(name, NULL, (byte *)pic, width, height, IMGFLAG_CLAMPTOEDGE );
   return RE_RegisterShaderFromImage(name, LIGHTMAP_2D, image, qfalse);
-  /*
-  InitShader( name, LIGHTMAP_2D );
-  stages[0].bundle[0].image[0] = image;
-  stages[0].active = qtrue;
-  stages[0].stateBits = GLS_DEPTHTEST_DISABLE |
-                        GLS_SRCBLEND_SRC_ALPHA |
-                        GLS_DSTBLEND_SRC_ALPHA;
-  stages[0].bundle[0].image[0] = image;
-  stages[0].rgbGen = CGEN_VERTEX;
-  stages[0].alphaGen = AGEN_VERTEX;
-  shader_t	*sh = FinishShader();
-  return sh->index;
-  */
 }
 
 qhandle_t RE_RegisterImage( int *dimensions, const char *name ) {
