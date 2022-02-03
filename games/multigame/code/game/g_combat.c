@@ -352,6 +352,7 @@ char	*modNames[] = {
 	"MOD_SUICIDE",
 	"MOD_TARGET_LASER",
 #ifdef USE_MODES_DEATH
+	"MOD_SPECTATE",
   "MOD_VOID",
   "MOD_RING_OUT",
   "MOD_FROM_GRAVE",
@@ -366,6 +367,8 @@ char	*modNames[] = {
 #endif
 #ifdef USE_LV_DISCHARGE
   "MOD_LV_DISCHARGE",
+#endif
+#ifdef USE_FLAME_THROWER
   "MOD_FLAME_THROWER",
 #endif
 #ifdef USE_HEADSHOTS

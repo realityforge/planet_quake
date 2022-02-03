@@ -1338,23 +1338,20 @@ static qboolean R_MirrorViewBySurface( const drawSurf_t *drawSurf, int entityNum
 #ifdef USE_MULTIVM_CLIENT
 	if(newParms.newWorld != oldParms.newWorld
 		&& rwi != newParms.newWorld) {
-#ifdef USE_LAZY_MEMORY
-		newParms.newWorld = ri.worldMaps[newParms.newWorld];
-#endif
-		if(newParms.newWorld == -1 || newParms.newWorld >= MAX_NUM_WORLDS
-			|| !trWorlds[newParms.newWorld].world
+		if(newParms.newWorld < 0 || newParms.newWorld >= MAX_NUM_WORLDS
+			|| !trWorlds[ri.worldMaps[newParms.newWorld]].world
 		//	|| !tr.refdef.num_entities
 		) {
-			printf("skipping\n");
+			printf("skipping: %i\n", tr.viewParms.newWorld);
 			return qfalse; // world isn't loaded?
 		}
 		// this clears the time parameter so that CGame will send new entities by next frame
 		//ri.UpdateCGame(newParms.newWorld);
-		rwi = newParms.newWorld;
-//#if 0
-		if(tr.viewParms.frameSceneNum < trWorlds[oldParms.newWorld].frameSceneNum) {
+		rwi = ri.worldMaps[newParms.newWorld];
+#if 0
+		if(tr.viewParms.frameSceneNum < trWorlds[ri.worldMaps[oldParms.newWorld]].frameSceneNum) {
 			refdef_t fd;
-			tr.viewParms.frameSceneNum = trWorlds[oldParms.newWorld].frameSceneNum;
+			tr.viewParms.frameSceneNum = trWorlds[ri.worldMaps[oldParms.newWorld]].frameSceneNum;
 			for ( int i = 0; i < MAX_MAP_AREA_BYTES/sizeof(int); i++ ) {
 				((int *)fd.areamask)[i] = 0xFFFFFFFF;
 			}
@@ -1378,15 +1375,11 @@ static qboolean R_MirrorViewBySurface( const drawSurf_t *drawSurf, int entityNum
 
 			//RE_RenderScene(&fd);
 			// switch back
-#ifdef USE_LAZY_MEMORY
 			rwi = ri.worldMaps[oldParms.newWorld];
-#else
-			rwi = oldParms.newWorld;
-#endif
 			tr.viewParms = oldParms;
 			return qtrue;
 		}
-//#endif
+#endif
 	}
 #endif
 
@@ -1394,6 +1387,9 @@ static qboolean R_MirrorViewBySurface( const drawSurf_t *drawSurf, int entityNum
 	R_RenderView( &newParms );
 
 	tr.viewParms = oldParms;
+#ifdef USE_MULTIVM_CLIENT
+	rwi = ri.worldMaps[oldParms.newWorld];
+#endif
 
 	return qtrue;
 }
@@ -1756,6 +1752,7 @@ static void R_SortDrawSurfs( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 	}
 #endif // USE_PMLIGHT
 
+	printf("drawing: %i -> %i\n", rwi, numDrawSurfs);
 	R_AddDrawSurfCmd( drawSurfs, numDrawSurfs );
 }
 

@@ -4535,7 +4535,7 @@ static void CL_InitRef( void ) {
 
 #ifdef USE_MULTIVM_CLIENT
 	rimp.UpdateCGame = CL_UpdateCGame;
-	rimp.worldMaps = worldMaps;
+	rimp.worldMaps = &worldMaps[0];
 #endif
 #ifdef USE_LAZY_LOAD
 	rimp.FS_FOpenFileRead = FS_FOpenFileRead;

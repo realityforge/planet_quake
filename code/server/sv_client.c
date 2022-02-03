@@ -2412,6 +2412,7 @@ void SV_LoadVM( client_t *cl ) {
 
 #if defined(USE_MULTIVM_SERVER) || defined(USE_ENGINE_TELE)
 typedef enum {
+
 	SPAWNORIGIN,
 	SAMEORIGIN,
 	COPYORIGIN,
@@ -3418,6 +3419,7 @@ static void SV_UserMove( client_t *cl, msg_t *msg, qboolean delta ) {
 			//Com_Printf("skipping! %i: %i <= %i\n", gvmi, cmds[i].serverTime, cl->lastUsercmd.serverTime);
 			continue;
 		}
+		//Com_Printf("thinking! [%i] %i\n", (int)(cl - svs.clients), gvmi);
 		SV_ClientThink (cl, &cmds[ i ]);
 	}
 }
