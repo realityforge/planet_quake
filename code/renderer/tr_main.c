@@ -1234,6 +1234,7 @@ Returns qtrue if another view has been rendered
 ========================
 */
 #ifdef USE_MULTIVM_CLIENT
+void R_SetWorld(viewParms_t *oldParms, viewParms_t *newParms);
 extern int r_numdlightWorlds[MAX_NUM_WORLDS];
 #define r_numdlights r_numdlightWorlds[rwi]
 #else
@@ -1344,9 +1345,11 @@ static qboolean R_MirrorViewBySurface( const drawSurf_t *drawSurf, int entityNum
 		) {
 			return qfalse; // world isn't loaded?
 		}
-		// this clears the time parameter so that CGame will send new entities by next frame
-		//ri.UpdateCGame(newParms.newWorld);
-		rwi = ri.worldMaps[newParms.newWorld];
+
+		R_SetWorld(&oldParms, &newParms);
+		return qtrue;
+		// TODO: fix multiplexing cmd table and replace the view angle in scene
+
 #if 0
 		if(tr.viewParms.frameSceneNum < trWorlds[ri.worldMaps[oldParms.newWorld]].frameSceneNum) {
 			refdef_t fd;

@@ -1875,6 +1875,14 @@ typedef struct {
 	float	color[4];
 } setColorCommand_t;
 
+#ifdef USE_MULTIVM_CLIENT
+typedef struct {
+	int		commandId;
+	int 	world;
+	const void *next;
+} setWorldCommand_t;
+#endif
+
 typedef struct {
 	int		commandId;
 	int		buffer;
@@ -1946,6 +1954,9 @@ typedef struct
 typedef enum {
 	RC_END_OF_LIST,
 	RC_SET_COLOR,
+#ifdef USE_MULTIVM_CLIENT
+	RC_SET_WORLD,
+#endif
   RC_POLY2D_INDEXED,
 	RC_STRETCH_PIC,
 	RC_DRAW_SURFS,

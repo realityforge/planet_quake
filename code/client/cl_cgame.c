@@ -299,7 +299,10 @@ static qboolean CL_GetSnapshot( int snapshotNumber, snapshot_t *snapshot ) {
 						}
 						snapshot->entities[ count++ ] = cl.parseEntities[ parsedIndex ];
 					} else {
+#ifndef USE_MULTIVM_CLIENT
+						// TODO: not sure why multiview crashes here, because you can't follow a spectated entity? Should transfer people's own multiview entity regardless.
 						Com_Error( ERR_DROP, "packet entity not found in snapshot: %i (%i)", entityNum, cgvmi );
+#endif
 						break;
 					}
 				}

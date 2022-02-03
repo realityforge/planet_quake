@@ -617,13 +617,6 @@ void RE_RenderScene( const refdef_t *fd ) {
 	r_firstScenePoly = r_numpolys;
 
 	tr.frontEndMsec += ri.Milliseconds() - startTime;
-
-#ifdef USE_MULTIVM_CLIENT
-	// because of the DVR, we can't wait until EndFrame() for every scene
-	//   since 2D elements aren't drawn until the end, the DVR already switches
-	//   back to fullscreen mode to draw the console by the time the frame is ended
-	R_IssuePendingRenderCommands();
-#endif
 }
 
 /*

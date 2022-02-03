@@ -218,6 +218,43 @@ void R_AddDrawSurfCmd( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 }
 
 
+#ifdef USE_MULTIVM_CLIENT
+void R_SetWorld(viewParms_t *oldParms, viewParms_t *newParms) {
+	// first, add a world command to this world to switch command buffers
+	setWorldCommand_t	*cmd1;
+	cmd1 = R_GetCommandBuffer( sizeof( *cmd1 ) );
+	cmd1->commandId = RC_SET_WORLD;
+	cmd1->world = ri.worldMaps[newParms->newWorld];
+
+	// then add a command to the new world to skip the render sequence 
+	//   it switches to at the end of frame so it doesn't render twice
+	rwi = ri.worldMaps[newParms->newWorld];
+	setWorldCommand_t	*cmd2;
+	cmd2 = R_GetCommandBuffer( sizeof( *cmd2 ) );
+	cmd2->commandId = RC_SET_WORLD;
+	cmd2->world = rwi; // same world
+	// update the first setWorldCommand to where to pick up after this skip command
+	cmd1->next = (const void *)(cmd2 + 1);
+
+	// render commands on newWorld command buffer
+	R_RenderView( newParms );
+	// TODO: fix oldParms should come from newWorld?
+	tr.viewParms = *oldParms; // happens in new world, so reset in new world before `rwi` changes
+
+	// then add a command to switch back to original world
+	setWorldCommand_t	*cmd3;
+	cmd3 = R_GetCommandBuffer( sizeof( *cmd3 ) );
+	cmd3->commandId = RC_SET_WORLD;
+	cmd3->world = ri.worldMaps[oldParms->newWorld];
+	cmd3->next = (const void *)(cmd1 + 1);
+	// update the skip command (cmd2) to skip the number of commands this render added
+	cmd2->next = (const void *)(cmd3 + 1);
+
+	rwi = ri.worldMaps[oldParms->newWorld];
+}
+#endif
+
+
 /*
 =============
 RE_SetColor

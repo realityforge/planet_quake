@@ -2482,10 +2482,10 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
     } else if (sv_mvOmnipresent->integer == -1) {
       SV_ExecuteClientCommand(client, "team s");
     }
-		//client->deltaMessage = -1;
-		//client->lastSnapshotTime = svs.time - 9999; // generate a snapshot immediately
+		client->deltaMessage = -1;
+		client->lastSnapshotTime = svs.time - 9999; // generate a snapshot immediately
 		//client->state = CS_ZOMBIE; // skip delta generation
-		//SV_SendClientSnapshot( client, qfalse );
+		SV_SendClientSnapshot( client, qfalse );
 		//client->state = CS_CONNECTED;
 
 		gvmi = newWorld;
@@ -2506,7 +2506,7 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
 			//if(!client->multiview.protocol) {
 			//	client->oldServerTime = sv.time;
 				client->state = CS_CONNECTED;
-				client->gamestateMessageNum = -1; // send a new gamestate
+				//client->gamestateMessageNum = -1; // send a new gamestate
 			//} else {
 				SV_SendClientGameState( client );
 			//}
