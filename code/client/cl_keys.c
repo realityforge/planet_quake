@@ -928,7 +928,20 @@ Called by the system for both key up and key down events
 */
 void CL_KeyEvent( int key, qboolean down, unsigned time, int finger )
 {
-#ifdef USE_MULTIVM_CLIENT
+#if 0 //def USE_MULTIVM_CLIENT
+	if(!clc.sv_mvWorld) {
+		for(int i = 0; i < MAX_NUM_VMS; i++) {
+			if(clientGames[i] > -1) {
+				cgvmi = i;
+				CM_SwitchMap(clientMaps[i]);
+				if ( down )
+					CL_KeyDownEvent( key, time, finger );
+				else
+					CL_KeyUpEvent( key, time, finger );
+			}
+		}
+		return;
+	}
 	cgvmi = clc.currentView;
 	CM_SwitchMap(clientMaps[cgvmi]);
 #endif

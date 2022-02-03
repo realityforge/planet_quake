@@ -1022,11 +1022,11 @@ void SCR_UpdateScreen( qboolean fromVM ) {
 
 #ifdef USE_MULTIVM_CLIENT
 		// skip if we haven't received a snapshot in a while
-		if(cl.serverTimes[0] - cl.snapWorlds[clientGames[cgvmi]].serverTime > 1000
-			&& clientScreens[cgvmi][0] == -1) continue;
+		//if(cl.serverTimes[0] - cl.snapWorlds[clientGames[cgvmi]].serverTime > 1000
+		//	&& clientScreens[cgvmi][0] == -1) continue;
 		// skip if we are in world mode, multiworld renderer calls screen refresh
 		//   when the portal is visible
-		if(clc.world && clc.world[0] != '\0' && clientScreens[cgvmi][0] == -1) {
+		if(clc.sv_mvWorld && clientScreens[cgvmi][0] == -1) {
 			// limit secondary screens to 60 FPS using buffers
 			//if(ms - lastSubWorld[cgvmi] < 13) continue;
 			lastSubWorld[cgvmi] = ms;
@@ -1073,6 +1073,18 @@ void SCR_UpdateScreen( qboolean fromVM ) {
 			VM_Call( uivm, 1, UI_REFRESH, cls.realtime );
 		}
 
+#ifdef USE_MULTIVM_CLIENT
+		if(clientScreens[cgvmi][0] == 0
+			&& clientScreens[cgvmi][1] == 0
+			&& clientScreens[cgvmi][2] == 0
+			&& clientScreens[cgvmi][3] == 0
+		) {
+			clientScreens[cgvmi][0] =
+			clientScreens[cgvmi][1] =
+			clientScreens[cgvmi][2] =
+			clientScreens[cgvmi][3] = -1;
+		}
+#endif
 #ifdef USE_RMLUI
     if(cls.rmlStarted)
       CL_UIContextRender();
@@ -1141,6 +1153,7 @@ donewithupdate:
 #ifdef USE_LAZY_MEMORY
 	re.SwitchWorld(worldMaps[cgvmi]);
 #endif
+	re.SetDvrFrame(0, 0, 1, 1);
 #endif
 
 #ifdef USE_LNBITS

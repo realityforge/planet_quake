@@ -531,7 +531,7 @@ void Cvar_SetServerDescriptions( void ) {
 	Cvar_SetDescription( "sv_mvSyncPS", "Synchronize player state across worlds. If a player picks up a weapon in one world, that weapon slot will be filled in every other world. Only works with the same mods.\nDefault: 0");
 	Cvar_SetDescription( "sv_mvSyncXYZ", "Force players to occupy the same XYZ coordinates in every world. Useful in shadow/mirror dimension type games.\nDefault: 0");
 	Cvar_SetDescription( "sv_mvSyncMove", "Sync movement across multiple worlds, copy movement from the active screen.\nDefault: 0");
-	Cvar_SetDescription( "sv_mvOmnipresent", "Occupy an active player position in multiple worlds.\n 0 - disconnected except for one, 1 - active in all worlds automatically, -1 - spectator in other worlds, !0 - active in all worlds client has joined, 0 - turn off and only occupy one game at a time\nDefault: 0");
+	Cvar_SetDescription( "sv_mvOmnipresent", "Occupy an active player position in multiple worlds.\n 0 - disconnected except for one, 1 - active in all worlds automatically, -1 - spectator in other worlds (compatible with legacy clients), !0 - active in all worlds client has joined, 0 - turn off and only occupy one game at a time\nDefault: 0");
 #endif
   Cvar_SetDescription( "sv_minRate", "Force clients to play with a minimum latency\nDefault: 0");
 	Cvar_SetDescription( "sv_maxRate", "Force all clients to play with a max rate, limit an advantage for having a low latency\nDefault: 0");

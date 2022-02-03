@@ -375,7 +375,7 @@ void CL_ParseSnapshot( msg_t *msg )
 				}
 			}
 		}
-//Com_Printf("Parsing world: %i (%i -> %i -> %i)\n", igs, deltaNum, newSnap.messageNum, clc.reliableAcknowledge);
+//printf("Parsing world: %i (%i -> %i -> %i)\n", igs, deltaNum, newSnap.messageNum, clc.reliableAcknowledge);
 #endif
 
 		// from here we can start version-dependent snapshot parsing
@@ -830,6 +830,8 @@ void CL_ParseServerInfo( int igs )
 		sizeof(clc.sv_dlURL));
 
   clc.isMultiGame = strcmp(Info_ValueForKey(serverInfo, "gamename"), "multigame") == 0;
+  clc.sv_mvWorld = strcmp(Info_ValueForKey(serverInfo, "sv_mvWorld"), "1") == 0;
+  clc.sv_mvOmnipresent = strcmp(Info_ValueForKey(serverInfo, "sv_mvOmnipresent"), "1") == 0;
 
 	/* remove ending slash in URLs */
 	len = strlen( clc.sv_dlURL );
@@ -903,8 +905,6 @@ static void CL_ParseGamestate( msg_t *msg ) {
 #ifdef USE_MULTIVM_CLIENT
 		if ( cmd == svc_mvWorld ) {
 			igs = MSG_ReadByte( msg );
-			if(clc.world) Z_Free(clc.world);
-			clc.world = CopyString(va("%i", igs));
 			cgvmi = clc.currentView = igs;
 			clientGames[igs] = clc.currentView;
 			memset(&cl.snapWorlds[igs], 0, sizeof(cl.snapWorlds[igs]));

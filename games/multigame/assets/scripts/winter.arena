@@ -1,0 +1,17 @@
+{
+map "winter"
+longname "Winternacht by Wakey"
+bots "bones uriel"
+type "tourney ffa"
+fraglimit 25
+timelimit 15
+}
+
+{
+map "summer"
+longname "Sommergewitter by Wakey"
+bots "bones uriel"
+type "tourney ffa"
+fraglimit 25
+timelimit 15
+}

@@ -2167,7 +2167,7 @@ void RE_SwitchWorld(int w) {
 	//  ri.Printf( PRINT_ALL, "Switching renderers %i -> %i\n", rwi, w );
 	if(s_worldDatas[w].name[0] == '\0'
 		|| w < 0 || w >= MAX_NUM_WORLDS) {
-		Com_DPrintf("RE_SwitchWorld: no world loaded on %i\n", w);
+		//Com_DPrintf("RE_SwitchWorld: no world loaded on %i\n", w);
 		// allow engine to prep renderer
 		if(w < 0 || w >= MAX_NUM_WORLDS) {
 			rwi = 0;

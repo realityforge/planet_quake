@@ -207,7 +207,9 @@ static float CL_KeyState( kbutton_t *key ) {
 		} else {
 			msec += com_frameTime - key->downtime;
 		}
+#ifndef USE_MULTIVM_CLIENT
 		key->downtime = com_frameTime;
+#endif
 	}
 
 #if 0
@@ -806,15 +808,15 @@ void CL_WritePacket( void ) {
 		// TODO: only send from clientWorlds[clc.currentView]
 		if(clientGames[igvm] == -1
 			|| (igvm != clc.currentView && clientWorlds[igvm] != clc.clientNum)
-			|| (igvm != clc.currentView && clc.world && clc.world[0] != '\0')
+			|| (igvm != clc.currentView && clc.sv_mvWorld)
 		) {
 			continue;
 		}
 		int igs = clientGames[igvm];
 		//int oldCmdNum = cl.clCmdNumbers[igvm];
 		CL_CreateNewCommands(igvm);
-		//Com_Printf("input: %i -> %i: %i, %i\n", igvm, igs, cl.serverTimes[0], cl.serverTimeDelta);
-		/*if(igvm != 0) {
+		//printf("input: %i -> %i: %i, %i\n", igvm, igs, cl.serverTimes[0], cl.serverTimeDelta);
+		if(clc.sv_mvOmnipresent && igvm != 0) {
       // choose which client to extract movement commands from, cl.currentView?
 			cl.cmds[cl.clCmdNumbers[igvm] & CMD_MASK].forwardmove = 
 				cl.cmdWorlds[0][cl.clCmdNumbers[0] & CMD_MASK].forwardmove;
@@ -822,7 +824,7 @@ void CL_WritePacket( void ) {
 				cl.cmdWorlds[0][cl.clCmdNumbers[0] & CMD_MASK].rightmove;
 			cl.cmds[cl.clCmdNumbers[igvm] & CMD_MASK].upmove = 
 				cl.cmdWorlds[0][cl.clCmdNumbers[0] & CMD_MASK].upmove;
-		}*/
+		}
 #endif
 
 	oldcmd = &nullcmd;
@@ -937,6 +939,22 @@ void CL_WritePacket( void ) {
 	CL_Netchan_Transmit( &clc.netchan, &buf );
 #ifdef USE_MULTIVM_CLIENT
 	}
+	if(in_right.active)
+		in_right.downtime = com_frameTime;
+	if(in_left.active)
+		in_left.downtime = com_frameTime;
+	if(in_moveright.active)
+		in_moveright.downtime = com_frameTime;
+	if(in_moveleft.active)
+		in_moveleft.downtime = com_frameTime;
+	if(in_up.active)
+		in_up.downtime = com_frameTime;
+	if(in_down.active)
+		in_down.downtime = com_frameTime;
+	if(in_forward.active)
+		in_forward.downtime = com_frameTime;
+	if(in_back.active)
+		in_back.downtime = com_frameTime;
 #endif
 }
 

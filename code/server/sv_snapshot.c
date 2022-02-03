@@ -1354,6 +1354,10 @@ void SV_SendMessageToClient( msg_t *msg, client_t *client )
 }
 
 
+#ifdef USE_MULTIVM_SERVER
+void SV_SetClientViewAngle( int clientNum, vec3_t angle );
+#endif
+
 /*
 =======================
 SV_SendClientSnapshot
@@ -1370,6 +1374,7 @@ void SV_SendClientSnapshot( client_t *client, qboolean includeBaselines ) {
 #ifdef USE_MULTIVM_SERVER
 	qboolean first = qtrue;
 	int igvm;
+
 	//entityState_t nullstate;
 	//const svEntity_t *svEnt;
 	// mark portal PVS ahead of time, sucks to do extra math, but then all worlds can refer to each other easily
@@ -1391,6 +1396,15 @@ void SV_SendClientSnapshot( client_t *client, qboolean includeBaselines ) {
 		gvmi = igvm; // TODO remove need for gvmi and pass igvm
 		CM_SwitchMap(gameWorlds[gvmi]);
 		SV_SetAASgvm(gvmi);
+
+		if(sv_mvSyncXYZ->integer 
+			&& sv_mvOmnipresent->integer != 0
+			&& gvmi != client->newWorld && gvmi != client->gameWorld) {
+			int clientNum = (int)(client - svs.clients);
+			playerState_t *ps = (playerState_t *)((byte *)sv.gameClientWorlds[client->gameWorld] + sv.gameClientSizes[client->gameWorld]*clientNum);
+			VectorCopy(ps->origin, SV_GameClientNum( clientNum )->origin);
+			SV_SetClientViewAngle(clientNum, vec3_origin);
+		}
 
 		// skip worlds client hasn't entered yet
 		if(sv_mvWorld->integer != 0 
@@ -1422,6 +1436,10 @@ void SV_SendClientSnapshot( client_t *client, qboolean includeBaselines ) {
 		msg.allowoverflow = qtrue;
 		headerBytes = msg.cursize;
 		MSG_WriteLong( &msg, client->lastClientCommand );
+	}
+	if(atoi(Info_ValueForKey( client->userinfo, "mvproto" )) > 1) {
+		MSG_WriteByte( &msg, svc_mvWorld );
+		MSG_WriteByte( &msg, gvmi );
 	}
 #else
 	MSG_Init( &msg, msg_buf, MAX_MSGLEN );

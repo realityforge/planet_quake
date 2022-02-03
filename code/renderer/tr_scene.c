@@ -556,7 +556,6 @@ void RE_RenderScene( const refdef_t *fd ) {
 	parms.viewportWidth = tr.refdef.width;
 	parms.viewportHeight = tr.refdef.height;
 #else
-	parms.newWorld = rwi;
 	parms.viewportX = tr.refdef.x * dvrXScale + (dvrXOffset * glConfig.vidWidth);
 	parms.viewportY = glConfig.vidHeight - ( (tr.refdef.y * dvrYScale + (dvrYOffset * glConfig.vidHeight)) + (tr.refdef.height * dvrYScale) );
 	parms.viewportWidth = tr.refdef.width * dvrXScale;
@@ -601,6 +600,12 @@ void RE_RenderScene( const refdef_t *fd ) {
 
 	tr.frontEndMsec += ri.Milliseconds() - startTime;
 
+#ifdef USE_MULTIVM_CLIENT
+	// because of the DVR, we can't wait until EndFrame() for every scene
+	//   since 2D elements aren't drawn until the end, the DVR already switches
+	//   back to fullscreen mode to draw the console by the time the frame is ended
+	R_IssuePendingRenderCommands();
+#endif
 }
 
 /*

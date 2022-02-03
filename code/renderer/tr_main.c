@@ -1336,41 +1336,64 @@ static qboolean R_MirrorViewBySurface( const drawSurf_t *drawSurf, int entityNum
 	// OPTIMIZE: restrict the viewport on the mirrored view
 
 #ifdef USE_MULTIVM_CLIENT
-return qfalse;
 	if(newParms.newWorld != oldParms.newWorld
 		&& rwi != newParms.newWorld) {
 #ifdef USE_LAZY_MEMORY
-		rwi = ri.worldMaps[newParms.newWorld];
-#else
-		rwi = newParms.newWorld;
+		newParms.newWorld = ri.worldMaps[newParms.newWorld];
 #endif
-		if(rwi != newParms.newWorld) {
-			// TODO: sucks to do all this math and the exit out, can't this happen earlier?
+		if(newParms.newWorld == -1 || newParms.newWorld >= MAX_NUM_WORLDS
+			|| !trWorlds[newParms.newWorld].world
+		//	|| !tr.refdef.num_entities
+		) {
+			printf("skipping\n");
 			return qfalse; // world isn't loaded?
 		}
 		// this clears the time parameter so that CGame will send new entities by next frame
 		//ri.UpdateCGame(newParms.newWorld);
-	}
-	if(!tr.refdef.num_entities) {
-		return qfalse;
-	}
-	// TODO: comment this out when working
+		rwi = newParms.newWorld;
+//#if 0
+		if(tr.viewParms.frameSceneNum < trWorlds[oldParms.newWorld].frameSceneNum) {
+			refdef_t fd;
+			tr.viewParms.frameSceneNum = trWorlds[oldParms.newWorld].frameSceneNum;
+			for ( int i = 0; i < MAX_MAP_AREA_BYTES/sizeof(int); i++ ) {
+				((int *)fd.areamask)[i] = 0xFFFFFFFF;
+			}
+			// strings for in game rendering
+			// Q_strncpyz( cg.refdef.text[0], "Park Ranger", sizeof(cg.refdef.text[0]) );
+			// Q_strncpyz( cg.refdef.text[1], "19", sizeof(cg.refdef.text[1]) );
+			fd.x = newParms.viewportX;
+			fd.y = newParms.viewportY;
+			fd.height = newParms.viewportHeight;
+			fd.width = newParms.viewportWidth;
+			fd.fov_x = newParms.fovX;
+			fd.fov_y = newParms.fovY;
+			VectorCopy( newParms.pvsOrigin, fd.vieworg );
+			VectorCopy( newParms.or.axis[0], fd.viewaxis[0] );
+			VectorCopy( newParms.or.axis[1], fd.viewaxis[1] );
+			VectorCopy( newParms.or.axis[2], fd.viewaxis[2] );
+			fd.time = tr.refdef.time;
+			fd.rdflags = tr.refdef.rdflags;
+			printf("scene\n");
+			R_RenderView( &newParms );
+
+			//RE_RenderScene(&fd);
+			// switch back
+#ifdef USE_LAZY_MEMORY
+			rwi = ri.worldMaps[oldParms.newWorld];
+#else
+			rwi = oldParms.newWorld;
 #endif
+			tr.viewParms = oldParms;
+			return qtrue;
+		}
+//#endif
+	}
+#endif
+
 	// render the mirror view
-	//R_RenderView( &newParms );
+	R_RenderView( &newParms );
 
 	tr.viewParms = oldParms;
-#ifdef USE_MULTIVM_CLIENT
-	// switch back
-	if(newParms.newWorld != oldParms.newWorld
-		&& rwi != oldParms.newWorld) {
-#ifdef USE_LAZY_MEMORY
-		rwi = ri.worldMaps[oldParms.newWorld];
-#else
-		rwi = oldParms.newWorld;
-#endif
-	}
-#endif
 
 	return qtrue;
 }
@@ -1871,7 +1894,7 @@ void R_RenderView( const viewParms_t *parms ) {
 		return;
 	}
 
-	//Com_Printf("rendering: %i -> %i\n", rwi, tr.refdef.num_entities);
+	//printf("rendering: %i -> %i\n", rwi, tr.refdef.num_entities);
 
 	tr.viewCount++;
 

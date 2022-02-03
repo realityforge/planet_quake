@@ -449,7 +449,7 @@ static const char *SV_FindCountry( const char *tld ) {
 SetClientViewAngle
 ==================
 */
-static void SV_SetClientViewAngle( int clientNum, vec3_t angle ) {
+void SV_SetClientViewAngle( int clientNum, vec3_t angle ) {
 	int	i, cmdAngle;
 	playerState_t *ps = SV_GameClientNum( clientNum );
 	gentity_t *ent = (void *)SV_GentityNum( clientNum ); //->r.s;
@@ -935,7 +935,7 @@ gotnewcl:
 	newcl->netchan.remoteAddress.netWorld = from->netWorld;
   // add new clients to all worlds
 	if(atoi(Info_ValueForKey( userinfo, "mvproto" )) != MV_PROTOCOL_VERSION) {
-		if(sv_mvOmnipresent->integer != 0) {
+		if(sv_mvOmnipresent->integer > 0) {
 				NET_OutOfBandPrint( NS_SERVER, from, "print\nSorry, but this server requires multiview %i\n", MV_PROTOCOL_VERSION );
 				Com_DPrintf( "Multiview rejected a regular client.\n" );
 				return;
@@ -2354,8 +2354,10 @@ void SV_LoadVM( client_t *cl ) {
 		Sys_SetStatus( "Loading map %s", mapname );
     Cvar_Get( va("mapname_%i", gvmi), mapname, CVAR_TAGGED_SPECIFIC );
     Cvar_Set( va("mapname_%i", gvmi), mapname );
-    Cvar_Get( va("sv_mvWorld_%i", gvmi), va("%i", gvmi), CVAR_TAGGED_SPECIFIC );
-    Cvar_Set( va("sv_mvWorld_%i", gvmi), va("%i", gvmi) );
+		if(sv_mvWorld->integer) {
+			Cvar_Get( va("sv_mvWorld_%i", gvmi), va("%i", gvmi), CVAR_TAGGED_SPECIFIC );
+			Cvar_Set( va("sv_mvWorld_%i", gvmi), va("%i", gvmi) );
+		}
 		gameWorlds[gvmi] = CM_LoadMap( va( "maps/%s.bsp", mapname ), qfalse, &checksum );
 		Cvar_Set( va("sv_mapChecksum_%i", gvmi), va( "%i", checksum ) );
     Cvar_Get( va("sv_mapChecksum_%i", gvmi), "", CVAR_TAGGED_SPECIFIC );
@@ -2418,7 +2420,6 @@ typedef enum {
 
 void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, vec3_t *newOrigin ) {
 	int		clientNum; //, i;
-	int oldDelta[3];
 	playerState_t	*ps, oldps;
 	vec3_t newAngles;
 	//gentity_t *gent, oldEnt;
@@ -2440,7 +2441,7 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
 		if(changeOrigin == COPYORIGIN) {
 			// copy old view angles from previous world to new world
 			memcpy(newOrigin, ps->origin, sizeof(vec3_t));
-			memcpy(oldDelta, ps->delta_angles, sizeof(int[3]));
+			VectorClear(ps->delta_angles);
 			memcpy(newAngles, ps->viewangles, sizeof(vec3_t));
 		}
 		// not possible, but if it was, copy delta from new world
@@ -2449,7 +2450,7 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
 #endif
   {
 		if(changeOrigin == MOVEORIGIN) {
-			memcpy(oldDelta, ps->delta_angles, sizeof(int[3]));
+			VectorClear(ps->delta_angles);
 			// TODO: move in the direction of the view
 		}
 	}
@@ -2464,7 +2465,7 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
 		if(changeOrigin == SAMEORIGIN) {
 			ps = SV_GameClientNum( clientNum );
 			memcpy(newOrigin, ps->origin, sizeof(vec3_t));
-			memcpy(oldDelta, ps->delta_angles, sizeof(int[3]));
+			VectorClear(ps->delta_angles);
 			memcpy(newAngles, ps->viewangles, sizeof(vec3_t));
 		}
 		
@@ -2916,7 +2917,7 @@ void SV_Game_f( client_t *client ) {
 
 	if(!client) return;
 	if(atoi(Info_ValueForKey( client->userinfo, "mvproto" )) != MV_PROTOCOL_VERSION) {
-		if(sv_mvOmnipresent->integer != 0) {
+		if(sv_mvOmnipresent->integer > 0) {
 			NET_OutOfBandPrint( NS_SERVER, &client->netchan.remoteAddress, "print\nSorry, but this server requires multiview %i\n", MV_PROTOCOL_VERSION );
 			Com_DPrintf( "Game comand rejected a regular client.\n" );
 			return;
@@ -3417,7 +3418,6 @@ static void SV_UserMove( client_t *cl, msg_t *msg, qboolean delta ) {
 			//Com_Printf("skipping! %i: %i <= %i\n", gvmi, cmds[i].serverTime, cl->lastUsercmd.serverTime);
 			continue;
 		}
-		//Com_Printf("thinking! [%i] %i\n", (int)(cl - svs.clients), gvmi);
 		SV_ClientThink (cl, &cmds[ i ]);
 	}
 }
@@ -3544,23 +3544,15 @@ void SV_ExecuteClientMessage( client_t *cl, msg_t *msg ) {
 
 	// read the usercmd_t
 #ifdef USE_MULTIVM_SERVER
-	if ( c == clc_mvMove ) {
+	if ( c == clc_mvMove || c == clc_mvMoveNoDelta ) {
 		int igs = MSG_ReadByte( msg );
-		if(!sv_mvWorld->integer) {
+		if(!sv_mvWorld->integer || sv_mvOmnipresent->integer > 0) {
 			gvmi = igs;
 			CM_SwitchMap(gameWorlds[gvmi]);
 			SV_SetAASgvm(gvmi);
 		}
-		SV_UserMove( cl, msg, qtrue );
-	} else if ( c == clc_mvMoveNoDelta ) {
-		int igs = MSG_ReadByte( msg );
-		if(!sv_mvWorld->integer) {
-			gvmi = igs;
-			CM_SwitchMap(gameWorlds[gvmi]);
-			SV_SetAASgvm(gvmi);
-		}
-		SV_UserMove( cl, msg, qfalse );
-	} else
+		SV_UserMove( cl, msg, c == clc_mvMove );
+	} else 
 #endif
 	if ( c == clc_move ) {
 		SV_UserMove( cl, msg, qtrue );

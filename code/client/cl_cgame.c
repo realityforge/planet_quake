@@ -1064,16 +1064,6 @@ static intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 #ifdef USE_MULTIVM_CLIENT
 		if(clientScreens[cgvmi][0] == -1)
 			return 0;
-		if(clientScreens[cgvmi][0] == 0
-			&& clientScreens[cgvmi][1] == 0
-			&& clientScreens[cgvmi][2] == 0
-			&& clientScreens[cgvmi][3] == 0) {
-			clientScreens[cgvmi][0] =
-			clientScreens[cgvmi][1] =
-			clientScreens[cgvmi][2] =
-			clientScreens[cgvmi][3] = -1;
-			return 0;
-		}
 #endif
     //X_DMG_DrawDamage((refdef_t*)VMA(1));
     //tc_vis_render();

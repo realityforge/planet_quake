@@ -297,6 +297,7 @@ typedef struct {
 	qboolean		isLightmap;
 	qboolean		isVideoMap;
 	qboolean		isScreenMap;
+	qboolean		isImplicit;
 } textureBundle_t;
 
 #define NUM_TEXTURE_BUNDLES 2

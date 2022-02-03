@@ -108,12 +108,13 @@ typedef struct {
 #define svEntities svEntities[gvmi]
 	const char		*entityParsePoint; // TODO: need parse points in case loading 2 at the same time?
 	sharedEntity_t	*gentitiesWorlds[MAX_NUM_VMS];
-	int				gentitySize[MAX_NUM_VMS];
+	int				gentitySizes[MAX_NUM_VMS];
+//#define gentitySize gentitySizes[gvmi]
 	int				num_entitiesWorlds[MAX_NUM_VMS];
-	playerState_t	*gameClients[MAX_NUM_VMS];
-#define gameClients gameClients[gvmi] // these are all just pointers with players join so it's OK to duplicate
-	int				gameClientSize[MAX_NUM_VMS];
-#define gameClientSize gameClientSize[gvmi]
+	playerState_t	*gameClientWorlds[MAX_NUM_VMS];
+#define gameClients gameClientWorlds[gvmi] // these are all just pointers with players join so it's OK to duplicate
+	int				gameClientSizes[MAX_NUM_VMS];
+#define gameClientSize gameClientSizes[gvmi]
 	int				restartTime;
 	int				time; // TODO: keep track of times seperately?
 	byte			baselineUsed[MAX_NUM_VMS][ MAX_GENTITIES ];

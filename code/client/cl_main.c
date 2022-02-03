@@ -2872,13 +2872,12 @@ static void CL_DownloadsComplete( void ) {
 	// this only loads a VM the first time, decoupling game state from loading
 	// TODO: exec world 0:0 asynchronously
 	cgvmi = clc.currentView;
-	// FIXME: don't know what slot the renderer is on,
-	//   otherwise we could replace `worldMaps` by reversing powerups in snapshot
-	//re.SwitchWorld(clientMaps[cgvmi]);
 #ifdef USE_LAZY_LOAD
-	if(clc.world && clc.world[0] != '\0') {
-		Cvar_Set( "cl_lazyLoad", "2" ); // TODO: 4
-	}
+	//if(clc.sv_mvWorld) {
+	//	Cvar_Set( "cl_lazyLoad", "2" ); // TODO: 4
+	//} else {
+		Cvar_Set( "cl_lazyLoad", "1" ); // TODO: 4
+	//}
 #endif
 	// added restart fancy-ness to this function automatically
 	CL_InitCGame(cgvmi);
@@ -4936,6 +4935,8 @@ void CL_LoadVM_f( void ) {
     if(!Q_stricmp( name, "demo" )) {
       CL_PlayDemo_f();
     } else {
+			clientGames[cgvmi] = clientGames[clc.currentView];
+			clientWorlds[cgvmi] = clientWorlds[clc.currentView];
 		  CL_InitCGame(cgvmi); // createNew if cgvmWorlds[cgvmi] is already taken
 		}
 		return;
@@ -4988,7 +4989,13 @@ void CL_Game_f ( void ) {
 		Com_Printf ("Usage: game [0/1/2 moveorigin] [num]\n");
 		return;
 	}
-
+	char *i = Cmd_Argv(2);
+	if(i[0] != '\0') {
+		clc.currentView = atoi(i);
+		if(clc.currentView < 0 || clc.currentView >= MAX_NUM_VMS) {
+			clc.currentView = 0;
+		}
+	}
 	CL_AddReliableCommand( va("game %s", Cmd_ArgsFrom(1)), qfalse );
 }
 
@@ -5058,8 +5065,7 @@ void CL_World_f( void ) {
 
 void CL_Tile_f( void ) {
 	int clientNum, i, x, y, xMaxVMs, yMaxVMs, count = 0;
-	if(Cmd_Argc() == 1 || Cmd_Argc() > 4 || (clc.world 
-    && clc.world[0] != '\0' && atoi(&clc.world[0]) && !serverWorld)) {
+	if(Cmd_Argc() == 1 || Cmd_Argc() > 4 || (clc.sv_mvWorld && !serverWorld)) {
 		if(Cmd_Argc() == 1) {
 			for(int i = 0; i < MAX_NUM_VMS; i++) {
 				if(clientScreens[i][0] > -1) {
@@ -5069,7 +5075,7 @@ void CL_Tile_f( void ) {
 					 	clientScreens[i][2], clientScreens[i][3]);
 				}
 			}
-		} else if (atoi(&clc.world[0]) && !serverWorld) {
+		} else if (clc.sv_mvWorld && !serverWorld) {
 			Com_Printf("In server world mode, no tiling.\n");
 			return; // silently disable on this server, world messages are sent
 		}
@@ -5081,9 +5087,20 @@ void CL_Tile_f( void ) {
 		if(clientScreens[i][0] > -1) count++;
 	}
 	if(Cmd_Argc() == 3 || Cmd_Argc() == 4) {
-		if(Cmd_Argc() == 4)
-			clientNum = atoi(Cmd_Argv(3));
-		else
+		if(Cmd_Argc() == 4) {
+			char world[16];
+			strcpy(world, Cmd_Argv(3));
+			if(world[1] == ':') {
+				world[1] = '\0';
+				clientNum = atoi(world);
+				if(clientGames[clientNum] != -1) {
+					// switch the screen on the world view for this specific client
+					clientWorlds[clientNum] = atoi(&world[2]);
+				}
+			} else {
+				clientNum = atoi(world);
+			}
+		} else
 			clientNum = clc.currentView;
 		x = atoi(Cmd_Argv(1));
 		y = atoi(Cmd_Argv(2));
@@ -5153,9 +5170,9 @@ void CL_Tile_f( void ) {
 
 void CL_Dvr_f(void) {
 	char *xIn, *yIn, *wIn, *hIn;
-	int clientNum, argc = 1;
+	int clientNum, argc = 0;
 	if(Cmd_Argc() < 5 || Cmd_Argc() > 6
-		|| (atoi(&clc.world[0]) && !serverWorld)) {
+		|| (clc.sv_mvWorld && !serverWorld)) {
 		if(Cmd_Argc() == 1) {
 			for(int i = 0; i < MAX_NUM_VMS; i++) {
 				if(clientScreens[i][0] > -1) {
@@ -5165,7 +5182,7 @@ void CL_Dvr_f(void) {
 					 	clientScreens[i][2], clientScreens[i][3]);
 				}
 			}
-		} else if (atoi(&clc.world[0]) && !serverWorld) {
+		} else if (clc.sv_mvWorld && !serverWorld) {
 			Com_Printf("In server world mode, no tiling.\n");
 			return; // silently disable on this server, world messages are sent
 		}
@@ -5175,7 +5192,18 @@ void CL_Dvr_f(void) {
 	if(Cmd_Argc() == 5) {
 		clientNum = clc.currentView;
 	} else {
-		clientNum = atoi(Cmd_Argv(++argc));
+		char world[16];
+		strcpy(world, Cmd_Argv(++argc));
+		if(world[1] == ':') {
+			world[1] = '\0';
+			clientNum = atoi(world);
+			if(clientGames[clientNum] != -1) {
+				// switch the screen on the world view for this specific client
+				clientWorlds[clientNum] = atoi(&world[2]);
+			}
+		} else {
+			clientNum = atoi(world);
+		}
 	}
 	xIn = Cmd_Argv(++argc);
 	yIn = Cmd_Argv(++argc);

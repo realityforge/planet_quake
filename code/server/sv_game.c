@@ -42,7 +42,7 @@ int	SV_NumForGentity( sharedEntity_t *ent ) {
 	int		num;
 
 #ifdef USE_MULTIVM_SERVER
-  num = ( (byte *)ent - (byte *)sv.gentitiesWorlds[gvmi] ) / sv.gentitySize[gvmi];
+  num = ( (byte *)ent - (byte *)sv.gentitiesWorlds[gvmi] ) / sv.gentitySizes[gvmi];
 #else
 	num = ( (byte *)ent - (byte *)sv.gentities ) / sv.gentitySize;
 #endif
@@ -55,7 +55,7 @@ sharedEntity_t *SV_GentityNum( int num ) {
 	sharedEntity_t *ent;
 
 #ifdef USE_MULTIVM_SERVER
-	ent = (sharedEntity_t *)((byte *)sv.gentitiesWorlds[gvmi] + sv.gentitySize[gvmi]*(num));
+	ent = (sharedEntity_t *)((byte *)sv.gentitiesWorlds[gvmi] + sv.gentitySizes[gvmi]*(num));
 #else
   ent = (sharedEntity_t *)((byte *)sv.gentities + sv.gentitySize*(num));
 #endif
@@ -333,7 +333,7 @@ static void SV_LocateGameData( sharedEntity_t *gEnts, int numGEntities, int size
 
 #ifdef USE_MULTIVM_SERVER
   sv.gentitiesWorlds[gvmi] = gEnts;
-  sv.gentitySize[gvmi] = sizeofGEntity_t;
+  sv.gentitySizes[gvmi] = sizeofGEntity_t;
   sv.num_entitiesWorlds[gvmi] = numGEntities;
 #else
   sv.gentities = gEnts;

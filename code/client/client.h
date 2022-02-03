@@ -332,7 +332,8 @@ typedef struct {
 
 #ifdef USE_MULTIVM_CLIENT
 	int     currentView; // force the client to load a new VM
-	char    *world;
+	qboolean      sv_mvWorld;
+	qboolean      sv_mvOmnipresent;
   fileHandle_t	demofiles[MAX_NUM_VMS];
 #define demofile demofiles[igs]
   int			      numDemoIndexes[MAX_NUM_VMS];

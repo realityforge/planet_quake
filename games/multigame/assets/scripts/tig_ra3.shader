@@ -63,8 +63,7 @@ textures/tig_ra3/t8dm5_goop_bounce2
 	{
 		map textures/tig_ra3/tig_bird_jump7.tga
 		blendFunc Add
-	        rgbGen wave sin .2 .1 0 .2
-                  
+		rgbGen wave sin .2 .1 0 .2
 	}
 }
 

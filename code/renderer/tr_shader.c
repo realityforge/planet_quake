@@ -709,11 +709,13 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 
 				stage->bundle[0].image[0] = R_FindImageFile( token, flags );
 
-				if ( !stage->bundle[0].image[0] 
 #ifdef USE_LAZY_LOAD
-					|| (!mapShaders && r_lazyLoad->integer >= 2 && (long)stage->bundle[0].image[0] == 1)
+				if((!mapShaders || r_lazyLoad->integer >= 2) && (long)stage->bundle[0].image[0] == 1) {
+					stage->bundle[0].image[0] = NULL;
+					return qfalse;
+				} else
 #endif
-				) {
+				if ( !stage->bundle[0].image[0] ) {
 					ri.Printf( PRINT_DEVELOPER, "WARNING: R_FindImageFile could not find '%s' in shader '%s'\n", token, shader.name );
 					return qfalse;
 				}
@@ -2086,7 +2088,6 @@ static qboolean ParseShader( const char **text )
 				shader.cullType = CT_FRONT_SIDED;
 			}
       stages[s].active = qtrue;
-			s++;
 
       // get image
       token = COM_ParseExt( text, qfalse );
@@ -2106,7 +2107,9 @@ static qboolean ParseShader( const char **text )
           continue;
         }
       }
+			stages[s].bundle[0].isImplicit = qtrue;
       stages[s].active = qtrue;
+			s++;
 
 			continue;
 		}
@@ -3348,6 +3351,15 @@ shader_t *R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImag
 		if ( !ParseShader( &shaderText ) ) {
 			// had errors, so use default shader
 			shader.defaultShader = qtrue;
+#ifdef USE_LAZY_LOAD
+			// because the functions that call into this, e.g. RegisterShader(), don't return 0
+			//   and return sh->index instead when there are missing files, we need to discard
+			//   missing shaders entirely and recreate when the images become available
+			if(shader.stages[0]
+				&& shader.stages[0]->bundle[0].isImplicit
+				&& shader.stages[0]->bundle[0].image[0] == NULL)
+				return tr.defaultShader;
+#endif
 		}
 		sh = FinishShader();
 		return sh;
@@ -3375,16 +3387,20 @@ shader_t *R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImag
 #ifdef USE_LAZY_LOAD
 		// this indicates that it is lazily loading and it will be replaced when
 		// the image arrives
-		if(!mapShaders && r_lazyLoad->integer >= 2 && (long)image == 1) {
+		if((!mapShaders || r_lazyLoad->integer >= 2) && (long)image == 1) {
 			shader.remappedShader = tr.defaultShader;
 			shader.defaultShader = qfalse;
-		} else
-#endif
+		} else if (!image) {
+			// it's not going to be able to load over the network because it doesn't exist
+			return tr.defaultShader;
+		}
+#else
 		if ( !image ) {
 			ri.Printf( PRINT_DEVELOPER, "Couldn't find image file for shader %s\n", name );
 			shader.defaultShader = qtrue;
 			return FinishShader();
 		}
+#endif
 	}
 
 	//
@@ -3477,7 +3493,11 @@ qhandle_t RE_RegisterShaderLightMap( const char *name, int lightmapIndex ) {
   	sh = R_FindShader( name, lightmapIndex, qtrue );
   }
 
-#ifndef USE_LAZY_LOAD
+#ifdef USE_LAZY_LOAD
+	if( sh == tr.defaultShader ) {
+		return 0;
+	}
+#else
 	// we want to return 0 if the shader failed to
 	// load for some reason, but R_FindShader should
 	// still keep a name allocated for it, so if
@@ -3518,7 +3538,11 @@ qhandle_t RE_RegisterShader( const char *name ) {
 
 	sh = R_FindShader( name, LIGHTMAP_2D, qtrue );
 
-#ifndef USE_LAZY_LOAD
+#ifdef USE_LAZY_LOAD
+	if( sh == tr.defaultShader ) {
+		return 0;
+	}
+#else
 	// we want to return 0 if the shader failed to
 	// load for some reason, but R_FindShader should
 	// still keep a name allocated for it, so if
@@ -3550,7 +3574,11 @@ qhandle_t RE_RegisterShaderNoMip( const char *name ) {
 
 	sh = R_FindShader( name, LIGHTMAP_2D, qfalse );
 
-#ifndef USE_LAZY_LOAD
+#ifdef USE_LAZY_LOAD
+	if( sh == tr.defaultShader ) {
+		return 0;
+	}
+#else
 	// we want to return 0 if the shader failed to
 	// load for some reason, but R_FindShader should
 	// still keep a name allocated for it, so if

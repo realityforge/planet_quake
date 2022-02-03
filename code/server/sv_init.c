@@ -139,7 +139,7 @@ void SV_SetConfigstring (int index, const char *val) {
 #endif
 
 #ifdef USE_MULTIVM_SERVER
-  if(sv.gentitySize[gvmi] == 0) {
+  if(sv.gentitySizes[gvmi] == 0) {
     // still starting up
     return;
   }
@@ -611,8 +611,6 @@ void SV_SpawnServer( const char *mapname, qboolean killBots ) {
 #ifdef USE_MULTIVM_SERVER
   Cvar_Get( va("mapname_%i", gvmi), mapname, CVAR_TAGGED_SPECIFIC );
   Cvar_Set( va("mapname_%i", gvmi), mapname );
-	Cvar_Get( va("sv_mvWorld_%i", gvmi), va("%i", gvmi), CVAR_TAGGED_SPECIFIC );
-	Cvar_Set( va("sv_mvWorld_%i", gvmi), va("%i", gvmi) );
 #endif
 
 	Sys_SetStatus( "Loading map %s", mapname );
@@ -989,7 +987,7 @@ void SV_Init( void )
 	Cvar_CheckRange( sv_mvSyncXYZ, "0", "1", CV_INTEGER );
 	sv_mvSyncMove = Cvar_Get("sv_mvSyncMove", "0", CVAR_ARCHIVE);
 	Cvar_CheckRange( sv_mvSyncMove, "0", "1", CV_INTEGER );
-	sv_mvOmnipresent = Cvar_Get("sv_mvOmnipresent", "0", CVAR_ARCHIVE);
+	sv_mvOmnipresent = Cvar_Get("sv_mvOmnipresent", "0", CVAR_ARCHIVE | CVAR_SERVERINFO);
 	Cvar_CheckRange( sv_mvOmnipresent, "-1", "1", CV_INTEGER );
 #endif
 

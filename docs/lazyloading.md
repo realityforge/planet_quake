@@ -17,10 +17,11 @@ That means, I can load graphics quickly enough that it does it in-between frames
 
 ## TODO
 
+  * Lazy loading file streaming out of pk3 on server over UDP or cURL interface.
+  * Stream files in memory zips to clients based on recently collect requests
   * Fix check for files from renderer2 and return 0 if file isn't in index and return placeholder when file is queued for download
   * Distance based lazy loading, need to sort which graphics load first by the number of times it's displayed on screen
   * 4 - set all to default and load during intermission (this is specifically for subordinate VMs in multiVM/multi-render modes)
   * Leave files open for changing mip levels (especially on DDS)?
-  * Lazy loading file streaming out of pk3 on server over UDP or cURL interface.
   * Changing the theme of maps at runtime using `if` in shaders
   * Download files using offsets out of pk3 files, like streaming a part of the zip file, add this to native dedicated server and UDP downloads, this won't work on Google CDN because there is no accept-ranges support with brotli compression, https://cloud.google.com/storage/docs/xml-api/get-object-download service in front of that needs to re-encode the individual file based on the offset provided with brotli.
