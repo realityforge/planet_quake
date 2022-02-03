@@ -1342,7 +1342,6 @@ static qboolean R_MirrorViewBySurface( const drawSurf_t *drawSurf, int entityNum
 			|| !trWorlds[ri.worldMaps[newParms.newWorld]].world
 		//	|| !tr.refdef.num_entities
 		) {
-			printf("skipping: %i\n", tr.viewParms.newWorld);
 			return qfalse; // world isn't loaded?
 		}
 		// this clears the time parameter so that CGame will send new entities by next frame
@@ -1752,7 +1751,7 @@ static void R_SortDrawSurfs( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 	}
 #endif // USE_PMLIGHT
 
-	printf("drawing: %i -> %i\n", rwi, numDrawSurfs);
+	//printf("drawing: %i -> %i\n", rwi, numDrawSurfs);
 	R_AddDrawSurfCmd( drawSurfs, numDrawSurfs );
 }
 

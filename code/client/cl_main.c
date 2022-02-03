@@ -156,6 +156,7 @@ clientConnection_t	clc;
 clientStatic_t		cls;
 
 #ifdef USE_MULTIVM_CLIENT
+static qboolean serverWorld = qfalse;
 int   cgvmi = 0;
 vm_t *cgvmWorlds[MAX_NUM_VMS];
 #else
@@ -4209,6 +4210,14 @@ static void CL_InitRenderer( void ) {
 #ifdef USE_PRINT_CONSOLE
   Com_PrintFlags(PC_INIT);
 #endif
+#ifdef USE_MULTIVM_CLIENT
+	clc.currentView = clientGames[0] = worldMaps[0] = 0;
+  clientScreens[0][0] = 
+	clientScreens[0][1] = 0;
+	clientScreens[0][2] = 
+	clientScreens[0][3] = 1;
+	re.SwitchWorld(-1);
+#endif
 	// this sets up the renderer and calls R_Init
 	re.BeginRegistration( &cls.glconfig );
 #ifdef USE_PRINT_CONSOLE
@@ -4999,7 +5008,6 @@ void CL_Game_f ( void ) {
 	CL_AddReliableCommand( va("game %s", Cmd_ArgsFrom(1)), qfalse );
 }
 
-static qboolean serverWorld = qfalse;
 void CL_World_f( void ) {
 	int i;
 	char world[10];

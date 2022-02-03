@@ -807,8 +807,8 @@ void CL_WritePacket( void ) {
 	for(int igvm = 0; igvm < MAX_NUM_VMS; igvm++) {
 		// TODO: only send from clientWorlds[clc.currentView]
 		if(clientGames[igvm] == -1
-			|| (igvm != clc.currentView && clientWorlds[igvm] != clc.clientNum)
-			|| (igvm != clc.currentView && clc.sv_mvWorld)
+			//|| (igvm != clc.currentView && clientWorlds[igvm] != clc.clientNum)
+			//|| (igvm != clc.currentView && clc.sv_mvWorld)
 		) {
 			continue;
 		}

@@ -294,12 +294,12 @@ static qboolean CL_GetSnapshot( int snapshotNumber, snapshot_t *snapshot ) {
 					if ( startIndex >= 0 ) {
 						// should never happen but anyway:
 						if ( count >= MAX_ENTITIES_IN_SNAPSHOT ) {
-							Com_Printf( /* ERR_DROP, */ "snapshot entities count overflow for %i", cv );
+							Com_Error( ERR_DROP, "snapshot entities count overflow for %i", cv );
 							break;
 						}
 						snapshot->entities[ count++ ] = cl.parseEntities[ parsedIndex ];
 					} else {
-						Com_Printf( /* ERR_DROP, */ "packet entity not found in snapshot: %i (%i)", entityNum, cgvmi );
+						Com_Error( ERR_DROP, "packet entity not found in snapshot: %i (%i)", entityNum, cgvmi );
 						break;
 					}
 				}

@@ -179,12 +179,21 @@ void RE_AddPolyToScene( qhandle_t hShader, int numVerts, const polyVert_t *verts
       since we don't plan on changing the const and making for room for those effects
       simply cut this message to developer only
       */
-			ri.Printf( PRINT_DEVELOPER, "WARNING: RE_AddPolyToScene: r_max_polys or r_max_polyverts reached\n");
+			ri.Printf( PRINT_DEVELOPER, "WARNING: RE_AddPolyToScene: r_maxpolys or r_maxpolyverts reached\n");
 			return;
 		}
 
 #ifdef USE_UNLOCKED_CVARS
-		poly = &backEndData->polys[0][r_numpolys];
+		int polyUsed = r_numpolys % MAX_POLYS_DIVISOR;
+		int polyList = (r_numpolys - polyUsed) / MAX_POLYS_DIVISOR;
+		if(polyUsed + 1 >= MAX_POLYS_DIVISOR) {
+			Com_Printf("Expanding the polys list one time.\n");
+			backEndData->polys[polyList + 1] = ri.Hunk_Alloc(sizeof(srfPoly_t) * MAX_POLYS_DIVISOR, h_low);
+			r_numpolys = (polyList + 1) * MAX_POLYS_DIVISOR;
+			poly = &backEndData->polys[polyList + 1][0];
+		} else {
+			poly = &backEndData->polys[polyList][polyUsed];
+		}
 #else
 		poly = &backEndData->polys[r_numpolys];
 #endif
@@ -192,7 +201,16 @@ void RE_AddPolyToScene( qhandle_t hShader, int numVerts, const polyVert_t *verts
 		poly->hShader = hShader;
 		poly->numVerts = numVerts;
 #ifdef USE_UNLOCKED_CVARS
-		poly->verts = &backEndData->polyVerts[0][r_numpolyverts];
+		int vertsUsed = r_numpolyverts % MAX_POLYVERTS_DIVISOR;
+		int vertsList = (r_numpolyverts - vertsUsed) / MAX_POLYVERTS_DIVISOR;
+		if(vertsUsed + 1 >= MAX_POLYVERTS_DIVISOR) {
+			Com_Printf("Expanding the polyverts list one time.\n");
+			backEndData->polyVerts[vertsList + 1] = ri.Hunk_Alloc(sizeof(polyVert_t) * MAX_POLYVERTS_DIVISOR, h_low);
+			r_numpolyverts = (vertsList + 1) * MAX_POLYVERTS_DIVISOR;
+			poly->verts = &backEndData->polyVerts[vertsList + 1][0];
+		} else {
+			poly->verts = &backEndData->polyVerts[vertsList][vertsUsed];
+		}
 #else
 		poly->verts = &backEndData->polyVerts[r_numpolyverts];
 #endif

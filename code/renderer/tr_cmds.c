@@ -270,7 +270,7 @@ void RE_RenderGeometry(void *vertices, int num_vertices, int* indices,
     return;
   }
   if ( r_numpolyverts + num_vertices > r_maxpolyverts->integer || r_numindexes + num_indices > r_maxpolyverts->integer ) {
-    ri.Printf( PRINT_DEVELOPER, "WARNING: RE_AddPolyToScene: r_max_polyverts reached\n");
+    ri.Printf( PRINT_DEVELOPER, "WARNING: RE_AddPolyToScene: r_maxpolyverts reached\n");
     return;
   }
 	cmd = R_GetCommandBuffer( sizeof( *cmd ) );
@@ -281,7 +281,16 @@ void RE_RenderGeometry(void *vertices, int num_vertices, int* indices,
   cmd->shader = R_GetShaderByHandle( texture );
   cmd->numVerts = num_vertices;
 #ifdef USE_UNLOCKED_CVARS
-  cmd->verts = &backEndData->polyVerts[0][ r_numpolyverts ];
+		int vertsUsed = r_numpolyverts % MAX_POLYVERTS_DIVISOR;
+		int vertsList = (r_numpolyverts - vertsUsed) / MAX_POLYVERTS_DIVISOR;
+		if(vertsUsed + 1 >= MAX_POLYVERTS_DIVISOR) {
+			Com_Printf("Expanding the polyverts list one time.\n");
+			backEndData->polyVerts[vertsList + 1] = ri.Hunk_Alloc(sizeof(polyVert_t) * MAX_POLYVERTS_DIVISOR, h_low);
+			r_numpolyverts = (vertsList + 1) * MAX_POLYVERTS_DIVISOR;
+			cmd->verts = &backEndData->polyVerts[vertsList + 1][0];
+		} else {
+			cmd->verts = &backEndData->polyVerts[vertsList][vertsUsed];
+		}
 #else
   cmd->verts = &backEndData->polyVerts[ r_numpolyverts ];
 #endif
@@ -298,7 +307,16 @@ void RE_RenderGeometry(void *vertices, int num_vertices, int* indices,
   }
   cmd->numIndexes = num_indices;
 #ifdef USE_UNLOCKED_CVARS
-  cmd->indexes = &backEndData->indexes[0][ r_numindexes ];
+	int indexUsed = r_numindexes % MAX_POLYVERTS_DIVISOR;
+	int indexList = (r_numindexes - indexUsed) / MAX_POLYVERTS_DIVISOR;
+	if(indexUsed + num_indices >= MAX_POLYVERTS_DIVISOR) {
+		Com_Printf("Expanding the index list one time.\n");
+		backEndData->indexes[indexList + 1] = ri.Hunk_Alloc(sizeof(srfPoly_t) * MAX_POLYVERTS_DIVISOR, h_low);
+		cmd->indexes = &backEndData->indexes[indexList + 1][0];
+		r_numindexes = (indexList + 1) * MAX_POLYVERTS_DIVISOR;
+	} else {
+		cmd->indexes = &backEndData->indexes[indexList][indexUsed];
+	}
 #else
   cmd->indexes = &backEndData->indexes[ r_numindexes ];
 #endif

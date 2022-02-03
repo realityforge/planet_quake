@@ -1834,10 +1834,10 @@ int backendSize;
 		+ sizeof(t) * d * MAX_NUM_WORLDS
 #define BACKEND \
 	BASSIGN( backEndData->indexes, int, r_maxpolyverts->integer, MAX_POLYVERTS_DIVISOR) \
-	BASSIGN( backEndData->polys, srfPoly_t, r_maxpolyverts->integer, MAX_POLYS_DIVISOR) \
+	BASSIGN( backEndData->polys, srfPoly_t, r_maxpolys->integer, MAX_POLYS_DIVISOR) \
 	BASSIGN( backEndData->polyVerts, polyVert_t, r_maxpolyverts->integer, MAX_POLYVERTS_DIVISOR) \
-	BASSIGN( backEndData->polybuffers, srfPolyBuffer_t, r_maxpolyverts->integer, MAX_POLYBUFFERS_DIVISOR) \
-	BASSIGN( backEndData->commands.cmds, byte, r_maxpolyverts->integer, MAX_RENDER_DIVISOR)
+	BASSIGN( backEndData->polybuffers, srfPolyBuffer_t, r_maxpolybuffers->integer, MAX_POLYBUFFERS_DIVISOR) \
+	BASSIGN( backEndData->commands.cmds, byte, r_maxcmds->integer, MAX_RENDER_DIVISOR)
 	backendSize = sizeof(intptr_t) * MAX_NUM_WORLDS
 		+ sizeof( *backEndData ) * MAX_NUM_WORLDS
 		BACKEND;
@@ -1865,10 +1865,10 @@ int backendSize;
 
 #define BACKEND \
 	BASSIGN( backEndData->indexes, int, r_maxpolyverts->integer, MAX_POLYVERTS_DIVISOR) \
-	BASSIGN( backEndData->polys, srfPoly_t, r_maxpolyverts->integer, MAX_POLYS_DIVISOR) \
+	BASSIGN( backEndData->polys, srfPoly_t, r_maxpolys->integer, MAX_POLYS_DIVISOR) \
 	BASSIGN( backEndData->polyVerts, polyVert_t, r_maxpolyverts->integer, MAX_POLYVERTS_DIVISOR) \
-	BASSIGN( backEndData->polybuffers, srfPolyBuffer_t, r_maxpolyverts->integer, MAX_POLYBUFFERS_DIVISOR) \
-	BASSIGN( backEndData->commands.cmds, byte, r_maxpolyverts->integer, MAX_RENDER_DIVISOR)
+	BASSIGN( backEndData->polybuffers, srfPolyBuffer_t, r_maxpolybuffers->integer, MAX_POLYBUFFERS_DIVISOR) \
+	BASSIGN( backEndData->commands.cmds, byte, r_maxcmds->integer, MAX_RENDER_DIVISOR)
 	ptr = ri.Hunk_Alloc( sizeof( *backEndData ) 
 #define BASSIGN(a, t, n, d) \
 		+ sizeof(intptr_t) * (n / d + 1) \
@@ -1893,9 +1893,9 @@ int backendSize;
 
 #define BACKEND \
 	BASSIGN( backEndData->indexes, int, r_maxpolyverts->integer) \
-	BASSIGN( backEndData->polys, srfPoly_t, r_maxpolyverts->integer) \
+	BASSIGN( backEndData->polys, srfPoly_t, r_maxpolys->integer) \
 	BASSIGN( backEndData->polyVerts, polyVert_t, r_maxpolyverts->integer) \
-	BASSIGN( backEndData->polybuffers, srfPolyBuffer_t, r_maxpolyverts->integer)
+	BASSIGN( backEndData->polybuffers, srfPolyBuffer_t, r_maxpolybuffers->integer)
 	ptr = ri.Hunk_Alloc( sizeof( *backEndData ) 
 #define BASSIGN(a, t, n) \
 		+ sizeof(t) * n
