@@ -2484,15 +2484,12 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
     }
 		client->deltaMessage = -1;
 		client->lastSnapshotTime = svs.time - 9999; // generate a snapshot immediately
-		//client->state = CS_ZOMBIE; // skip delta generation
-		SV_SendClientSnapshot( client, qfalse );
-		//client->state = CS_CONNECTED;
 
 		gvmi = newWorld;
 		CM_SwitchMap(gameWorlds[gvmi]);
 		SV_SetAASgvm(gvmi);
 		client->newWorld = newWorld;
-		if(!SV_PlayerPresent(clientNum) || !client->multiview.protocol) {
+		if(qtrue || !SV_PlayerPresent(clientNum) || !client->multiview.protocol) {
 			// if the client is new to the world, the only option is SPAWNORIGIN
 			if(changeOrigin != COPYORIGIN) {
 				changeOrigin = SPAWNORIGIN;
@@ -2501,16 +2498,10 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
 			//   to only send commands from a game to the client of the same world
 			VM_Call( gvm, 3, GAME_CLIENT_CONNECT, clientNum, qfalse, qfalse );	// firstTime = qfalse
 			// if this is the first time they are entering a world, send a gamestate
-			//client->deltaMessage = -1;
-			//client->lastSnapshotTime = svs.time - 9999; // generate a snapshot immediately
-			//if(!client->multiview.protocol) {
-			//	client->oldServerTime = sv.time;
-				client->state = CS_CONNECTED;
-				//client->gamestateMessageNum = -1; // send a new gamestate
-			//} else {
-				SV_SendClientGameState( client );
-			//}
-			//return;
+			client->state = CS_CONNECTED;
+			client->gamestateMessageNum = -1; // send a new gamestate
+			SV_SendClientGameState( client );
+			//return; // update location below
 		} else {
 			// above must come before this because there is a filter 
 			//   to only send commands from a game to the client of the same world
@@ -2518,8 +2509,6 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
 			// not the first time they have entered, automatically connect
 			client->gameWorld = newWorld;
 			client->state = CS_PRIMED;
-			//client->deltaMessage = -1;
-			//client->lastSnapshotTime = svs.time - 9999; // generate a snapshot immediately
 			// notify the client of the secondary map
 			if(sv_mvWorld->integer) {
 				SV_SendServerCommand(client, "world %i", client->newWorld);
@@ -2529,7 +2518,7 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
 	}
 #endif
 
-	//SV_UpdateConfigstrings( client );
+	SV_UpdateConfigstrings( client );
 	// modify location
 	{
 		sharedEntity_t *ent = SV_GentityNum( clientNum );

@@ -1296,6 +1296,17 @@ static qboolean R_MirrorViewBySurface( const drawSurf_t *drawSurf, int entityNum
 		) ) {
 		return qfalse;		// bad portal, no portalentity
 	}
+#ifdef USE_MULTIVM_CLIENT
+	if(newParms.newWorld != oldParms.newWorld) {
+		viewParms_t		newerParms;
+		newerParms = trWorlds[newParms.newWorld].viewParms;
+		VectorCopy(newParms.pvsOrigin, newerParms.pvsOrigin);
+		newerParms.portalEntity = newParms.portalEntity;
+		newerParms.newWorld = newParms.newWorld;
+		newerParms.portalView = newParms.portalView;
+		newParms = newerParms;
+	}
+#endif
 
 	if(oldParms.portalView + 1 == PV_MIRROR || oldParms.portalView + 1 == PV_COUNT)
 		return qfalse;

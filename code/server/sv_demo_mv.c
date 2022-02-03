@@ -580,7 +580,7 @@ void SV_MultiView_f( client_t *client ) {
 		if ( client->multiview.protocol == 0 ) {
 			SV_SendServerCommand( client, "print \"You are not in multiview state.\n\"" );
 		} else {
-			SV_SendServerCommand( client, "print \"%s "S_COLOR_WHITE"leaved multiview.\n\"", client->name );
+			SV_SendServerCommand( client, "print \"%s "S_COLOR_WHITE"left multiview.\n\"", client->name );
 			// FIXME: broadcast?
 			client->multiview.protocol = 0;
 			client->multiview.scoreQueryTime = 0;

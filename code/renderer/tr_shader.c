@@ -4039,7 +4039,7 @@ void RE_ReloadShaders( qboolean createNew ) {
 			}
 		}
 		rwi = i;
-		//printf("starting world: %i -> %i\n", rwi, tr.numShaders);
+		printf("starting world: %i -> %i\n", rwi, tr.numShaders);
 	}
 
 	tr.numShaders = 0;
@@ -4047,6 +4047,7 @@ void RE_ReloadShaders( qboolean createNew ) {
 	tr.numModels = 0;
 
 	memcpy(&trWorlds[rwi], &trWorlds[0], sizeof(trGlobals_t));
+	trWorlds[rwi].world = NULL;
 #endif
 
   tr.lastRegistrationTime = ri.Milliseconds();

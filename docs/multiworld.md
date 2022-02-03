@@ -41,7 +41,6 @@ Finally, I want to use multiworld for streaming game content to clients. Where t
 ## TODO
 
   * Fix multiworld deltas... again... or make no-delta the requirement.
-  * Fix rendering order for surfaces, need some sort of skip-list in backend.cmds.
   * Fix scene rendering, skipping, and replaying entity cmds between frames.
   * Fix sv_mvOmnipresent 1, send all gamestates up-front or wait until network settles on client. When omnipresent changes, update all the clients on the server.
   * Multiworld CGame interaction, load all the cameras from entities by name using splines.c, and set the cameras in game using the camera API so that CGame is guaranteed to draw entities in place correctly. Automatically move cameras to load any map with the same lobby/rotating camera like that door in Doctor Strange.

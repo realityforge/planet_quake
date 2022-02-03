@@ -264,7 +264,9 @@ static void SV_WriteSnapshotToClient( const client_t *client, msg_t *msg ) {
 
 		SV_EmitPlayerStates( client - svs.clients, oldframe, frame, msg, frame->mergeMask );
 		MSG_entMergeMask = frame->mergeMask; // emit packet entities with skipmask
-		//Com_Printf("ents [%i]: %i -> %i, %i, %i\n", (int)(client - svs.clients), gvmi, frame->num_entities, client->gameWorld, client->newWorld);
+		if((int)(client - svs.clients) > 0) {
+			//Com_Printf("ents [%i]: %i -> %i, %i, %i\n", (int)(client - svs.clients), gvmi, frame->num_entities, client->gameWorld, client->newWorld);
+		}
 		SV_EmitPacketEntities( oldframe, frame, msg );
 		MSG_entMergeMask = 0; // don't forget to reset that! 
 	} else
@@ -292,7 +294,9 @@ static void SV_WriteSnapshotToClient( const client_t *client, msg_t *msg ) {
 		}
 
 		// delta encode the entities
-		//Com_Printf("ents [%i]: %i -> %i, %i, %i\n", (int)(client - svs.clients), gvmi, frame->num_entities, client->gameWorld, client->newWorld);
+		if((int)(client - svs.clients) > 0) {
+			//Com_Printf("ents [%i]: %i -> %i, %i, %i\n", (int)(client - svs.clients), gvmi, frame->num_entities, client->gameWorld, client->newWorld);
+		}
 		SV_EmitPacketEntities( oldframe, frame, msg );
 	} // !client->MVProtocol
 
@@ -417,8 +421,12 @@ typedef struct clientPVS_s {
 
 } clientPVS_t;
 
+#ifdef USE_MULTIVM_SERVER
+static clientPVS_t client_pvsWorlds[MAX_NUM_VMS][ MAX_CLIENTS ];
+#define client_pvs client_pvsWorlds[gvmi]
+#else
 static clientPVS_t client_pvs[ MAX_CLIENTS ];
-
+#endif
 
 /*
 =============
@@ -853,11 +861,13 @@ void SV_InitSnapshotStorage( void )
 
 #ifdef USE_MULTIVM_SERVER
   Com_Memset(svs.currFrameWorlds, 0, sizeof(svs.currFrameWorlds));
+
+	Com_Memset( client_pvsWorlds, 0, sizeof( client_pvsWorlds ) );
 #else
   svs.currFrame = NULL;
-#endif
 
 	Com_Memset( client_pvs, 0, sizeof( client_pvs ) );
+#endif
 }
 
 
@@ -1393,13 +1403,14 @@ void SV_SendClientSnapshot( client_t *client, qboolean includeBaselines ) {
 
 	for(igvm = 0; igvm < MAX_NUM_VMS; igvm++) {
 		if(!gvmWorlds[igvm]) continue;
-		gvmi = igvm; // TODO remove need for gvmi and pass igvm
-		CM_SwitchMap(gameWorlds[gvmi]);
-		SV_SetAASgvm(gvmi);
+		gvmi = igvm;
+		CM_SwitchMap(gameWorlds[igvm]);
+		SV_SetAASgvm(igvm);
 
-		if(sv_mvSyncXYZ->integer 
+		// for omnipresent with matching worlds, copy origin and view angle to subordinate worlds
+		if(sv_mvSyncXYZ->integer != 0
 			&& sv_mvOmnipresent->integer != 0
-			&& gvmi != client->newWorld && gvmi != client->gameWorld) {
+			&& igvm != client->newWorld && igvm != client->gameWorld) {
 			int clientNum = (int)(client - svs.clients);
 			playerState_t *ps = (playerState_t *)((byte *)sv.gameClientWorlds[client->gameWorld] + sv.gameClientSizes[client->gameWorld]*clientNum);
 			VectorCopy(ps->origin, SV_GameClientNum( clientNum )->origin);
@@ -1408,9 +1419,12 @@ void SV_SendClientSnapshot( client_t *client, qboolean includeBaselines ) {
 
 		// skip worlds client hasn't entered yet
 		if(sv_mvWorld->integer != 0 
-			&& (!SV_PlayerPresent(client - svs.clients) /* || !hasMultiworldInView[gvmi] */)
-			&& gvmi != client->gameWorld && gvmi != client->newWorld) continue;
-		//Com_Printf("Sending snapshot %i -> %i, %i, %i\n", (int)(client - svs.clients), gvmi, SV_PlayerPresent(client - svs.clients), SV_GentityNum(client - svs.clients)->s.eType);
+			&& (!SV_PlayerPresent(client - svs.clients) /* || !hasMultiworldInView[igvm] */)
+			&& igvm != client->gameWorld && igvm != client->newWorld) continue;
+
+		// must acknowledge new gamestate in response to their game request
+		//if(client->lastSnapshotTime - svs.time == -9999 && igvm != client->newWorld) continue;
+		//Com_Printf("Sending snapshot %i -> %i, %i, %i\n", (int)(client - svs.clients), igvm, SV_PlayerPresent(client - svs.clients), SV_GentityNum(client - svs.clients)->s.eType);
 
 #endif
 
@@ -1437,9 +1451,10 @@ void SV_SendClientSnapshot( client_t *client, qboolean includeBaselines ) {
 		headerBytes = msg.cursize;
 		MSG_WriteLong( &msg, client->lastClientCommand );
 	}
+	// switch game data slots (`igs`) on client before processing snapshot
 	if(atoi(Info_ValueForKey( client->userinfo, "mvproto" )) > 1) {
 		MSG_WriteByte( &msg, svc_mvWorld );
-		MSG_WriteByte( &msg, gvmi );
+		MSG_WriteByte( &msg, igvm );
 	}
 #else
 	MSG_Init( &msg, msg_buf, MAX_MSGLEN );
@@ -1507,6 +1522,9 @@ void SV_SendClientSnapshot( client_t *client, qboolean includeBaselines ) {
 			break;
 		}
 	}
+	gvmi = 0;
+	CM_SwitchMap(gameWorlds[gvmi]);
+	SV_SetAASgvm(gvmi);
 #endif
 
 	// check for overflow
