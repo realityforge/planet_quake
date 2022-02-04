@@ -690,7 +690,7 @@ qboolean Cmd_ExecuteString( const char *text, int tag);
 #endif
 #else
 #ifdef USE_CMD_CONNECTOR
-qboolean Cmd_ExecuteString( const char *text );
+qboolean Cmd_ExecuteString( const char *text, qboolean noServer );
 #else
 qboolean Cmd_ExecuteString( const char *text );
 #endif

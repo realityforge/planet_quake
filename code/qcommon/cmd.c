@@ -160,7 +160,7 @@ static void Cbuf_ExecuteInternal( cbufExec_t exec_when, const char *text )
 	case EXEC_NOW:
 		if ( text && text[0] != '\0' ) {
 			Com_DPrintf(S_COLOR_YELLOW "EXEC_NOW %s\n", text);
-#ifdef USE_MULTIVM_CLIENT
+#if defined(USE_MULTIVM_CLIENT) || defined(USE_MULTIVM_SERVER)
 #ifdef USE_CMD_CONNECTOR
 			Cmd_ExecuteString (text, qfalse, -1);
 #else
@@ -943,7 +943,7 @@ qboolean Cmd_ExecuteString( const char *text, int tag)
 #endif
 #else
 #ifdef USE_CMD_CONNECTOR
-qboolean Cmd_ExecuteString( const char *text )
+qboolean Cmd_ExecuteString( const char *text, qboolean noServer )
 #else
 qboolean Cmd_ExecuteString( const char *text )
 #endif
