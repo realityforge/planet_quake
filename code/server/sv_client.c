@@ -3045,11 +3045,11 @@ qboolean SV_ExecuteClientCommand( client_t *cl, const char *s ) {
 		redirectAddress = cl->netchan.remoteAddress;
 		Com_BeginRedirect( sv_outputbuf, sizeof( sv_outputbuf ), SV_FlushRedirect );
 		if(
-#ifdef USE_MULTIVM_SERVER
+#ifdef USE_SERVER_ROLES
 #ifdef USE_CMD_CONNECTOR
-			Cmd_ExecuteString(s, qtrue, gvmi)
+			Cmd_ExecuteLimitedString(s, qtrue, -1)
 #else
-			Cmd_ExecuteString(s, gvmi)
+			Cmd_ExecuteLimitedString(s, -1)
 #endif
 #else
 #ifdef USE_CMD_CONNECTOR
@@ -3071,11 +3071,7 @@ qboolean SV_ExecuteClientCommand( client_t *cl, const char *s ) {
 #endif
 		if(com_sv_running && com_sv_running->integer) {
 			VM_Call( gvm, 1, GAME_RUN_FRAME, sv.time );
-#ifdef USE_MULTIVM_SERVER
-			SV_GameCommand(gvmi);
-#else
-      SV_GameCommand(0);
-#endif
+      SV_GameCommand();
 		}
 #ifndef DEDICATED
 		Cvar_Set("dedicated", va("%i", ded));

@@ -633,11 +633,7 @@ rescan:
 
 	// pass server commands through to client like postgame
   // skip sending to server since that where it came from
-#ifdef USE_MULTIVM_CLIENT
-	if(Cmd_ExecuteString(s, qtrue, cgvmi)) {
-#else
-  if(Cmd_ExecuteString(s, qtrue)) {
-#endif
+	if(Cmd_ExecuteString(s, qfalse)) {
 		Cmd_Clear();
 		return qfalse;
 	}
@@ -864,7 +860,7 @@ static intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 
 	case CG_SENDCONSOLECOMMAND:
 #ifdef USE_MULTIVM_CLIENT
-			Cbuf_ExecuteTagged( EXEC_APPEND, VMA(1), cgvmi );
+			Cbuf_ExecuteTagged( EXEC_APPEND, VMA(1), -1 );
 #else
       Cbuf_AddText( VMA(1) );
 #endif
@@ -1474,21 +1470,11 @@ CL_GameCommand
 See if the current console command is claimed by the cgame
 ====================
 */
-#ifdef USE_MULTIVM_CLIENT
-qboolean CL_GameCommand( int igvm ) 
-#else
-qboolean CL_GameCommand( void ) 
-#endif
-{
+qboolean CL_GameCommand( void ) {
 	qboolean result;
 #ifdef USE_MULTIVM_CLIENT
-	int prevGvm = cgvmi;
-	if(igvm == -1) {
-		cgvmi = clc.currentView;
-	} else {
-		cgvmi = igvm;
-	}
-  int igs = clientGames[igvm];
+	cgvmi = clc.currentView;
+  int igs = clientGames[cgvmi];
 	CM_SwitchMap(clientMaps[cgvmi]);
 #endif
 
@@ -1506,19 +1492,12 @@ qboolean CL_GameCommand( void )
 	// it's possible (and happened in Q3F) that the game executes a console command
 	// before the frame has resumed the vm
 	if (VM_IsSuspended(cgvm)) {
-#ifdef USE_MULTIVM_CLIENT
-			cgvmi = prevGvm;
-			CM_SwitchMap(clientMaps[cgvmi]);
-#endif
 		return qfalse;
 	}
 #endif
 
 	result = VM_Call( cgvm, 0, CG_CONSOLE_COMMAND );
-#ifdef USE_MULTIVM_CLIENT
-	cgvmi = prevGvm;
-	CM_SwitchMap(clientMaps[cgvmi]);
-#endif
+
 	return result;
 }
 

@@ -679,22 +679,20 @@ void	Cmd_TokenizeStringIgnoreQuotes( const char *text_in );
 
 char     *Cmd_TokenizeAlphanumeric(const char *text_in, int *count);
 #ifdef USE_SERVER_ROLES
+#ifdef USE_CMD_CONNECTOR
 qboolean	Cmd_ExecuteLimitedString( const char *text, qboolean noServer, int role );
+#else
+qboolean	Cmd_ExecuteLimitedString( const char *text, int role );
+#endif
 void      Cmd_FilterLimited(char *commandList);
 #endif
-#if defined(USE_MULTIVM_CLIENT) || defined(USE_MULTIVM_SERVER)
-#ifdef USE_CMD_CONNECTOR
-qboolean Cmd_ExecuteString( const char *text, qboolean noServer, int tag);
-#else
-qboolean Cmd_ExecuteString( const char *text, int tag);
-#endif
-#else
+
 #ifdef USE_CMD_CONNECTOR
 qboolean Cmd_ExecuteString( const char *text, qboolean noServer );
 #else
 qboolean Cmd_ExecuteString( const char *text );
 #endif
-#endif
+
 // Parses a single line of text into arguments and tries to execute it
 // as if it was typed at the console
 
@@ -1354,11 +1352,7 @@ qboolean CL_Disconnect( qboolean showMainMenu, qboolean dropped );
 void CL_ResetOldGame( void );
 void CL_Shutdown( const char *finalmsg, qboolean quit );
 void CL_Frame( int msec, int realMsec );
-#ifdef USE_MULTIVM_SERVER
-qboolean CL_GameCommand( int igvm );
-#else
 qboolean CL_GameCommand( void );
-#endif
 void CL_KeyEvent (int key, qboolean down, unsigned time, int fingerId);
 #ifdef USE_DRAGDROP
 void CL_DropComplete(void);
@@ -1440,7 +1434,7 @@ void SV_PacketEvent( const netadr_t *from, msg_t *msg );
 void SV_PersistClient(int c);
 void SV_RestoreClient(int c);
 int SV_FrameMsec( void );
-qboolean SV_GameCommand( int igvm );
+qboolean SV_GameCommand( void );
 int SV_SendQueuedPackets( void );
 
 void SV_AddDedicatedCommands( void );
@@ -1451,7 +1445,7 @@ void SV_RemoveDedicatedCommands( void );
 //
 // UI interface
 //
-qboolean UI_GameCommand( int igvm );
+qboolean UI_GameCommand( void );
 qboolean UI_usesUniqueCDKey(void);
 
 /*

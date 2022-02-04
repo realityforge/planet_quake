@@ -1381,28 +1381,18 @@ UI_GameCommand
 See if the current console command is claimed by the ui
 ====================
 */
-qboolean UI_GameCommand( int iui ) {
+qboolean UI_GameCommand( void ) {
   qboolean result;
-
 #ifdef USE_MULTIVM_CLIENT
-  int prevUi = uivmi;
-  uivmi = iui;
+	uivmi = clc.currentView;
   CM_SwitchMap( clientMaps[uivmi] );
 #endif
 
 	if ( !uivm ) {
-#ifdef USE_MULTIVM_CLIENT
-    uivmi = prevUi;
-    CM_SwitchMap( clientMaps[uivmi] );
-#endif
 		return qfalse;
   }
 
 	result = VM_Call( uivm, 1, UI_CONSOLE_COMMAND, cls.realtime );
 
-#ifdef USE_MULTIVM_CLIENT
-  uivmi = prevUi;
-  CM_SwitchMap( clientMaps[uivmi] );
-#endif
   return result;
 }

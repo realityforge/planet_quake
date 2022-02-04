@@ -160,11 +160,11 @@ static void Cbuf_ExecuteInternal( cbufExec_t exec_when, const char *text )
 	case EXEC_NOW:
 		if ( text && text[0] != '\0' ) {
 			Com_DPrintf(S_COLOR_YELLOW "EXEC_NOW %s\n", text);
-#if defined(USE_MULTIVM_CLIENT) || defined(USE_MULTIVM_SERVER)
+#ifdef USE_SERVER_ROLES
 #ifdef USE_CMD_CONNECTOR
-			Cmd_ExecuteString (text, qfalse, -1);
+			Cmd_ExecuteLimitedString (text, qfalse, -1);
 #else
-			Cmd_ExecuteString (text, -1);
+			Cmd_ExecuteLimitedString (text, -1);
 #endif
 #else
 #ifdef USE_CMD_CONNECTOR
@@ -284,19 +284,11 @@ void Cbuf_Execute( void )
 		}
 
 		// execute the command line
-#if defined(USE_MULTIVM_CLIENT) || defined(USE_MULTIVM_SERVER)
+#ifdef USE_SERVER_ROLES
 #ifdef USE_CMD_CONNECTOR
-		if(cmd_text[execCmdI].filtered) {
-			Cmd_ExecuteString( line, qfalse, cmd_text[execCmdI].tag );
-		} else {
-			Cmd_ExecuteString( line, qfalse, -1 );
-		}
+		Cmd_ExecuteLimitedString( line, qfalse, cmd_text[execCmdI].filtered ? cmd_text[execCmdI].tag : -1 );
 #else
-		if(cmd_text[execCmdI].filtered) {
-			Cmd_ExecuteString( line, cmd_text[execCmdI].tag );
-		} else {
-			Cmd_ExecuteString( line, -1 );
-		}
+		Cmd_ExecuteLimitedString( line, cmd_text[execCmdI].filtered ? cmd_text[execCmdI].tag : -1 );
 #endif
 #else
 #ifdef USE_CMD_CONNECTOR
@@ -935,18 +927,10 @@ Cmd_ExecuteString
 A complete command line has been parsed, so try to execute it
 ============
 */
-#if defined(USE_MULTIVM_CLIENT) || defined(USE_MULTIVM_SERVER)
-#ifdef USE_CMD_CONNECTOR
-qboolean Cmd_ExecuteString( const char *text, qboolean noServer, int tag)
-#else
-qboolean Cmd_ExecuteString( const char *text, int tag)
-#endif
-#else
 #ifdef USE_CMD_CONNECTOR
 qboolean Cmd_ExecuteString( const char *text, qboolean noServer )
 #else
 qboolean Cmd_ExecuteString( const char *text )
-#endif
 #endif
 {
 	cmd_function_t *cmd, **prev;
@@ -990,13 +974,7 @@ qboolean Cmd_ExecuteString( const char *text )
 	
 #ifndef DEDICATED
 	// check client game commands
-	if ( com_dedicated && !com_dedicated->integer && com_cl_running && com_cl_running->integer 
-#ifdef USE_MULTIVM_SERVER
-		&& CL_GameCommand(tag) 
-#else
-		&& CL_GameCommand() 
-#endif
-) {
+	if ( com_dedicated && !com_dedicated->integer && com_cl_running && com_cl_running->integer && CL_GameCommand() ) {
 		return qtrue;
 	}
 #endif
@@ -1008,10 +986,9 @@ qboolean Cmd_ExecuteString( const char *text )
 	// check server game commands
 	if ( com_sv_running && com_sv_running->integer
 #ifdef USE_CMD_CONNECTOR
-		&& !noServer && SV_GameCommand(tag)
-#else
-		&& SV_GameCommand(-1) 
+		&& !noServer 
 #endif
+		&& SV_GameCommand()
 	) {
 		return qtrue;
 	}
@@ -1019,12 +996,7 @@ qboolean Cmd_ExecuteString( const char *text )
 
 #ifndef DEDICATED
 	// check ui commands
-	if ( com_dedicated && !com_dedicated->integer && com_cl_running && com_cl_running->integer 
-#if defined(USE_MULTIVM_CLIENT) || defined(USE_MULTIVM_SERVER)
-		&& UI_GameCommand(tag) 
-#else
-		&& UI_GameCommand(-1) 
-#endif
+	if ( com_dedicated && !com_dedicated->integer && com_cl_running && com_cl_running->integer && UI_GameCommand() 
 	) {
 		return qtrue;
 	}
@@ -1269,9 +1241,18 @@ char *Cmd_TokenizeAlphanumeric(const char *text_in, int *count) {
 
 
 #ifdef USE_SERVER_ROLES
-qboolean Cmd_ExecuteLimitedString( const char *text, qboolean noServer, int role ) {
-	limited = qtrue;
-	qboolean result = Cmd_ExecuteString(text, noServer, 0);
+#ifdef USE_CMD_CONNECTOR
+qboolean Cmd_ExecuteLimitedString( const char *text, qboolean noServer, int role ) 
+#else
+qboolean Cmd_ExecuteLimitedString( const char *text, int role ) 
+#endif
+{
+	limited = role == -1;
+#ifdef USE_CMD_CONNECTOR
+	qboolean result = Cmd_ExecuteString(text, noServer);
+#else
+	qboolean result = Cmd_ExecuteString(text);
+#endif
 	limited = qfalse;
 	return result;
 }

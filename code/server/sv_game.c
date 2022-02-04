@@ -1280,24 +1280,18 @@ SV_GameCommand
 See if the current console command is claimed by the game
 ====================
 */
-qboolean SV_GameCommand( int igvm ) {
+qboolean SV_GameCommand( void ) {
 	qboolean result;
 #ifdef USE_MULTIVM_SERVER
-	int prevGvm = gvmi;
-	if(igvm == -1) {
-		// gvmi = 0; // unaffected based on netWorld?
-	} else {
-		gvmi = igvm;
-	}
+	// TODO: allow server admins to set this somehow?
+	gvmi = 0;
 	CM_SwitchMap(gameWorlds[gvmi]);
 	SV_SetAASgvm(gvmi);
+#endif
+
 	if ( !gvm ) {
-    gvmi = prevGvm;
-		CM_SwitchMap(gameWorlds[gvmi]);
-		SV_SetAASgvm(gvmi);
 		return qfalse;
 	}
-#endif
 
 	if ( sv.state != SS_GAME ) {
 		return qfalse;
@@ -1324,20 +1318,10 @@ qboolean SV_GameCommand( int igvm ) {
 				|| Info_ValueForKey(client->userinfo, "cmd_connector"))
 				SV_SendServerCommand( client, "%s", Cmd_ArgsFrom(0) );
 		}
-#ifdef USE_MULTIVM_SERVER
-		gvmi = prevGvm;
-		CM_SwitchMap(gameWorlds[gvmi]);
-		SV_SetAASgvm(gvmi);
-#endif
 		return qtrue;
 	}
 #else
 	result = VM_Call( gvm, 0, GAME_CONSOLE_COMMAND );
-#endif
-#ifdef USE_MULTIVM_SERVER
-	gvmi = prevGvm;
-	CM_SwitchMap(gameWorlds[gvmi]);
-	SV_SetAASgvm(gvmi);
 #endif
 	return result;
 }

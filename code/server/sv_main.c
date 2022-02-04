@@ -1161,19 +1161,14 @@ static void SVC_RemoteCommand( const netadr_t *from ) {
 			NET_OutOfBandPrint( NS_SERVER, from, "infoResponse\n%s", infostring );
 		} else {
 #ifdef USE_SERVER_ROLES
-			if(limited) {
-				Cmd_ExecuteLimitedString( cmd_aux, qfalse, role );
-			} else
-#endif
-#ifdef USE_MULTIVM_SERVER
 #ifdef USE_CMD_CONNECTOR
-      Cmd_ExecuteString( cmd_aux, qfalse, gvmi );
+			Cmd_ExecuteLimitedString( cmd_aux, qtrue, limited ? role : -1 );
 #else
-      Cmd_ExecuteString( cmd_aux, gvmi );
+			Cmd_ExecuteLimitedString( cmd_aux, limited ? role : -1 );
 #endif
 #else
 #ifdef USE_CMD_CONNECTOR
-			Cmd_ExecuteString( cmd_aux, qfalse );
+			Cmd_ExecuteString( cmd_aux, qtrue );
 #else
 			Cmd_ExecuteString( cmd_aux );
 #endif
@@ -1894,8 +1889,8 @@ void SV_Frame( int msec ) {
 	{
 		client_t *c = &svs.clients[ i ];
 		playerState_t *ps = SV_GameClientNum( i );
-		clientSnapshot_t	*frame = c->frames[ c->netchan.outgoingSequence - 1 & PACKET_MASK ];
-		clientSnapshot_t	*frame2 = c->frames[ c->netchan.outgoingSequence - 2 & PACKET_MASK ];
+		clientSnapshot_t	*frame = &c->frames[ c->netchan.outgoingSequence - 1 & PACKET_MASK ];
+		clientSnapshot_t	*frame2 = &c->frames[ c->netchan.outgoingSequence - 2 & PACKET_MASK ];
 
 		if(c->netchan.remoteAddress.type != NA_BOT) {
 			numConnected++;
