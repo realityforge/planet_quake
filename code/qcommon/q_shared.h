@@ -75,7 +75,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 //   it's also used for the Discord chat bot connector
 #define USE_RECENT_EVENTS 1
 // Cyrax's Multiview is what makes multiworld possible.
-#define USE_MV				  // multiview enabled
+#define USE_MV 1				  // multiview enabled
 //#define USE_MV_ZCMD		// command compression
 // RmlUi adds supplementary initerfaces written in HTML.
 //#define USE_RMLUI 1

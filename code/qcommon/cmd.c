@@ -991,10 +991,10 @@ qboolean Cmd_ExecuteString( const char *text )
 #ifndef DEDICATED
 	// check client game commands
 	if ( com_dedicated && !com_dedicated->integer && com_cl_running && com_cl_running->integer 
-#if defined(USE_MULTIVM_CLIENT) || defined(USE_MULTIVM_SERVER)
+#ifdef USE_MULTIVM_SERVER
 		&& CL_GameCommand(tag) 
 #else
-		&& CL_GameCommand(-1) 
+		&& CL_GameCommand() 
 #endif
 ) {
 		return qtrue;

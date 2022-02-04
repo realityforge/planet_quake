@@ -37,6 +37,13 @@ Finally, I want to use multiworld for streaming game content to clients. Where t
 
   Client cl_nodelta is required for the time-being, deltas work but it causes server errors. Binds set the DVR for q3dm1 to `g` key, and q3dm2 to `h` key. Level only needs to load first time it's used.
 
+### Portal Demo
+
+  Launch options are much.
+  ```
+  ./build/debug-darwin-x86_64/quake3e_mw +set fs_basepath /Applications/ioquake3 +set fs_basegame baseq3 +set sv_pure 0 +set r_fullscreen 0 +set cl_nodelta 1 +set developer 1 +set cl_lazyLoad 0 +devmap tig_ra3_arena_0 +load game tig_ra3_arena_1 +load game tig_ra3_arena_2 +load game tig_ra3_arena_3 +load game tig_ra3_arena_4 +set sv_mvWorld 1 +set sv_memoryMaps 1 +set sv_bspRebuild 1 +set sv_bspLight 2 +set sv_mvOmnipresent -1
+  ```
+
 
 ## TODO
 

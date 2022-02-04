@@ -473,9 +473,9 @@ void SV_PersistClient( int c ) {
 		return;
 	}
 	playerState_t *ps = SV_GameClientNum( c );
-	gentity_t *ent = (void *)SV_GentityNum( c ); //->r.s;
+	void *ent = SV_GentityNum( c ); //->r.s;
 	cl->persisted = sv.time;
-	Com_Printf("Persisting client: %i, %f x %f\n", ent->health, ps->viewangles[0], ps->viewangles[1]);
+	//Com_Printf("Persisting client: %i, %f x %f\n", ent->health, ps->viewangles[0], ps->viewangles[1]);
 
 	fileHandle_t h = FS_SV_FOpenFileWrite( va("client_%s.session", cl_guid) );
 	time_t t = I_FloatTime();
@@ -485,7 +485,11 @@ void SV_PersistClient( int c ) {
 	FS_Write(&size, sizeof(int), h);
 	FS_Write(ps, size, h);
 
-	size = sizeof(gentity_t);
+#ifdef USE_MULTIVM_SERVER
+	size = sv.gentitySizes[gvmi];
+#else
+	size = sv.gentitySize;
+#endif
 	FS_Write(&size, sizeof(int), h);
 	FS_Write(ent, size, h);
 
@@ -499,7 +503,11 @@ void SV_PersistClient( int c ) {
 
 
 void SV_RestoreClient( int clientNum ) {
-	byte buffer[sizeof(gentity_t) * 2];
+#ifdef USE_MULTIVM_SERVER
+	byte buffer[sv.gentitySizes[gvmi] * 2];
+#else
+	byte buffer[sv.gentitySize * 2];
+#endif
 	client_t *cl = &svs.clients[clientNum];
 	char *cl_guid = Info_ValueForKey(cl->userinfo, "cl_guid");
 	if(!cl_guid[0] || cl->state != CS_ACTIVE) {
@@ -536,18 +544,24 @@ void SV_RestoreClient( int clientNum ) {
 
 	// weird because the struct lists player state twice or something? In sharedEntity_t and in entityShared_t
 	int restoreOffset = sizeof(entityShared_t) - sizeof(entityState_t) + 4; // 4 for the ptr
-	byte *clientEnt = (void *)SV_GentityNum( clientNum );
-	gentity_t *ent = (void *)&clientEnt[-restoreOffset]; //->r.s;
+	//byte *clientEnt = (void *)SV_GentityNum( clientNum );
+	//void *ent = (void *)&clientEnt[-restoreOffset]; //->r.s;
 
 	FS_Read(buffer, sizeof(int), h);
 	memcpy(&size, buffer, sizeof(int));
 	memset(buffer, 0, sizeof(buffer));
 	FS_Read(&buffer[restoreOffset], size, h);
-	if(size != sizeof(gentity_t)) {
+	if(
+#ifdef USE_MULTIVM_SERVER
+		size != sv.gentitySizes[gvmi]
+#else
+		size != sv.gentitySize
+#endif
+	) {
 		Com_Printf( S_COLOR_RED "SESSION ERROR: Player entity sizes do not match (%i != %lu).\n", size, sizeof(playerState_t));
 	} else {
-		memcpy(&ent->health, &((gentity_t*)buffer)->health, sizeof(int));
-		Com_Printf("Restoring client %i: %i, %f x %f\n", clientNum, ent->health /*sizeof(playerState_t) + ((intptr_t)&ent->health - (intptr_t)ent)*/, ps->origin[0], ps->origin[1]);
+		//memcpy(&ent->health, &((gentity_t*)buffer)->health, sizeof(int));
+		Com_Printf("Restoring client %i: %f x %f\n", clientNum, ps->origin[0], ps->origin[1]);
 	}
 
 	FS_Read(buffer, sizeof(int), h);

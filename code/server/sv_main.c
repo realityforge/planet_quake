@@ -1894,14 +1894,15 @@ void SV_Frame( int msec ) {
 	{
 		client_t *c = &svs.clients[ i ];
 		playerState_t *ps = SV_GameClientNum( i );
-		clientSnapshot_t	*frame = &c->frames[ c->netchan.outgoingSequence - 1 & PACKET_MASK ];
+		clientSnapshot_t	*frame = c->frames[ c->netchan.outgoingSequence - 1 & PACKET_MASK ];
+		clientSnapshot_t	*frame2 = c->frames[ c->netchan.outgoingSequence - 2 & PACKET_MASK ];
 
 		if(c->netchan.remoteAddress.type != NA_BOT) {
 			numConnected++;
 		}
 		//ps = &frame->ps;
 		for ( int j = ps->eventSequence - MAX_PS_EVENTS ; j < ps->eventSequence ; j++ ) {
-			if ( j >= c->frames[ c->netchan.outgoingSequence - 2 & PACKET_MASK ].ps.eventSequence ) {
+			if ( j >= frame2->ps.eventSequence ) {
 				int event = frame->ps.events[ j & (MAX_PS_EVENTS-1) ] & ~EV_EVENT_BITS;
 				//if(j >= ps.eventSequence) {
 //					if(event > 1) // footsteps and none
