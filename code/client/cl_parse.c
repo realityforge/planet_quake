@@ -830,8 +830,10 @@ void CL_ParseServerInfo( int igs )
 		sizeof(clc.sv_dlURL));
 
   clc.isMultiGame = strcmp(Info_ValueForKey(serverInfo, "gamename"), "multigame") == 0;
+#ifdef USE_MULTIVM_CLIENT
   clc.sv_mvWorld = strcmp(Info_ValueForKey(serverInfo, "sv_mvWorld"), "1") == 0;
   clc.sv_mvOmnipresent = strcmp(Info_ValueForKey(serverInfo, "sv_mvOmnipresent"), "1") == 0;
+#endif
 
 	/* remove ending slash in URLs */
 	len = strlen( clc.sv_dlURL );

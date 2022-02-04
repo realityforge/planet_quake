@@ -22,7 +22,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 // sv_client.c -- server code for dealing with clients
 
 #include "server.h"
-#if defined(USE_PERSIST_CLIENT) || defined(USE_MULTIVM_SERVER) || defined(USE_REFEREE_CMDS)
+#if 0 //defined(USE_PERSIST_CLIENT) || defined(USE_MULTIVM_SERVER) || defined(USE_REFEREE_CMDS)
 #include "../game/g_local.h" // get both the definitions of gentity_t (to get gentity_t->health field) AND sharedEntity_t, so that we can convert a sharedEntity_t into a gentity_t (see more details in SV_GentityUpdateHealthField() notes)
 #endif
 
@@ -452,15 +452,15 @@ SetClientViewAngle
 void SV_SetClientViewAngle( int clientNum, vec3_t angle ) {
 	int	i, cmdAngle;
 	playerState_t *ps = SV_GameClientNum( clientNum );
-	gentity_t *ent = (void *)SV_GentityNum( clientNum ); //->r.s;
+	//gentity_t *ent = (void *)SV_GentityNum( clientNum ); //->r.s;
 
 	// set the delta angle
 	for (i = 0 ; i < 3 ; i++) {
 		cmdAngle = ANGLE2SHORT(angle[i]);
 		ps->delta_angles[i] = cmdAngle; // - client->pers.cmd.angles[i];
 	}
-	VectorCopy( angle, ent->s.angles );
-	VectorCopy( ent->s.angles, ps->viewangles );
+	VectorCopy( angle, ps->viewangles );
+	//VectorCopy( angle, ent->s.angles );
 }
 #endif
 

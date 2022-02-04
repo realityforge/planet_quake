@@ -9,6 +9,7 @@
 "arena" "4"
 "message" "Certain Ruin by Tigger-oN"
 "ambient" "12"
+"_tb_textures" "textures/common"
 // brush 0
 {
 ( 488 144 362 ) ( 488 400 362 ) ( 488 400 370 ) common/nodraw 8 -4 0 0.5 0.5 134217728 0 0
@@ -7613,26 +7614,26 @@
 // entity 14
 {
 "classname" "misc_model"
-"model" "models/mapobj~1/tig_ra3/fern.md3"
+"model" "models/mapobjects/tig_ra3/fern.md3"
 "origin" "295 -1080 57"
 }
 // entity 15
 {
 "classname" "misc_model"
-"model" "models/mapobj~1/tig_ra3/fernbig.md3"
+"model" "models/mapobjects/tig_ra3/fernbig.md3"
 "angle" "270"
 "origin" "227 -1128 69"
 }
 // entity 16
 {
 "classname" "misc_model"
-"model" "models/mapobj~1/tig_ra3/fernbig.md3"
+"model" "models/mapobjects/tig_ra3/fernbig.md3"
 "origin" "327 -424 0"
 }
 // entity 17
 {
 "origin" "-490 -484 28"
-"model" "models/mapobj~1/tig_ra3/natesh~1.md3"
+"model" "models/mapobjects/tig_ra3/nateshroom1.md3"
 "classname" "misc_model"
 }
 // entity 18
@@ -7780,20 +7781,20 @@
 {
 "angle" "270"
 "classname" "misc_model"
-"model" "models/mapobj~1/tig_ra3/natesh~1.md3"
+"model" "models/mapobjects/tig_ra3/nateshroom1.md3"
 "origin" "-476 -516 36"
 }
 // entity 39
 {
 "origin" "295 -448 0"
-"model" "models/mapobj~1/tig_ra3/fernbig.md3"
+"model" "models/mapobjects/tig_ra3/fernbig.md3"
 "classname" "misc_model"
 "angle" "270"
 }
 // entity 40
 {
 "origin" "283 -1097 59"
-"model" "models/mapobj~1/tig_ra3/fern.md3"
+"model" "models/mapobjects/tig_ra3/fern.md3"
 "classname" "misc_model"
 "angle" "135"
 }
@@ -7909,9 +7910,4 @@
 "noise" "sound/tig_ra3/nicebird.wav"
 "origin" "-824 732 408"
 "targetname" "t9"
-}
-// entity 59
-{
-"classname" "misc_portal_camera"
-"origin" "1048 -1016 904"
 }

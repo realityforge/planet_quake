@@ -2,6 +2,7 @@ textures/common/areaportal
 {
 	qer_trans 0.50
 	surfaceparm nodraw
+	surfaceparm nolightmap
 	surfaceparm nonsolid
 	surfaceparm structural
 	surfaceparm trans
@@ -9,44 +10,33 @@ textures/common/areaportal
 	surfaceparm areaportal
 }
 
-textures/common/botclip
-{
-	qer_trans 0.40
-	qer_editorimage textures/common/botclip
-	surfaceparm nolightmap
-	surfaceparm nomarks
-	surfaceparm nodraw
-	surfaceparm nonsolid
-	surfaceparm botclip
-	surfaceparm noimpact
-}
-
 textures/common/caulk
 {
 	surfaceparm nodraw
-	surfaceparm nomarks
 	surfaceparm nolightmap
+	surfaceparm nomarks
 }
 
 textures/common/clip
 {
 	qer_trans 0.40
-	surfaceparm nolightmap
-	surfaceparm nomarks
 	surfaceparm nodraw
+	surfaceparm nolightmap
 	surfaceparm nonsolid
-	surfaceparm playerclip
+	surfaceparm trans
+	surfaceparm nomarks
 	surfaceparm noimpact
+	surfaceparm playerclip
 }
 
 textures/common/clusterportal
 {
 	qer_trans 0.50
 	surfaceparm nodraw
+	surfaceparm nolightmap
 	surfaceparm nonsolid
 	surfaceparm trans
 	surfaceparm nomarks
-	surfaceparm detail
 	surfaceparm clusterportal
 }
 
@@ -55,9 +45,10 @@ textures/common/cushion
 	qer_nocarve
 	qer_trans 0.50
 	surfaceparm nodraw
+	surfaceparm nolightmap
+	surfaceparm trans
 	surfaceparm nomarks
 	surfaceparm nodamage
-	surfaceparm trans
 }
 
 textures/common/donotenter
@@ -67,32 +58,32 @@ textures/common/donotenter
 	surfaceparm nonsolid
 	surfaceparm trans
 	surfaceparm nomarks
-	surfaceparm detail
 	surfaceparm donotenter
 }
 
-textures/common/energypad
-{
-	qer_editorimage textures/common/bluegoal.tga
-	surfaceparm nolightmap
-	cull twosided
+// never used
+//
+//textures/common/energypad
+//{
+//	qer_editorimage textures/sfx/bluegoal.tga
+//	surfaceparm nolightmap
+//	cull twosided
+//	{
+//		map textures//bluegoal.tga
+//		blendFunc GL_ONE GL_SRC_ALPHA
+//		tcGen environment
+//		tcMod turb 0 0.25 0 0.05
+//	}
+//}
 
-	{
-		map textures/common/bluegoal.tga
-		blendFunc GL_ONE GL_SRC_ALPHA
-		tcGen environment
-		tcMod turb 0 0.25 0 0.05
-	}
-}
-
-textures/common/full_clip
+textures/common/full_clip	// silly shader, use weapclip instead
 {
 	qer_trans 0.40
 	surfaceparm nodraw
 	surfaceparm playerclip
 }
 
-textures/common/hint
+textures/common/hint		// should NOT use surfaceparm hint... strange but true
 {
 	qer_nocarve
 	qer_trans 0.30
@@ -101,12 +92,25 @@ textures/common/hint
 	surfaceparm structural
 	surfaceparm trans
 	surfaceparm noimpact
+	surfaceparm hint	// ydnar: yes it should.
 }
 
-textures/common/invisible
+// Obsidian: Local hint works like normal hint but doesn't create portals beyond local structural brushes. Experimental, use with caution.
+textures/common/hintlocal
+{
+	qer_nocarve
+	qer_trans 0.30
+	qer_editorImage textures/common/hintlocal.tga
+	surfaceparm nodraw
+	surfaceparm nonsolid
+	surfaceparm structural
+	surfaceparm trans
+	surfaceparm noimpact
+}
+
+textures/common/invisible	// solid, transparent polygons, casts shadows
 {
 	surfaceparm nolightmap
-
 	{
 		map textures/common/invisible.tga
 		alphaFunc GE128
@@ -115,24 +119,11 @@ textures/common/invisible
 	}
 }
 
-textures/common/lightgrid
-{
-	qer_trans 0.40
-	qer_editorimage textures/common/lightgrid
-	surfaceparm nolightmap
-	surfaceparm nomarks
-	surfaceparm nodraw
-	surfaceparm nonsolid
-	surfaceparm lightgrid
-	surfaceparm noimpact
-}
-
 textures/common/mirror1
 {
-	qer_editorimage textures/common/qer_mirror.tga
+	qer_editorimage textures/common/mirror1.tga
 	surfaceparm nolightmap
 	portal
-
 	{
 		map textures/common/mirror1.tga
 		blendfunc GL_ONE GL_ONE_MINUS_SRC_ALPHA
@@ -145,7 +136,6 @@ textures/common/mirror2
 	qer_editorimage textures/common/qer_mirror.tga
 	surfaceparm nolightmap
 	portal
-
 	{
 		map textures/common/mirror1.tga
 		blendfunc GL_ONE GL_ONE_MINUS_SRC_ALPHA
@@ -163,12 +153,15 @@ textures/common/missileclip
 	surfaceparm nodamage
 	surfaceparm nomarks
 	surfaceparm nodraw
+	//surfaceparm nonsolid
 	surfaceparm playerclip
+	surfaceparm trans
 }
 
 textures/common/nodraw
 {
 	surfaceparm nodraw
+	surfaceparm nolightmap
 	surfaceparm nonsolid
 	surfaceparm trans
 	surfaceparm nomarks
@@ -177,6 +170,7 @@ textures/common/nodraw
 textures/common/nodrawnonsolid
 {
 	surfaceparm nonsolid
+	surfaceparm nolightmap
 	surfaceparm nodraw
 }
 
@@ -184,17 +178,17 @@ textures/common/nodrop
 {
 	qer_nocarve
 	qer_trans 0.5
-	surfaceparm trans
+	surfaceparm nodraw
+	surfaceparm nolightmap
 	surfaceparm nonsolid
+	surfaceparm trans
 	surfaceparm nomarks
 	surfaceparm nodrop
-	surfaceparm nolightmap
-	surfaceparm nodraw
-	cull disable
 }
 
 textures/common/noimpact
 {
+	qer_editorimage textures/common/nolightmap.tga
 	surfaceparm noimpact
 }
 
@@ -207,7 +201,9 @@ textures/common/origin
 {
 	qer_nocarve
 	surfaceparm nodraw
+	surfaceparm nolightmap
 	surfaceparm nonsolid
+	surfaceparm trans
 	surfaceparm origin
 }
 
@@ -216,7 +212,6 @@ textures/common/portal
 	qer_editorimage textures/common/qer_portal.tga
 	surfaceparm nolightmap
 	portal
-
 	{
 		map textures/common/mirror1.tga
 		tcMod turb 0 0.25 0 0.05
@@ -225,37 +220,32 @@ textures/common/portal
 	}
 }
 
-textures/common/skip
-{
-	qer_nocarve
-	qer_trans 0.40
-	surfaceparm nodraw
-	surfaceparm nonsolid
-	surfaceparm structural
-	surfaceparm trans
-}
-
 textures/common/slick
 {
 	qer_trans 0.50
 	surfaceparm nodraw
+	surfaceparm nolightmap
 	surfaceparm nomarks
 	surfaceparm trans
 	surfaceparm slick
 }
 
-textures/common/teleporter
+textures/common/terrain
 {
+	q3map_terrain
+	surfaceparm nodraw
 	surfaceparm nolightmap
-	surfaceparm noimpact
-	q3map_lightimage textures/sfx/powerupshit.tga
-	q3map_surfacelight 800
+	surfaceparm nomarks
+}
 
-	{
-		map textures/sfx/powerupshit.tga
-		tcGen environment
-		tcMod turb 0 0.015 0 0.3
-	}
+textures/common/terrain2
+{
+	q3map_terrain
+	qer_editorimage textures/common/terrain.tga
+	surfaceparm dust
+	surfaceparm nodraw
+	surfaceparm nomarks
+	surfaceparm nolightmap
 }
 
 textures/common/timportal
@@ -263,7 +253,6 @@ textures/common/timportal
 	qer_editorimage textures/common/qer_portal.tga
 	portal
 	surfaceparm nolightmap
-
 	{
 		map textures/common/portal.tga
 		tcMod turb 0 0.25 0 0.05
@@ -282,7 +271,193 @@ textures/common/trigger
 textures/common/weapclip
 {
 	qer_trans 0.40
+	surfaceparm nodraw
+	surfaceparm nolightmap
 	surfaceparm trans
 	surfaceparm nomarks
+}
+
+textures/common/metalclip
+{
+	qer_trans 0.40
 	surfaceparm nodraw
+	surfaceparm nolightmap
+	surfaceparm nonsolid
+	surfaceparm trans
+	surfaceparm nomarks
+	surfaceparm noimpact
+	surfaceparm playerclip
+	surfaceparm metalsteps
+}
+
+textures/common/botclip
+{
+	qer_trans 0.40
+	surfaceparm nodraw
+	surfaceparm nolightmap
+	surfaceparm nonsolid
+	surfaceparm trans
+	surfaceparm nomarks
+	surfaceparm noimpact
+	surfaceparm botclip
+}
+
+// ydnar q3map lightgrid bounds
+//
+// the min/max bounds of brushes with this shader in a map
+// will define the bounds of the map's lightgrid (model lighting)
+// note: make it as small as possible around player space
+// to minimize bsp size and compile time
+
+textures/common/lightgrid
+{
+	qer_trans 0.5
+	surfaceparm nodraw
+	surfaceparm nolightmap
+	surfaceparm nonsolid
+	surfaceparm detail
+	surfaceparm nomarks
+	surfaceparm trans
+	surfaceparm lightgrid
+}
+
+
+
+
+//******************************************************************************
+// Obsidian 2007-08-24 (update 2010-12-03)
+// Q3Map2 "common" shaders
+//******************************************************************************
+
+
+// ydnar: antiportal works like hint, but supresses portals
+// add this to your common.shader file
+textures/common/antiportal
+{
+	qer_nocarve
+	qer_trans 0.30
+	surfaceparm nodraw
+	surfaceparm nonsolid
+	surfaceparm structural
+	surfaceparm trans
+	surfaceparm noimpact
+	surfaceparm antiportal
+}
+
+
+// ydnar: skip works like quake 2 hint: it doesn't generate bsp splits
+// use on sides of hint brushes where you don't want bsp splits or portals
+// add this to your common.shader file
+textures/common/skip
+{
+	qer_nocarve
+	qer_trans 0.30
+	surfaceparm nodraw
+	surfaceparm nonsolid
+	surfaceparm structural
+	surfaceparm trans
+	surfaceparm noimpact
+	surfaceparm skip
+}
+
+
+// Obsidian: same as skip but name changed to allow Radiant to filter both hint and skip
+textures/common/hintskip
+{
+	qer_nocarve
+	qer_trans 0.30
+	qer_editorImage textures/common/skip.tga
+	surfaceparm nodraw
+	surfaceparm nonsolid
+	surfaceparm structural
+	surfaceparm trans
+	surfaceparm noimpact
+	surfaceparm skip
+}
+
+
+// Obsidian: 2 usages for watercaulk depending on water brush complexity
+// SIMPLE WATER BRUSHES - use watercaulk on faces between water brushes
+// COMPLEX WATER BRUSHES - overlap complex water brushes with watercaulk.
+//		Water shader should be nodraw, nonsolid, trans, *sans-water*
+textures/common/watercaulk
+{
+	qer_trans 0.5
+	surfaceparm nodraw
+	surfaceparm nonsolid
+	surfaceparm trans
+	surfaceparm water
+}
+
+textures/common/slimecaulk
+{
+	qer_trans 0.5
+	surfaceparm nodraw
+	surfaceparm nonsolid
+	surfaceparm trans
+	surfaceparm slime
+}
+
+textures/common/lavacaulk
+{
+	qer_trans 0.5
+	surfaceparm nodraw
+	surfaceparm nonsolid
+	surfaceparm trans
+	surfaceparm lava
+}
+
+// alpha fade shaders
+// (c) 2004 randy reddig
+// http://www.shaderlab.com
+// distribution, in part or in whole, in any medium, permitted
+
+textures/common/alpha_100
+{
+	qer_trans 0.5
+	q3map_alphaMod volume
+	q3map_alphaMod scale 1.0
+	surfaceparm nodraw
+	surfaceparm nonsolid
+	surfaceparm trans
+}
+
+textures/common/alpha_75
+{
+	qer_trans 0.5
+	q3map_alphaMod volume
+	q3map_alphaMod scale 0.75
+	surfaceparm nodraw
+	surfaceparm nonsolid
+	surfaceparm trans
+}
+
+textures/common/alpha_50
+{
+	qer_trans 0.5
+	q3map_alphaMod volume
+	q3map_alphaMod scale 0.5
+	surfaceparm nodraw
+	surfaceparm nonsolid
+	surfaceparm trans
+}
+
+textures/common/alpha_25
+{
+	qer_trans 0.5
+	q3map_alphaMod volume
+	q3map_alphaMod scale 0.25
+	surfaceparm nodraw
+	surfaceparm nonsolid
+	surfaceparm trans
+}
+
+textures/common/alpha_0
+{
+	qer_trans 0.5
+	q3map_alphaMod volume
+	q3map_alphaMod scale 0
+	surfaceparm nodraw
+	surfaceparm nonsolid
+	surfaceparm trans
 }

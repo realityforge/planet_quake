@@ -286,7 +286,7 @@
 ( -192 256 -2944 ) ( -256 256 -2944 ) ( -256 160 -2944 ) common/caulk 0 0 0 0.500000 0.500000 0 0 0
 ( -256 160 -2240 ) ( -256 256 -2240 ) ( -192 256 -2240 ) common/caulk 0 0 0 0.500000 0.500000 0 0 0
 ( -384 -3904 -1888 ) ( -320 -3904 -1888 ) ( -320 -3904 -2944 ) common/caulk 0 0 0 0.500000 0.500000 0 0 0
-( -192 96 -1888 ) ( -192 192 -1888 ) ( -192 192 -2944 ) tig_ra3/tig_ra3_skybox02 0 0 0 0.500000 0.500000 0 0 0
+( -192 96 -1888 ) ( -192 192 -1888 ) ( -192 192 -2944 ) tig_ra3/tig_ra3_skybox04 0 0 0 0.500000 0.500000 0 0 0
 ( -192 192 -1888 ) ( -256 192 -1888 ) ( -256 192 -2944 ) common/caulk 0 0 0 0.500000 0.500000 0 0 0
 ( -256 256 -1888 ) ( -256 160 -1888 ) ( -256 160 -2944 ) common/caulk 0 0 0 0.500000 0.500000 0 0 0
 
@@ -297,7 +297,7 @@
 ( 3968 192 -2944 ) ( 3968 256 -2944 ) ( 3872 256 -2944 ) common/caulk -63 0 90 0.500000 0.500000 0 0 0
 ( 3872 256 -2240 ) ( 3968 256 -2240 ) ( 3968 192 -2240 ) common/caulk -63 0 90 0.500000 0.500000 0 0 0
 ( -192 384 -1888 ) ( -192 320 -1888 ) ( -192 320 -2944 ) common/caulk 0 0 0 0.500000 0.500000 0 0 0
-( 3808 192 -1888 ) ( 3904 192 -1888 ) ( 3904 192 -2944 ) tig_ra3/tig_ra3_skybox02 0 0 -180 0.500000 -0.500000 0 0 0
+( 3808 192 -1888 ) ( 3904 192 -1888 ) ( 3904 192 -2944 ) tig_ra3/tig_ra3_skybox04 0 0 -180 0.500000 -0.500000 0 0 0
 ( 3904 192 -1888 ) ( 3904 256 -1888 ) ( 3904 256 -2944 ) common/caulk 0 0 0 0.500000 0.500000 0 0 0
 ( 3968 256 -1888 ) ( 3872 256 -1888 ) ( 3872 256 -2944 ) common/caulk 0 0 -180 0.500000 -0.500000 0 0 0
 
@@ -308,7 +308,7 @@
 ( -256 -3904 -2944 ) ( -256 -3968 -2944 ) ( -160 -3968 -2944 ) common/caulk -63 0 -90 0.500000 0.500000 0 0 0
 ( -160 -3968 -2240 ) ( -256 -3968 -2240 ) ( -256 -3904 -2240 ) common/caulk -63 0 -90 0.500000 0.500000 0 0 0
 ( 3904 -4096 -1888 ) ( 3904 -4032 -1888 ) ( 3904 -4032 -2944 ) common/caulk 0 0 -180 0.500000 -0.500000 0 0 0
-( -96 -3904 -1888 ) ( -192 -3904 -1888 ) ( -192 -3904 -2944 ) tig_ra3/tig_ra3_skybox02 -256 0 0 0.500000 0.500000 0 0 0
+( -96 -3904 -1888 ) ( -192 -3904 -1888 ) ( -192 -3904 -2944 ) tig_ra3/tig_ra3_skybox04 -256 0 0 0.500000 0.500000 0 0 0
 ( -192 -3904 -1888 ) ( -192 -3968 -1888 ) ( -192 -3968 -2944 ) common/caulk 0 0 -180 0.500000 -0.500000 0 0 0
 ( -256 -3968 -1888 ) ( -160 -3968 -1888 ) ( -160 -3968 -2944 ) common/caulk 0 0 0 0.500000 0.500000 0 0 0
 
@@ -319,7 +319,7 @@
 ( 3904 -3968 -2944 ) ( 3968 -3968 -2944 ) ( 3968 -3872 -2944 ) common/caulk 0 63 -180 0.500000 0.500000 0 0 0
 ( 3968 -3872 -2240 ) ( 3968 -3968 -2240 ) ( 3904 -3968 -2240 ) common/caulk 0 63 -180 0.500000 0.500000 0 0 0
 ( 4096 192 -1888 ) ( 4032 192 -1888 ) ( 4032 192 -2944 ) common/caulk 0 0 -180 0.500000 -0.500000 0 0 0
-( 3904 -3808 -1888 ) ( 3904 -3904 -1888 ) ( 3904 -3904 -2944 ) tig_ra3/tig_ra3_skybox02 -256 0 -180 0.500000 -0.500000 0 0 0
+( 3904 -3808 -1888 ) ( 3904 -3904 -1888 ) ( 3904 -3904 -2944 ) tig_ra3/tig_ra3_skybox04 -256 0 -180 0.500000 -0.500000 0 0 0
 ( 3904 -3904 -1888 ) ( 3968 -3904 -1888 ) ( 3968 -3904 -2944 ) common/caulk 0 0 -180 0.500000 -0.500000 0 0 0
 ( 3968 -3968 -1888 ) ( 3968 -3872 -1888 ) ( 3968 -3872 -2944 ) common/caulk 0 0 -180 0.500000 -0.500000 0 0 0
 
@@ -330,7 +330,7 @@
 ( -192 -3872 -2176 ) ( -192 -3968 -2176 ) ( -192 -3968 -2240 ) common/caulk 0 0 90 0.500000 -0.500000 0 0 0
 ( 3904 -4064 -2240 ) ( 3904 -4064 -2176 ) ( 3904 -3968 -2176 ) common/caulk 0 0 90 0.500000 -0.500000 0 0 0
 ( -192 192 -2112 ) ( 864 192 -2112 ) ( 864 192 -2048 ) common/caulk 0 0 90 0.500000 0.500000 0 0 0
-( -192 -3904 -2240 ) ( 864 -3904 -2240 ) ( 864 -3808 -2240 ) tig_ra3/tig_ra3_skybox02 0 -256 90 0.500000 0.500000 0 0 0
+( -192 -3904 -2240 ) ( 864 -3904 -2240 ) ( 864 -3808 -2240 ) tig_ra3/tig_ra3_skybox04 0 -256 90 0.500000 0.500000 0 0 0
 ( -192 -3904 -2176 ) ( 864 -3904 -2176 ) ( 864 -3904 -2240 ) common/caulk 0 0 90 0.500000 0.500000 0 0 0
 ( -192 -3872 -2176 ) ( 864 -3872 -2176 ) ( 864 -3968 -2176 ) common/caulk 0 0 0 0.500000 0.500000 0 0 0
 
@@ -12611,7 +12611,7 @@
 {
 "origin" "801 -608 -3328"
 "angle" "135"
-"model" "models/mapobj~1/fern.md3"
+"model" "models/mapobjects/fern.md3"
 "classname" "misc_model"
 
 }
@@ -12623,7 +12623,7 @@
 {
 "origin" "867 -604 -3332"
 "angle" "315"
-"model" "models/mapobj~1/natero~2.md3"
+"model" "models/mapobjects/naterock2.md3"
 "classname" "misc_model"
 
 }
@@ -12633,7 +12633,7 @@
 
 {
 "origin" "831 -624 -3328"
-"model" "models/mapobj~1/fernbig.md3"
+"model" "models/mapobjects/fernbig.md3"
 "classname" "misc_model"
 
 }
@@ -12643,7 +12643,7 @@
 
 {
 "classname" "misc_model"
-"model" "models/mapobj~1/fernbig.md3"
+"model" "models/mapobjects/fernbig.md3"
 "origin" "3356 -2996 -3324"
 
 }
@@ -12654,7 +12654,7 @@
 
 {
 "classname" "misc_model"
-"model" "models/mapobj~1/multip~1/multip~4.md3"
+"model" "models/mapobjects/multiplant/multiplant.md3"
 "angle" "90"
 "origin" "3240 -3080 -3330"
 
@@ -12666,7 +12666,7 @@
 
 {
 "classname" "misc_model"
-"model" "models/mapobj~1/natero~1.md3"
+"model" "models/mapobjects/naterock1.md3"
 "angle" "225"
 "origin" "3309 -3055 -3336"
 
@@ -12678,7 +12678,7 @@
 
 {
 "classname" "misc_model"
-"model" "models/mapobj~1/natero~1.md3"
+"model" "models/mapobjects/naterock1.md3"
 "angle" "225"
 "origin" "976 -526 -3346"
 
@@ -12689,7 +12689,7 @@
 
 {
 "origin" "526 -442 -3336"
-"model" "models/mapobj~1/fernbig.md3"
+"model" "models/mapobjects/fernbig.md3"
 "classname" "misc_model"
 
 }
@@ -12699,7 +12699,7 @@
 
 {
 "origin" "2832 -2480 -3048"
-"model" "models/mapobj~1/timlamp/timlamp.md3"
+"model" "models/mapobjects/timlamp/timlamp.md3"
 "classname" "misc_model"
 
 }
@@ -12729,7 +12729,7 @@
 
 {
 "classname" "misc_model"
-"model" "models/mapobj~1/multip~1/multip~4.md3"
+"model" "models/mapobjects/multiplant/multiplant.md3"
 "origin" "1112 -1224 -3586"
 
 }
@@ -12749,7 +12749,7 @@
 
 {
 "classname" "misc_model"
-"model" "models/mapobj~1/fernbig.md3"
+"model" "models/mapobjects/fernbig.md3"
 "origin" "2368 -1444 -3540"
 
 }
@@ -12759,7 +12759,7 @@
 
 {
 "classname" "misc_model"
-"model" "models/mapobj~1/fern.md3"
+"model" "models/mapobjects/fern.md3"
 "origin" "1900 -1808 -3560"
 
 }
@@ -12770,7 +12770,7 @@
 
 {
 "classname" "misc_model"
-"model" "models/mapobj~1/multip~1/mu16a2~1.md3"
+"model" "models/mapobjects/multiplant/multiplant_a.md3"
 "angle" "45"
 "origin" "2404 -1536 -3552"
 
@@ -12782,7 +12782,7 @@
 
 {
 "classname" "misc_model"
-"model" "models/mapobj~1/multip~1/muea32~1.md3"
+"model" "models/mapobjects/multiplant/multiplant_e.md3"
 "angle" "45"
 "origin" "2412 -2284 -3576"
 
@@ -12833,7 +12833,7 @@
 
 {
 "classname" "misc_model"
-"model" "models/mapobj~1/gratel~1/gratet~1.md3"
+"model" "models/mapobjects/gratelamp/gratetorch.md3"
 "angle" "270"
 "origin" "2016 -1420 -3442"
 
@@ -33113,7 +33113,7 @@
 {
 "origin" "1568 -1420 -3442"
 "angle" "270"
-"model" "models/mapobj~1/gratel~1/gratet~1.md3"
+"model" "models/mapobjects/gratelamp/gratetorch.md3"
 "classname" "misc_model"
 
 }
@@ -33125,7 +33125,7 @@
 {
 "origin" "2292 -1696 -3442"
 "angle" "180"
-"model" "models/mapobj~1/gratel~1/gratet~1.md3"
+"model" "models/mapobjects/gratelamp/gratetorch.md3"
 "classname" "misc_model"
 
 }
@@ -33136,7 +33136,7 @@
 
 {
 "classname" "misc_model"
-"model" "models/mapobj~1/gratel~1/gratet~1.md3"
+"model" "models/mapobjects/gratelamp/gratetorch.md3"
 "angle" "180"
 "origin" "2292 -2144 -3442"
 
@@ -33149,7 +33149,7 @@
 {
 "origin" "1292 -1696 -3442"
 "angle" "360"
-"model" "models/mapobj~1/gratel~1/gratet~1.md3"
+"model" "models/mapobjects/gratelamp/gratetorch.md3"
 "classname" "misc_model"
 
 }
@@ -33321,7 +33321,7 @@
 {
 "origin" "2480 -2320 -3568"
 "angle" "225"
-"model" "models/mapobj~1/multip~1/muea32~1.md3"
+"model" "models/mapobjects/multiplant/multiplant_e.md3"
 "classname" "misc_model"
 
 }
@@ -33332,7 +33332,7 @@
 
 {
 "origin" "1884 -1788 -3560"
-"model" "models/mapobj~1/fern.md3"
+"model" "models/mapobjects/fern.md3"
 "classname" "misc_model"
 "angle" "270"
 
@@ -33344,7 +33344,7 @@
 
 {
 "origin" "1052 -1388 -3584"
-"model" "models/mapobj~1/fernbig.md3"
+"model" "models/mapobjects/fernbig.md3"
 "classname" "misc_model"
 "angle" "90"
 
@@ -33357,7 +33357,7 @@
 {
 "origin" "1096 -1340 -3592"
 "angle" "45"
-"model" "models/mapobj~1/multip~1/muea32~1.md3"
+"model" "models/mapobjects/multiplant/multiplant_e.md3"
 "classname" "misc_model"
 
 }
@@ -33368,7 +33368,7 @@
 
 {
 "classname" "misc_model"
-"model" "models/mapobj~1/multip~1/muea32~1.md3"
+"model" "models/mapobjects/multiplant/multiplant_e.md3"
 "angle" "270"
 "origin" "1236 -1292 -3578"
 
@@ -33381,7 +33381,7 @@
 {
 "origin" "1176 -1132 -3576"
 "angle" "180"
-"model" "models/mapobj~1/multip~1/muea32~1.md3"
+"model" "models/mapobjects/multiplant/multiplant_e.md3"
 "classname" "misc_model"
 
 }
@@ -33393,7 +33393,7 @@
 {
 "angle" "315"
 "classname" "misc_model"
-"model" "models/mapobj~1/fernbig.md3"
+"model" "models/mapobjects/fernbig.md3"
 "origin" "1016 -1356 -3568"
 
 }
@@ -33405,7 +33405,7 @@
 {
 "origin" "508 -376 -3324"
 "angle" "270"
-"model" "models/mapobj~1/multip~1/mu16a2~1.md3"
+"model" "models/mapobjects/multiplant/multiplant_a.md3"
 "classname" "misc_model"
 
 }
@@ -33416,7 +33416,7 @@
 
 {
 "classname" "misc_model"
-"model" "models/mapobj~1/multip~1/mu16a2~1.md3"
+"model" "models/mapobjects/multiplant/multiplant_a.md3"
 "angle" "135"
 "origin" "1264 -532 -3330"
 
@@ -33428,7 +33428,7 @@
 
 {
 "origin" "1192 -1444 -3584"
-"model" "models/mapobj~1/multip~1/multip~4.md3"
+"model" "models/mapobjects/multiplant/multiplant.md3"
 "classname" "misc_model"
 "angle" "135"
 
@@ -33441,7 +33441,7 @@
 {
 "origin" "3448 -1440 -3336"
 "angle" "45"
-"model" "models/mapobj~1/multip~1/mu16a2~1.md3"
+"model" "models/mapobjects/multiplant/multiplant_a.md3"
 "classname" "misc_model"
 
 }
@@ -33451,7 +33451,7 @@
 
 {
 "origin" "2822 -1688 -3078"
-"model" "models/mapobj~1/fern.md3"
+"model" "models/mapobjects/fern.md3"
 "classname" "misc_model"
 
 }
@@ -33462,7 +33462,7 @@
 
 {
 "classname" "misc_model"
-"model" "models/mapobj~1/multip~1/mu16a2~1.md3"
+"model" "models/mapobjects/multiplant/multiplant_a.md3"
 "angle" "270"
 "origin" "2004 -2936 -3278"
 
@@ -33503,7 +33503,7 @@
 
 {
 "classname" "misc_model"
-"model" "models/mapobj~1/timlamp/timlamp.md3"
+"model" "models/mapobjects/timlamp/timlamp.md3"
 "origin" "3360 -2480 -3048"
 
 }
@@ -33513,7 +33513,7 @@
 
 {
 "origin" "2832 -3168 -3048"
-"model" "models/mapobj~1/timlamp/timlamp.md3"
+"model" "models/mapobjects/timlamp/timlamp.md3"
 "classname" "misc_model"
 
 }
@@ -33523,7 +33523,7 @@
 
 {
 "classname" "misc_model"
-"model" "models/mapobj~1/fernbig.md3"
+"model" "models/mapobjects/fernbig.md3"
 "origin" "1174 -534 -3330"
 
 }
@@ -33595,7 +33595,7 @@
 {
 "origin" "3189 -3053 -3336"
 "angle" "135"
-"model" "models/mapobj~1/natero~2.md3"
+"model" "models/mapobjects/naterock2.md3"
 "classname" "misc_model"
 
 }
@@ -33606,7 +33606,7 @@
 
 {
 "classname" "misc_model"
-"model" "models/mapobj~1/natero~2.md3"
+"model" "models/mapobjects/naterock2.md3"
 "angle" "160"
 "origin" "3310 -3014 -3336"
 
@@ -33618,7 +33618,7 @@
 
 {
 "classname" "misc_model"
-"model" "models/mapobj~1/natero~2.md3"
+"model" "models/mapobjects/naterock2.md3"
 "angle" "200"
 "origin" "3363 -2915 -3332"
 
@@ -33711,7 +33711,7 @@
 {
 "angle" "225"
 "classname" "misc_model"
-"model" "models/mapobj~1/fernbig.md3"
+"model" "models/mapobjects/fernbig.md3"
 "origin" "651 -920 -3330"
 
 }
@@ -33722,7 +33722,7 @@
 
 {
 "classname" "misc_model"
-"model" "models/mapobj~1/multip~1/mu16a2~1.md3"
+"model" "models/mapobjects/multiplant/multiplant_a.md3"
 "angle" "315"
 "origin" "700 -714 -3336"
 

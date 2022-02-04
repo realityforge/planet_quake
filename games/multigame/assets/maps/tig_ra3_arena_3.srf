@@ -7529,7 +7529,7 @@ default
 
 1145 // ESurfaceType::Meta V: 16 I: 42 planar
 {
-	shader textures/tig_ra3/tig_ra3_skybox01
+	shader textures/tig_ra3/tig_ra3_skybox03
 	sampleSize 0
 }
 

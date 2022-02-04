@@ -5347,7 +5347,7 @@
 ( -3936 -3200 -1136 ) ( -2080 -3200 -1136 ) ( -2080 -3200 -1200 ) common/caulk 0 0 0 0.500000 0.500000 0 0 0
 ( -3968 -128 -1136 ) ( -3968 -2304 -1136 ) ( -3968 -2304 -1200 ) common/caulk 0 0 0 0.500000 0.500000 0 0 0
 ( -3872 -128 -960 ) ( -2016 -128 -960 ) ( -2016 -2304 -960 ) common/caulk 0 0 0 0.500000 0.500000 0 0 0
-( -2032 -2304 -1024 ) ( -2032 -128 -1024 ) ( -3888 -128 -1024 ) tig_ra3/tig_ra3_skybox02 0 0 0 0.500000 0.500000 0 0 0
+( -2032 -2304 -1024 ) ( -2032 -128 -1024 ) ( -3888 -128 -1024 ) tig_ra3/tig_ra3_skybox00 0 0 0 0.500000 0.500000 0 0 0
 
 }
 
@@ -5411,7 +5411,7 @@
 ( -3968 -128 -1024 ) ( -2112 -128 -1024 ) ( -2112 -2304 -1024 ) common/caulk 0 0 0 0.500000 0.500000 0 0 0
 ( -4032 -128 -1856 ) ( -4032 -2304 -1856 ) ( -4032 -2304 -1920 ) common/caulk 0 0 0 0.500000 0.500000 0 0 0
 ( -4000 -3200 -1856 ) ( -2144 -3200 -1856 ) ( -2144 -3200 -1920 ) common/caulk 0 0 0 0.500000 0.500000 0 0 0
-( -3968 -2352 -1856 ) ( -3968 -176 -1856 ) ( -3968 -176 -1920 ) tig_ra3/tig_ra3_skybox02 0 0 0 0.500000 0.500000 0 0 0
+( -3968 -2352 -1856 ) ( -3968 -176 -1856 ) ( -3968 -176 -1920 ) tig_ra3/tig_ra3_skybox00 0 0 0 0.500000 0.500000 0 0 0
 ( -2240 -1088 -1856 ) ( -4096 -1088 -1856 ) ( -4096 -1088 -1920 ) common/caulk 0 0 0 0.500000 0.500000 0 0 0
 
 }
@@ -5420,7 +5420,7 @@
 {
 ( 192 -2304 -1920 ) ( 192 -128 -1920 ) ( -1664 -128 -1920 ) common/caulk 0 0 0 0.500000 0.500000 0 0 0
 ( -1664 -128 -1024 ) ( 192 -128 -1024 ) ( 192 -2304 -1024 ) common/caulk 0 0 0 0.500000 0.500000 0 0 0
-( -1728 -128 -1856 ) ( -1728 -2304 -1856 ) ( -1728 -2304 -1920 ) tig_ra3/tig_ra3_skybox02 0 0 0 0.500000 0.500000 0 0 0
+( -1728 -128 -1856 ) ( -1728 -2304 -1856 ) ( -1728 -2304 -1920 ) tig_ra3/tig_ra3_skybox00 0 0 0 0.500000 0.500000 0 0 0
 ( -1696 -3200 -1856 ) ( 160 -3200 -1856 ) ( 160 -3200 -1920 ) common/caulk 0 0 0 0.500000 0.500000 0 0 0
 ( -1664 -2352 -1856 ) ( -1664 -176 -1856 ) ( -1664 -176 -1920 ) common/caulk 0 0 0 0.500000 0.500000 0 0 0
 ( 64 -1088 -1856 ) ( -1792 -1088 -1856 ) ( -1792 -1088 -1920 ) common/caulk 0 0 0 0.500000 0.500000 0 0 0
@@ -5433,7 +5433,7 @@
 ( -4800 -3200 -1024 ) ( -4800 -1344 -1024 ) ( -2624 -1344 -1024 ) common/caulk 0 0 0 0.500000 0.500000 0 0 0
 ( -4800 -3264 -1856 ) ( -2624 -3264 -1856 ) ( -2624 -3264 -1920 ) common/caulk 0 0 0 0.500000 0.500000 0 0 0
 ( -1728 -3232 -1856 ) ( -1728 -1376 -1856 ) ( -1728 -1376 -1920 ) common/caulk 0 0 0 0.500000 0.500000 0 0 0
-( -2576 -3200 -1856 ) ( -4752 -3200 -1856 ) ( -4752 -3200 -1920 ) tig_ra3/tig_ra3_skybox02 0 0 0 0.500000 0.500000 0 0 0
+( -2576 -3200 -1856 ) ( -4752 -3200 -1856 ) ( -4752 -3200 -1920 ) tig_ra3/tig_ra3_skybox00 0 0 0 0.500000 0.500000 0 0 0
 ( -3968 -1472 -1856 ) ( -3968 -3328 -1856 ) ( -3968 -3328 -1920 ) common/caulk 0 0 0 0.500000 0.500000 0 0 0
 
 }
@@ -5442,7 +5442,7 @@
 {
 ( -2624 832 -1920 ) ( -4800 832 -1920 ) ( -4800 -1024 -1920 ) common/caulk 0 0 0 0.500000 0.500000 0 0 0
 ( -4800 -1024 -1024 ) ( -4800 832 -1024 ) ( -2624 832 -1024 ) common/caulk 0 0 0 0.500000 0.500000 0 0 0
-( -4800 -1088 -1856 ) ( -2624 -1088 -1856 ) ( -2624 -1088 -1920 ) tig_ra3/tig_ra3_skybox02 0 0 0 0.500000 0.500000 0 0 0
+( -4800 -1088 -1856 ) ( -2624 -1088 -1856 ) ( -2624 -1088 -1920 ) tig_ra3/tig_ra3_skybox00 0 0 0 0.500000 0.500000 0 0 0
 ( -1728 -1056 -1856 ) ( -1728 800 -1856 ) ( -1728 800 -1920 ) common/caulk 0 0 0 0.500000 0.500000 0 0 0
 ( -2576 -1024 -1856 ) ( -4752 -1024 -1856 ) ( -4752 -1024 -1920 ) common/caulk 0 0 0 0.500000 0.500000 0 0 0
 ( -3968 704 -1856 ) ( -3968 -1152 -1856 ) ( -3968 -1152 -1920 ) common/caulk 0 0 0 0.500000 0.500000 0 0 0
@@ -8225,7 +8225,7 @@
 
 {
 "classname" "misc_model"
-"model" "models/mapobj~1/storch/storchx.md3"
+"model" "models/mapobjects/storch/storchx.md3"
 "angle" "270"
 "origin" "-3548 -2304 -1596"
 
@@ -8237,7 +8237,7 @@
 
 {
 "classname" "misc_model"
-"model" "models/mapobj~1/storch/tall_t~1.md3"
+"model" "models/mapobjects/storch/tall_torch.md3"
 "angle" "45"
 "origin" "-3392 -2600 -1580"
 
@@ -8260,7 +8260,7 @@
 {
 "origin" "-2016 -2088 -1752"
 "angle" "270"
-"model" "models/mapobj~1/atlantis/fall.md3"
+"model" "models/mapobjects/atlantis/fall.md3"
 "classname" "misc_model"
 
 }
@@ -8426,7 +8426,7 @@
 {
 "origin" "-3392 -1688 -1580"
 "angle" "315"
-"model" "models/mapobj~1/storch/tall_t~1.md3"
+"model" "models/mapobjects/storch/tall_torch.md3"
 "classname" "misc_model"
 
 }
@@ -8438,7 +8438,7 @@
 {
 "origin" "-3548 -2560 -1596"
 "angle" "90"
-"model" "models/mapobj~1/storch/storchx.md3"
+"model" "models/mapobjects/storch/storchx.md3"
 "classname" "misc_model"
 
 }
@@ -8450,7 +8450,7 @@
 {
 "origin" "-3548 -1728 -1596"
 "angle" "270"
-"model" "models/mapobj~1/storch/storchx.md3"
+"model" "models/mapobjects/storch/storchx.md3"
 "classname" "misc_model"
 
 }
@@ -8461,7 +8461,7 @@
 
 {
 "classname" "misc_model"
-"model" "models/mapobj~1/storch/storchx.md3"
+"model" "models/mapobjects/storch/storchx.md3"
 "angle" "90"
 "origin" "-3548 -1984 -1596"
 
@@ -8473,7 +8473,7 @@
 
 {
 "classname" "misc_model"
-"model" "models/mapobj~1/storch/storchx.md3"
+"model" "models/mapobjects/storch/storchx.md3"
 "angle" "360"
 "origin" "-2880 -1504 -1596"
 
@@ -8486,7 +8486,7 @@
 {
 "origin" "-2624 -1504 -1596"
 "angle" "180"
-"model" "models/mapobj~1/storch/storchx.md3"
+"model" "models/mapobjects/storch/storchx.md3"
 "classname" "misc_model"
 
 }
@@ -8498,7 +8498,7 @@
 {
 "origin" "-2880 -2784 -1596"
 "angle" "360"
-"model" "models/mapobj~1/storch/storchx.md3"
+"model" "models/mapobjects/storch/storchx.md3"
 "classname" "misc_model"
 
 }
@@ -8509,7 +8509,7 @@
 
 {
 "classname" "misc_model"
-"model" "models/mapobj~1/storch/storchx.md3"
+"model" "models/mapobjects/storch/storchx.md3"
 "angle" "180"
 "origin" "-2624 -2784 -1596"
 
@@ -8521,7 +8521,7 @@
 
 {
 "classname" "misc_model"
-"model" "models/mapobj~1/storch/storchx.md3"
+"model" "models/mapobjects/storch/storchx.md3"
 "angle" "270"
 "origin" "-2544 -1604 -1596"
 
@@ -8534,7 +8534,7 @@
 {
 "origin" "-2960 -1600 -1596"
 "angle" "270"
-"model" "models/mapobj~1/storch/storchx.md3"
+"model" "models/mapobjects/storch/storchx.md3"
 "classname" "misc_model"
 
 }
@@ -8546,7 +8546,7 @@
 {
 "origin" "-2544 -2684 -1596"
 "angle" "90"
-"model" "models/mapobj~1/storch/storchx.md3"
+"model" "models/mapobjects/storch/storchx.md3"
 "classname" "misc_model"
 
 }
@@ -8557,7 +8557,7 @@
 
 {
 "classname" "misc_model"
-"model" "models/mapobj~1/storch/storchx.md3"
+"model" "models/mapobjects/storch/storchx.md3"
 "angle" "90"
 "origin" "-2960 -2688 -1596"
 
@@ -8699,7 +8699,7 @@
 
 {
 "classname" "misc_model"
-"model" "models/mapobj~1/storch/storchx.md3"
+"model" "models/mapobjects/storch/storchx.md3"
 "angle" "360"
 "origin" "-3448 -2432 -1820"
 
@@ -8722,7 +8722,7 @@
 {
 "origin" "-3448 -1856 -1820"
 "angle" "360"
-"model" "models/mapobj~1/storch/storchx.md3"
+"model" "models/mapobjects/storch/storchx.md3"
 "classname" "misc_model"
 
 }
@@ -16756,6 +16756,7 @@
 "classname" "misc_portal_camera"
 "targetname" "tig_ra3_skycam_a1"
 "origin" "-232 168 696"
+"spawnflags" "4"
 "target" "tig_ra3_dir_a1"
 "world" "1"
 "roll" "-30"
@@ -16784,6 +16785,7 @@
 "classname" "misc_portal_camera"
 "targetname" "tig_ra3_skycam_a2"
 "origin" "-1807 610 968"
+"spawnflags" "4"
 "target" "tig_ra3_dir_a2"
 "world" "2"
 "roll" "0"
@@ -16811,6 +16813,7 @@
 "classname" "misc_portal_camera"
 "targetname" "tig_ra3_skycam_a3"
 "origin" "1432 3432 1112"
+"spawnflags" "4"
 "target" "tig_ra3_dir_a3"
 "world" "3"
 "roll" "200"
@@ -16838,6 +16841,7 @@
 "classname" "misc_portal_camera"
 "targetname" "tig_ra3_skycam_a4"
 "origin" "1536 -392 -2864"
+"spawnflags" "4"
 "target" "tig_ra3_dir_a4"
 "world" "4"
 "roll" "270"

@@ -18947,14 +18947,14 @@
 // entity 17
 {
 "classname" "misc_model"
-"model" "models/mapobj~1/storch/storchx.md3"
+"model" "models/mapobjects/storch/storchx.md3"
 "angle" "270"
 "origin" "-3548 -2304 -1596"
 }
 // entity 18
 {
 "classname" "misc_model"
-"model" "models/mapobj~1/storch/tall_t~1.md3"
+"model" "models/mapobjects/storch/tall_torch.md3"
 "angle" "45"
 "origin" "-3392 -2600 -1580"
 }
@@ -18968,7 +18968,7 @@
 {
 "origin" "-2016 -2088 -1752"
 "angle" "270"
-"model" "models/mapobj~1/atlantis/fall.md3"
+"model" "models/mapobjects/atlantis/fall.md3"
 "classname" "misc_model"
 }
 // entity 21
@@ -19067,34 +19067,34 @@
 {
 "origin" "-3392 -1688 -1580"
 "angle" "315"
-"model" "models/mapobj~1/storch/tall_t~1.md3"
+"model" "models/mapobjects/storch/tall_torch.md3"
 "classname" "misc_model"
 }
 // entity 37
 {
 "origin" "-3548 -2560 -1596"
 "angle" "90"
-"model" "models/mapobj~1/storch/storchx.md3"
+"model" "models/mapobjects/storch/storchx.md3"
 "classname" "misc_model"
 }
 // entity 38
 {
 "origin" "-3548 -1728 -1596"
 "angle" "270"
-"model" "models/mapobj~1/storch/storchx.md3"
+"model" "models/mapobjects/storch/storchx.md3"
 "classname" "misc_model"
 }
 // entity 39
 {
 "classname" "misc_model"
-"model" "models/mapobj~1/storch/storchx.md3"
+"model" "models/mapobjects/storch/storchx.md3"
 "angle" "90"
 "origin" "-3548 -1984 -1596"
 }
 // entity 40
 {
 "classname" "misc_model"
-"model" "models/mapobj~1/storch/storchx.md3"
+"model" "models/mapobjects/storch/storchx.md3"
 "angle" "360"
 "origin" "-2880 -1504 -1596"
 }
@@ -19102,27 +19102,27 @@
 {
 "origin" "-2624 -1504 -1596"
 "angle" "180"
-"model" "models/mapobj~1/storch/storchx.md3"
+"model" "models/mapobjects/storch/storchx.md3"
 "classname" "misc_model"
 }
 // entity 42
 {
 "origin" "-2880 -2784 -1596"
 "angle" "360"
-"model" "models/mapobj~1/storch/storchx.md3"
+"model" "models/mapobjects/storch/storchx.md3"
 "classname" "misc_model"
 }
 // entity 43
 {
 "classname" "misc_model"
-"model" "models/mapobj~1/storch/storchx.md3"
+"model" "models/mapobjects/storch/storchx.md3"
 "angle" "180"
 "origin" "-2624 -2784 -1596"
 }
 // entity 44
 {
 "classname" "misc_model"
-"model" "models/mapobj~1/storch/storchx.md3"
+"model" "models/mapobjects/storch/storchx.md3"
 "angle" "270"
 "origin" "-2544 -1604 -1596"
 }
@@ -19130,20 +19130,20 @@
 {
 "origin" "-2960 -1600 -1596"
 "angle" "270"
-"model" "models/mapobj~1/storch/storchx.md3"
+"model" "models/mapobjects/storch/storchx.md3"
 "classname" "misc_model"
 }
 // entity 46
 {
 "origin" "-2544 -2684 -1596"
 "angle" "90"
-"model" "models/mapobj~1/storch/storchx.md3"
+"model" "models/mapobjects/storch/storchx.md3"
 "classname" "misc_model"
 }
 // entity 47
 {
 "classname" "misc_model"
-"model" "models/mapobj~1/storch/storchx.md3"
+"model" "models/mapobjects/storch/storchx.md3"
 "angle" "90"
 "origin" "-2960 -2688 -1596"
 }
@@ -19228,7 +19228,7 @@
 // entity 61
 {
 "classname" "misc_model"
-"model" "models/mapobj~1/storch/storchx.md3"
+"model" "models/mapobjects/storch/storchx.md3"
 "angle" "360"
 "origin" "-3448 -2432 -1820"
 }
@@ -19242,7 +19242,7 @@
 {
 "origin" "-3448 -1856 -1820"
 "angle" "360"
-"model" "models/mapobj~1/storch/storchx.md3"
+"model" "models/mapobjects/storch/storchx.md3"
 "classname" "misc_model"
 }
 // entity 64
@@ -19470,26 +19470,26 @@
 // entity 97
 {
 "classname" "misc_model"
-"model" "models/mapobj~1/tig_ra3/fern.md3"
+"model" "models/mapobjects/tig_ra3/fern.md3"
 "origin" "295 -1080 57"
 }
 // entity 98
 {
 "classname" "misc_model"
-"model" "models/mapobj~1/tig_ra3/fernbig.md3"
+"model" "models/mapobjects/tig_ra3/fernbig.md3"
 "angle" "270"
 "origin" "227 -1128 69"
 }
 // entity 99
 {
 "classname" "misc_model"
-"model" "models/mapobj~1/tig_ra3/fernbig.md3"
+"model" "models/mapobjects/tig_ra3/fernbig.md3"
 "origin" "327 -424 0"
 }
 // entity 100
 {
 "origin" "-490 -484 28"
-"model" "models/mapobj~1/tig_ra3/natesh~1.md3"
+"model" "models/mapobjects/tig_ra3/nateshroom1.md3"
 "classname" "misc_model"
 }
 // entity 101
@@ -19637,20 +19637,20 @@
 {
 "angle" "270"
 "classname" "misc_model"
-"model" "models/mapobj~1/tig_ra3/natesh~1.md3"
+"model" "models/mapobjects/tig_ra3/nateshroom1.md3"
 "origin" "-476 -516 36"
 }
 // entity 122
 {
 "origin" "295 -448 0"
-"model" "models/mapobj~1/tig_ra3/fernbig.md3"
+"model" "models/mapobjects/tig_ra3/fernbig.md3"
 "classname" "misc_model"
 "angle" "270"
 }
 // entity 123
 {
 "origin" "283 -1097 59"
-"model" "models/mapobj~1/tig_ra3/fern.md3"
+"model" "models/mapobjects/tig_ra3/fern.md3"
 "classname" "misc_model"
 "angle" "135"
 }
@@ -28224,59 +28224,59 @@
 {
 "origin" "801 -608 -3328"
 "angle" "135"
-"model" "models/mapobj~1/fern.md3"
+"model" "models/mapobjects/fern.md3"
 "classname" "misc_model"
 }
 // entity 297
 {
 "origin" "867 -604 -3332"
 "angle" "315"
-"model" "models/mapobj~1/natero~2.md3"
+"model" "models/mapobjects/naterock2.md3"
 "classname" "misc_model"
 }
 // entity 298
 {
 "origin" "831 -624 -3328"
-"model" "models/mapobj~1/fernbig.md3"
+"model" "models/mapobjects/fernbig.md3"
 "classname" "misc_model"
 }
 // entity 299
 {
 "classname" "misc_model"
-"model" "models/mapobj~1/fernbig.md3"
+"model" "models/mapobjects/fernbig.md3"
 "origin" "3356 -2996 -3324"
 }
 // entity 300
 {
 "classname" "misc_model"
-"model" "models/mapobj~1/multip~1/multip~4.md3"
+"model" "models/mapobjects/multiplant/multiplant.md3"
 "angle" "90"
 "origin" "3240 -3080 -3330"
 }
 // entity 301
 {
 "classname" "misc_model"
-"model" "models/mapobj~1/natero~1.md3"
+"model" "models/mapobjects/naterock1.md3"
 "angle" "225"
 "origin" "3309 -3055 -3336"
 }
 // entity 302
 {
 "classname" "misc_model"
-"model" "models/mapobj~1/natero~1.md3"
+"model" "models/mapobjects/naterock1.md3"
 "angle" "225"
 "origin" "976 -526 -3346"
 }
 // entity 303
 {
 "origin" "526 -442 -3336"
-"model" "models/mapobj~1/fernbig.md3"
+"model" "models/mapobjects/fernbig.md3"
 "classname" "misc_model"
 }
 // entity 304
 {
 "origin" "2832 -2480 -3048"
-"model" "models/mapobj~1/timlamp/timlamp.md3"
+"model" "models/mapobjects/timlamp/timlamp.md3"
 "classname" "misc_model"
 }
 // entity 305
@@ -28294,7 +28294,7 @@
 // entity 307
 {
 "classname" "misc_model"
-"model" "models/mapobj~1/multip~1/multip~4.md3"
+"model" "models/mapobjects/multiplant/multiplant.md3"
 "origin" "1112 -1224 -3586"
 }
 // entity 308
@@ -28306,26 +28306,26 @@
 // entity 309
 {
 "classname" "misc_model"
-"model" "models/mapobj~1/fernbig.md3"
+"model" "models/mapobjects/fernbig.md3"
 "origin" "2368 -1444 -3540"
 }
 // entity 310
 {
 "classname" "misc_model"
-"model" "models/mapobj~1/fern.md3"
+"model" "models/mapobjects/fern.md3"
 "origin" "1900 -1808 -3560"
 }
 // entity 311
 {
 "classname" "misc_model"
-"model" "models/mapobj~1/multip~1/mu16a2~1.md3"
+"model" "models/mapobjects/multiplant/multiplant_a.md3"
 "angle" "45"
 "origin" "2404 -1536 -3552"
 }
 // entity 312
 {
 "classname" "misc_model"
-"model" "models/mapobj~1/multip~1/muea32~1.md3"
+"model" "models/mapobjects/multiplant/multiplant_e.md3"
 "angle" "45"
 "origin" "2412 -2284 -3576"
 }
@@ -28358,7 +28358,7 @@
 // entity 316
 {
 "classname" "misc_model"
-"model" "models/mapobj~1/gratel~1/gratet~1.md3"
+"model" "models/mapobjects/gratelamp/gratetorch.md3"
 "angle" "270"
 "origin" "2016 -1420 -3442"
 }
@@ -44573,20 +44573,20 @@
 {
 "origin" "1568 -1420 -3442"
 "angle" "270"
-"model" "models/mapobj~1/gratel~1/gratet~1.md3"
+"model" "models/mapobjects/gratelamp/gratetorch.md3"
 "classname" "misc_model"
 }
 // entity 323
 {
 "origin" "2292 -1696 -3442"
 "angle" "180"
-"model" "models/mapobj~1/gratel~1/gratet~1.md3"
+"model" "models/mapobjects/gratelamp/gratetorch.md3"
 "classname" "misc_model"
 }
 // entity 324
 {
 "classname" "misc_model"
-"model" "models/mapobj~1/gratel~1/gratet~1.md3"
+"model" "models/mapobjects/gratelamp/gratetorch.md3"
 "angle" "180"
 "origin" "2292 -2144 -3442"
 }
@@ -44594,7 +44594,7 @@
 {
 "origin" "1292 -1696 -3442"
 "angle" "360"
-"model" "models/mapobj~1/gratel~1/gratet~1.md3"
+"model" "models/mapobjects/gratelamp/gratetorch.md3"
 "classname" "misc_model"
 }
 // entity 326
@@ -44697,20 +44697,20 @@
 {
 "origin" "2480 -2320 -3568"
 "angle" "225"
-"model" "models/mapobj~1/multip~1/muea32~1.md3"
+"model" "models/mapobjects/multiplant/multiplant_e.md3"
 "classname" "misc_model"
 }
 // entity 343
 {
 "origin" "1884 -1788 -3560"
-"model" "models/mapobj~1/fern.md3"
+"model" "models/mapobjects/fern.md3"
 "classname" "misc_model"
 "angle" "270"
 }
 // entity 344
 {
 "origin" "1052 -1388 -3584"
-"model" "models/mapobj~1/fernbig.md3"
+"model" "models/mapobjects/fernbig.md3"
 "classname" "misc_model"
 "angle" "90"
 }
@@ -44718,13 +44718,13 @@
 {
 "origin" "1096 -1340 -3592"
 "angle" "45"
-"model" "models/mapobj~1/multip~1/muea32~1.md3"
+"model" "models/mapobjects/multiplant/multiplant_e.md3"
 "classname" "misc_model"
 }
 // entity 346
 {
 "classname" "misc_model"
-"model" "models/mapobj~1/multip~1/muea32~1.md3"
+"model" "models/mapobjects/multiplant/multiplant_e.md3"
 "angle" "270"
 "origin" "1236 -1292 -3578"
 }
@@ -44732,34 +44732,34 @@
 {
 "origin" "1176 -1132 -3576"
 "angle" "180"
-"model" "models/mapobj~1/multip~1/muea32~1.md3"
+"model" "models/mapobjects/multiplant/multiplant_e.md3"
 "classname" "misc_model"
 }
 // entity 348
 {
 "angle" "315"
 "classname" "misc_model"
-"model" "models/mapobj~1/fernbig.md3"
+"model" "models/mapobjects/fernbig.md3"
 "origin" "1016 -1356 -3568"
 }
 // entity 349
 {
 "origin" "508 -376 -3324"
 "angle" "270"
-"model" "models/mapobj~1/multip~1/mu16a2~1.md3"
+"model" "models/mapobjects/multiplant/multiplant_a.md3"
 "classname" "misc_model"
 }
 // entity 350
 {
 "classname" "misc_model"
-"model" "models/mapobj~1/multip~1/mu16a2~1.md3"
+"model" "models/mapobjects/multiplant/multiplant_a.md3"
 "angle" "135"
 "origin" "1264 -532 -3330"
 }
 // entity 351
 {
 "origin" "1192 -1444 -3584"
-"model" "models/mapobj~1/multip~1/multip~4.md3"
+"model" "models/mapobjects/multiplant/multiplant.md3"
 "classname" "misc_model"
 "angle" "135"
 }
@@ -44767,19 +44767,19 @@
 {
 "origin" "3448 -1440 -3336"
 "angle" "45"
-"model" "models/mapobj~1/multip~1/mu16a2~1.md3"
+"model" "models/mapobjects/multiplant/multiplant_a.md3"
 "classname" "misc_model"
 }
 // entity 353
 {
 "origin" "2822 -1688 -3078"
-"model" "models/mapobj~1/fern.md3"
+"model" "models/mapobjects/fern.md3"
 "classname" "misc_model"
 }
 // entity 354
 {
 "classname" "misc_model"
-"model" "models/mapobj~1/multip~1/mu16a2~1.md3"
+"model" "models/mapobjects/multiplant/multiplant_a.md3"
 "angle" "270"
 "origin" "2004 -2936 -3278"
 }
@@ -44804,19 +44804,19 @@
 // entity 358
 {
 "classname" "misc_model"
-"model" "models/mapobj~1/timlamp/timlamp.md3"
+"model" "models/mapobjects/timlamp/timlamp.md3"
 "origin" "3360 -2480 -3048"
 }
 // entity 359
 {
 "origin" "2832 -3168 -3048"
-"model" "models/mapobj~1/timlamp/timlamp.md3"
+"model" "models/mapobjects/timlamp/timlamp.md3"
 "classname" "misc_model"
 }
 // entity 360
 {
 "classname" "misc_model"
-"model" "models/mapobj~1/fernbig.md3"
+"model" "models/mapobjects/fernbig.md3"
 "origin" "1174 -534 -3330"
 }
 // entity 361
@@ -44859,20 +44859,20 @@
 {
 "origin" "3189 -3053 -3336"
 "angle" "135"
-"model" "models/mapobj~1/natero~2.md3"
+"model" "models/mapobjects/naterock2.md3"
 "classname" "misc_model"
 }
 // entity 368
 {
 "classname" "misc_model"
-"model" "models/mapobj~1/natero~2.md3"
+"model" "models/mapobjects/naterock2.md3"
 "angle" "160"
 "origin" "3310 -3014 -3336"
 }
 // entity 369
 {
 "classname" "misc_model"
-"model" "models/mapobj~1/natero~2.md3"
+"model" "models/mapobjects/naterock2.md3"
 "angle" "200"
 "origin" "3363 -2915 -3332"
 }
@@ -44940,13 +44940,13 @@
 {
 "angle" "225"
 "classname" "misc_model"
-"model" "models/mapobj~1/fernbig.md3"
+"model" "models/mapobjects/fernbig.md3"
 "origin" "651 -920 -3330"
 }
 // entity 376
 {
 "classname" "misc_model"
-"model" "models/mapobj~1/multip~1/mu16a2~1.md3"
+"model" "models/mapobjects/multiplant/multiplant_a.md3"
 "angle" "315"
 "origin" "700 -714 -3336"
 }

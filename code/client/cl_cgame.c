@@ -1314,7 +1314,9 @@ void CL_InitCGame( int inVM ) {
 	const char			*info;
 	const char			*mapname;
 	vmInterpret_t		interpret;
+#ifdef USE_ASYNCHRONOUS
 	unsigned result;
+#endif
 #ifdef USE_PRINT_CONSOLE
   Com_PrintFlags(PC_INIT);
 #endif
@@ -1371,7 +1373,10 @@ void CL_InitCGame( int inVM ) {
 	// init for this gamestate
 	// use the lastExecutedServerCommand instead of the serverCommandSequence
 	// otherwise server commands sent just before a gamestate are dropped
-	result = VM_Call( cgvm, 3, CG_INIT, clc.serverMessageSequence, clc.lastExecutedServerCommand, clc.clientNum );
+#ifdef USE_ASYNCHRONOUS
+	result = 
+#endif
+	VM_Call( cgvm, 3, CG_INIT, clc.serverMessageSequence, clc.lastExecutedServerCommand, clc.clientNum );
 
   // do not allow vid_restart for first time
 	cls.lastVidRestart = Sys_Milliseconds();

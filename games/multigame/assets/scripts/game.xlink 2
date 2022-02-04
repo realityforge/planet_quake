@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="iso-8859-1" standalone="yes"?>
+<!-- Links for the Quake III Arena game pack -->
+<!-- updated by Obsidian 2013-07-23 -->
+<links>
+	<item name="GtkRadiant Homepage" url="http://www.icculus.org/gtkradiant/"/>
+	<item name="Quake3World Level Editing Forum" url="http://www.quake3world.com/forum/viewforum.php?f=10"/>
+	<item name="Model Manual" url="http://icculus.org/gtkradiant/documentation/Model_Manual/model_manual.htm"/>
+	<item name="Q3Map2 Shader Manual" url="http://q3map2.robotrenegade.com/docs/shader_manual/"/>
+	<item name="Shader Manual" url="http://icculus.org/gtkradiant/documentation/Q3AShader_Manual/index.htm"/>
+	<item name="Terrain Manual" url="http://icculus.org/gtkradiant/documentation/Terrain_Manual/start.html"/>
+	<item name="Compiling Manual (q3map &amp; bspc)" url="http://icculus.org/gtkradiant/documentation/Compile_Manual/"/>
+	<item name="TA Teams Manual" url="http://icculus.org/gtkradiant/documentation/New_Teams_For_Q3TA/"/>
+	<item name="Team Arena Mapping" url="http://icculus.org/gtkradiant/documentation/Team_Arena_Mapping_Help/start.html"/>
+</links>

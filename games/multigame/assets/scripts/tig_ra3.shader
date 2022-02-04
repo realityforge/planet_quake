@@ -299,9 +299,22 @@ textures/tig_ra3/tig_ra3_skybox01
 	surfaceparm sky
 	q3map_globaltexture
 	q3map_lightsubdivide 256
-	q3map_surfacelight 60
-	q3map_sun 0.6 0.6 0.6 100 82 45
+	q3map_surfacelight 50
+	q3map_sun 0.2 0.4 0.6 100 82 45
 	skyparms env/tig_ra3/overcast - -
+}
+
+textures/tig_ra3/tig_ra3_skybox00
+{
+	qer_editorimage textures/tig_ra3/mistyvalley_bk
+	surfaceparm noimpact
+	surfaceparm nolightmap
+	surfaceparm sky
+	q3map_globaltexture
+	q3map_lightsubdivide 256
+	q3map_surfacelight 100
+	q3map_sun	0.4 0.2 0.0 100	45 45
+	skyparms env/tig_ra3/mistyvalley - -
 }
 
 textures/tig_ra3/tig_ra3_skybox02
@@ -312,18 +325,35 @@ textures/tig_ra3/tig_ra3_skybox02
 	surfaceparm sky
 	q3map_globaltexture
 	q3map_lightsubdivide 256
-	//q3map_surfacelight 60
-	//q3map_sun 0.6 0.6 0.6 100 120 45
-	//q3map_sun 0.6 0.6 0.6 100 85 32
-	q3map_surfacelight 400
-	q3map_sun	1.0 0.4 0.0 100	45 45
-	//q3map_sun 0.9 0.5 0.3 100 90 90
+	q3map_surfacelight 450
+	q3map_sun	0.1 0.9 0.3 100	45 45
 	skyparms env/tig_ra3/mistyvalley - -
-	{
-		map $whiteimage
-		rgbGen const ( 1.0 0.0 0.0 )
-		blendFunc add
-	}
+}
+
+textures/tig_ra3/tig_ra3_skybox03
+{
+	qer_editorimage textures/tig_ra3/mistyvalley_bk
+	surfaceparm noimpact
+	surfaceparm nolightmap
+	surfaceparm sky
+	q3map_globaltexture
+	q3map_lightsubdivide 256
+	q3map_surfacelight 40
+	q3map_sun	0.5 0.4 0.1 100	45 45
+	skyparms env/tig_ra3/mistyvalley - -
+}
+
+textures/tig_ra3/tig_ra3_skybox04
+{
+	qer_editorimage textures/tig_ra3/overcast_bk
+	surfaceparm noimpact
+	surfaceparm nolightmap
+	surfaceparm sky
+	q3map_globaltexture
+	q3map_lightsubdivide 256
+	q3map_surfacelight 150
+	q3map_sun	0.6 0.1 0.7 100	45 45
+	skyparms env/tig_ra3/overcast - -
 }
 
 textures/tig_ra3/tig_spiderweb4

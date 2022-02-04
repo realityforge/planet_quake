@@ -13815,7 +13815,7 @@
 
 {
 "classname" "misc_model"
-"model" "models/mapobj~1/tig_ra3/fern.md3"
+"model" "models/mapobjects/tig_ra3/fern.md3"
 "origin" "295 -1080 57"
 
 }
@@ -13826,7 +13826,7 @@
 
 {
 "classname" "misc_model"
-"model" "models/mapobj~1/tig_ra3/fernbig.md3"
+"model" "models/mapobjects/tig_ra3/fernbig.md3"
 "angle" "270"
 "origin" "227 -1128 69"
 
@@ -13837,7 +13837,7 @@
 
 {
 "classname" "misc_model"
-"model" "models/mapobj~1/tig_ra3/fernbig.md3"
+"model" "models/mapobjects/tig_ra3/fernbig.md3"
 "origin" "327 -424 0"
 
 }
@@ -13847,7 +13847,7 @@
 
 {
 "origin" "-490 -484 28"
-"model" "models/mapobj~1/tig_ra3/natesh~1.md3"
+"model" "models/mapobjects/tig_ra3/nateshroom1.md3"
 "classname" "misc_model"
 
 }
@@ -14192,7 +14192,7 @@
 {
 "angle" "270"
 "classname" "misc_model"
-"model" "models/mapobj~1/tig_ra3/natesh~1.md3"
+"model" "models/mapobjects/tig_ra3/nateshroom1.md3"
 "origin" "-476 -516 36"
 
 }
@@ -14203,7 +14203,7 @@
 
 {
 "origin" "295 -448 0"
-"model" "models/mapobj~1/tig_ra3/fernbig.md3"
+"model" "models/mapobjects/tig_ra3/fernbig.md3"
 "classname" "misc_model"
 "angle" "270"
 
@@ -14215,7 +14215,7 @@
 
 {
 "origin" "283 -1097 59"
-"model" "models/mapobj~1/tig_ra3/fern.md3"
+"model" "models/mapobjects/tig_ra3/fern.md3"
 "classname" "misc_model"
 "angle" "135"
 

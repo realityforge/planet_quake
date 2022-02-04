@@ -3450,6 +3450,7 @@ int SV_MakeMap( const char **map ) {
 				"-fs_game",
 				(char *)FS_GetCurrentGameDir(),
 				"-meta",
+				"-vis",
 		    //"-patchmeta", // makes compile  much slower
 				"-keeplights",
 				mapPath
