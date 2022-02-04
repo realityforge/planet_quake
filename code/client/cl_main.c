@@ -933,11 +933,19 @@ void CL_ReadDemoIndex( void ) {
 			// read the checksum feed
 			clc.checksumFeed = MSG_ReadLong( &buf );
 
-		} else if (s == svc_snapshot) {
+		} else if (s == svc_snapshot 
+#ifdef USE_MV
+			|| s == svc_multiview
+#endif
+		) {
 #ifdef USE_MULTIVM_CLIENT
 			CL_ParseSnapshot( &buf, 0 );
 #else
+#ifdef USE_MV
+			CL_ParseSnapshot( &buf, s == svc_multiview );
+#else
 			CL_ParseSnapshot( &buf );
+#endif
 #endif
 			int newcount = floor((cl.snap.serverTime - demoStart) / 1000);
 			if(newcount > count) {

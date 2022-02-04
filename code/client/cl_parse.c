@@ -72,7 +72,12 @@ Parses deltas from the given base and adds the resulting entity
 to the current frame
 ==================
 */
-static void CL_DeltaEntity( msg_t *msg, clSnapshot_t *frame, int newnum, const entityState_t *old, qboolean unchanged, int igs) {
+#ifdef USE_MULTIVM_CLIENT
+static void CL_DeltaEntity( msg_t *msg, clSnapshot_t *frame, int newnum, const entityState_t *old, qboolean unchanged, int igs) 
+#else
+static void CL_DeltaEntity( msg_t *msg, clSnapshot_t *frame, int newnum, const entityState_t *old, qboolean unchanged) 
+#endif
+{
 	entityState_t	*state;
 
 	// save the parsed entity state into the big circular buffer so
@@ -106,7 +111,12 @@ static void CL_DeltaEntity( msg_t *msg, clSnapshot_t *frame, int newnum, const e
 CL_ParsePacketEntities
 ==================
 */
-static void CL_ParsePacketEntities( msg_t *msg, const clSnapshot_t *oldframe, clSnapshot_t *newframe, int igs ) {
+#ifdef USE_MULTIVM_CLIENT
+static void CL_ParsePacketEntities( msg_t *msg, const clSnapshot_t *oldframe, clSnapshot_t *newframe, int igs ) 
+#else
+static void CL_ParsePacketEntities( msg_t *msg, const clSnapshot_t *oldframe, clSnapshot_t *newframe ) 
+#endif
+{
 	const entityState_t	*oldstate;
 	int	newnum;
 	int	oldindex, oldnum;
@@ -150,8 +160,11 @@ static void CL_ParsePacketEntities( msg_t *msg, const clSnapshot_t *oldframe, cl
 			if ( cl_shownet->integer == 3 ) {
 				Com_Printf ("%3i:  unchanged: %i\n", msg->readcount, oldnum);
 			}
+#ifdef USE_MULTIVM_CLIENT
 			CL_DeltaEntity( msg, newframe, oldnum, oldstate, qtrue, igs );
-			
+#else
+			CL_DeltaEntity( msg, newframe, oldnum, oldstate, qtrue);
+#endif
 			oldindex++;
 
 			if ( oldindex >= oldframe->numEntities ) {
@@ -167,8 +180,11 @@ static void CL_ParsePacketEntities( msg_t *msg, const clSnapshot_t *oldframe, cl
 			if ( cl_shownet->integer == 3 ) {
 				Com_Printf ("%3i:  delta: %i\n", msg->readcount, newnum);
 			}
+#ifdef USE_MULTIVM_CLIENT
 			CL_DeltaEntity( msg, newframe, newnum, oldstate, qfalse, igs );
-
+#else
+			CL_DeltaEntity( msg, newframe, newnum, oldstate, qfalse );
+#endif
 			oldindex++;
 
 			if ( oldindex >= oldframe->numEntities ) {
@@ -186,7 +202,11 @@ static void CL_ParsePacketEntities( msg_t *msg, const clSnapshot_t *oldframe, cl
 			if ( cl_shownet->integer == 3 ) {
 				Com_Printf ("%3i:  baseline: %i\n", msg->readcount, newnum);
 			}
+#ifdef USE_MULTIVM_CLIENT
 			CL_DeltaEntity( msg, newframe, newnum, &cl.entityBaselines[newnum], qfalse, igs );
+#else
+			CL_DeltaEntity( msg, newframe, newnum, &cl.entityBaselines[newnum], qfalse );
+#endif
 			continue;
 		}
 
@@ -198,8 +218,11 @@ static void CL_ParsePacketEntities( msg_t *msg, const clSnapshot_t *oldframe, cl
 		if ( cl_shownet->integer == 3 ) {
 			Com_Printf ("%3i:  unchanged: %i\n", msg->readcount, oldnum);
 		}
+#ifdef USE_MULTIVM_CLIENT
 		CL_DeltaEntity( msg, newframe, oldnum, oldstate, qtrue, igs );
-		
+#else
+		CL_DeltaEntity( msg, newframe, oldnum, oldstate, qtrue );
+#endif
 		oldindex++;
 
 		if ( oldindex >= oldframe->numEntities ) {
@@ -225,7 +248,11 @@ for any reason, no changes to the state will be made at all.
 #ifdef USE_MULTIVM_CLIENT
 void CL_ParseSnapshot( msg_t *msg, int multiview ) 
 #else
-void CL_ParseSnapshot( msg_t *msg ) 
+#ifdef USE_MV
+void CL_ParseSnapshot( msg_t *msg, qboolean multiview )
+#else
+void CL_ParseSnapshot( msg_t *msg )
+#endif
 #endif
 {
 	const clSnapshot_t *old;
@@ -456,7 +483,12 @@ void CL_ParseSnapshot( msg_t *msg )
 #endif
 			newSnap.clps[ clientNum ].valid = qtrue;
 
-			if ( clientNum == clientWorlds[igs] /* clc.clientNum */ ) {
+#ifdef USE_MULTIVM_CLIENT
+			if ( clientNum == clientWorlds[igs] /* clc.clientNum */ ) 
+#else
+			if ( clientNum == clc.clientNum ) 
+#endif
+			{
 				// copy data to primary playerstate
 				Com_Memcpy( &newSnap.areamask, &newSnap.clps[ clientNum ].areamask, sizeof( newSnap.areamask ) );
 				Com_Memcpy( &newSnap.ps, &newSnap.clps[ clientNum ].ps, sizeof( newSnap.ps ) );
@@ -467,7 +499,11 @@ void CL_ParseSnapshot( msg_t *msg )
 
 		// read packet entities
 		SHOWNET( msg, "packet entities" );
+#ifdef USE_MULTIVM_CLIENT
 		CL_ParsePacketEntities( msg, old, &newSnap, igs );
+#else
+		CL_ParsePacketEntities( msg, old, &newSnap );
+#endif
 
 		// apply skipmask to player entities
 		if ( newSnap.mergeMask ) {
@@ -522,7 +558,7 @@ void CL_ParseSnapshot( msg_t *msg )
 #ifdef USE_MULTIVM_CLIENT
 		CL_ParsePacketEntities( msg, old, &newSnap, igs );
 #else
-		CL_ParsePacketEntities( msg, old, &newSnap, 0 );
+		CL_ParsePacketEntities( msg, old, &newSnap );
 #endif
 
 	} // USE_MV !extended snapshot
@@ -1401,9 +1437,18 @@ void CL_ParseServerMessage( msg_t *msg ) {
 			break;
 #endif
 #else
+#ifdef USE_MV
+		case svc_multiview:
+			CL_ParseSnapshot( msg, qtrue );
+			break;
+		case svc_snapshot:
+			CL_ParseSnapshot( msg, qfalse );
+			break;
+#else
 		case svc_snapshot:
 			CL_ParseSnapshot( msg );
 			break;
+#endif
 #endif
 		case svc_download:
 			if ( clc.demofile != FS_INVALID_HANDLE )
