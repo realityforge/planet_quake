@@ -93,12 +93,7 @@ typedef struct vbo_s {
 
 } vbo_t;
 
-#if 0 //def USE_MULTIVM_CLIENT
-static vbo_t world_vbos[MAX_NUM_WORLDS];
-#define world_vbo world_vbos[rwi]
-#else
 static vbo_t world_vbo;
-#endif
 
 GLuint VBO_world_data;
 GLuint VBO_world_indexes;
@@ -1080,21 +1075,12 @@ void VBO_Cleanup( void )
 
 	memset( &world_vbo, 0, sizeof( world_vbo ) );
 
-#if 0 //def USE_MULTIVM_CLIENT
-	for ( i = 0; i < trWorlds[0].numShaders; i++ )
-	{
-		trWorlds[0].shaders[ i ]->isStaticShader = qfalse;
-		trWorlds[0].shaders[ i ]->iboOffset = -1;
-		trWorlds[0].shaders[ i ]->vboOffset = -1;
-	}
-#else
 	for ( i = 0; i < tr.numShaders; i++ )
 	{
 		tr.shaders[ i ]->isStaticShader = qfalse;
 		tr.shaders[ i ]->iboOffset = -1;
 		tr.shaders[ i ]->vboOffset = -1;
 	}
-#endif
 }
 
 

@@ -396,11 +396,7 @@ void R_AddMD3Surfaces( trRefEntity_t *ent ) {
 		} else {
 			md3Shader = (md3Shader_t *) ( (byte *)surface + surface->ofsShaders );
 			md3Shader += ent->e.skinNum % surface->numShaders;
-#ifdef USE_MULTIVM_CLIENT
-			shader = R_GetShaderByHandle(md3Shader->shaderIndex);
-#else
 			shader = tr.shaders[ md3Shader->shaderIndex ];
-#endif
 		}
 
 

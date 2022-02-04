@@ -1889,8 +1889,13 @@ void SV_Frame( int msec ) {
 	{
 		client_t *c = &svs.clients[ i ];
 		playerState_t *ps = SV_GameClientNum( i );
+#ifdef USE_MULTIVM_SERVER
+		clientSnapshot_t	*frame = &c->frames[c->gameWorld][ c->netchan.outgoingSequence - 1 & PACKET_MASK ];
+		clientSnapshot_t	*frame2 = &c->frames[c->gameWorld][ c->netchan.outgoingSequence - 2 & PACKET_MASK ];
+#else
 		clientSnapshot_t	*frame = &c->frames[ c->netchan.outgoingSequence - 1 & PACKET_MASK ];
 		clientSnapshot_t	*frame2 = &c->frames[ c->netchan.outgoingSequence - 2 & PACKET_MASK ];
+#endif
 
 		if(c->netchan.remoteAddress.type != NA_BOT) {
 			numConnected++;

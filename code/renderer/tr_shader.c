@@ -3953,6 +3953,13 @@ static void CreateInternalShaders( void ) {
 	stages[0].stateBits = GLS_DEFAULT;
 	tr.defaultShader = FinishShader();
 
+	InitShader( "<whiteShader>", LIGHTMAP_NONE );
+	stages[0].bundle[0].image[0] = tr.whiteImage;
+	stages[0].active = qtrue;
+	stages[0].rgbGen = CGEN_EXACT_VERTEX;
+	stages[0].stateBits = GLS_DEPTHTEST_DISABLE | GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA;
+	tr.whiteShader = FinishShader();
+
 	// shadow shader is just a marker
 	InitShader( "<stencil shadow>", LIGHTMAP_NONE );
 	stages[0].bundle[0].image[0] = tr.defaultImage;
@@ -3967,25 +3974,6 @@ static void CreateInternalShaders( void ) {
 	stages[0].rgbGen = CGEN_IDENTITY_LIGHTING;
 	stages[0].stateBits = GLS_DEPTHTEST_DISABLE;
 	tr.cinematicShader = FinishShader();
-
-#if 0 //def USE_MULTIVM_CLIENT
-	for(int i = 1; i < MAX_NUM_WORLDS; i++) {
-		//for(int j = 0; j < MAX_SHADERS; j++) {
-		//	trWorlds[i].shaders[j] = trWorlds[0].shaders[j];
-		//	trWorlds[i].sortedShaders[j] = trWorlds[0].sortedShaders[j];
-		//}
-		trWorlds[i].defaultShader = tr.defaultShader;
-		trWorlds[i].shadowShader = tr.shadowShader;
-		trWorlds[i].cinematicShader = tr.cinematicShader;
-		/*trWorlds[i].shaders[0] = tr.defaultShader;
-		trWorlds[i].sortedShaders[0] = tr.defaultShader;
-		trWorlds[i].shaders[1] = tr.shadowShader;
-		trWorlds[i].sortedShaders[1] = tr.shadowShader;
-		trWorlds[i].shaders[2] = tr.cinematicShader;
-		trWorlds[i].sortedShaders[2] = tr.cinematicShader;
-		trWorlds[i].numShaders = 3;*/
-	}
-#endif
 }
 
 
@@ -4070,11 +4058,7 @@ R_InitShaders
 void R_InitShaders( void ) {
 	ri.Printf( PRINT_ALL, "Initializing Shaders\n" );
 
-#if 0 //def USE_MULTIVM_CLIENT
-	Com_Memset(hashWorlds, 0, sizeof(hashWorlds));
-#else
 	Com_Memset(hashTable, 0, sizeof(hashTable));
-#endif
 
 	CreateInternalShaders();
 
