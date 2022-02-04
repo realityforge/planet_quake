@@ -772,7 +772,7 @@ void CL_ShutdownCGame( void );
 #ifdef USE_MULTIVM_SERVER
 qboolean CL_GameCommand( int igvm );
 #else
-qboolean CL_GameCommand( int igvm );
+qboolean CL_GameCommand( void );
 #endif
 void CL_CGameRendering( stereoFrame_t stereo );
 void CL_SetCGameTime( void );

@@ -1354,7 +1354,11 @@ qboolean CL_Disconnect( qboolean showMainMenu, qboolean dropped );
 void CL_ResetOldGame( void );
 void CL_Shutdown( const char *finalmsg, qboolean quit );
 void CL_Frame( int msec, int realMsec );
+#ifdef USE_MULTIVM_SERVER
 qboolean CL_GameCommand( int igvm );
+#else
+qboolean CL_GameCommand( void );
+#endif
 void CL_KeyEvent (int key, qboolean down, unsigned time, int fingerId);
 #ifdef USE_DRAGDROP
 void CL_DropComplete(void);
