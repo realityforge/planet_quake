@@ -50,3 +50,4 @@ Multigame is a mod I've been working on that adds Runes and alternate fire modes
 
   * Event history with demo streaming as a service in the browser for splicing all those sweet frags, SQS/Message Queue
   * Synchronized server/AI for offline and connection interruptions
+  * Headless match streaming directly to OBS using multiview and fpipes where necessary. Streaming render commands?

@@ -23,8 +23,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #include "tr_local.h"
 
-model_t *worldModels[MAX_MOD_KNOWN*MAX_NUM_WORLDS];
-
 #define	LL(x) x=LittleLong(x)
 
 static qboolean R_LoadMD3(model_t *mod, int lod, void *buffer, int bufferSize, const char *modName);
@@ -211,11 +209,11 @@ model_t	*R_GetModelByHandle( qhandle_t index ) {
 	model_t		*mod;
 
 	// out of range gets the defualt model
-	if ( index < 1 || index >= s_worldData.numModels ) {
-		return s_worldData.models[0];
+	if ( index < 1 || index >= tr.numModels ) {
+		return tr.models[0];
 	}
 
-	mod = s_worldData.models[index];
+	mod = tr.models[index];
 
 	return mod;
 }
@@ -226,27 +224,21 @@ model_t	*R_GetModelByHandle( qhandle_t index ) {
 ** R_AllocModel
 */
 model_t *R_AllocModel( void ) {
-	model_t		*mod = NULL;
+	model_t		*mod;
 
-	if ( s_worldData.numModels == MAX_MOD_KNOWN ) {
+	if ( tr.numModels == MAX_MOD_KNOWN ) {
 		// TODO: same pattern as images, find oldest and free/replace
 		return NULL;
 	}
 
-	for(int i = 0; i < ARRAY_LEN(worldModels); i++) {
-		if(!worldModels[i]) {
-			mod = worldModels[i] = ri.Hunk_Alloc( sizeof( model_t ), h_low );
-			break;
-		} else if (i > 0 && !worldModels[i]->name[0]) {
-			mod = worldModels[i];
-			break;
-		}
-	}
-	if(mod == NULL) return NULL;
-
-	mod->index = s_worldData.numModels;
-	s_worldData.models[s_worldData.numModels] = mod;
-	s_worldData.numModels++;
+	mod = ri.Hunk_Alloc( sizeof( *tr.models[tr.numModels] ), h_low );
+#ifdef USE_MULTIVM_CLIENT
+	mod->index = rwi * MAX_MOD_KNOWN + tr.numModels;
+#else
+	mod->index = tr.numModels;
+#endif
+	tr.models[tr.numModels] = mod;
+	tr.numModels++;
 
 	return mod;
 }
@@ -291,23 +283,27 @@ qhandle_t RE_RegisterModel( const char *name )
 	//
 	// search the currently loaded models
 	//
-	for ( hModel = 1 ; hModel < ARRAY_LEN(worldModels); hModel++ ) {
-		mod = worldModels[hModel];
-		if ( mod && !strcmp( mod->name, name )
-			// make sure brush models are referenced properly
-		 	&& (name[0] != '*' || s_worldData.models[mod->index] == mod) ) {
+	for ( hModel = 1 ; hModel < tr.numModels; hModel++ ) {
+		mod = tr.models[hModel];
+		if ( !strcmp( mod->name, name ) ) {
+#ifdef USE_LAZY_LOAD
 			found = qtrue;
-			// check it is loaded in world models
-			if(s_worldData.models[mod->index] != mod) {
-				mod->index = s_worldData.numModels;
-				s_worldData.models[s_worldData.numModels] = mod;
-				s_worldData.numModels++;
-			}
-			if( mod->type != MOD_BAD ) {
+			// break instead in-case its time to re-load the model after download
+			if( mod->type != MOD_BAD || !updateModels ) {
 				return mod->index;
 			} else {
 				break;
 			}
+#else
+			if( mod->type == MOD_BAD ) {
+				return 0;
+			}
+#ifdef USE_MULTIVM_CLIENT
+			return mod->index;
+#else
+			return hModel;
+#endif
+#endif
 		}
 	}
 
@@ -1232,7 +1228,6 @@ static qboolean R_LoadMDR( model_t *mod, void *buffer, int filesize, const char 
 ** RE_BeginRegistration
 */
 void RE_BeginRegistration( glconfig_t *glconfigOut ) {
-	int	i;
 	tr.lastRegistrationTime = ri.Milliseconds();
 
 	R_Init();
@@ -1243,7 +1238,7 @@ void RE_BeginRegistration( glconfig_t *glconfigOut ) {
 
 	tr.visIndex = 0;
 	// force markleafs to regenerate
-	for(i = 0; i < MAX_VISCOUNTS; i++) {
+	for(int i = 0; i < MAX_VISCOUNTS; i++) {
 		tr.visClusters[i] = -2;
 	}
 
@@ -1262,15 +1257,10 @@ R_ModelInit
 ===============
 */
 void R_ModelInit( void ) {
-	model_t		*mod = NULL;
+	model_t		*mod;
 
-#ifdef USE_MULTIVM_CLIENT
-  // TODO: move this up?
-  rwi = 0;
-#endif
   // leave a space for NULL model
-	s_worldData.numModels = 0;
-	memset(worldModels, 0, sizeof(worldModels));
+	tr.numModels = 0;
 
 	mod = R_AllocModel();
 	mod->type = MOD_BAD;
@@ -1279,9 +1269,9 @@ void R_ModelInit( void ) {
   //   subsequent worlds will just continue to load new models in addition
   //   this is just a few pointers afterall
 #ifdef USE_MULTIVM_CLIENT
-	for(int i = 1; i < MAX_NUM_WORLDS; i++) {
-		s_worldDatas[i].models[0] = mod;
-		s_worldDatas[i].numModels = 1;
+	for(int i = 0; i < MAX_NUM_WORLDS; i++) {
+		trWorlds[i].models[0] = mod;
+		trWorlds[i].numModels = 1;
 	}
 #endif
 }

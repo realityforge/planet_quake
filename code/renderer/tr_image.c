@@ -22,10 +22,12 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 // tr_image.c
 #include "tr_local.h"
 #ifdef _DEBUG
+#ifndef _WIN32
 #ifndef __WASM__
 #include <execinfo.h>
 #endif
 #include <unistd.h>
+#endif
 #endif
 
 static byte			 s_intensitytable[256];

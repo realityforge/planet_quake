@@ -155,7 +155,7 @@ release:
 	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) \
 		WORKDIRS="$(Q3MAP2_WORKDIR) $(Q3MAP2_WORKDIR)/picomodel" mkdirs
 	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) pre-build
-	@$(MAKE) -f $(MKFILE) B=$(BR)  -j 8 \
+	@$(MAKE) -f $(MKFILE) B=$(BR) -j 8 \
 		CFLAGS="$(CFLAGS) $(RELEASE_CFLAGS)" \
 		LDFLAGS="$(LDFLAGS) $(RELEASE_LDFLAGS)" $(BR)/$(Q3MAP2_TARGET)
 

@@ -146,6 +146,7 @@ void SetDrawVerts( int n ){
 }
 
 void SetDrawSurfacesBuffer(){
+	if(drawSurfaces)
 	free( drawSurfaces );
 
 	numDrawSurfacesBuffer = MAX_MAP_DRAW_SURFS;
@@ -154,6 +155,7 @@ void SetDrawSurfacesBuffer(){
 }
 
 void SetDrawSurfaces( int n ){
+	if(drawSurfaces)
 	free( drawSurfaces );
 
 	numDrawSurfaces =
@@ -163,9 +165,13 @@ void SetDrawSurfaces( int n ){
 }
 
 void BspFilesCleanup(){
+	if(drawVerts)
 	free( drawVerts );
+	if(drawSurfaces)
 	free( drawSurfaces );
+	if(lightBytes)
 	free( lightBytes );
+	if(gridData)
 	free( gridData );
 }
 

@@ -416,6 +416,7 @@ static void R_LoadLightmaps( const lump_t *l ) {
 
 	len = l->filelen;
 	if ( !len ) {
+		r_vertexLight->integer = 1;
 		return;
 	}
 	buf = fileBase + l->fileofs;

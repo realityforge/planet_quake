@@ -606,10 +606,10 @@ int MiniMapBSPMain( int argc, char **argv ){
 		minimap.sharpen_boxmult    =    -minimapSharpen;
 	}
 
-	minimap.data1f = safe_malloc( minimap.width * minimap.height * sizeof( *minimap.data1f ) );
+	minimap.data1f = safe_malloc( minimap.width * minimap.height * sizeof( float ) );
 	data4b = safe_malloc( minimap.width * minimap.height * 4 );
 	if ( minimapSharpen >= 0 ) {
-		minimap.sharpendata1f = safe_malloc( minimap.width * minimap.height * sizeof( *minimap.data1f ) );
+		minimap.sharpendata1f = safe_malloc( minimap.width * minimap.height * sizeof( float ) );
 	}
 
 	MiniMapSetupBrushes();

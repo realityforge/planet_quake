@@ -82,6 +82,7 @@ void IncDrawVerts(){
 }
 
 void SetDrawVerts( int n ){
+	if(bspDrawVerts)
 	free( bspDrawVerts );
 
 	numBSPDrawVerts =
@@ -92,6 +93,7 @@ void SetDrawVerts( int n ){
 
 int numBSPDrawSurfacesBuffer = 0;
 void SetDrawSurfacesBuffer(){
+	if(bspDrawSurfaces)
 	free( bspDrawSurfaces );
 
 	numBSPDrawSurfacesBuffer = MAX_MAP_DRAW_SURFS;
@@ -100,6 +102,7 @@ void SetDrawSurfacesBuffer(){
 }
 
 void SetDrawSurfaces( int n ){
+	if(bspDrawSurfaces)
 	free( bspDrawSurfaces );
 
 	numBSPDrawSurfaces =
@@ -109,10 +112,21 @@ void SetDrawSurfaces( int n ){
 }
 
 void BSPFilesCleanup(){
+	if(bspDrawVerts)
 	free( bspDrawVerts );
+	if(bspDrawSurfaces)
 	free( bspDrawSurfaces );
+	if(bspLightBytes)
 	free( bspLightBytes );
+	if(bspGridPoints)
 	free( bspGridPoints );
+	bspDrawVerts = 0;
+	bspDrawSurfaces = 0;
+	bspLightBytes = 0;
+	bspGridPoints = 0;
+	numBSPDrawVerts = 0;
+	numBSPDrawSurfaces = 0;
+	numBSPDrawSurfacesBuffer = 0;
 }
 
 

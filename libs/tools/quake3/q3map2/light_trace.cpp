@@ -417,6 +417,8 @@ void ClipTraceWinding( traceWinding_t *tw, const Plane3f& plane, traceWinding_t 
 			/* handle points on the splitting plane */
 			switch ( sides[ i ] )
 			{
+			default:
+				break;
 			case eSideFront:
 				if ( front->numVerts >= MAX_TW_VERTS ) {
 					Error( "MAX_TW_VERTS (%d) exceeded", MAX_TW_VERTS );

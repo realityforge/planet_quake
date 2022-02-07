@@ -48,7 +48,8 @@ static void ExitQ3Map( void ){
 	/* flush xml send buffer, shut down connection */
 	Broadcast_Shutdown();
 	BSPFilesCleanup();
-	free( mapDrawSurfs );
+	if(mapDrawSurfs)
+		free( mapDrawSurfs );
 }
 
 
@@ -85,6 +86,8 @@ int main( int argc, char **argv )
 #ifndef LINKABLE
 	/* set exit call */
 	atexit( ExitQ3Map );
+#else
+	BSPFilesCleanup();
 #endif
 
 	/* read general options first */

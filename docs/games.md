@@ -182,11 +182,11 @@ Special multiworld features like cameras and portals. See [multiworld](../docs/m
 
 ## TODO
 
-  * Finish portal interpolation, and seeing one portal surface through another portal, projectiles (distance from origin). Share entities between multiple server qagame QVMs, possibly through the engine itself or a new API call for game/g_*.c  Add `world` game commands when using inter-dimensional teleporters, and set the `sv_mvWorld` designation for managed cameras. Finish multiworld TODOs like not crashing after 10 maps and cvars. 
+  * Finish portal interpolation, and seeing one portal surface through another portal, projectiles (distance from origin). Share entities between multiple server qagame QVMs, possibly through the engine itself or a new API call for game/g_*.c
+  * Finish multiworld TODOs like not crashing after 10 maps and cvars. 
   * Rocket Arena maps. Place white return teleporters for arena 0 on player_start positions and going through a portal counts as a vote to white arena to play in. Or use drop command to drop portal connects and in RA mode return to arena 0. Always spawn in arena 0 during intermission until voted, or remove guns from arena 0 and repawn in voted arena.
-  * Add entities through portals
   * Add autosprite flag to misc_model for rotating like portal always facing camera
-  * Shoot portal gun twice in the same place to fill a specific area of space on the wall for the portal, generating a new portal model to fit the surface. The portal stretches to cover an entire wall. 3 kinds of portals. Shoot again and the portal goes back to small and round. Maximize at an optional 50 x 50 = 2500 area. Somehow visualize morphing from sphere to whole wall.
+  * Shoot portal gun twice in the same place to fill a specific area of space on the wall for the portal, generating a new portal model to fit the surface. The portal stretches to cover an entire wall. 3 kinds of portals. Shoot again and the portal goes back to small and round. Maximize at an optional 50 x 50 = 2500 area. Somehow visualize morphing from sphere to whole wall. Need to learn how to make meshes.
   * Use geometric content from previous campaigns Q1, Q2, but ruin the ability to speed run (smarter bots, more enemies, team based, disrupting events and puzzles, long missions like Q2 Ground Zero Research Hangar) then create a new mode called shortcuts, where alternate puzzles can be solved to jump through maps quickly.
   * Free standing portals should use gravity for like half a second, to land on the ground correctly, then figure out where the bounding box puts it and maybe add a stand.
   * Make a Doom style Prawler amygdala that you have to kill for in a boss fight to get teleportation abilities.
@@ -214,7 +214,7 @@ Special multiworld features like cameras and portals. See [multiworld](../docs/m
   * Extra UI menus with multiQVM, for voting on maps and bitcoin setup, Instant replay, consolidate all VM UIs scoreboard/postgame/HUD/menus in to 1 UI system, replace the menu address with an API call.
   * Many mod support, compiling and playing lots of different game types, capture the flag with 3+ teams
   * Campaign mode, playing older engine content and playing as enemy characters, new AI for old enemies
-  * Keep away, where one team has to kill the flag carrier and return they flag to score.
+  * Keep away, where one team has to kill the flag carrier and return the flag to score.
   * Add light coming from player to flashlight command so even if you're pointing at the sky it looks like a flashlight is on.
   * Make "tech-demo" as an example of some game dynamic. Make a Matrix mod that loads the white loading program and jump simulation and UrT subway. Make a space to planet landing sequence with death modes. https://www.youtube.com/watch?v=sLqXFF8mlEU
   * Tie content together with lore. When Utu had success with creating life, The Father granted him immortality. Yog-Sothoth was jealous of Utus success with Earth he decided to poison the others Gods' worlds. Employing his monstrous creation Shug-Niggurath to create the first Quake. Reanimating souls from the dead to supply the army.

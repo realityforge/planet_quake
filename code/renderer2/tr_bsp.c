@@ -226,6 +226,7 @@ static	void R_LoadLightmaps( lump_t *l, lump_t *surfs ) {
     r_deluxeMapping->integer = 0;
     r_normalMapping->integer = 0;
     r_specularMapping->integer = 0;
+		r_vertexLight->integer = 1;
 		return;
 	}
 	buf = fileBase + l->fileofs;

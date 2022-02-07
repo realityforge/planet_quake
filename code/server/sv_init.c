@@ -1094,6 +1094,7 @@ void SV_Init( void )
 #ifdef USE_MEMORY_MAPS
 	sv_memoryMaps = Cvar_Get( "sv_memoryMaps", "1", CVAR_ARCHIVE );
 	sv_bspLight = Cvar_Get( "sv_bspLight", "0", CVAR_TEMP );
+	sv_bspMinimap = Cvar_Get( "sv_bspMinimap", "0", CVAR_TEMP );
 	sv_bspAAS = Cvar_Get( "sv_bspAAS", "0", CVAR_TEMP );
 	sv_bspMap = Cvar_Get( "sv_bspMap", "0", CVAR_TEMP );
 	sv_bspSplice = Cvar_Get( "sv_bspSplice", "", CVAR_TEMP );

@@ -581,6 +581,7 @@ void SV_InitBanCheats( void );
 #ifdef USE_MEMORY_MAPS
 extern  cvar_t *sv_memoryMaps;
 extern  cvar_t *sv_bspLight;
+extern  cvar_t *sv_bspMinimap;
 extern  cvar_t *sv_bspAAS;
 extern  cvar_t *sv_bspRebuild;
 extern  cvar_t *sv_bspMap;

@@ -7361,159 +7361,159 @@ default
 	lightmapAxis ( -1.000000 -0.000000 -0.000000 )
 }
 
-1226 // ESurfaceType::Meta V: 4 I: 6 planar
+1226 // ESurfaceType::Meta V: 22 I: 60 planar
 {
-	shader textures/sfx/lavabeam
+	shader textures/tig_ra3/tig_pool2
 	sampleSize 0
 }
 
-1227 // ESurfaceType::Meta V: 4 I: 6 planar
+1227 // ESurfaceType::Meta V: 26 I: 72 planar
 {
-	shader textures/sfx/lavabeam
+	shader textures/tig_ra3/tig_pool2
 	sampleSize 0
 }
 
-1228 // ESurfaceType::Meta V: 4 I: 6 planar
+1228 // ESurfaceType::Meta V: 143 I: 720 planar
 {
-	shader textures/sfx/lavabeam
+	shader textures/tig_ra3/tig_pool2
 	sampleSize 0
 }
 
-1229 // ESurfaceType::Meta V: 4 I: 6 planar
+1229 // ESurfaceType::Meta V: 26 I: 72 planar
 {
-	shader textures/sfx/lavabeam
+	shader textures/tig_ra3/tig_pool2
 	sampleSize 0
 }
 
-1230 // ESurfaceType::Meta V: 4 I: 6 planar
+1230 // ESurfaceType::Meta V: 24 I: 66 planar
 {
-	shader textures/sfx/lavabeam
+	shader textures/tig_ra3/tig_pool2
 	sampleSize 0
 }
 
 1231 // ESurfaceType::Meta V: 4 I: 6 planar
 {
-	shader textures/sfx/lavabeam
+	shader textures/tig_ra3/tig_ra3_a4
 	sampleSize 0
 }
 
 1232 // ESurfaceType::Meta V: 4 I: 6 planar
 {
-	shader textures/sfx/lavabeam
+	shader textures/tig_ra3/tig_ra3_a3
 	sampleSize 0
 }
 
 1233 // ESurfaceType::Meta V: 4 I: 6 planar
 {
-	shader textures/sfx/lavabeam
+	shader textures/tig_ra3/tig_ra3_a2
 	sampleSize 0
 }
 
 1234 // ESurfaceType::Meta V: 4 I: 6 planar
 {
-	shader textures/sfx/lavabeam
+	shader textures/tig_ra3/tig_ra3_a1
 	sampleSize 0
 }
 
-1235 // ESurfaceType::Meta V: 4 I: 6 planar
+1235 // ESurfaceType::Meta V: 9 I: 24 planar
+{
+	shader textures/tig_ra3/tig_ra3_skybox00
+	sampleSize 0
+}
+
+1236 // ESurfaceType::Meta V: 5 I: 9 planar
+{
+	shader textures/tig_ra3/tig_ra3_skybox00
+	sampleSize 0
+}
+
+1237 // ESurfaceType::Meta V: 5 I: 9 planar
+{
+	shader textures/tig_ra3/tig_ra3_skybox00
+	sampleSize 0
+}
+
+1238 // ESurfaceType::Meta V: 4 I: 6 planar
+{
+	shader textures/tig_ra3/tig_ra3_skybox00
+	sampleSize 0
+}
+
+1239 // ESurfaceType::Meta V: 4 I: 6 planar
+{
+	shader textures/tig_ra3/tig_ra3_skybox00
+	sampleSize 0
+}
+
+1240 // ESurfaceType::Meta V: 4 I: 6 planar
 {
 	shader textures/sfx/lavabeam
 	sampleSize 0
 }
 
-1236 // ESurfaceType::Meta V: 4 I: 6 planar
+1241 // ESurfaceType::Meta V: 4 I: 6 planar
 {
 	shader textures/sfx/lavabeam
 	sampleSize 0
 }
 
-1237 // ESurfaceType::Meta V: 4 I: 6 planar
+1242 // ESurfaceType::Meta V: 4 I: 6 planar
 {
 	shader textures/sfx/lavabeam
-	sampleSize 0
-}
-
-1238 // ESurfaceType::Meta V: 22 I: 60 planar
-{
-	shader textures/tig_ra3/tig_pool2
-	sampleSize 0
-}
-
-1239 // ESurfaceType::Meta V: 26 I: 72 planar
-{
-	shader textures/tig_ra3/tig_pool2
-	sampleSize 0
-}
-
-1240 // ESurfaceType::Meta V: 143 I: 720 planar
-{
-	shader textures/tig_ra3/tig_pool2
-	sampleSize 0
-}
-
-1241 // ESurfaceType::Meta V: 26 I: 72 planar
-{
-	shader textures/tig_ra3/tig_pool2
-	sampleSize 0
-}
-
-1242 // ESurfaceType::Meta V: 24 I: 66 planar
-{
-	shader textures/tig_ra3/tig_pool2
 	sampleSize 0
 }
 
 1243 // ESurfaceType::Meta V: 4 I: 6 planar
 {
-	shader textures/tig_ra3/tig_ra3_a4
+	shader textures/sfx/lavabeam
 	sampleSize 0
 }
 
 1244 // ESurfaceType::Meta V: 4 I: 6 planar
 {
-	shader textures/tig_ra3/tig_ra3_a3
+	shader textures/sfx/lavabeam
 	sampleSize 0
 }
 
 1245 // ESurfaceType::Meta V: 4 I: 6 planar
 {
-	shader textures/tig_ra3/tig_ra3_a2
+	shader textures/sfx/lavabeam
 	sampleSize 0
 }
 
 1246 // ESurfaceType::Meta V: 4 I: 6 planar
 {
-	shader textures/tig_ra3/tig_ra3_a1
+	shader textures/sfx/lavabeam
 	sampleSize 0
 }
 
-1247 // ESurfaceType::Meta V: 9 I: 24 planar
+1247 // ESurfaceType::Meta V: 4 I: 6 planar
 {
-	shader textures/tig_ra3/tig_ra3_skybox00
+	shader textures/sfx/lavabeam
 	sampleSize 0
 }
 
-1248 // ESurfaceType::Meta V: 5 I: 9 planar
+1248 // ESurfaceType::Meta V: 4 I: 6 planar
 {
-	shader textures/tig_ra3/tig_ra3_skybox00
+	shader textures/sfx/lavabeam
 	sampleSize 0
 }
 
-1249 // ESurfaceType::Meta V: 5 I: 9 planar
+1249 // ESurfaceType::Meta V: 4 I: 6 planar
 {
-	shader textures/tig_ra3/tig_ra3_skybox00
+	shader textures/sfx/lavabeam
 	sampleSize 0
 }
 
 1250 // ESurfaceType::Meta V: 4 I: 6 planar
 {
-	shader textures/tig_ra3/tig_ra3_skybox00
+	shader textures/sfx/lavabeam
 	sampleSize 0
 }
 
 1251 // ESurfaceType::Meta V: 4 I: 6 planar
 {
-	shader textures/tig_ra3/tig_ra3_skybox00
+	shader textures/sfx/lavabeam
 	sampleSize 0
 }
 

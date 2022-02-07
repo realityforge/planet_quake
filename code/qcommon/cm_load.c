@@ -610,15 +610,6 @@ void CMod_LoadPatches( lump_t *surfs, lump_t *verts ) {
 		// create the internal facet structure
 		patch->pc = CM_GeneratePatchCollide( width, height, points );
 	}
-	
-	if(cmod_base == 0) {
-		// finalize memory map
-		CMod_CheckLeafBrushes();
-
-		CM_InitBoxHull();
-
-		CM_FloodAreaConnections();
-	}
 }
 
 //==================================================================
@@ -723,6 +714,11 @@ cmdsAdded = qtrue;
 #endif
 }
 
+
+#ifdef USE_MEMORY_MAPS
+void SV_MakeMinimap(const char *minimap);
+extern cvar_t *sv_bspMinimap;
+#endif
 
 
 /*
@@ -843,7 +839,15 @@ int CM_LoadMap( const char *name, qboolean clientload, int *checksum ) {
 	//if ( !clientload ) {
 	Q_strncpyz( cm.name, name, sizeof( cm.name ) );
 	//}
-	
+
+#ifndef BUILD_SLIM_CLIENT
+#ifdef USE_MEMORY_MAPS
+	if (sv_bspMinimap->integer) {
+		SV_MakeMinimap(name);
+	}
+#endif
+#endif
+
 #if defined(USE_MULTIVM_SERVER) || defined(USE_MULTIVM_CLIENT)
 	return cmi;
 #else

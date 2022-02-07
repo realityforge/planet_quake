@@ -148,6 +148,7 @@ char    *svUncheats[128];
 #ifdef USE_MEMORY_MAPS
 cvar_t *sv_memoryMaps;
 cvar_t *sv_bspLight;
+cvar_t *sv_bspMinimap;
 cvar_t *sv_bspAAS;
 cvar_t *sv_bspRebuild;
 cvar_t *sv_bspMap;
