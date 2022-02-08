@@ -118,6 +118,7 @@ void RE_ClearScene( void ) {
 	r_firstSceneDlight = r_numdlights;
 	r_firstSceneEntity = r_numentities;
 	r_firstScenePoly = r_numpolys;
+	r_firstScenePolybuffer = r_numpolybuffers;
 }
 
 /*
@@ -532,6 +533,13 @@ void RE_RenderScene( const refdef_t *fd ) {
 	tr.refdef.polys = &backEndData->polys[r_firstScenePoly];
 #endif
 
+	tr.refdef.numPolyBuffers = r_numpolybuffers - r_firstScenePolybuffer;
+#ifdef USE_UNLOCKED_CVARS
+	tr.refdef.polybuffers = &backEndData->polybuffers[0][r_firstScenePolybuffer];
+#else
+	tr.refdef.polybuffers = &backEndData->polybuffers[r_firstScenePolybuffer];
+#endif
+
 	// turn off dynamic lighting globally by clearing all the
 	// dlights if it needs to be disabled
 	if ( r_dynamiclight->integer == 0 || glConfig.hardwareType == GLHW_PERMEDIA2 ) {
@@ -615,9 +623,34 @@ void RE_RenderScene( const refdef_t *fd ) {
 	r_firstSceneEntity = r_numentities;
 	r_firstSceneDlight = r_numdlights;
 	r_firstScenePoly = r_numpolys;
+	r_firstScenePolybuffer = r_numpolybuffers;
 
 	tr.frontEndMsec += ri.Milliseconds() - startTime;
 }
+
+
+/*
+=====================
+R_AddPolygonBufferSurfaces
+
+Adds all the scene's polys into this view's drawsurf list
+=====================
+*/
+void R_AddPolygonBufferSurfaces( void ) {
+	int i;
+	shader_t        *sh;
+	srfPolyBuffer_t *polybuffer;
+
+	tr.currentEntityNum = REFENTITYNUM_WORLD;
+	tr.shiftedEntityNum = tr.currentEntityNum << QSORT_REFENTITYNUM_SHIFT;
+
+	for ( i = 0, polybuffer = tr.refdef.polybuffers; i < tr.refdef.numPolyBuffers ; i++, polybuffer++ ) {
+		sh = R_GetShaderByHandle( polybuffer->pPolyBuffer->shader );
+
+		R_AddDrawSurf( ( void * )polybuffer, sh, polybuffer->fogIndex, 0 );
+	}
+}
+
 
 /*
 =====================
@@ -632,12 +665,24 @@ void RE_AddPolyBufferToScene( polyBuffer_t* pPolyBuffer ) {
 	vec3_t bounds[2];
 	int i;
 
-	if ( r_numpolybuffers >= r_maxpolys->integer ) {
+	if ( r_numpolybuffers >= r_maxpolybuffers->integer 
+		|| r_numpolyverts + pPolyBuffer->numVerts >= r_maxpolyverts->integer 
+	) {
+		ri.Printf( PRINT_DEVELOPER, "WARNING: RE_AddPolyBufferToScene: r_numpolybuffers or r_maxpolyverts reached\n");
 		return;
 	}
 
 #ifdef USE_UNLOCKED_CVARS
-	pPolySurf = &backEndData->polybuffers[0][r_numpolybuffers];
+	int buffersUsed = r_numpolybuffers % MAX_POLYBUFFERS_DIVISOR;
+	int buffersList = (r_numpolybuffers - buffersUsed) / MAX_POLYBUFFERS_DIVISOR;
+	if(buffersUsed + 1 >= MAX_POLYBUFFERS_DIVISOR) {
+		Com_Printf("Expanding the polybuffers list one time.\n");
+		backEndData->polyVerts[buffersList + 1] = ri.Hunk_Alloc(sizeof(polyBuffer_t) * MAX_POLYBUFFERS_DIVISOR, h_low);
+		r_numpolyverts = (buffersList + 1) * MAX_POLYBUFFERS_DIVISOR;
+		pPolySurf = &backEndData->polybuffers[buffersList + 1][0];
+	} else {
+		pPolySurf = &backEndData->polybuffers[buffersList][buffersUsed];
+	}
 #else
 	pPolySurf = &backEndData->polybuffers[r_numpolybuffers];
 #endif

@@ -469,7 +469,18 @@ typedef struct {
 	struct dlight_s	*dlights;
 
 	int			numPolys;
+#ifdef USE_UNLOCKED_CVARS
+	int     firstPoly;
+#else
 	struct srfPoly_s	*polys;
+#endif
+
+	int numPolyBuffers;
+#ifdef USE_UNLOCKED_CVARS
+	int     firstPolyBuffer;
+#else
+	struct srfPolyBuffer_s  *polybuffers;
+#endif
 
 	int			numDrawSurfs;
 	struct drawSurf_s	*drawSurfs;
@@ -1392,7 +1403,7 @@ void R_AddNullModelSurfaces( trRefEntity_t *e );
 void R_AddBeamSurfaces( trRefEntity_t *e );
 void R_AddRailSurfaces( trRefEntity_t *e, qboolean isUnderwater );
 void R_AddLightningBoltSurfaces( trRefEntity_t *e );
-
+void R_AddPolygonBufferSurfaces( void );
 void R_AddPolygonSurfaces( void );
 
 void R_DecomposeSort( unsigned sort, int *entityNum, shader_t **shader, 
