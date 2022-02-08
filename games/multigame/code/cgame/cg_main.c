@@ -2148,6 +2148,7 @@ Will perform callbacks to make the loading info screen update.
 void CG_Init( int serverMessageNum, int serverCommandSequence, int clientNum ) {
 	char  value[MAX_CVAR_VALUE_STRING];
 	const char	*s;
+	vec3_t mins, maxs;
 
 	// clear everything
 	memset( &cgs, 0, sizeof( cgs ) );
@@ -2274,6 +2275,23 @@ void CG_Init( int serverMessageNum, int serverCommandSequence, int clientNum ) {
 	CG_LoadingString( "graphics" );
 
 	CG_RegisterGraphics();
+
+	trap_R_ModelBounds( 0, mins, maxs );
+	cg.mapcoordsMins[0] = (int)mins[0];
+	cg.mapcoordsMaxs[0] = (int)maxs[0];
+	cg.mapcoordsMins[1] = (int)mins[1];
+	cg.mapcoordsMaxs[1] = (int)maxs[1];
+	if(cg.mapcoordsMaxs[1] - cg.mapcoordsMins[1] > cg.mapcoordsMaxs[0] - cg.mapcoordsMins[0]) {
+		int dif = (int)((cg.mapcoordsMaxs[1] - cg.mapcoordsMins[1]) - (cg.mapcoordsMaxs[0] - cg.mapcoordsMins[0]));
+		cg.mapcoordsMins[0] -= dif / 2.0f;
+		cg.mapcoordsMaxs[0] += dif / 2.0f;
+	} else {
+		int dif = (int)((cg.mapcoordsMaxs[0] - cg.mapcoordsMins[0]) - (cg.mapcoordsMaxs[1] - cg.mapcoordsMins[1]));
+		cg.mapcoordsMins[1] -= dif / 2.0f;
+		cg.mapcoordsMaxs[1] += dif / 2.0f;
+	}
+	cg.mapcoordsValid = qtrue;
+	CG_EffectParse(cg_atmosphere.string);
 
 	CG_LoadingString( "clients" );
 

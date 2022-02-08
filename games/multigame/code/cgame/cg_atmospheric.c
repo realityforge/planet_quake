@@ -117,6 +117,8 @@ static void CG_AddPolyToPool( qhandle_t shader, const polyVert_t *verts ) {
 
 	for ( i = 0; i < 3; i++ ) {
 		VectorCopy( verts[i].xyz, pPolyBuffer->xyz[firstVertex + i] );
+		Com_Printf("poly: %f, %f, %f\n", pPolyBuffer->xyz[firstVertex + i][0],
+			pPolyBuffer->xyz[firstVertex + i][1], pPolyBuffer->xyz[firstVertex + i][2]);
 
 		pPolyBuffer->st[firstVertex + i][0] = verts[i].st[0];
 		pPolyBuffer->st[firstVertex + i][1] = verts[i].st[1];
@@ -126,7 +128,6 @@ static void CG_AddPolyToPool( qhandle_t shader, const polyVert_t *verts ) {
 		pPolyBuffer->color[firstVertex + i][3] = verts[i].modulate[3];
 
 		pPolyBuffer->indicies[firstIndex + i] = firstVertex + i;
-
 	}
 
 	pPolyBuffer->numIndicies += 3;
@@ -739,6 +740,8 @@ void CG_EffectParse( const char *effectstr ) {
 	char workbuff[128];
 	atmFXType_t atmFXType = ATM_NONE;
 
+return;
+
 	if ( CG_AtmosphericKludge() ) {
 		return;
 	}
@@ -824,7 +827,6 @@ void CG_EffectParse( const char *effectstr ) {
 
 	if ( atmFXType == ATM_NONE || !BG_LoadTraceMap( cgs.rawmapname, cg.mapcoordsMins, cg.mapcoordsMaxs ) ) {
 		// No effects
-
 		cg_atmFx.numDrops = -1;
 		return;
 	}

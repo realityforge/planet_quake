@@ -87,7 +87,7 @@ void CG_GenerateTracemap( void ) {
 		return;
 	}
 
-	if ( ( cg.mapcoordsMaxs[0] - cg.mapcoordsMins[0] ) != ( cg.mapcoordsMins[1] - cg.mapcoordsMaxs[1] ) ) {
+	if ( ( cg.mapcoordsMaxs[0] - cg.mapcoordsMins[0] ) != ( cg.mapcoordsMaxs[1] - cg.mapcoordsMins[1] ) ) {
 		CG_Printf( "Mapcoords need to be square.\n" );
 		return;
 	}

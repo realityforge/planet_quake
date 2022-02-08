@@ -93,4 +93,3 @@ Multigame is a mod I've been working on that adds Runes and alternate fire modes
   * Something wrong with r_fbo causing driver crash. Need it for hall of mirrors effect for portals.
   * Make all game code entry points asynchronous with engine to run all QVMs in web workers/pthreads. Pause VM for async calls between engine and VM.
   * Allow different VMs on file system by using more search directories and Pure server calls for filtering.
-  * Set fog with a foglevel setting instead of using brushes?

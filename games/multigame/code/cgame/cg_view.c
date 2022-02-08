@@ -856,6 +856,8 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 		return;
 	}
 
+	CG_PB_ClearPolyBuffers();
+
 	// any looped sounds will be respecified as entities
 	// are added to the render list
 	trap_S_ClearLoopingSounds(qfalse);
