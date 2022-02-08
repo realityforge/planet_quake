@@ -232,16 +232,22 @@ void Cvar_CommandCompletion( void (*callback)(const char *s) )
 
 
 static qboolean Cvar_IsIntegral( const char *s ) {
-
+	qboolean hex = qfalse;
 	if ( *s == '-' && *(s+1) != '\0' )
 		s++;
 
-	if(s[0] == '0' && s[1] == 'x')
+	if(s[0] == '0' && s[1] == 'x') {
+		hex = qtrue;
 		s += 2;
+	}
 
 	while ( *s != '\0' ) {
 		if(*s == 'f' && *(s+1) == '\0') // early out for c-style floats
 			return qtrue;
+		if( hex && ((*s >= 'a' && *s <= 'f')
+			|| (*s >= 'A' && *s <= 'F'))) {
+				// pass
+		} else
 		if ( *s < '0' || *s > '9' ) {
 			return qfalse;
 		}
@@ -285,7 +291,11 @@ static const char *Cvar_Validate( cvar_t *var, const char *value, qboolean warn 
 					sprintf( intbuf, "%i", atoi( value ) );
 					value = intbuf; // new value
 				}
-				valuei = atoi( value );
+				if(value[0] == '0' && value[1] == 'x') {
+					sscanf(&value[2], "%x", &valuei);
+				} else {
+					valuei = atoi( value );
+				}
 				if ( var->mins && valuei < atoi( var->mins ) ) {
 					limit = var->mins;
 				} else if ( var->maxs && valuei > atoi( var->maxs ) ) {
@@ -506,7 +516,12 @@ cvar_t *Cvar_Get( const char *var_name, const char *var_value, int flags ) {
 	var->modified = qtrue;
 	var->modificationCount = 1;
 	var->value = Q_atof( var->string );
-	var->integer = atoi( var->string );
+	if(var->string[0] == '0' && var->string[1] == 'x') {
+		sscanf(&var->string[2], "%x", &var->integer);
+		var->value = 1.0f * var->integer;
+	} else {
+		var->integer = atoi( var->string );
+	}
 	var->resetString = CopyString( var_value );
 	var->validator = CV_NONE;
 	var->description = NULL;

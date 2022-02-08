@@ -6355,16 +6355,16 @@ default
 	lightmapAxis ( 0.000000 0.000000 1.000000 )
 }
 
-1038 // ESurfaceType::Meta V: 6 I: 12 planar
-{
-	shader textures/tig_ra3/tig_evilde-r_mtl
-	lightmapAxis ( -0.000000 -1.000000 -0.000000 )
-}
-
-1039 // ESurfaceType::Meta V: 8 I: 18 planar
+1038 // ESurfaceType::Meta V: 8 I: 18 planar
 {
 	shader textures/tig_ra3/tig_evilde-r_mtl
 	lightmapAxis ( -1.000000 -0.000000 -0.000000 )
+}
+
+1039 // ESurfaceType::Meta V: 6 I: 12 planar
+{
+	shader textures/tig_ra3/tig_evilde-r_mtl
+	lightmapAxis ( -0.000000 -1.000000 -0.000000 )
 }
 
 1040 // ESurfaceType::Meta V: 4 I: 6 planar
@@ -6489,206 +6489,206 @@ default
 
 1060 // ESurfaceType::Meta V: 4 I: 6 planar
 {
-	shader textures/base_light/ceil1_39
-	lightmapAxis ( -1.000000 -0.000000 -0.000000 )
-}
-
-1061 // ESurfaceType::Meta V: 4 I: 6 planar
-{
-	shader textures/base_light/ceil1_39
-	lightmapAxis ( -1.000000 -0.000000 -0.000000 )
-}
-
-1062 // ESurfaceType::Meta V: 4 I: 6 planar
-{
-	shader textures/base_light/ceil1_39
-	lightmapAxis ( 0.000000 1.000000 0.000000 )
-}
-
-1063 // ESurfaceType::Meta V: 4 I: 6 planar
-{
-	shader textures/base_light/ceil1_39
-	lightmapAxis ( 0.000000 1.000000 0.000000 )
-}
-
-1064 // ESurfaceType::Meta V: 4 I: 6 planar
-{
-	shader textures/base_light/baslt4_1_4k
-	lightmapAxis ( -1.000000 -0.000000 -0.000000 )
-}
-
-1065 // ESurfaceType::Meta V: 4 I: 6 planar
-{
-	shader textures/base_light/baslt4_1_4k
-	lightmapAxis ( -1.000000 -0.000000 -0.000000 )
-}
-
-1066 // ESurfaceType::Meta V: 4 I: 6 planar
-{
-	shader textures/base_light/baslt4_1_4k
-	lightmapAxis ( -0.000000 -1.000000 -0.000000 )
-}
-
-1067 // ESurfaceType::Meta V: 4 I: 6 planar
-{
-	shader textures/base_light/baslt4_1_4k
-	lightmapAxis ( 0.000000 1.000000 0.000000 )
-}
-
-1068 // ESurfaceType::Meta V: 4 I: 6 planar
-{
-	shader textures/base_light/baslt4_1_4k
-	lightmapAxis ( 1.000000 0.000000 0.000000 )
-}
-
-1069 // ESurfaceType::Meta V: 4 I: 6 planar
-{
-	shader textures/base_light/baslt4_1_4k
-	lightmapAxis ( -0.000000 -1.000000 -0.000000 )
-}
-
-1070 // ESurfaceType::Meta V: 4 I: 6 planar
-{
-	shader textures/base_light/baslt4_1_4k
-	lightmapAxis ( 0.000000 1.000000 0.000000 )
-}
-
-1071 // ESurfaceType::Meta V: 4 I: 6 planar
-{
-	shader textures/base_light/baslt4_1_4k
-	lightmapAxis ( 1.000000 0.000000 0.000000 )
-}
-
-1072 // ESurfaceType::Meta V: 4 I: 6 planar
-{
-	shader textures/base_light/baslt4_1_4k
-	lightmapAxis ( -1.000000 -0.000000 -0.000000 )
-}
-
-1073 // ESurfaceType::Meta V: 4 I: 6 planar
-{
-	shader textures/base_light/baslt4_1_4k
-	lightmapAxis ( -0.000000 -1.000000 -0.000000 )
-}
-
-1074 // ESurfaceType::Meta V: 4 I: 6 planar
-{
-	shader textures/base_light/baslt4_1_4k
-	lightmapAxis ( 0.000000 1.000000 0.000000 )
-}
-
-1075 // ESurfaceType::Meta V: 4 I: 6 planar
-{
-	shader textures/base_light/baslt4_1_4k
-	lightmapAxis ( -1.000000 -0.000000 -0.000000 )
-}
-
-1076 // ESurfaceType::Meta V: 4 I: 6 planar
-{
-	shader textures/base_light/baslt4_1_4k
-	lightmapAxis ( 1.000000 0.000000 0.000000 )
-}
-
-1077 // ESurfaceType::Meta V: 4 I: 6 planar
-{
-	shader textures/base_light/baslt4_1_4k
-	lightmapAxis ( -0.000000 -1.000000 -0.000000 )
-}
-
-1078 // ESurfaceType::Meta V: 4 I: 6 planar
-{
-	shader textures/base_light/baslt4_1_4k
-	lightmapAxis ( 0.000000 1.000000 0.000000 )
-}
-
-1079 // ESurfaceType::Meta V: 4 I: 6 planar
-{
-	shader textures/base_light/baslt4_1_4k
-	lightmapAxis ( 1.000000 0.000000 0.000000 )
-}
-
-1080 // ESurfaceType::Meta V: 4 I: 6 planar
-{
 	shader textures/tig_ra3/tig_e6launchengine_s
 	entity 64
 	lightmapAxis ( 0.000000 0.000000 1.000000 )
 }
 
-1081 // ESurfaceType::Meta V: 4 I: 6 planar
+1061 // ESurfaceType::Meta V: 4 I: 6 planar
 {
 	shader textures/tig_ra3/tig_e6launchengine_s
 	lightmapAxis ( 0.000000 0.000000 1.000000 )
 }
 
-1082 // ESurfaceType::Meta V: 4 I: 6 planar
+1062 // ESurfaceType::Meta V: 4 I: 6 planar
 {
 	shader textures/tig_ra3/tig_grey_fog
 	sampleSize 0
+}
+
+1063 // ESurfaceType::Meta V: 4 I: 6 planar
+{
+	shader textures/tig_ra3/tig_grey_fog
+	sampleSize 0
+}
+
+1064 // ESurfaceType::Meta V: 4 I: 6 planar
+{
+	shader textures/tig_ra3/tig_grey
+	sampleSize 0
+}
+
+1065 // ESurfaceType::Meta V: 4 I: 6 planar
+{
+	shader textures/tig_ra3/tig_grey
+	sampleSize 0
+}
+
+1066 // ESurfaceType::Meta V: 4 I: 6 planar
+{
+	shader textures/tig_ra3/tig_grey
+	sampleSize 0
+}
+
+1067 // ESurfaceType::Meta V: 4 I: 6 planar
+{
+	shader textures/tig_ra3/tig_grey
+	sampleSize 0
+}
+
+1068 // ESurfaceType::Meta V: 4 I: 6 planar
+{
+	shader textures/tig_ra3/tig_grey
+	sampleSize 0
+}
+
+1069 // ESurfaceType::Meta V: 4 I: 6 planar
+{
+	shader textures/tig_ra3/tig_grey
+	sampleSize 0
+}
+
+1070 // ESurfaceType::Meta V: 4 I: 6 planar
+{
+	shader textures/tig_ra3/tig_grey
+	sampleSize 0
+}
+
+1071 // ESurfaceType::Meta V: 4 I: 6 planar
+{
+	shader textures/tig_ra3/tig_grey
+	sampleSize 0
+}
+
+1072 // ESurfaceType::Meta V: 4 I: 6 planar
+{
+	shader textures/tig_ra3/tig_grey
+	sampleSize 0
+}
+
+1073 // ESurfaceType::Meta V: 4 I: 6 planar
+{
+	shader textures/tig_ra3/tig_grey
+	sampleSize 0
+}
+
+1074 // ESurfaceType::Meta V: 4 I: 6 planar
+{
+	shader textures/base_light/ceil1_39
+	lightmapAxis ( -1.000000 -0.000000 -0.000000 )
+}
+
+1075 // ESurfaceType::Meta V: 4 I: 6 planar
+{
+	shader textures/base_light/ceil1_39
+	lightmapAxis ( -1.000000 -0.000000 -0.000000 )
+}
+
+1076 // ESurfaceType::Meta V: 4 I: 6 planar
+{
+	shader textures/base_light/ceil1_39
+	lightmapAxis ( 0.000000 1.000000 0.000000 )
+}
+
+1077 // ESurfaceType::Meta V: 4 I: 6 planar
+{
+	shader textures/base_light/ceil1_39
+	lightmapAxis ( 0.000000 1.000000 0.000000 )
+}
+
+1078 // ESurfaceType::Meta V: 4 I: 6 planar
+{
+	shader textures/base_light/baslt4_1_4k
+	lightmapAxis ( -1.000000 -0.000000 -0.000000 )
+}
+
+1079 // ESurfaceType::Meta V: 4 I: 6 planar
+{
+	shader textures/base_light/baslt4_1_4k
+	lightmapAxis ( -1.000000 -0.000000 -0.000000 )
+}
+
+1080 // ESurfaceType::Meta V: 4 I: 6 planar
+{
+	shader textures/base_light/baslt4_1_4k
+	lightmapAxis ( -0.000000 -1.000000 -0.000000 )
+}
+
+1081 // ESurfaceType::Meta V: 4 I: 6 planar
+{
+	shader textures/base_light/baslt4_1_4k
+	lightmapAxis ( 0.000000 1.000000 0.000000 )
+}
+
+1082 // ESurfaceType::Meta V: 4 I: 6 planar
+{
+	shader textures/base_light/baslt4_1_4k
+	lightmapAxis ( 1.000000 0.000000 0.000000 )
 }
 
 1083 // ESurfaceType::Meta V: 4 I: 6 planar
 {
-	shader textures/tig_ra3/tig_grey_fog
-	sampleSize 0
+	shader textures/base_light/baslt4_1_4k
+	lightmapAxis ( -0.000000 -1.000000 -0.000000 )
 }
 
 1084 // ESurfaceType::Meta V: 4 I: 6 planar
 {
-	shader textures/tig_ra3/tig_grey
-	sampleSize 0
+	shader textures/base_light/baslt4_1_4k
+	lightmapAxis ( 0.000000 1.000000 0.000000 )
 }
 
 1085 // ESurfaceType::Meta V: 4 I: 6 planar
 {
-	shader textures/tig_ra3/tig_grey
-	sampleSize 0
+	shader textures/base_light/baslt4_1_4k
+	lightmapAxis ( 1.000000 0.000000 0.000000 )
 }
 
 1086 // ESurfaceType::Meta V: 4 I: 6 planar
 {
-	shader textures/tig_ra3/tig_grey
-	sampleSize 0
+	shader textures/base_light/baslt4_1_4k
+	lightmapAxis ( -1.000000 -0.000000 -0.000000 )
 }
 
 1087 // ESurfaceType::Meta V: 4 I: 6 planar
 {
-	shader textures/tig_ra3/tig_grey
-	sampleSize 0
+	shader textures/base_light/baslt4_1_4k
+	lightmapAxis ( -0.000000 -1.000000 -0.000000 )
 }
 
 1088 // ESurfaceType::Meta V: 4 I: 6 planar
 {
-	shader textures/tig_ra3/tig_grey
-	sampleSize 0
+	shader textures/base_light/baslt4_1_4k
+	lightmapAxis ( 0.000000 1.000000 0.000000 )
 }
 
 1089 // ESurfaceType::Meta V: 4 I: 6 planar
 {
-	shader textures/tig_ra3/tig_grey
-	sampleSize 0
+	shader textures/base_light/baslt4_1_4k
+	lightmapAxis ( -1.000000 -0.000000 -0.000000 )
 }
 
 1090 // ESurfaceType::Meta V: 4 I: 6 planar
 {
-	shader textures/tig_ra3/tig_grey
-	sampleSize 0
+	shader textures/base_light/baslt4_1_4k
+	lightmapAxis ( 1.000000 0.000000 0.000000 )
 }
 
 1091 // ESurfaceType::Meta V: 4 I: 6 planar
 {
-	shader textures/tig_ra3/tig_grey
-	sampleSize 0
+	shader textures/base_light/baslt4_1_4k
+	lightmapAxis ( -0.000000 -1.000000 -0.000000 )
 }
 
 1092 // ESurfaceType::Meta V: 4 I: 6 planar
 {
-	shader textures/tig_ra3/tig_grey
-	sampleSize 0
+	shader textures/base_light/baslt4_1_4k
+	lightmapAxis ( 0.000000 1.000000 0.000000 )
 }
 
 1093 // ESurfaceType::Meta V: 4 I: 6 planar
 {
-	shader textures/tig_ra3/tig_grey
-	sampleSize 0
+	shader textures/base_light/baslt4_1_4k
+	lightmapAxis ( 1.000000 0.000000 0.000000 )
 }
 

@@ -592,7 +592,7 @@ static void ParseFace( const dsurface_t *ds, const drawVert_t *verts, msurface_t
 	}
 
 	// get fog volume
-	surf->fogIndex = LittleLong( ds->fogNum ) + 1;
+	surf->fogIndex = LittleLong( ds->fogNum ) + 2;
 
 	// get shader value
 	surf->shader = ShaderForShaderNum( ds->shaderNum, lightmapNum );
@@ -699,7 +699,7 @@ static void ParseMesh( const dsurface_t *ds, const drawVert_t *verts, msurface_t
 	}
 
 	// get fog volume
-	surf->fogIndex = LittleLong( ds->fogNum ) + 1;
+	surf->fogIndex = LittleLong( ds->fogNum ) + 2;
 
 	// get shader value
 	surf->shader = ShaderForShaderNum( ds->shaderNum, lightmapNum );
@@ -770,7 +770,7 @@ static void ParseTriSurf( const dsurface_t *ds, const drawVert_t *verts, msurfac
 	float			lightmapX, lightmapY;
 
 	// get fog volume
-	surf->fogIndex = LittleLong( ds->fogNum ) + 1;
+	surf->fogIndex = LittleLong( ds->fogNum ) + 2;
 
 	// get shader
 	surf->shader = ShaderForShaderNum( ds->shaderNum, LIGHTMAP_BY_VERTEX );
@@ -844,7 +844,7 @@ static void ParseFlare( const dsurface_t *ds, const drawVert_t *verts, msurface_
 	int				i;
 
 	// get fog volume
-	surf->fogIndex = LittleLong( ds->fogNum ) + 1;
+	surf->fogIndex = LittleLong( ds->fogNum ) + 2;
 
 	// get shader
 	surf->shader = ShaderForShaderNum( ds->shaderNum, LIGHTMAP_BY_VERTEX );
@@ -1916,10 +1916,10 @@ static void R_LoadFogs( const lump_t *l, const lump_t *brushesLump, const lump_t
 	if (l->filelen % sizeof(*fogs)) {
 		ri.Error( ERR_DROP, "%s(): funny lump size in %s", __func__, s_worldData.name );
 	}
-	count = l->filelen / sizeof(*fogs);
+	count = l->filelen / sizeof(*fogs) + 1;
 
 	// create fog structures for them
-	s_worldData.numfogs = count + 1;
+	s_worldData.numfogs = count + 2;
 	s_worldData.fogs = ri.Hunk_Alloc( s_worldData.numfogs*sizeof(*out), h_low);
 	out = s_worldData.fogs + 1;
 
@@ -1940,6 +1940,9 @@ static void R_LoadFogs( const lump_t *l, const lump_t *brushesLump, const lump_t
 	sidesCount = sidesLump->filelen / sizeof(*sides);
 
 	for ( i=0 ; i<count ; i++, fogs++) {
+if(i == 1) {
+	fogs--;
+}
 		out->originalBrushNumber = LittleLong( fogs->brushNum );
 
 		if ( (unsigned)out->originalBrushNumber >= brushesCount ) {
@@ -2006,6 +2009,9 @@ static void R_LoadFogs( const lump_t *l, const lump_t *brushesLump, const lump_t
 
 		// set the gradient vector
 		sideNum = LittleLong( fogs->visibleSide );
+if(i == 0) {
+	sideNum = -1;
+}
 
 		if ( sideNum == -1 ) {
 			out->hasSurface = qfalse;
@@ -2304,6 +2310,14 @@ int RE_LoadWorldMap( const char *name ) {
 	R_LoadMarksurfaces( &header->lumps[LUMP_LEAFSURFACES] );
 	R_LoadNodesAndLeafs( &header->lumps[LUMP_NODES], &header->lumps[LUMP_LEAFS] );
 	R_LoadSubmodels( &header->lumps[LUMP_MODELS] );
+	VectorCopy( s_worldData.bmodels[0].bounds[0], s_worldData.fogs[1].bounds[0] );
+	s_worldData.fogs[1].bounds[0][0] += 16;
+	s_worldData.fogs[1].bounds[0][1] += 16;
+	s_worldData.fogs[1].bounds[0][2] += 16;
+	VectorCopy( s_worldData.bmodels[0].bounds[1], s_worldData.fogs[1].bounds[1] );
+	s_worldData.fogs[1].bounds[1][0] -= 16;
+	s_worldData.fogs[1].bounds[1][1] -= 16;
+	s_worldData.fogs[1].bounds[1][2] -= 16;
 	R_LoadVisibility( &header->lumps[LUMP_VISIBILITY] );
 	R_LoadEntities( &header->lumps[LUMP_ENTITIES] );
 	R_LoadLightGrid( &header->lumps[LUMP_LIGHTGRID] );

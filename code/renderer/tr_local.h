@@ -1358,6 +1358,9 @@ extern cvar_t	*r_marksOnTriangleMeshes;
 
 extern cvar_t	*r_developer;
 
+extern cvar_t	*r_fogDepth;
+extern cvar_t	*r_fogColor;
+
 #ifdef USE_LAZY_LOAD
 extern cvar_t	*r_lazyLoad;
 #endif

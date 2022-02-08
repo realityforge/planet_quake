@@ -6110,14 +6110,14 @@ default
 {
 	shader textures/stone/pjrock1
 	entity 16
-	lightmapAxis ( 0.000000 1.000000 0.000000 )
+	lightmapAxis ( 1.000000 0.000000 0.000000 )
 }
 
 941 // ESurfaceType::Meta V: 4 I: 6 planar
 {
 	shader textures/stone/pjrock1
 	entity 16
-	lightmapAxis ( 1.000000 0.000000 0.000000 )
+	lightmapAxis ( 0.000000 1.000000 0.000000 )
 }
 
 942 // ESurfaceType::Meta V: 3 I: 3 planar
@@ -6376,14 +6376,14 @@ default
 {
 	shader textures/stone/pjrock1
 	entity 16
-	lightmapAxis ( -0.000000 -1.000000 -0.000000 )
+	lightmapAxis ( -0.000000 -0.000000 -1.000000 )
 }
 
 979 // ESurfaceType::Meta V: 3 I: 3 planar
 {
 	shader textures/stone/pjrock1
 	entity 16
-	lightmapAxis ( -0.000000 -0.000000 -1.000000 )
+	lightmapAxis ( -0.000000 -1.000000 -0.000000 )
 }
 
 980 // ESurfaceType::Meta V: 3 I: 3 planar
@@ -6750,14 +6750,14 @@ default
 	lightmapAxis ( 1.000000 0.000000 0.000000 )
 }
 
-1033 // ESurfaceType::Meta V: 4 I: 6 planar
+1033 // ESurfaceType::Meta V: 3 I: 3 planar
 {
 	shader textures/stone/pjrock1
 	entity 16
 	lightmapAxis ( 1.000000 0.000000 0.000000 )
 }
 
-1034 // ESurfaceType::Meta V: 3 I: 3 planar
+1034 // ESurfaceType::Meta V: 4 I: 6 planar
 {
 	shader textures/stone/pjrock1
 	entity 16
@@ -6801,14 +6801,14 @@ default
 {
 	shader textures/stone/pjrock1
 	entity 16
-	lightmapAxis ( 1.000000 0.000000 0.000000 )
+	lightmapAxis ( 0.000000 1.000000 0.000000 )
 }
 
 1041 // ESurfaceType::Meta V: 4 I: 6 planar
 {
 	shader textures/stone/pjrock1
 	entity 16
-	lightmapAxis ( 0.000000 1.000000 0.000000 )
+	lightmapAxis ( 1.000000 0.000000 0.000000 )
 }
 
 1042 // ESurfaceType::Meta V: 3 I: 3 planar
@@ -6822,14 +6822,14 @@ default
 {
 	shader textures/stone/pjrock1
 	entity 16
-	lightmapAxis ( 1.000000 0.000000 0.000000 )
+	lightmapAxis ( -0.000000 -1.000000 -0.000000 )
 }
 
 1044 // ESurfaceType::Meta V: 3 I: 3 planar
 {
 	shader textures/stone/pjrock1
 	entity 16
-	lightmapAxis ( -0.000000 -1.000000 -0.000000 )
+	lightmapAxis ( 1.000000 0.000000 0.000000 )
 }
 
 1045 // ESurfaceType::Meta V: 3 I: 3 planar
@@ -7046,14 +7046,14 @@ default
 {
 	shader textures/stone/pjrock1
 	entity 16
-	lightmapAxis ( -0.000000 -0.000000 -1.000000 )
+	lightmapAxis ( 1.000000 0.000000 0.000000 )
 }
 
 1076 // ESurfaceType::Meta V: 3 I: 3 planar
 {
 	shader textures/stone/pjrock1
 	entity 16
-	lightmapAxis ( 1.000000 0.000000 0.000000 )
+	lightmapAxis ( -0.000000 -0.000000 -1.000000 )
 }
 
 1077 // ESurfaceType::Meta V: 3 I: 3 planar
@@ -7480,14 +7480,14 @@ default
 {
 	shader textures/stone/pjrock1
 	entity 16
-	lightmapAxis ( 1.000000 0.000000 0.000000 )
+	lightmapAxis ( -0.000000 -1.000000 -0.000000 )
 }
 
 1138 // ESurfaceType::Meta V: 3 I: 3 planar
 {
 	shader textures/stone/pjrock1
 	entity 16
-	lightmapAxis ( -0.000000 -1.000000 -0.000000 )
+	lightmapAxis ( 1.000000 0.000000 0.000000 )
 }
 
 1139 // ESurfaceType::Meta V: 4 I: 6 planar
@@ -7497,9 +7497,9 @@ default
 	lightmapAxis ( 1.000000 0.000000 0.000000 )
 }
 
-1140 // ESurfaceType::Meta V: 4 I: 6 planar
+1140 // ESurfaceType::Meta V: 16 I: 42 planar
 {
-	shader textures/sfx/flame1_hell
+	shader textures/tig_ra3/tig_ra3_skybox03
 	sampleSize 0
 }
 
@@ -7521,21 +7521,21 @@ default
 	sampleSize 0
 }
 
-1144 // ESurfaceType::Meta V: 301 I: 1566 planar
+1144 // ESurfaceType::Meta V: 4 I: 6 planar
 {
-	shader textures/liquids/lavahellflat_400
+	shader textures/sfx/flame1_hell
 	sampleSize 0
 }
 
-1145 // ESurfaceType::Meta V: 16 I: 42 planar
+1145 // ESurfaceType::Meta V: 301 I: 1566 planar
 {
-	shader textures/tig_ra3/tig_ra3_skybox03
+	shader textures/liquids/lavahellflat_400
 	sampleSize 0
 }
 
 1146 // ESurfaceType::Meta V: 4 I: 6 planar
 {
 	shader textures/gothic_door/door02_i_ornate5_fin
-	sampleSize 0
+	lightmapAxis ( 1.000000 0.000000 0.000000 )
 }
 

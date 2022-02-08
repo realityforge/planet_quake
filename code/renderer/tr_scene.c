@@ -254,7 +254,7 @@ void RE_AddPolyToScene( qhandle_t hShader, int numVerts, const polyVert_t *verts
 				}
 			}
 			if ( fogIndex == tr.world->numfogs ) {
-				fogIndex = 0;
+				fogIndex = 1;
 			}
 		}
 		poly->fogIndex = fogIndex;

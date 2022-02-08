@@ -149,12 +149,12 @@ qboolean CG_AtmosphericKludge( void ) {
 	kludgeChecked = qtrue;
 	kludgeResult = qfalse;
 
-	/*if( !Q_stricmp( cgs.mapname, "maps/trainyard.bsp" ) )
+	if( !Q_stricmp( cgs.mapname, "maps/q3dm1.bsp" ) )
 	{
 		//CG_EffectParse( "T=RAIN,B=5 10,C=0.5 2,G=0.5 2,BV=30 100,GV=20 80,W=1 2,D=1000 1000" );
 		CG_EffectParse( "T=RAIN,B=5 10,C=0.5,G=0.5 2,BV=50 50,GV=200 200,W=1 2,D=1000" );
 		return( kludgeResult = qtrue );
-	}*/
+	}
 /*	if( !Q_stricmp( cgs.mapname, "maps/mp_railgun.bsp" ) )
 	{
 		//CG_EffectParse( "T=RAIN,B=5 10,C=0.5 2,G=0.5 2,BV=30 100,GV=20 80,W=1 2,D=1000 1000" );

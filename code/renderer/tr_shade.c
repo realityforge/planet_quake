@@ -484,7 +484,11 @@ static void RB_FogPass( void ) {
 	fog = tr.world->fogs + tess.fogNum;
 
 	for ( i = 0; i < tess.numVertexes; i++ ) {
+if(tess.fogNum == 1 /* && !(tess.shader->surfaceFlags & SURF_NOLIGHTMAP) */) {
+		tess.svars.colors[i].u32 = r_fogColor->integer;
+} else {
 		tess.svars.colors[i].u32 = fog->colorInt.u32;
+}
 	}
 
 	RB_CalcFogTexCoords( ( float * ) tess.svars.texcoords[0] );
@@ -586,7 +590,11 @@ void R_ComputeColors( const shaderStage_t *pStage )
 				fog = tr.world->fogs + tess.fogNum;
 
 				for ( i = 0; i < tess.numVertexes; i++ ) {
+if(tess.fogNum == 1 /* && !(tess.shader->surfaceFlags & SURF_NOLIGHTMAP) */) {
+					tess.svars.colors[i].u32 = r_fogColor->integer;
+} else {
 					tess.svars.colors[i].u32 = fog->colorInt.u32;
+}
 				}
 			}
 			break;
@@ -987,6 +995,7 @@ void RB_StageIteratorGeneric( void )
 	//
 	// now do fog
 	//
+	//if(!(tess.shader->surfaceFlags & SURF_NOLIGHTMAP))
 	if ( tess.fogNum && tess.shader->fogPass )
 	{
 		RB_FogPass();

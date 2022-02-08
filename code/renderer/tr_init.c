@@ -176,6 +176,9 @@ cvar_t	*r_marksOnTriangleMeshes;
 cvar_t	*r_aviMotionJpegQuality;
 cvar_t	*r_screenshotJpegQuality;
 
+cvar_t	*r_fogDepth;
+cvar_t	*r_fogColor;
+
 cvar_t	*r_maxpolys;
 cvar_t	*r_maxpolyverts;
 cvar_t	*r_maxpolybuffers;
@@ -1515,6 +1518,9 @@ static void R_Register( void )
 	ri.Cvar_CheckRange( r_mapGreyScale, "-1", "1", CV_FLOAT );
 
 	r_subdivisions = ri.Cvar_Get( "r_subdivisions", "4", CVAR_ARCHIVE_ND | CVAR_LATCH );
+
+	r_fogColor = ri.Cvar_Get("r_fogColor", "0xFFFFFFFF", CVAR_ARCHIVE_ND );
+	r_fogDepth = ri.Cvar_Get("r_fogDepth", "1000", CVAR_ARCHIVE_ND );
 
 	r_maxpolys = ri.Cvar_Get( "r_maxpolys", va("%i", MAX_POLYS ), CVAR_LATCH);
 	r_maxpolyverts = ri.Cvar_Get( "r_maxpolyverts", va("%i", MAX_POLYVERTS), CVAR_LATCH);

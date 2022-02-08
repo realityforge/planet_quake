@@ -718,6 +718,32 @@ void SV_FreeIP4DB( void );
 void SV_PrintLocations_f( client_t *client );
 void SV_LoadVM( client_t *client );
 
+#ifdef USE_MEMORY_MAPS
+//
+// sv_bsp*.c
+//
+
+#define  SIDE_NORTH  1
+#define  SIDE_EAST   2
+#define  SIDE_SOUTH  4
+#define  SIDE_WEST   8
+#define  SIDE_TOP    16
+#define  SIDE_BOTTOM 32
+#define  SIDE_ALL    63 // ?
+
+char *SV_MakeCube(
+	vec3_t p1, vec3_t p2, vec3_t p3, vec3_t p4,
+	vec3_t p5, vec3_t p6, vec3_t p7, vec3_t p8);
+qboolean isOverlapping(vec2_t l1, vec2_t r1, vec2_t l2, vec2_t r2);
+void SV_SetStroke( const char *path );
+char *SV_MakeBox( vec3_t min, vec3_t max );
+char *SV_MakePortal( float radius, vec3_t min, vec3_t max, int minSegment, int maxSegment, int sides );
+char *SV_MakeWall( int p1[3], int p2[3] );
+extern char output[2 * 1024 * 1024];
+extern int brushC;
+extern char stroke[MAX_QPATH];
+#endif
+
 //
 // sv_ccmds.c
 //
