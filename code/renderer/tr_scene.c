@@ -144,10 +144,25 @@ void R_AddPolygonSurfaces( void ) {
 	tr.currentEntityNum = REFENTITYNUM_WORLD;
 	tr.shiftedEntityNum = tr.currentEntityNum << QSORT_REFENTITYNUM_SHIFT;
 
+#ifdef USE_UNLOCKED_CVARS
+	int startList = floor(tr.refdef.firstPoly / MAX_POLYS_DIVISOR);
+	int numLists = floor((tr.refdef.numPolys - tr.refdef.firstPoly) / MAX_POLYS_DIVISOR);
+	int startIndex = tr.refdef.firstPoly % MAX_POLYS_DIVISOR;
+	for( int j = startList; j <= startList + numLists; j++ ) {
+		for ( i = j == startList ? startIndex : 0, 
+			poly = j == startList ? &backEndData->polys[j][startIndex] : &backEndData->polys[j][0];
+			(j * MAX_POLYS_DIVISOR) + i < tr.refdef.numPolys ; i++, poly++ 
+		) {
+			sh = R_GetShaderByHandle( poly->hShader );
+			R_AddDrawSurf( ( void * )poly, sh, poly->fogIndex, 0 );
+		}
+	}
+#else
 	for ( i = 0, poly = tr.refdef.polys; i < tr.refdef.numPolys ; i++, poly++ ) {
 		sh = R_GetShaderByHandle( poly->hShader );
 		R_AddDrawSurf( ( void * )poly, sh, poly->fogIndex, 0 );
 	}
+#endif
 }
 
 /*
@@ -526,17 +541,19 @@ void RE_RenderScene( const refdef_t *fd ) {
 	tr.refdef.num_dlights = r_numdlights - r_firstSceneDlight;
 	tr.refdef.dlights = &backEndData->dlights[r_firstSceneDlight];
 
-	tr.refdef.numPolys = r_numpolys - r_firstScenePoly;
 #ifdef USE_UNLOCKED_CVARS
-	tr.refdef.polys = &backEndData->polys[0][r_firstScenePoly];
+	tr.refdef.firstPoly = r_firstScenePoly;
+	tr.refdef.numPolys = r_numpolys;
 #else
+	tr.refdef.numPolys = r_numpolys - r_firstScenePoly;
 	tr.refdef.polys = &backEndData->polys[r_firstScenePoly];
 #endif
 
-	tr.refdef.numPolyBuffers = r_numpolybuffers - r_firstScenePolybuffer;
 #ifdef USE_UNLOCKED_CVARS
-	tr.refdef.polybuffers = &backEndData->polybuffers[0][r_firstScenePolybuffer];
+	tr.refdef.numPolyBuffers = r_numpolybuffers;
+	tr.refdef.firstPolyBuffer = r_firstScenePolybuffer;
 #else
+	tr.refdef.numPolyBuffers = r_numpolybuffers - r_firstScenePolybuffer;
 	tr.refdef.polybuffers = &backEndData->polybuffers[r_firstScenePolybuffer];
 #endif
 
@@ -644,11 +661,26 @@ void R_AddPolygonBufferSurfaces( void ) {
 	tr.currentEntityNum = REFENTITYNUM_WORLD;
 	tr.shiftedEntityNum = tr.currentEntityNum << QSORT_REFENTITYNUM_SHIFT;
 
+#ifdef USE_UNLOCKED_CVARS
+	int startList = floor(tr.refdef.firstPolyBuffer / MAX_POLYBUFFERS_DIVISOR);
+	int numLists = floor((tr.refdef.numPolyBuffers - tr.refdef.firstPolyBuffer) / MAX_POLYBUFFERS_DIVISOR);
+	int startIndex = tr.refdef.firstPolyBuffer % MAX_POLYBUFFERS_DIVISOR;
+	for( int j = startList; j <= startList + numLists; j++ ) {
+		for ( i = j == startList ? startIndex : 0, 
+			polybuffer = j == startList ? &backEndData->polybuffers[j][startIndex] : &backEndData->polybuffers[j][0];
+			(j * MAX_POLYBUFFERS_DIVISOR) + i < tr.refdef.numPolyBuffers ; i++, polybuffer++ 
+		) {
+			sh = R_GetShaderByHandle( polybuffer->pPolyBuffer->shader );
+			R_AddDrawSurf( ( void * )polybuffer, sh, polybuffer->fogIndex, 0 );
+		}
+	}
+#else
 	for ( i = 0, polybuffer = tr.refdef.polybuffers; i < tr.refdef.numPolyBuffers ; i++, polybuffer++ ) {
 		sh = R_GetShaderByHandle( polybuffer->pPolyBuffer->shader );
 
 		R_AddDrawSurf( ( void * )polybuffer, sh, polybuffer->fogIndex, 0 );
 	}
+#endif
 }
 
 

@@ -2855,7 +2855,7 @@ static void CL_DownloadsComplete( void ) {
 	// if this is a local client then only the client part of the hunk
 	// will be cleared, note that this is done after the hunk mark has been set
 	//if ( !com_sv_running->integer )
-  
+
 #ifdef USE_LAZY_MEMORY
 	S_DisableSounds();
 	re.ReloadShaders(qtrue);

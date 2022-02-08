@@ -151,7 +151,8 @@ qboolean CG_AtmosphericKludge( void ) {
 	kludgeResult = qfalse;
 
 	if(!Q_stricmp( cgs.mapname, "maps/q3dm1.bsp" )) {
-		CG_EffectParse( "T=SNOW,B=5 10,C=0.5,G=0.3 2,BV=20 30,GV=25 40,W=3 5,D=2000" );
+		//CG_EffectParse( "T=SNOW,B=5 10,C=0.5,G=0.3 2,BV=20 30,GV=25 40,W=3 5,D=2000" );
+		CG_EffectParse( "T=RAIN,D=800 800" );
 		return( kludgeResult = qtrue );
 	} else
 	if( !Q_stricmp( cgs.mapname, "maps/etf_2night3.bsp" ) )
@@ -267,7 +268,7 @@ static qboolean CG_RainParticleGenerate( cg_atmosphericParticle_t *particle, vec
 
 	particle->pos[0] = cg.refdef.vieworg[0] + sin(angle) * distance;
 	particle->pos[1] = cg.refdef.vieworg[1] + cos(angle) * distance;
-	
+
 	// ydnar: choose a spawn point randomly between sky and ground
 	skyHeight = BG_GetSkyHeightAtPoint( particle->pos );
 	if ( skyHeight == MAX_ATMOSPHERIC_HEIGHT ) {
@@ -332,6 +333,7 @@ static qboolean CG_RainParticleCheckVisible( cg_atmosphericParticle_t *particle 
 
 	moved = (cg.time - cg_atmFx.lastRainTime) * 0.001;	// Units moved since last frame
 	VectorMA( particle->pos, moved, particle->delta, particle->pos );
+
  	if( particle->pos[2] + particle->height < BG_GetSkyGroundHeightAtPoint( particle->pos ) ) {
 //		checkvisibletime += trap_Milliseconds() - msec;
 		return CG_SetParticleActive( particle, ACT_NOT );
@@ -348,12 +350,10 @@ static qboolean CG_RainParticleCheckVisible( cg_atmosphericParticle_t *particle 
 		particle->pos[0] -= 1.85f * distance[0];
 		particle->pos[1] -= 1.85f * distance[1];
 
-		// Valid spot?
-		pointHeight = BG_GetSkyHeightAtPoint( particle->pos );
-		if( pointHeight == MAX_ATMOSPHERIC_HEIGHT ) {
-//			checkvisibletime += trap_Milliseconds() - msec;
-			return CG_SetParticleActive( particle, ACT_NOT );
-		}
+	if( BG_GetSkyHeightAtPoint( particle->pos ) == MAX_ATMOSPHERIC_HEIGHT ) {
+//		checkvisibletime += trap_Milliseconds() - msec;
+		return( qfalse );
+	}
 
 		pointHeight = BG_GetSkyGroundHeightAtPoint( particle->pos );
 		if( pointHeight == MAX_ATMOSPHERIC_HEIGHT || pointHeight >= particle->pos[2] ) {

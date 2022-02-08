@@ -2911,7 +2911,7 @@ void SV_Tele_f( client_t *client ) {
 
 #ifdef USE_MULTIVM_SERVER
 // The kind of teleports that changes which world we are in
-void SV_Game_f( client_t *client ) {
+void SV_GameCL_f( client_t *client ) {
 	int worldC, count = 0, i;
 	char *world, *userOrigin;
 	int clientNum;
@@ -2999,7 +2999,7 @@ static const ucmd_t ucmds[] = {
 #endif
 #ifdef USE_MULTIVM_SERVER
 	{"load", SV_LoadVM},
-	{"game", SV_Game_f},
+	{"game", SV_GameCL_f},
 #endif
 #ifdef USE_MV
 	{"mvjoin", SV_MultiView_f},

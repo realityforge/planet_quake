@@ -182,6 +182,9 @@ Special multiworld features like cameras and portals. See [multiworld](../docs/m
 
 ## TODO
 
+  * Add atmospheric effects, smoke and sparks over lava, dust, worldly fog, to old maps.
+  * Multiworld camera features
+  * Add stray rounds to projectiles
   * Finish portal interpolation, and seeing one portal surface through another portal, projectiles (distance from origin). Share entities between multiple server qagame QVMs, possibly through the engine itself or a new API call for game/g_*.c
   * Finish multiworld TODOs like not crashing after 10 maps and cvars. 
   * Rocket Arena maps. Place white return teleporters for arena 0 on player_start positions and going through a portal counts as a vote to white arena to play in. Or use drop command to drop portal connects and in RA mode return to arena 0. Always spawn in arena 0 during intermission until voted, or remove guns from arena 0 and repawn in voted arena.

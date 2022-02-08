@@ -2577,12 +2577,12 @@ typedef struct {
 #ifdef USE_UNLOCKED_CVARS
 	srfPoly_t	**polys;//[MAX_POLYS];
 	polyVert_t	**polyVerts;//[MAX_POLYVERTS];
-	srfPolyBuffer_t **polybuffers; //[MAX_POLYS];
+	srfPolyBuffer_t **polybuffers; //[MAX_POLYBUFFERS];
   int	**indexes;//[MAX_POLYVERTS];
 #else
 	srfPoly_t	*polys;//[MAX_POLYS];
 	polyVert_t	*polyVerts;//[MAX_POLYVERTS];
-	srfPolyBuffer_t *polybuffers; //[MAX_POLYS];
+	srfPolyBuffer_t *polybuffers; //[MAX_POLYBUFFERS];
   int	*indexes;//[MAX_POLYVERTS];
 #endif
 	pshadow_t pshadows[MAX_CALC_PSHADOWS];

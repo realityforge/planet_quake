@@ -196,7 +196,6 @@ extern	int			c_traces, c_brush_traces, c_patch_traces;
 extern	cvar_t		*cm_noAreas;
 extern	cvar_t		*cm_noCurves;
 extern	cvar_t		*cm_playerCurveClip;
-extern  cvar_t    *cm_saveEnts;
 extern  byte	  	*cmod_base;
 
 #if defined(USE_MULTIVM_CLIENT) || defined(USE_MULTIVM_SERVER)

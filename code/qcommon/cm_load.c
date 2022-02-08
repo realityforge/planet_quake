@@ -71,6 +71,7 @@ cvar_t		*cm_noAreas;
 cvar_t		*cm_noCurves;
 cvar_t		*cm_playerCurveClip;
 cvar_t    *cm_saveEnts;
+cvar_t    *cm_entityString;
 #endif
 
 #if defined(USE_MULTIVM_CLIENT) || defined(USE_MULTIVM_SERVER)
@@ -489,7 +490,10 @@ void CMod_LoadEntityString( lump_t *l, const char *name ) {
 	int entFileLen = 0;
 
 	// Attempt to load entities from an external .ent file if available
-	if(name[0] != '\0' && l->fileofs != 0) { // don't do memory loading
+	if (cm_entityString->string[0] != '\0') {
+		cm.entityString = cm_entityString->string;
+		cm.numEntityChars = strlen(cm_entityString->string);
+	} else if(name[0] != '\0' && l->fileofs != 0) { // don't do memory loading
 		Q_strncpyz(entName, name, sizeof(entName));
 		entNameLen = strlen(entName);
 		entName[entNameLen - 3] = 'e';
@@ -707,6 +711,7 @@ cmdsAdded = qtrue;
 	cm_noCurves = Cvar_Get ("cm_noCurves", "0", CVAR_CHEAT);
 	cm_playerCurveClip = Cvar_Get ("cm_playerCurveClip", "1", CVAR_ARCHIVE_ND|CVAR_CHEAT);
 	cm_saveEnts = Cvar_Get ("cm_saveEnts", "0", CVAR_TEMP);
+	cm_entityString = Cvar_Get ("cm_entityString", "", CVAR_TEMP);
 #endif
 #if defined(USE_MULTIVM_SERVER) || defined(USE_MULTIVM_CLIENT)
 	Cmd_AddCommand("cmlist", CM_MapList_f);

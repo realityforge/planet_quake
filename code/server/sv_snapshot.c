@@ -617,9 +617,8 @@ static void SV_AddEntitiesVisibleFromPoint( const vec3_t origin, clientPVS_t *pv
 			pvs->numbers.unordered = qtrue;
 #ifdef USE_MULTIVM_SERVER
 			if(ent->s.eType == ET_PORTAL) {
-				int newWorld = ent->s.powerups >> 8;
 				// don't show entities if the portal is from a different world
-				if(newWorld != gvmi) {
+				if((ent->s.powerups >> 8) != gvmi) {
 					// doesn't add portals but still adds camera points
 					SV_AddEntitiesVisibleFromPoint( ent->s.origin2, pvs, EPV_PORTALONLY );
 				} else
@@ -788,10 +787,13 @@ void SV_AddWorldlyEntities( void ) {
 		VectorClear(origin);
 		for(int j = 0; j < numKeyValues; j++) {
 			if(!Q_stricmpn(keys[j], "classname", 9)) {
-				if(!Q_stricmpn(vals[j]+1, "misc_teleporter_dest", 20)) {
+				if(!Q_stricmpn(vals[j]+1, "misc_teleporter_dest", 10)
+					|| !Q_stricmpn(vals[j]+1, "info_player_deathmatch", 10)
+				) {
 					isTeleporter = qtrue;
 				}
-				else if (!Q_stricmpn(vals[j]+1, "misc_portal_camera", 18)) {
+				else if (!Q_stricmpn(vals[j]+1, "info_player_intermission", 10)
+					|| !Q_stricmpn(vals[j]+1, "misc_portal_camera", 10)) {
 					isCamera = qtrue;
 				}
 				else if (!Q_stricmpn(vals[j]+1, "worldspawn", 10)) {
@@ -1195,17 +1197,18 @@ static void SV_BuildClientSnapshot( client_t *client ) {
 	// grab the current playerState_t
 	ps = SV_GameClientNum( cl );
 	frame->ps = *ps;
+
 #ifdef USE_MULTIVM_SERVER
+	// change player world be detecting a multiworld portal jump
 	clientSnapshot_t *oldframe = &client->frames[gvmi][ client->netchan.outgoingSequence - 1 & PACKET_MASK ];
 	if(/* sv_mvWorld->integer &&*/ gvmi == client->gameWorld
 		&& ((ps->eFlags ^ oldframe->ps.eFlags) & EF_TELEPORT_BIT)) {
 		for(int i = 0; i < numMultiworldEntities; i++) {
-			int newWorld = multiworldEntities[i].world;
 			vec3_t vec;
 			VectorSubtract(multiworldEntities[i].origin, ps->origin, vec);
-			if(newWorld != client->newWorld && VectorLength(vec) < 64) {
-				client->newWorld = newWorld;
-				Cbuf_AddText(va("wait 1\nswitchgame %i %i\n", cl, newWorld));
+			if(multiworldEntities[i].world != client->newWorld && VectorLength(vec) < 64) {
+				client->newWorld = multiworldEntities[i].world;
+				Cbuf_AddText(va("wait 1\ngame %i %i\n", cl, client->newWorld));
 			}
 		}
 	}

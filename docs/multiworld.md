@@ -47,6 +47,7 @@ Finally, I want to use multiworld for streaming game content to clients. Where t
 
 ## TODO
 
+  * Use cm_entityString or something to communicate portal changes to multiple QVMs
   * Fix multiworld deltas... again... or make no-delta the requirement.
   * Fix scene rendering, skipping, and replaying entity cmds between frames. Not critical because I haven't seen a drop in FPS since I made the trWorld_t change.
   * Fix sv_mvOmnipresent 1, send all gamestates up-front or wait until network settles on client. When omnipresent changes, update all the clients on the server.

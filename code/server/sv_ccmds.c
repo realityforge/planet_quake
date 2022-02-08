@@ -1560,9 +1560,9 @@ static void SV_CompleteMapName( char *args, int argNum ) {
 
 
 #ifdef USE_MULTIVM_SERVER
-void SV_Game_f( client_t *client );
+void SV_GameCL_f( client_t *client );
 
-void SV_SwitchGame_f ( void ) {
+void SV_Game_f ( void ) {
 	client_t *client;
 	int game;
 	if ( Cmd_Argc() > 4 ) {
@@ -1584,7 +1584,7 @@ void SV_SwitchGame_f ( void ) {
 	} else {
 		Cmd_TokenizeString( va("game 0 %s", Cmd_ArgsFrom(2)) );
 	}
-	SV_Game_f( client );
+	SV_GameCL_f( client );
 	Cmd_Clear();
 }
 
@@ -1852,8 +1852,8 @@ void SV_AddOperatorCommands( void ) {
 	Cmd_SetDescription( "mvstop", "Stop a multiview recording\nUsage: mvstop" );
 #endif
 #ifdef USE_MULTIVM_SERVER
-	Cmd_AddCommand ("switchgame", SV_SwitchGame_f);
-	Cmd_SetDescription( "switchgame", "Switch games in multiVM mode to another match\nUsage: game <client> [num]" );
+	Cmd_AddCommand ("game", SV_Game_f);
+	Cmd_SetDescription( "game", "Switch games in multiVM mode to another match\nUsage: game <client> [num]" );
 	Cmd_AddCommand ("teleport", SV_Teleport_f);
 	Cmd_SetDescription( "teleport", "Teleport into the game as if you just connected\nUsage: teleport <client> [xcoord zcoord ycoord]" );
 #endif

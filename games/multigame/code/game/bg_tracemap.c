@@ -417,17 +417,20 @@ void CG_GenerateTracemap( void ) {
 				continue;
 			}
 
-			data = tracemap.sky[TRACEMAP_SIZE - 1 - i][j]; trap_FS_Write( &data, sizeof( data ), f ); // b
+			data = tracemap.sky[TRACEMAP_SIZE - 1 - i][j];
+			trap_FS_Write( &data, sizeof( data ), f ); // b
 			if ( tracemap.skyground[TRACEMAP_SIZE - 1 - i][j] == MIN_WORLD_HEIGHT ) {
 				data = 0; trap_FS_Write( &data, sizeof( data ), f );  // g
 			} else {
-				data = tracemap.skyground[TRACEMAP_SIZE - 1 - i][j]; trap_FS_Write( &data, sizeof( data ), f );   // g
+				data = tracemap.skyground[TRACEMAP_SIZE - 1 - i][j];
+				trap_FS_Write( &data, sizeof( data ), f );   // g
 			}
 			if ( tracemap.ground[TRACEMAP_SIZE - 1 - i][j] == MIN_WORLD_HEIGHT ) {
 				data = 0; trap_FS_Write( &data, sizeof( data ), f );  // r
 				data = 0; trap_FS_Write( &data, sizeof( data ), f );  // a
 			} else {
-				data = tracemap.ground[TRACEMAP_SIZE - 1 - i][j]; trap_FS_Write( &data, sizeof( data ), f );  // r
+				data = tracemap.ground[TRACEMAP_SIZE - 1 - i][j];
+				trap_FS_Write( &data, sizeof( data ), f );  // r
 				data = 255; trap_FS_Write( &data, sizeof( data ), f );    // a
 			}
 		}
@@ -630,10 +633,10 @@ static void BG_ClampPointToTracemapExtends( vec3_t point, vec2_t out ) {
 		out[0] = point[0];
 	}
 
-	if ( point[1] < tracemap.world_maxs[1] ) {
-		out[1] = tracemap.world_maxs[1];
-	} else if ( point[1] > tracemap.world_mins[1] ) {
+	if ( point[1] < tracemap.world_mins[1] ) {
 		out[1] = tracemap.world_mins[1];
+	} else if ( point[1] > tracemap.world_maxs[1] ) {
+		out[1] = tracemap.world_maxs[1];
 	} else {
 		out[1] = point[1];
 	}
