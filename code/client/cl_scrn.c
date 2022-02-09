@@ -840,9 +840,6 @@ void SCR_DrawCurrentView( void ) {
 
 static int lastSubWorld[MAX_NUM_VMS] = {0,0,0,0,0,0,0,0,0,0};
 
-void CL_UpdateCGame(int cgvmi) {
-	lastSubWorld[cgvmi] = 0;
-}
 #endif
 
 
@@ -1152,8 +1149,8 @@ donewithupdate:
   CM_SwitchMap(clientMaps[cgvmi]);
 #ifdef USE_LAZY_MEMORY
 	re.SwitchWorld(worldMaps[cgvmi]);
-#endif
 	re.SetDvrFrame(0, 0, 1, 1);
+#endif
 #endif
 
 #ifdef USE_LNBITS

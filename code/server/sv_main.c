@@ -884,7 +884,11 @@ static void SVC_Status( const netadr_t *from ) {
 #ifdef USE_MULTIVM_SERVER
   Q_strncpyz( infostring, Cvar_InfoString( CVAR_SERVERINFO, NULL, gvmi ), sizeof( infostring ) );
 #else
+#ifdef USE_MULTIVM_CLIENT
+	Q_strncpyz( infostring, Cvar_InfoString( CVAR_SERVERINFO, NULL, 0 ), sizeof( infostring ) );
+#else
 	Q_strncpyz( infostring, Cvar_InfoString( CVAR_SERVERINFO, NULL ), sizeof( infostring ) );
+#endif
 #endif
 
 	// echo back the parameter to status. so master servers can use it as a challenge
@@ -1777,6 +1781,16 @@ void SV_Frame( int msec ) {
 		cvar_modifiedFlags &= ~CVAR_SYSTEMINFO;
 	}
 #else
+#ifdef USE_MULTIVM_CLIENT
+	if ( cvar_modifiedFlags & CVAR_SERVERINFO ) {
+		SV_SetConfigstring( CS_SERVERINFO, Cvar_InfoString( CVAR_SERVERINFO, NULL, 0 ) );
+		cvar_modifiedFlags &= ~CVAR_SERVERINFO;
+	}
+	if ( cvar_modifiedFlags & CVAR_SYSTEMINFO ) {
+		SV_SetConfigstring( CS_SYSTEMINFO, Cvar_InfoString_Big( CVAR_SYSTEMINFO, NULL, 0 ) );
+		cvar_modifiedFlags &= ~CVAR_SYSTEMINFO;
+	}
+#else
   if ( cvar_modifiedFlags & CVAR_SERVERINFO ) {
     SV_SetConfigstring( CS_SERVERINFO, Cvar_InfoString( CVAR_SERVERINFO, NULL ) );
     cvar_modifiedFlags &= ~CVAR_SERVERINFO;
@@ -1785,6 +1799,7 @@ void SV_Frame( int msec ) {
     SV_SetConfigstring( CS_SYSTEMINFO, Cvar_InfoString_Big( CVAR_SYSTEMINFO, NULL ) );
     cvar_modifiedFlags &= ~CVAR_SYSTEMINFO;
   }
+#endif
 #endif
 
 	if ( com_speeds->integer ) {

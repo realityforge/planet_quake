@@ -36,11 +36,7 @@ glstatic_t	gls;
 
 static void GfxInfo( void );
 static void VarInfo( void );
-#ifdef USE_LAZY_MEMORY
-void GL_SetDefaultState( void );
-#else
 static void GL_SetDefaultState( void );
-#endif
 
 cvar_t	*r_flareSize;
 cvar_t	*r_flareFade;
@@ -1251,10 +1247,7 @@ const void *RB_TakeVideoFrameCmd( const void *data )
 /*
 ** GL_SetDefaultState
 */
-#ifndef USE_LAZY_MEMORY
-static 
-#endif
-void GL_SetDefaultState( void )
+static void GL_SetDefaultState( void )
 {
 	int i;
 
@@ -1769,6 +1762,7 @@ void R_Init( void ) {
 	int	err;
 	int i;
 	byte *ptr;
+	int backendSize;
 
 	ri.Printf( PRINT_ALL, "----- R_Init (renderer1) -----\n" );
 
@@ -1834,7 +1828,6 @@ void R_Init( void ) {
 
 #ifdef USE_UNLOCKED_CVARS
 #ifdef USE_MULTIVM_CLIENT
-int backendSize;
 #define BASSIGN(a, t, n, d) \
 		+ sizeof(intptr_t) * (n / d + 1) * MAX_NUM_WORLDS \
 		+ sizeof(t) * d * MAX_NUM_WORLDS
@@ -1875,12 +1868,12 @@ int backendSize;
 	BASSIGN( backEndData->polyVerts, polyVert_t, r_maxpolyverts->integer, MAX_POLYVERTS_DIVISOR) \
 	BASSIGN( backEndData->polybuffers, srfPolyBuffer_t, r_maxpolybuffers->integer, MAX_POLYBUFFERS_DIVISOR) \
 	BASSIGN( backEndData->commands.cmds, byte, r_maxcmds->integer, MAX_RENDER_DIVISOR)
-	ptr = ri.Hunk_Alloc( sizeof( *backEndData ) 
+	backendSize = sizeof( *backEndData );
 #define BASSIGN(a, t, n, d) \
-		+ sizeof(intptr_t) * (n / d + 1) \
-		+ sizeof(t) * d
-		BACKEND
-		, h_low);
+	backendSize += sizeof(intptr_t) * (n / d + 1) \
+	backendSize += sizeof(t) * d
+	BACKEND
+	ptr = ri.Hunk_Alloc(backendSize, h_low);
 #undef BASSIGN
 	backEndData = (backEndData_t *) ptr;
 	ptr += sizeof( *backEndData );
@@ -1894,7 +1887,7 @@ int backendSize;
 #undef BASSIGN
 
 #endif
-//#error not ready yet
+
 #else // !USE_UNLOCKED_CVARS
 
 #define BACKEND \
@@ -1902,11 +1895,37 @@ int backendSize;
 	BASSIGN( backEndData->polys, srfPoly_t, r_maxpolys->integer) \
 	BASSIGN( backEndData->polyVerts, polyVert_t, r_maxpolyverts->integer) \
 	BASSIGN( backEndData->polybuffers, srfPolyBuffer_t, r_maxpolybuffers->integer)
-	ptr = ri.Hunk_Alloc( sizeof( *backEndData ) 
+
+#ifdef USE_MULTIVM_CLIENT
+	backendSize = sizeof( *backEndData ) * MAX_NUM_WORLDS;
+	backendSize += sizeof(intptr_t) * MAX_NUM_WORLDS;
 #define BASSIGN(a, t, n) \
-		+ sizeof(t) * n
+	backendSize += sizeof(t) * n * MAX_NUM_WORLDS;
+	BACKEND
+	ptr = ri.Hunk_Alloc(backendSize, h_low);
+	Com_Printf("Allocating %iKB bytes for backend.\n", backendSize / 1024);
+#undef BASSIGN
+#define BASSIGN(a, t, n) \
+	a = (t *) ((char *) ptr); \
+	ptr += sizeof(t) * n;
+	backEndDatas = (backEndData_t **) ptr;
+	ptr += sizeof(intptr_t) * MAX_NUM_WORLDS;
+	for(rwi = 0; rwi < MAX_NUM_WORLDS; rwi++) {
+		backEndData = (backEndData_t *) ptr;
+		ptr += sizeof( **backEndDatas );
 		BACKEND
-		, h_low);
+		R_InitNextFrame();
+	}
+	rwi = 0;
+#undef BACKEND
+#undef BASSIGN
+
+#else
+	backendSize = sizeof( *backEndData );
+#define BASSIGN(a, t, n) \
+	backendSize += sizeof(t) * n;
+	BACKEND
+	ptr = ri.Hunk_Alloc(backendSize, h_low);	
 #undef BASSIGN
 	backEndData = (backEndData_t *) ptr;
 	ptr += sizeof( *backEndData );
@@ -1917,11 +1936,10 @@ int backendSize;
 #undef BACKEND
 #undef BASSIGN
 
+#endif
 #endif // !USE_UNLOCKED_CVARS
 
-#ifndef USE_MULTIVM_CLIENT // done above in same loop
 	R_InitNextFrame();
-#endif
 
 	InitOpenGL();
 
@@ -2102,6 +2120,9 @@ refexport_t *GetRefAPI ( int apiVersion, refimport_t *rimp ) {
 
 	re.AddPolyBufferToScene =   RE_AddPolyBufferToScene;
 
+#ifdef USE_LAZY_MEMORY
+	re.ReloadShaders = RE_ReloadShaders;
+#endif
 #ifdef USE_MULTIVM_CLIENT
 	re.SetDvrFrame = RE_SetDvrFrame;
   re.SwitchWorld = RE_SwitchWorld;
@@ -2110,9 +2131,6 @@ refexport_t *GetRefAPI ( int apiVersion, refimport_t *rimp ) {
   re.RegisterImage = RE_RegisterImage;
   re.RenderGeometry = RE_RenderGeometry;
   re.CreateShaderFromRaw = RE_CreateShaderFromRaw;
-#endif
-#ifdef USE_LAZY_MEMORY
-	re.ReloadShaders = RE_ReloadShaders;
 #endif
 #ifdef USE_LAZY_LOAD
 	re.UpdateShader = RE_UpdateShader;

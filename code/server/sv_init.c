@@ -769,7 +769,11 @@ void SV_SpawnServer( const char *mapname, qboolean killBots ) {
 #ifdef USE_MULTIVM_SERVER
     infolen = strlen( Cvar_InfoString_Big( CVAR_SYSTEMINFO, &infoTruncated, gvmi ) );
 #else
+#ifdef USE_MULTIVM_CLIENT
+		infolen = strlen( Cvar_InfoString_Big( CVAR_SYSTEMINFO, &infoTruncated, 0 ) );
+#else
 		infolen = strlen( Cvar_InfoString_Big( CVAR_SYSTEMINFO, &infoTruncated ) );
+#endif
 #endif
 
 		if ( infoTruncated ) {
@@ -799,11 +803,19 @@ void SV_SpawnServer( const char *mapname, qboolean killBots ) {
 	SV_SetConfigstring( CS_SERVERINFO, Cvar_InfoString( CVAR_SERVERINFO, NULL, gvmi ) );
 	cvar_modifiedFlags &= ~CVAR_SERVERINFO;
 #else
+#ifdef USE_MULTIVM_CLIENT
+	SV_SetConfigstring( CS_SYSTEMINFO, Cvar_InfoString_Big( CVAR_SYSTEMINFO, NULL, 0 ) );
+	cvar_modifiedFlags &= ~CVAR_SYSTEMINFO;
+
+	SV_SetConfigstring( CS_SERVERINFO, Cvar_InfoString( CVAR_SERVERINFO, NULL, 0 ) );
+	cvar_modifiedFlags &= ~CVAR_SERVERINFO;
+#else
   SV_SetConfigstring( CS_SYSTEMINFO, Cvar_InfoString_Big( CVAR_SYSTEMINFO, NULL ) );
   cvar_modifiedFlags &= ~CVAR_SYSTEMINFO;
 
   SV_SetConfigstring( CS_SERVERINFO, Cvar_InfoString( CVAR_SERVERINFO, NULL ) );
   cvar_modifiedFlags &= ~CVAR_SERVERINFO;
+#endif
 #endif
 
 	// any media configstring setting now should issue a warning

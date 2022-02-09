@@ -70,7 +70,7 @@ void RB_CheckOverflow( int verts, int indexes ) {
 RB_AddQuadStampExt
 ==============
 */
-void RB_AddQuadStampExt( const vec3_t origin, const vec3_t left, const vec3_t up, const byte *color, float s1, float t1, float s2, float t2 ) {
+void RB_AddQuadStampExt( const vec3_t origin, const vec3_t left, const vec3_t up, color4ub_t color, float s1, float t1, float s2, float t2 ) {
 	vec3_t		normal;
 	int			ndx;
 
@@ -83,7 +83,7 @@ void RB_AddQuadStampExt( const vec3_t origin, const vec3_t left, const vec3_t up
 	ndx = tess.numVertexes;
 
 	// triangle indexes for a simple quad
-	tess.indexes[ tess.numIndexes ] = ndx;
+	tess.indexes[ tess.numIndexes + 0 ] = ndx + 0;
 	tess.indexes[ tess.numIndexes + 1 ] = ndx + 1;
 	tess.indexes[ tess.numIndexes + 2 ] = ndx + 3;
 
@@ -106,7 +106,6 @@ void RB_AddQuadStampExt( const vec3_t origin, const vec3_t left, const vec3_t up
 	tess.xyz[ndx+3][0] = origin[0] + left[0] - up[0];
 	tess.xyz[ndx+3][1] = origin[1] + left[1] - up[1];
 	tess.xyz[ndx+3][2] = origin[2] + left[2] - up[2];
-
 
 	// constant normal all the way around
 	VectorSubtract( vec3_origin, backEnd.viewParms.or.axis[0], normal );
@@ -133,8 +132,7 @@ void RB_AddQuadStampExt( const vec3_t origin, const vec3_t left, const vec3_t up
 	tess.vertexColors[ndx+0].u32 =
 	tess.vertexColors[ndx+1].u32 =
 	tess.vertexColors[ndx+2].u32 =
-	tess.vertexColors[ndx+3].u32 =
-		* ( uint32_t * )color;
+	tess.vertexColors[ndx + 3].u32 = color.u32;
 
 	tess.numVertexes += 4;
 	tess.numIndexes += 6;
@@ -201,7 +199,7 @@ void RB_AddQuadStamp2( float x, float y, float w, float h, float s1, float t1, f
 RB_AddQuadStamp
 ==============
 */
-void RB_AddQuadStamp( const vec3_t origin, const vec3_t left, const vec3_t up, const byte *color ) {
+void RB_AddQuadStamp( const vec3_t origin, const vec3_t left, const vec3_t up, color4ub_t color ) {
 	RB_AddQuadStampExt( origin, left, up, color, 0, 0, 1, 1 );
 }
 
@@ -240,7 +238,7 @@ static void RB_SurfaceSprite( void ) {
 		VectorSubtract( vec3_origin, left, left );
 	}
 
-	RB_AddQuadStamp( backEnd.currentEntity->e.origin, left, up, backEnd.currentEntity->e.shader.rgba );
+	RB_AddQuadStamp( backEnd.currentEntity->e.origin, left, up, backEnd.currentEntity->e.shader );
 }
 
 

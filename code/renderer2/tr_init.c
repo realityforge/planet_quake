@@ -1741,6 +1741,39 @@ int backendSize;
 //#error not ready yet
 #else // !USE_UNLOCKED_CVARS
 
+#ifdef USE_MULTIVM_CLIENT
+int backendSize;
+#define BASSIGN(a, t, n) \
+		+ sizeof(t) * n * MAX_NUM_WORLDS
+#define BACKEND \
+	BASSIGN( backEndData->indexes, int, r_maxpolyverts->integer) \
+	BASSIGN( backEndData->polys, srfPoly_t, r_maxpolyverts->integer) \
+	BASSIGN( backEndData->polyVerts, polyVert_t, r_maxpolyverts->integer) \
+	BASSIGN( backEndData->polybuffers, srfPolyBuffer_t, r_maxpolyverts->integer) \
+	BASSIGN( backEndData->commands.cmds, byte, r_maxpolyverts->integer)
+	backendSize = sizeof(intptr_t) * MAX_NUM_WORLDS
+		+ sizeof( *backEndData ) * MAX_NUM_WORLDS
+		BACKEND;
+	ptr = ri.Hunk_Alloc(backendSize, h_low);
+	Com_Printf("Allocating %iKB bytes for backend.\n", backendSize / 1024);
+#undef BASSIGN
+#define BASSIGN(a, t, n) \
+	a = (t *) ((char *) ptr); \
+	ptr += sizeof(intptr_t) * n; \
+	backEndDatas = (backEndData_t **) ptr;
+	ptr += sizeof(intptr_t) * MAX_NUM_WORLDS;
+	for(int i = 0; i < MAX_NUM_WORLDS; i++) {
+		RE_SwitchWorld(i);
+		backEndData = (backEndData_t *) ptr;
+		ptr += sizeof( **backEndDatas );
+		BACKEND
+		rwi = i;
+		R_InitNextFrame();
+	}
+#undef BACKEND
+#undef BASSIGN
+
+#else
 #define BACKEND \
 	BASSIGN( backEndData->indexes, int, r_maxpolyverts->integer) \
 	BASSIGN( backEndData->polys, srfPoly_t, r_maxpolyverts->integer) \
@@ -1761,6 +1794,7 @@ int backendSize;
 #undef BACKEND
 #undef BASSIGN
 
+#endif
 #endif // !USE_UNLOCKED_CVARS
 
 #ifndef USE_MULTIVM_CLIENT // done above in same loop

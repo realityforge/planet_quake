@@ -23,8 +23,10 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "../qcommon/q_shared.h"
 #include "../qcommon/qcommon.h"
 
-#if defined(USE_MULTIVM_SERVER) || defined(USE_MULTIVM_CLIENT)
-#define USE_MULTI_PORT 1
+#ifdef USE_MULTIVM_SERVER
+#define MAX_NUM_PORTS MAX_NUM_VMS
+#else
+#define MAX_NUM_PORTS 1
 #endif
 
 #ifdef USE_PRINT_CONSOLE
@@ -190,9 +192,8 @@ static cvar_t	*net_dropsim;
 
 static sockaddr_t socksRelayAddr;
 
-#ifdef USE_MULTI_PORT
+#ifdef USE_MULTIVM_SERVER
 #define ip_socket ip_sockets[igvm]
-#define MAX_NUM_PORTS MAX_NUM_VMS
 static SOCKET	ip_sockets[MAX_NUM_PORTS] = {
   INVALID_SOCKET, INVALID_SOCKET, INVALID_SOCKET, INVALID_SOCKET,
   INVALID_SOCKET, INVALID_SOCKET, INVALID_SOCKET, INVALID_SOCKET,
@@ -702,7 +703,7 @@ NET_GetPacket
 Receive one packet
 ==================
 */
-#ifdef USE_MULTI_PORT
+#ifdef USE_MULTIVM_SERVER
 static qboolean NET_GetPacket( netadr_t *net_from, msg_t *net_message, const fd_set *fdr, int igvm )
 #else
 static qboolean NET_GetPacket( netadr_t *net_from, msg_t *net_message, const fd_set *fdr )
@@ -712,7 +713,7 @@ static qboolean NET_GetPacket( netadr_t *net_from, msg_t *net_message, const fd_
 	sockaddr_t	from;
 	socklen_t	fromlen;
 	int		err;
-#ifdef USE_MULTI_PORT
+#ifdef USE_MULTIVM_SERVER
 	//Com_Printf( "NET_GetPacket: %i -> %i\n", ip_socket, igvm );
 #endif
 
@@ -756,7 +757,7 @@ static qboolean NET_GetPacket( netadr_t *net_from, msg_t *net_message, const fd_
 			}
 
 			net_message->cursize = ret;
-#ifdef USE_MULTI_PORT
+#ifdef USE_MULTIVM_SERVER
 			net_from->netWorld = igvm;
 #endif
 			return qtrue;
@@ -837,7 +838,7 @@ Sys_SendPacket
 void Sys_SendPacket( int length, const void *data, const netadr_t *to )
 {
 	int ret = SOCKET_ERROR;
-#ifdef USE_MULTI_PORT
+#ifdef USE_MULTIVM_SERVER
 	int igvm = to->netWorld;
 	//Com_Printf( "Sys_SendPacket: %i -> %i\n", ip_socket, igvm );
 #endif
@@ -1695,7 +1696,7 @@ void NET_OpenIP( int igvm )
 #ifdef USE_IPV6
 	int		port6;
 #endif
-#ifdef USE_MULTI_PORT
+#ifdef USE_MULTIVM_SERVER
 	if(igvm == -1) {
 		for(igvm = 0; igvm < MAX_NUM_PORTS; igvm++) {
 			if(ip_sockets[igvm] != INVALID_SOCKET)
@@ -1751,7 +1752,7 @@ void NET_OpenIP( int igvm )
 		for( i = 0 ; i < MAX_NUM_VMS * 10 ; i++ ) {
 			ip_socket = NET_IPSocket( net_ip->string, port + i, &err );
 			if (ip_socket != INVALID_SOCKET) {
-#ifdef USE_MULTI_PORT
+#ifdef USE_MULTIVM_SERVER
 				Com_Printf("binding to %i - %s:%i\n", igvm, net_ip->string, port + i);
 				if(igvm == 0)
 #endif
@@ -1920,7 +1921,7 @@ static void NET_Config( qboolean enableNetworking ) {
 	}
 
 	if( stop ) {
-#ifdef USE_MULTI_PORT
+#ifdef USE_MULTIVM_SERVER
     for(int igvm = 0; igvm < MAX_NUM_PORTS; igvm++)
 #endif
 		if ( ip_socket != INVALID_SOCKET ) {
@@ -2050,7 +2051,7 @@ static void NET_Event( const fd_set *fdr )
 	{
 		MSG_Init( &netmsg, bufData, MAX_MSGLEN );
 
-#ifdef USE_MULTI_PORT
+#ifdef USE_MULTIVM_SERVER
 		if ( NET_GetPacket( &from, &netmsg, fdr, igvm ) )
 #else
     if ( NET_GetPacket( &from, &netmsg, fdr ) )

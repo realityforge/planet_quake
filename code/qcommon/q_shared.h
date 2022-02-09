@@ -107,6 +107,17 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 // make external lightmaps for lazy updating
 //
 #define USE_MEMORY_MAPS 1
+// Adds a few additional Cvar for MAX_RENDER_COMMANDS, and one major change
+//   to auto expand the command buffer, and max poly lists.
+// 
+// The auto expansion is also important for multiworld CMD
+//   replay features that allow a lot of processing to be cut out when the FPS 
+//   is lowered for subordinate VMs.
+// 
+// This expansion is slightly larger than the original Quake III Arena size. 
+//   So assets built are guaranteed to fit within the first memory allocation. 
+//#define USE_UNLOCKED_CVARS 1
+// 
 // 
 #endif
 
@@ -117,8 +128,10 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #if defined(USE_MULTIVM_CLIENT) || defined(USE_MULTIVM_SERVER)
 // Cyrax's Multiview is what makes multiworld possible.
+//#define USE_UNLOCKED_CVARS 1
+//#define USE_ENGINE_TELE 1
 #define USE_LAZY_MEMORY 1
-#define USE_LAZY_LOAD 1
+//#define USE_LAZY_LOAD 1
 #ifndef USE_MV
 #define USE_MV 1
 #endif
@@ -140,8 +153,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define MV_PROTOCOL_VERSION MV_MULTIWORLD_VERSION
 // TODO: make compatible with legacy clients by sending gamestate and 
 //   switching level like normal, I think another engine mod/ioq3? did this
-#define USE_LAZY_MEMORY 1
-#define USE_ENGINE_TELE 1
+//#define USE_LAZY_MEMORY 1
+//#define USE_ENGINE_TELE 1
 //#define USE_LAZY_LOAD
 #endif
 

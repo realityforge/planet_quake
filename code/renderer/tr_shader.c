@@ -3942,9 +3942,7 @@ CreateInternalShaders
 ====================
 */
 static void CreateInternalShaders( void ) {
-#ifndef USE_MULTIVM_CLIENT
 	tr.numShaders = 0;
-#endif
 
 	// init the default shader
 	InitShader( "<default>", LIGHTMAP_NONE );
@@ -4015,8 +4013,6 @@ void RE_UpdateShader(char *shaderName, int lightmapIndex) {
 
 
 #ifdef USE_LAZY_MEMORY
-void GL_SetDefaultState( void );
-
 void RE_ReloadShaders( qboolean createNew ) {
 #ifdef USE_MULTIVM_CLIENT
 	if(createNew) {
@@ -4029,13 +4025,13 @@ void RE_ReloadShaders( qboolean createNew ) {
 		rwi = i;
 		//printf("starting world: %i -> %i\n", rwi, tr.numShaders);
 	}
-
+	if(rwi != 0) {
+		memcpy(&trWorlds[rwi], &trWorlds[0], sizeof(trGlobals_t));
 	//tr.numShaders = 0;
 	//tr.numLightmaps = 0;
 	//tr.numModels = 0;
-
-	memcpy(&trWorlds[rwi], &trWorlds[0], sizeof(trGlobals_t));
-	trWorlds[rwi].world = NULL;
+		trWorlds[rwi].world = NULL;
+	}
 #endif
 
   tr.lastRegistrationTime = ri.Milliseconds();

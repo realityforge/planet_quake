@@ -224,11 +224,10 @@ model_t	*R_GetModelByHandle( qhandle_t index ) {
 	if(!trWorlds[i].models[index]) {
 		return tr.models[0];
 	}
-
 	mod = trWorlds[i].models[index];
-
 	return mod;
 #else
+
 	// out of range gets the default model
 	if ( index < 1 || index >= tr.numModels ) {
 		return tr.models[0];

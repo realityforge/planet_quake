@@ -1448,7 +1448,7 @@ void CL_ClearMemory( void ) {
 		CM_ClearMap();
 	} else {
 		// clear all the client data on the hunk
-#ifdef USE_MULTIVM_CLIENT
+#ifdef USE_MULTIVM_SERVER
 		// clear to mark doesn't work in multivm mode because there are many marks
 		Hunk_Clear();
     CM_ClearMap();
@@ -2859,11 +2859,11 @@ static void CL_DownloadsComplete( void ) {
 #ifdef USE_LAZY_MEMORY
 	S_DisableSounds();
 	re.ReloadShaders(qtrue);
-	cls.charSetShader = re.RegisterShader( "gfx/2d/bigchars" );
-	cls.whiteShader = re.RegisterShader( "white" );
-  cls.lagometerShader = re.RegisterShader( "lagometer" );
+	//cls.charSetShader = re.RegisterShader( "gfx/2d/bigchars" );
+	//cls.whiteShader = re.RegisterShader( "white" );
+  //cls.lagometerShader = re.RegisterShader( "lagometer" );
 #ifndef USE_NO_CONSOLE
-	cls.consoleShader = re.RegisterShader( "console" );
+	//cls.consoleShader = re.RegisterShader( "console" );
 #endif
 #ifndef __WASM__
 	cls.soundRegistered = qtrue;
@@ -4226,7 +4226,9 @@ static void CL_InitRenderer( void ) {
 	clientScreens[0][1] = 0;
 	clientScreens[0][2] = 
 	clientScreens[0][3] = 1;
+#ifdef USE_LAZY_MEMORY
 	re.SwitchWorld(-1);
+#endif
 #endif
 	// this sets up the renderer and calls R_Init
 	re.BeginRegistration( &cls.glconfig );
@@ -4400,7 +4402,6 @@ void	CL_CM_Trace( trace_t *results, const vec3_t start, const vec3_t mins, const
 	CM_BoxTrace(results, start, end, mins, maxs, 0, contentmask, qfalse);
 	CM_SwitchMap(prev);
 }
-void CL_UpdateCGame( int cgvmi );
 #else
 byte	*CL_CM_ClusterPVS (int cluster) {
 	return CM_ClusterPVS(cluster);
@@ -4553,7 +4554,6 @@ static void CL_InitRef( void ) {
 	rimp.Trace = CL_CM_Trace;
 
 #ifdef USE_MULTIVM_CLIENT
-	rimp.UpdateCGame = CL_UpdateCGame;
 	rimp.worldMaps = &worldMaps[0];
 #endif
 #ifdef USE_LAZY_LOAD
@@ -6132,7 +6132,7 @@ static void CL_LocalServers_f( void ) {
 		// can nicely run multiple servers
 		for ( j = 0 ; j < NUM_SERVER_PORTS ; j++ ) {
 			to.port = BigShort( (short)(PORT_SERVER + j) );
-#ifdef USE_MULTIVM_CLIENT
+#ifdef USE_MULTIVM_SERVER
 			to.netWorld = 0;
 #endif
 			to.type = NA_BROADCAST;

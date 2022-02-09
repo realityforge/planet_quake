@@ -1232,7 +1232,11 @@ int SV_RemainingGameState( void )
 #ifdef USE_MULTIVM_SERVER
 			MSG_WriteBigString( &msg, Cvar_InfoString( CVAR_SERVERINFO, NULL, gvmi ) );
 #else
+#ifdef USE_MULTIVM_CLIENT
+      MSG_WriteBigString( &msg, Cvar_InfoString( CVAR_SERVERINFO, NULL, 0 ) );
+#else
       MSG_WriteBigString( &msg, Cvar_InfoString( CVAR_SERVERINFO, NULL ) );
+#endif
 #endif
 			continue;
 		}
@@ -1242,7 +1246,11 @@ int SV_RemainingGameState( void )
 #ifdef USE_MULTIVM_SERVER
       MSG_WriteBigString( &msg, Cvar_InfoString_Big( CVAR_SYSTEMINFO, NULL, gvmi ) );
 #else
+#ifdef USE_MULTIVM_CLIENT
+			MSG_WriteBigString( &msg, Cvar_InfoString_Big( CVAR_SYSTEMINFO, NULL, 0 ) );
+#else
 			MSG_WriteBigString( &msg, Cvar_InfoString_Big( CVAR_SYSTEMINFO, NULL ) );
+#endif
 #endif
 			continue;
 		}

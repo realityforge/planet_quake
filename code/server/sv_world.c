@@ -38,7 +38,11 @@ clipHandle_t SV_ClipHandleForEntity( const sharedEntity_t *ent ) {
 #ifdef USE_MULTIVM_SERVER
     return CM_InlineModel( ent->s.modelindex, 3, gvmi );
 #else
+#ifdef USE_MULTIVM_CLIENT
+		return CM_InlineModel( ent->s.modelindex, 3, 0 );
+#else
 		return CM_InlineModel( ent->s.modelindex );
+#endif
 #endif
 	}
 	if ( ent->r.svFlags & SVF_CAPSULE ) {
@@ -166,7 +170,11 @@ void SV_ClearWorld( void ) {
 #ifdef USE_MULTIVM_SERVER
   h = CM_InlineModel( 0, 2, gvmi );
 #else
+#ifdef USE_MULTIVM_CLIENT
+	h = CM_InlineModel( 0, 2, 0 );
+#else
 	h = CM_InlineModel( 0 );
+#endif
 #endif
 	CM_ModelBounds( h, mins, maxs );
 	SV_CreateworldSector( 0, mins, maxs );

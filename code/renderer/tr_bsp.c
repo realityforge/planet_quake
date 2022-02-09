@@ -1983,7 +1983,7 @@ if(i == 1) {
 
 		// get information from the shader for fog parameters
 		shader = R_FindShader( fogs->shader, LIGHTMAP_NONE, qtrue );
-	
+
 		VectorCopy( shader->fogParms.color, fogColor );
 
 		if ( r_mapGreyScale->value > 0 ) {

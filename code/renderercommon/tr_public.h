@@ -25,20 +25,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "tr_types.h"
 #include "vulkan/vulkan.h"
 
-#ifdef USE_MULTIVM_CLIENT
-// Adds a few additional Cvar for MAX_RENDER_COMMANDS, and one major change
-//   to auto expand the command buffer, and max poly lists.
-// 
-// TODO: The auto expansion is also important for multiworld CMD
-//   replay features that allow a lot of processing to be cut out when the FPS 
-//   is lowered for subordinate VMs.
-// 
-// This expansion is slightly larger than the original Quake III Arena size. 
-//   So assets built are guaranteed to fit within the first memory allocation. 
-#define USE_UNLOCKED_CVARS 1
-// 
-#endif
-
 #define	REF_API_VERSION		8
 
 //
@@ -141,11 +127,11 @@ typedef struct {
 	qhandle_t  (*CreateShaderFromImageBytes)(const char* name, const byte *pic, int width, int height);
 #endif
 #ifdef USE_LAZY_MEMORY
-#ifdef USE_MULTIVM_CLIENT
-	void  (*SetDvrFrame)( float x, float y, float height, float width );
-#endif
 	void (*ReloadShaders)( qboolean createNew );
   void (*SwitchWorld)(int world);
+#endif
+#ifdef USE_MULTIVM_CLIENT
+	void  (*SetDvrFrame)( float x, float y, float height, float width );
 #endif
 #ifdef USE_LAZY_LOAD
 	void (*UpdateModel)(const char *name);
@@ -279,7 +265,6 @@ typedef struct {
   void	(*Cmd_SetDescription)( const char *name, char *description );
 	void  (*GLimp_UpdateMode)( glconfig_t *config );
 #ifdef USE_MULTIVM_CLIENT
-	void  (*UpdateCGame)( int igs );
 	int	  *worldMaps;
 #endif
 #if defined(USE_MULTIVM_CLIENT) || defined(USE_MULTIVM_SERVER)

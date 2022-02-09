@@ -2592,7 +2592,7 @@ typedef struct {
 
 #ifdef USE_MULTIVM_CLIENT
 extern backEndData_t	**backEndDatas;
-#define backEndData backEndDatas[0]
+#define backEndData backEndDatas[rwi]
 #else
 extern	backEndData_t	*backEndData;
 #endif

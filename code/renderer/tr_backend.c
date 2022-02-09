@@ -1631,7 +1631,6 @@ RB_SetWorld
 */
 static const void *RB_SetWorld( const void *data ) {
 	const setWorldCommand_t	*cmd;
-
 	cmd = (const setWorldCommand_t *)data;
 
 	rwi = cmd->world;

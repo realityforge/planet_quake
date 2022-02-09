@@ -58,6 +58,8 @@ typedef struct {
 	int number;
 	int world;
 	int worldFrom;
+	qboolean isCamera;
+	qboolean isTeleporter;
 	vec3_t origin;
 } multiworld_t;
 
@@ -515,7 +517,11 @@ static void SV_AddEntitiesVisibleFromPoint( const vec3_t origin, clientPVS_t *pv
 #ifdef USE_MULTIVM_SERVER
 	clientpvs = CM_ClusterPVS (clientcluster, gameWorlds[gvmi]);
 #else
+#ifdef USE_MULTIVM_CLIENT
+	clientpvs = CM_ClusterPVS (clientcluster, 0);
+#else
 	clientpvs = CM_ClusterPVS (clientcluster);
+#endif
 #endif
 
 	for ( e = 0 ; e < svs.currFrame->count; e++ ) {
@@ -621,6 +627,13 @@ static void SV_AddEntitiesVisibleFromPoint( const vec3_t origin, clientPVS_t *pv
 				if((ent->s.powerups >> 8) != gvmi) {
 					// doesn't add portals but still adds camera points
 					SV_AddEntitiesVisibleFromPoint( ent->s.origin2, pvs, EPV_PORTALONLY );
+					for(int j = 0; j < numMultiworldEntities; j++) {
+						if(multiworldEntities[j].worldFrom != (ent->s.powerups >> 8)) continue; // skip portals not from this world
+						if(multiworldEntities[j].isCamera) {
+							VectorCopy(multiworldEntities[j].origin, ent->s.origin2);
+							break;
+						}
+					}
 				} else
 					SV_AddEntitiesVisibleFromPoint( ent->s.origin2, pvs, portal );
 			} else
@@ -818,7 +831,9 @@ void SV_AddWorldlyEntities( void ) {
 		if(isWorldspawn) {
 			continue;
 		}
-		if((isCamera || isTeleporter) && world != gvmi) {
+		if( (isCamera || isTeleporter) /* && world != gvmi &*/ ) {
+			multiworldEntities[numMultiworldEntities].isCamera = isCamera;
+			multiworldEntities[numMultiworldEntities].isTeleporter = isTeleporter;
 			multiworldEntities[numMultiworldEntities].world = world;
 			multiworldEntities[numMultiworldEntities].worldFrom = gvmi;
 			multiworldEntities[numMultiworldEntities].number = i;
@@ -1446,7 +1461,7 @@ void SV_SendClientSnapshot( client_t *client, qboolean includeBaselines ) {
 	}
 #endif
 
-#ifdef USE_MULTIVM_CLIENT
+#ifdef USE_MULTIVM_SERVER
 	if(first) {
 		first = qfalse;
 		MSG_Init( &msg, msg_buf, MAX_MSGLEN );

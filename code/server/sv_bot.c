@@ -301,7 +301,11 @@ static void BotImport_BSPModelMinsMaxsOrigin(int modelnum, vec3_t angles, vec3_t
 #ifdef USE_MULTIVM_SERVER
 	h = CM_InlineModel(modelnum, 5, gvmi);
 #else
+#ifdef USE_MULTIVM_CLIENT
+  h = CM_InlineModel(modelnum, 5, 0);
+#else
   h = CM_InlineModel(modelnum);
+#endif
 #endif
 	CM_ModelBounds(h, mins, maxs);
 	//if the model is rotated

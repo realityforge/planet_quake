@@ -1360,39 +1360,6 @@ static qboolean R_MirrorViewBySurface( const drawSurf_t *drawSurf, int entityNum
 		R_SetWorld(&oldParms, &newParms);
 		return qtrue;
 		// TODO: fix multiplexing cmd table and replace the view angle in scene
-
-#if 0
-		if(tr.viewParms.frameSceneNum < trWorlds[ri.worldMaps[oldParms.newWorld]].frameSceneNum) {
-			refdef_t fd;
-			tr.viewParms.frameSceneNum = trWorlds[ri.worldMaps[oldParms.newWorld]].frameSceneNum;
-			for ( int i = 0; i < MAX_MAP_AREA_BYTES/sizeof(int); i++ ) {
-				((int *)fd.areamask)[i] = 0xFFFFFFFF;
-			}
-			// strings for in game rendering
-			// Q_strncpyz( cg.refdef.text[0], "Park Ranger", sizeof(cg.refdef.text[0]) );
-			// Q_strncpyz( cg.refdef.text[1], "19", sizeof(cg.refdef.text[1]) );
-			fd.x = newParms.viewportX;
-			fd.y = newParms.viewportY;
-			fd.height = newParms.viewportHeight;
-			fd.width = newParms.viewportWidth;
-			fd.fov_x = newParms.fovX;
-			fd.fov_y = newParms.fovY;
-			VectorCopy( newParms.pvsOrigin, fd.vieworg );
-			VectorCopy( newParms.or.axis[0], fd.viewaxis[0] );
-			VectorCopy( newParms.or.axis[1], fd.viewaxis[1] );
-			VectorCopy( newParms.or.axis[2], fd.viewaxis[2] );
-			fd.time = tr.refdef.time;
-			fd.rdflags = tr.refdef.rdflags;
-			printf("scene\n");
-			R_RenderView( &newParms );
-
-			//RE_RenderScene(&fd);
-			// switch back
-			rwi = ri.worldMaps[oldParms.newWorld];
-			tr.viewParms = oldParms;
-			return qtrue;
-		}
-#endif
 	}
 #endif
 

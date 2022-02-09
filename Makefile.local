@@ -24,9 +24,9 @@ USE_CIN_VPX            = 0
 
 USE_SERVER_ROLES       = 0
 USE_RECENT_EVENTS      = 0
-USE_REFEREE_CMDS       = 1
+USE_REFEREE_CMDS       = 0
 
-USE_ENGINE_TELE        = 1
+USE_ENGINE_TELE        = 0
 USE_DIDYOUMEAN         = 1
 USE_LIVE_RELOAD        = 0
 USE_BSP1               = 0
@@ -34,7 +34,7 @@ USE_ASYNCHRONOUS       = 0
 USE_DEMO_SERVER        = 0
 USE_DEMO_CLIENTS       = 0
 USE_DYNAMIC_ZIP        = 0
-USE_MEMORY_MAPS        = 1
+USE_MEMORY_MAPS        = 0
 USE_PERSIST_CONSOLE    = 0
 USE_NO_CONSOLE         = 0
 USE_PRINT_CONSOLE      = 0

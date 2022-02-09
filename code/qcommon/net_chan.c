@@ -101,7 +101,7 @@ void Netchan_Setup( netsrc_t sock, netchan_t *chan, const netadr_t *adr, int por
 	chan->challenge = challenge;
 	chan->compat = compat;
 	chan->isLANAddress = Sys_IsLANAddress( adr );
-#if defined(USE_MULTIVM_CLIENT) || defined(USE_MULTIVM_SERVER)
+#ifdef USE_MULTIVM_SERVER
 	chan->remoteAddress.netWorld = 0;
 #endif
 }
@@ -680,7 +680,7 @@ int NET_StringToAdr( const char *s, netadr_t *a, netadrtype_t family )
 		return 1;
 	}
 
-#if defined(USE_MULTIVM_CLIENT) || defined(USE_MULTIVM_SERVER)
+#ifdef USE_MULTIVM_SERVER
 	a->netWorld = 0;
 #endif
 	a->protocol[0] = 0;

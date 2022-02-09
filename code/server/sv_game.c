@@ -157,7 +157,11 @@ static void SV_SetBrushModel( sharedEntity_t *ent, const char *name ) {
 #ifdef USE_MULTIVM_SERVER
 	h = CM_InlineModel( ent->s.modelindex, 4, gvmi );
 #else
+#ifdef USE_MULTIVM_CLIENT
+  h = CM_InlineModel( ent->s.modelindex, 4, 0 );
+#else
   h = CM_InlineModel( ent->s.modelindex );
+#endif
 #endif
 	CM_ModelBounds( h, mins, maxs );
 	VectorCopy (mins, ent->r.mins);
@@ -190,7 +194,11 @@ qboolean SV_inPVS( const vec3_t p1, const vec3_t p2 )
 #ifdef USE_MULTIVM_SERVER
 	mask = CM_ClusterPVS (cluster, gameWorlds[gvmi]);
 #else
+#ifdef USE_MULTIVM_CLIENT
+	mask = CM_ClusterPVS (cluster, 0);
+#else
 	mask = CM_ClusterPVS (cluster);
+#endif
 #endif
 
 	leafnum = CM_PointLeafnum (p2);
@@ -222,7 +230,11 @@ static qboolean SV_inPVSIgnorePortals( const vec3_t p1, const vec3_t p2 )
 #ifdef USE_MULTIVM_SERVER
 	mask = CM_ClusterPVS (cluster, gameWorlds[gvmi]);
 #else
+#ifdef USE_MULTIVM_CLIENT
+	mask = CM_ClusterPVS (cluster, 0);
+#else
 	mask = CM_ClusterPVS (cluster);
+#endif
 #endif
 
 	leafnum = CM_PointLeafnum (p2);
@@ -289,7 +301,11 @@ static void SV_GetServerinfo( char *buffer, int bufferSize ) {
 #ifdef USE_MULTIVM_SERVER
 		Q_strncpyz( buffer, Cvar_InfoString( CVAR_SERVERINFO, NULL, gvmi ), bufferSize );
 #else
+#ifdef USE_MULTIVM_CLIENT
+    Q_strncpyz( buffer, Cvar_InfoString( CVAR_SERVERINFO, NULL, 0 ), bufferSize );
+#else
     Q_strncpyz( buffer, Cvar_InfoString( CVAR_SERVERINFO, NULL ), bufferSize );
+#endif
 #endif
 	} else {
 		Q_strncpyz( buffer, sv.configstrings[ CS_SERVERINFO ], bufferSize );

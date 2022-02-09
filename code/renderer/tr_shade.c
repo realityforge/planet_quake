@@ -995,7 +995,6 @@ void RB_StageIteratorGeneric( void )
 	//
 	// now do fog
 	//
-	//if(!(tess.shader->surfaceFlags & SURF_NOLIGHTMAP))
 	if ( tess.fogNum && tess.shader->fogPass )
 	{
 		RB_FogPass();

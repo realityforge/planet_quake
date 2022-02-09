@@ -601,7 +601,11 @@ void SV_MakeSkybox( void ) {
 #ifdef USE_MULTIVM_SERVER
 		int h = CM_InlineModel( 0, 2, gvmi );
 #else
+#ifdef USE_MULTIVM_CLIENT
+    int h = CM_InlineModel( 0, 2, 0 );
+#else
     int h = CM_InlineModel( 0 );
+#endif
 #endif
 		CM_ModelBounds( h, vs[0], vs[1] );
 	}

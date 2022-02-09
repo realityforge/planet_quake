@@ -806,7 +806,8 @@ image_t *R_CreateImage( const char *name, const char *name2, byte *pic, int widt
 
 	tr.images[ tr.numImages++ ] = image;
 #ifdef USE_MULTIVM_CLIENT
-	trWorlds[0].images[ trWorlds[0].numImages++ ] = image;
+	if(rwi != 0)
+		trWorlds[0].images[ trWorlds[0].numImages++ ] = image;
 #endif
 
 	image->flags = flags;
@@ -1407,12 +1408,6 @@ static void R_CreateDefaultImage( void ) {
 	}
 
 	tr.defaultImage = R_CreateImage( "*default", NULL, (byte *)data, DEFAULT_SIZE, DEFAULT_SIZE, IMGFLAG_MIPMAP );
-	
-#ifdef USE_MULTIVM_CLIENT
-	for(int i = 1; i < MAX_NUM_WORLDS; i++) {
-		trWorlds[i].defaultImage = tr.defaultImage;
-	}
-#endif
 }
 
 
@@ -1452,14 +1447,6 @@ static void R_CreateBuiltinImages( void ) {
 
 	R_CreateDlightImage();
 	R_CreateFogImage();
-#ifdef USE_MULTIVM_CLIENT
-	for(int i = 1; i < MAX_NUM_WORLDS; i++) {
-		trWorlds[i].whiteImage = tr.whiteImage;
-		trWorlds[i].identityLightImage = tr.identityLightImage;
-		trWorlds[i].dlightImage = tr.dlightImage;
-		trWorlds[i].fogImage = tr.fogImage;
-	}
-#endif
 }
 
 
@@ -1859,12 +1846,6 @@ void	R_InitSkins( void ) {
 	skin->numSurfaces = 1;
 	skin->surfaces = ri.Hunk_Alloc( sizeof( skinSurface_t ), h_low );
 	skin->surfaces[0].shader = tr.defaultShader;
-#ifdef USE_MULTIVM_CLIENT
-	for(int i = 1; i < MAX_NUM_WORLDS; i++) {
-		trWorlds[i].skins[0] = tr.skins[0];
-		trWorlds[i].numSkins = 1;
-	}
-#endif
 }
 
 
