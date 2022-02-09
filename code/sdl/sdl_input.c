@@ -1251,13 +1251,13 @@ void HandleEvents( void )
       case SDL_DROPTEXT:
         Com_DPrintf("%s: Dropping text \"%s\"\n", __func__, e.drop.file);          
         char *text = CopyString(e.drop.file);
-        Com_QueueEvent( in_eventTime, SE_KEY, SE_DROPTEXT, 0, strlen(text)+1, text );
+        Com_QueueEvent( in_eventTime, SE_DROPTEXT, 0, 0, strlen(text)+1, text );
         free(e.drop.file);
         break;
       case SDL_DROPFILE:
         Com_DPrintf("%s: Dropping file \"%s\"\n", __func__, e.drop.file);          
         char *file = CopyString(e.drop.file);
-        Com_QueueEvent( in_eventTime, SE_KEY, SE_DROPFILE, 0, strlen(file)+1, file );
+        Com_QueueEvent( in_eventTime, SE_DROPFILE, 0, 0, strlen(file)+1, file );
         free(e.drop.file);
         break;
       case SDL_DROPCOMPLETE:

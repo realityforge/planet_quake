@@ -77,7 +77,15 @@ void R_BindAnimatedImage( const textureBundle_t *bundle ) {
 	}
 
 	if ( bundle->numImageAnimations <= 1 ) {
-		GL_Bind( bundle->image[0] );
+		/* if(bundle->isLightmap) {
+			if((int)bundle->image[0] == -1) {
+				GL_Bind(tr.whiteImage);
+			} else {
+				GL_Bind(tr.lightmaps[(int)bundle->image[0]]);
+			}
+		} else */ {
+			GL_Bind( bundle->image[0] );
+		}
 		return;
 	}
 

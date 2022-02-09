@@ -52,6 +52,10 @@
 
 #define VFS_MAXDIRS 64
 
+#ifdef LINKABLE
+typedef int fileHandle_t;
+#endif
+
 void vfsInitDirectory( const char *path );
 void vfsShutdown();
 int vfsGetFileCount( const char *filename );

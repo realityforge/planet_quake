@@ -413,11 +413,25 @@ static void AddLightGridLumps( FILE *file, ibspHeader_t *header ){
    loads a quake 3 bsp file into memory
  */
 
+#ifdef LINKABLE
+extern int (*FS_ReadFile)(const char *qpath, void **buffer);
+#endif
+
 void LoadIBSPFile( const char *filename ){
 	ibspHeader_t    *header;
 
 
 	/* load the file header */
+#ifdef LINKABLE
+	if(FS_ReadFile) {
+		const long len = FS_ReadFile(filename, (void**) &header);
+		void *local = safe_malloc( len + 1 );
+		if(len && header) {
+			memcpy(local, (void *)header, len);
+			header = reinterpret_cast<ibspHeader_t *>(local);
+		}
+	} else
+#endif
 	LoadFile( filename, (void**) &header );
 
 	/* swap the header (except the first 4 bytes) */

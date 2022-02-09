@@ -2,9 +2,26 @@
 
 #ifdef USE_MEMORY_MAPS
 
+#ifdef _DEBUG
+#ifndef _WIN32
+#ifndef  __WASM__
+#include <execinfo.h>
+#endif
+#include <unistd.h>
+#endif
+#include <stdio.h>
+#include <stdlib.h>
+#endif
+
+#include <setjmp.h>
+
+static jmp_buf q3map2done;	// an ERR_DROP occurred, exit the entire frame
+
 #include "../qcommon/vm_local.h"
 #include "../qcommon/cm_public.h"
 #include "../game/bg_public.h"
+
+#include "../qcommon/cm_local.h"
 
 char *FS_RealPath(const char *localPath);
 
@@ -73,6 +90,85 @@ void SV_SpliceBSP(const char *memoryMap, const char *altName);
 
 extern int Q3MAP2Main( int argc, char **argv );
 
+static void SV_MapError(const char *error) {
+	Com_Printf("Q3MAP2 ERROR: %s\n", error);
+#ifdef _DEBUG
+#if defined(__linux__) || defined(__APPLE__)
+	{
+		void *syms[10];
+		const size_t size = backtrace( syms, ARRAY_LEN( syms ) );
+		backtrace_symbols_fd( syms, size, STDERR_FILENO );
+	}
+#endif // linux
+#endif // win32
+
+	Q_longjmp(q3map2done, 1); // unwind everything in C, TODO: shutdown q3map2?
+}
+
+static FILE *SV_OpenWrite(const char *path) {
+	// sometimes q3map2 will all process directory
+	if(Q_stristr(path, Sys_Pwd())) {
+		path += strlen(Sys_Pwd()) + 1;
+	}
+	return Sys_FOpen(FS_BuildOSPath(Cvar_VariableString("fs_homepath"), FS_GetCurrentGameDir(), path), "wb");
+}
+
+static int SV_ReadFile(const char *path, void **buffer) {
+	// sometimes q3map2 will all process directory
+	if(Q_stristr(path, Sys_Pwd())) {
+		path += strlen(Sys_Pwd()) + 1;
+	}
+	printf("reading: %s\n", path);
+	return FS_ReadFile(path, buffer);
+}
+
+void SV_ExportMap(void) {
+	static char strippedName[MAX_QPATH];
+	if(cm.name[0] == '\0') {
+		return;
+	}
+
+	if ( Q_setjmp( q3map2done ) ) {
+		return;			// an ERR_DROP was thrown
+	}
+	// someone extracted the bsp file intentionally?
+	// don't do it if we already extracted
+	// if( FS_RealPath( va("maps/%s_converted.map", memoryMap) ) {
+	//	return;
+	//}
+	Sys_SetStatus("Building map %s", cm.name);
+	Com_Printf("Building map %s\n", cm.name);
+
+	COM_StripExtension(cm.name, strippedName, sizeof(strippedName));
+	// touch the file so q3map2 can definitely access it
+	FS_SV_FOpenFileWrite(va("%s/%s_converted.map", FS_GetCurrentGameDir(), strippedName));
+
+	Cvar_Set( "buildingMap", cm.name );
+	char *compileMap[] = {
+		"q3map2",
+		"-v",
+		"-error",
+		(char *)SV_MapError,
+		"-fs_basepath",
+		(char *)Cvar_VariableString("fs_basepath"),
+		"-game",
+		"quake3",
+		"-fs_game",
+		(char *)FS_GetCurrentGameDir(),
+		"-vfs",
+		(char *)SV_ReadFile,
+		(char *)SV_OpenWrite,
+		"-convert",
+		"-keeplights",
+		"-format",
+		"map",
+		// "-readmap", // TODO: use for normalizing mbspc bsp2map conversions
+		cm.name
+	};
+	Q3MAP2Main(ARRAY_LEN(compileMap), compileMap);
+	Cvar_Set( "buildingMap", "" );
+}
+
 int SV_MakeMap( const char **map ) {
 	static char memoryMap[MAX_QPATH];
 	char *mapPath;
@@ -80,6 +176,10 @@ int SV_MakeMap( const char **map ) {
   fileHandle_t mapfile;
 	int length = 0;
 	Q_strncpyz( memoryMap, *map, sizeof(memoryMap) );
+
+	if ( Q_setjmp( q3map2done ) ) {
+		return 0;			// an ERR_DROP was thrown
+	}
 
 	// early exit unless we force rebuilding
 	if(!sv_bspRebuild->integer && FS_RealPath( va("maps/%s.bsp", memoryMap) )) {
@@ -120,31 +220,8 @@ int SV_MakeMap( const char **map ) {
   //gamedir = Cvar_VariableString( "fs_game" );
 	//basegame = Cvar_VariableString( "fs_basegame" );
 	// if there is no map file for it, try to make one!
-	mapPath = FS_RealPath( va("maps/%s.bsp", memoryMap) );
-	if(sv_bspMap->integer && mapPath
-		// don't do it if we already extracted
-		// && FS_RealPath( va("maps/%s_converted.map", memoryMap) )
-	) {
-		// someone extracted the bsp file intentionally?
-		Cvar_Set( "buildingMap", memoryMap );
-		char *compileMap[] = {
-			"q3map2",
-			"-v",
-			"-fs_basepath",
-			(char *)Cvar_VariableString("fs_basepath"),
-			"-game",
-			"quake3",
-			"-fs_game",
-			(char *)FS_GetCurrentGameDir(),
-			"-convert",
-			"-keeplights",
-			"-format",
-			"map",
-			// "-readmap", // TODO: use for normalizing mbspc bsp2map conversions
-			mapPath
-		};
-		Q3MAP2Main(ARRAY_LEN(compileMap), compileMap);
-		Cvar_Set( "buildingMap", "" );
+	if(sv_bspMap->integer) {
+		SV_ExportMap();
 	}
 	
 	if(sv_bspSplice->string[0] != '\0') {
@@ -172,8 +249,10 @@ int SV_MakeMap( const char **map ) {
 			Cvar_Set( "buildingMap", memoryMap );
 			char *compileMeta[] = {
 				"q3map2",
-				"-meta",
 				"-v",
+				"-error",
+				(char *)SV_MapError,
+				"-meta",
 				"-fs_basepath",
 				(char *)Cvar_VariableString("fs_basepath"),
 				"-game",
@@ -202,6 +281,9 @@ int SV_MakeMap( const char **map ) {
 			*/
 			char *compileLight[] = {
 				"q3map2",
+				"-v",
+				"-error",
+				(char *)SV_MapError,
 				"-light",
 				"-fs_basepath",
 				(char *)Cvar_VariableString("fs_basepath"),
@@ -229,6 +311,9 @@ int SV_MakeMap( const char **map ) {
 		bspPath = FS_RealPath( va("maps/%s.bsp", memoryMap) );
 		char *compileLight[] = {
 				"q3map2",
+				"-v",
+				"-error",
+				(char *)SV_MapError,
 				"-light",
 				"-external",
 				"-fs_basepath",
@@ -262,6 +347,8 @@ int SV_MakeMap( const char **map ) {
 			char *compileMap[] = {
 				"q3map2",
 				"-v",
+				"-error",
+				(char *)SV_MapError,
 				"-fs_basepath",
 				(char *)Cvar_VariableString("fs_basepath"),
 				"-game",

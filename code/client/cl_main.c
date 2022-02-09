@@ -5005,17 +5005,23 @@ void CL_Tele_f ( void ) {
 
 void CL_Game_f ( void ) {
 	if ( Cmd_Argc() > 3 ) {
-		Com_Printf ("Usage: game [0/1/2 moveorigin] [num]\n");
+		Com_Printf ("Usage: game [0/1/2 moveorigin] [num] (<client>)\n");
 		return;
 	}
 	char *i = Cmd_Argv(2);
 	if(i[0] != '\0') {
 		clc.currentView = atoi(i);
-		if(clc.currentView < 0 || clc.currentView >= MAX_NUM_VMS) {
-			clc.currentView = 0;
-		}
+	} else {
+		clc.currentView = clientGames[clc.currentView] + 1;
 	}
-	CL_AddReliableCommand( va("game %s", Cmd_ArgsFrom(1)), qfalse );
+	if(clc.currentView < 0 || clc.currentView >= MAX_NUM_VMS) {
+		clc.currentView = 0;
+	}
+	if(Cmd_Argc() < 2) {
+		CL_AddReliableCommand( va("game 0 %i %i", clc.currentView, clc.clientNum), qfalse );
+	} else {
+		CL_AddReliableCommand( va("game %i %i %i", atoi(Cmd_Argv(1)), clc.currentView, clc.clientNum), qfalse );
+	}
 }
 
 void CL_World_f( void ) {

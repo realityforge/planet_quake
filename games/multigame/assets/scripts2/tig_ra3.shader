@@ -18,7 +18,8 @@
 // ------------------------------------------------------18.mar.2001----
 
 // TODO: add a remap texture into the map file for this :(
-textures/gothic_door/door02_i_ornate5_fin
+//textures/gothic_door/door02_i_ornate5_fin
+textures/gothic_door/door02_portal
 {
 	portal
 	surfaceparm nolightmap
@@ -37,7 +38,7 @@ textures/gothic_door/door02_i_ornate5_fin
 		//blendFunc GL_DST_COLOR GL_SRC_ALPHA
 		//rgbGen identity
 		//alphaGen lightingSpecular
-    //alphagen portal 1024
+    alphagen portal 1024
   	//depthWrite
 	}
 }

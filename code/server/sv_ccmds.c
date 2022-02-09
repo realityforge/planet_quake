@@ -1564,27 +1564,33 @@ void SV_GameCL_f( client_t *client );
 
 void SV_Game_f ( void ) {
 	client_t *client;
-	int game;
+	int i;
 	if ( Cmd_Argc() > 4 ) {
-		Com_Printf ("Usage: game <client> [num] (<mode>)\n");
+		Com_Printf ("Usage: game (<mode>) [num] <client>\n");
 		return;
 	}
 
-	client = SV_GetPlayerByHandle();
-
-	if(Cmd_Argc() == 1) {
-		// TODO: finish this, switch a specific client to a new game or switch all clients to a new game
-		//   client command already exists in sv_client.c
-		//game = 
+	if(Cmd_Argc() < 4) {
+		//if(sv_gametype->integer == GT_SINGLE_PLAYER) {
+			// teleport entire team to new world with me
+			for ( i=0, client=svs.clients ; i < sv_maxclients->integer ; i++,client++ ) {
+				if ( !client->state ) {
+					continue;
+				}
+				if( client->netchan.remoteAddress.type == NA_LOOPBACK ) {
+					Cmd_TokenizeString( va("game %s %s", Cmd_Argv(1), Cmd_Argv(2)) );
+					SV_GameCL_f( client );
+				}
+			}
+		//} else {
+		//	Com_Printf( "No player specified. %s\n", Cmd_ArgsFrom(0) );
+		//	return;
+		//}
 	} else {
-		game = atoi(Cmd_Argv(2));
+		client = SV_GetPlayerByHandle();
+		Cmd_TokenizeString( va("game %s %s", Cmd_Argv(1), Cmd_Argv(2)) );
+		SV_GameCL_f( client );
 	}
-	if(Cmd_Argc() == 4) {
-		Cmd_TokenizeString( va("game %s %s", Cmd_Argv(3), Cmd_Argv(2)) );
-	} else {
-		Cmd_TokenizeString( va("game 0 %s", Cmd_ArgsFrom(2)) );
-	}
-	SV_GameCL_f( client );
 	Cmd_Clear();
 }
 
@@ -1851,11 +1857,17 @@ void SV_AddOperatorCommands( void ) {
 	Cmd_AddCommand( "mvstop", SV_MultiViewStopRecord_f );
 	Cmd_SetDescription( "mvstop", "Stop a multiview recording\nUsage: mvstop" );
 #endif
+
 #ifdef USE_MULTIVM_SERVER
-	Cmd_AddCommand ("svgame", SV_Game_f);
+	Cmd_AddCommand ("game", SV_Game_f);
 	Cmd_SetDescription( "game", "Switch games in multiVM mode to another match\nUsage: game <client> [num]" );
 	Cmd_AddCommand ("teleport", SV_Teleport_f);
 	Cmd_SetDescription( "teleport", "Teleport into the game as if you just connected\nUsage: teleport <client> [xcoord zcoord ycoord]" );
+#endif
+
+#ifdef USE_MEMORY_MAPS
+	Cmd_AddCommand ("export", SV_ExportMap);
+	Cmd_SetDescription( "export", "Export visible map geometry to a .map file\nUsage: export" );
 #endif
 }
 

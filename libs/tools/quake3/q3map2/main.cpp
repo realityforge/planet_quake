@@ -52,16 +52,15 @@ static void ExitQ3Map( void ){
 		free( mapDrawSurfs );
 }
 
-
-#ifdef __cplusplus
 extern "C" {
-#endif
 
 /*
    main()
    q3map mojo...
  */
 #ifdef LINKABLE
+extern int (*Com_Error)(const char *error);
+
 Q_EXPORT int Q3MAP2Main( int argc, char **argv )
 #else
 int main( int argc, char **argv )
@@ -117,6 +116,18 @@ int main( int argc, char **argv )
 				argv[ i ] = NULL;
 			}
 		}
+
+#ifdef LINKABLE
+		else if( striEqual( argv[ i ], "-error" ) )
+		{
+			if ( ++i >= argc || !argv[ i ] ) {
+				Error( "Out of arguments: No address specified after %s", argv[ i - 1 ] );
+			}
+			argv[ i - 1 ] = NULL;
+			Com_Error = reinterpret_cast<int (*)(const char *error)>(argv[ i ]);
+			argv[ i ] = NULL;
+		}
+#endif
 
 		/* force */
 		else if ( striEqual( argv[ i ], "-force" ) ) {
@@ -287,6 +298,4 @@ int main( int argc, char **argv )
 	return r;
 }
 
-#ifdef __cplusplus
 }
-#endif

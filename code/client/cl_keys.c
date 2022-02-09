@@ -819,6 +819,7 @@ static void CL_KeyUpEvent( int key, unsigned time, int fingerId )
 
 
 #ifdef USE_DRAGDROP
+qboolean dropped = qfalse;
 static char command[MAX_OSPATH];
 static int demos = 0;
 static int maps = 0;
@@ -834,12 +835,18 @@ static char *videoNames;
 static char *pk3Names;
 
 void CL_DropComplete( void ) {
+	int i;
   if(demos) {
     Com_Printf("Demos: %i\n", demos);
   }
   if(maps) {
     Com_Printf("Maps: %i\n", maps);
     // TODO: list images based on the percent they exist over other file types
+		i = 0;
+		while(i < maps) {
+			Com_Printf("%s\n", &mapNames[i]);
+			i += strlen(&mapNames[i])+1;
+		}
   }
 #ifndef USE_NO_CONSOLE
   Con_ClearNotify();
@@ -862,7 +869,7 @@ void CL_DropFile( char *file, int len ) {
   const char *to = FS_DescribeGameFile(file, &demoNames, &demos, &mapNames, 
     &maps, &imageNames, &images, &videoNames, &videos, &soundNames, &sounds, 
     &pk3Names, &pk3s);
-
+printf("new name: %s\n", to);
   // TODO: make an autocomplete for drop files
   if(command[0] == '\0') {
     if(demos) {
@@ -876,18 +883,18 @@ void CL_DropFile( char *file, int len ) {
     } else if (maps) {
 #ifdef USE_MULTIVM_CLIENT
       if(cls.state == CA_ACTIVE) {
-        memcpy(command, va("load game \"%s\"", mapNames), sizeof(command));
+        memcpy(command, va("load game \"%s\"", FS_SimpleFilename(mapNames)), sizeof(command));
       }
       else
 #endif
-      memcpy(command, va("map %s", mapNames), sizeof(command));
+      memcpy(command, va("map %s", FS_SimpleFilename(mapNames)), sizeof(command));
     } else if (images) {
       memcpy(command, va("r_showImages %s", imageNames), sizeof(command));
     }
   }
 
   if(to[0] != '\0') {
-    char *to_ospath = FS_BuildOSPath( Cvar_VariableString("fs_homepath"), to, NULL );
+    char *to_ospath = FS_BuildOSPath( Cvar_VariableString("fs_homepath"), FS_GetCurrentGameDir(), to );
     if(cl_dropAction->integer) {
       FS_CopyFile( file, to_ospath );
       // helper add the pak so we can run a map right away
@@ -907,12 +914,14 @@ void CL_DropFile( char *file, int len ) {
 
 
 void CL_DropStart( void ) {
+	dropped = qtrue;
   demos = 0;
   maps = 0;
   images = 0;
   videos = 0;
   sounds = 0;
   pk3s = 0;
+	command[0] = '\0';
   if(!(Key_GetCatcher() & KEYCATCH_CONSOLE))
     Key_SetCatcher( (Key_GetCatcher() & ~(KEYCATCH_UI | KEYCATCH_CGAME)) | KEYCATCH_CONSOLE );
 }

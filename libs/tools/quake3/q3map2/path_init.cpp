@@ -352,6 +352,13 @@ void AddPakPath( char *path ){
 }
 
 
+#ifdef LINKABLE
+
+extern int (*FS_ReadFile)(const char *qpath, void **buffer);
+extern int (*FS_OpenWrite)(const char *filename);
+
+#endif
+
 
 /*
    InitPaths() - ydnar
@@ -472,6 +479,20 @@ void InitPaths( int *argc, char **argv ){
 			AddPakPath( argv[ i ] );
 			argv[ i ] = NULL;
 		}
+
+#ifdef LINKABLE
+		// set virtual file interface
+		else if ( striEqual( argv[ i ], "-vfs" ) ) {
+			if ( ++i >= *argc || !argv[ i ] ) {
+				Error( "Out of arguments: No path specified after %s.", argv[ i - 1 ] );
+			}
+			argv[ i - 1 ] = NULL;
+			FS_ReadFile = reinterpret_cast<int (*)(const char *qpath, void **buffer)>(argv[i]);
+			argv[ i++ ] = NULL;
+			FS_OpenWrite = reinterpret_cast<int (*)(const char *filename)>(argv[i]);
+			argv[ i ] = NULL;
+		}
+#endif
 
 	}
 

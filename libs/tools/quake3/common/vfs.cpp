@@ -137,6 +137,15 @@ static void vfsInitPakFile( const char *filename ){
 // =============================================================================
 // Global functions
 
+#ifdef LINKABLE
+extern "C" {
+
+int (*FS_ReadFile)(const char *qpath, void **buffer);
+FILE* (*FS_OpenWrite)(const char *filepath);
+
+}
+#endif
+
 // reads all pak files from a dir
 void vfsInitDirectory( const char *path ){
 	char filename[PATH_MAX];
@@ -289,6 +298,16 @@ int vfsLoadFile( const char *filename, void **bufferptr, int index ){
 	int i, count = 0;
 	char tmp[NAME_MAX], fixed[NAME_MAX];
 	GSList *lst;
+
+	if(FS_ReadFile) {
+		const long len = FS_ReadFile(filename, bufferptr);
+		void *local = safe_malloc( len + 1 );
+		if(len && *bufferptr) {
+			memcpy(local, *bufferptr, len);
+			*bufferptr = local;
+			return len;
+		}
+	}
 
 	// filename is a full path
 	if ( index == -1 ) {

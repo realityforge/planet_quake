@@ -406,6 +406,16 @@ void Sys_Warning( const char *format, ... ){
 	FPrintf( SYS_WRN, out_buffer );
 }
 
+extern "C" {
+
+int (*Com_Error)(const char *error)
+#ifdef __GNUC__
+__attribute__( ( noreturn ) )
+#endif
+;
+
+}
+
 /*
    =================
    Error
@@ -421,6 +431,10 @@ void Error( const char *error, ... ){
 	va_start( argptr, error );
 	vsprintf( tmp, error, argptr );
 	va_end( argptr );
+
+	if(Com_Error) {
+		Com_Error(tmp);
+	}
 
 	sprintf( out_buffer, "************ ERROR ************\n%s\n", tmp );
 

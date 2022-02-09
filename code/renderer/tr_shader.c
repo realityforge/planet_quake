@@ -692,6 +692,13 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 				} else {
 					stage->bundle[0].image[0] = tr.lightmaps[shader.lightmapIndex];
 				}
+				/*
+				if ( shader.lightmapIndex < 0 || !tr.lightmaps ) {
+					stage->bundle[0].image[0] = -1;
+				} else {
+					stage->bundle[0].image[0] = shader.lightmapIndex;
+				}
+				*/
 				continue;
 			}
 			else
@@ -3232,6 +3239,7 @@ static void R_CreateDefaultShading( image_t *image ) {
 	} else {
 		// two pass lightmap
 		stages[0].bundle[0].image[0] = tr.lightmaps[shader.lightmapIndex];
+		//stages[0].bundle[0].image[0] = (void *)shader.lightmapIndex;
 		stages[0].bundle[0].isLightmap = qtrue;
 		stages[0].active = qtrue;
 		stages[0].rgbGen = CGEN_IDENTITY;	// lightmaps are scaled on creation

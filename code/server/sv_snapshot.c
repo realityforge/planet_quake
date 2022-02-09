@@ -1223,7 +1223,8 @@ static void SV_BuildClientSnapshot( client_t *client ) {
 			VectorSubtract(multiworldEntities[i].origin, ps->origin, vec);
 			if(multiworldEntities[i].world != client->newWorld && VectorLength(vec) < 64) {
 				client->newWorld = multiworldEntities[i].world;
-				Cbuf_AddText(va("wait 1\ngame %i %i\n", cl, client->newWorld));
+				// TODO: change this game mode to 5 to mean check with client if it's okay to send gamestate
+				Cbuf_AddText(va("wait 1\ngame 0 %i %i\n", client->newWorld, cl));
 			}
 		}
 	}

@@ -955,6 +955,10 @@ static void ConvertEPairs( FILE *f, entity_t *e, bool skip_origin ){
 }
 
 
+#ifdef LINKABLE
+extern FILE* (*FS_OpenWrite)(const char *filepath);
+#endif
+
 
 /*
    ConvertBSPToMap()
@@ -976,6 +980,11 @@ int ConvertBSPToMap_Ext( char *bspName, bool brushPrimitives ){
 	Sys_Printf( "writing %s\n", name.c_str() );
 
 	/* open it */
+#ifdef LINKABLE
+	if(FS_OpenWrite) {
+		f = FS_OpenWrite( name );
+	} else
+#endif
 	f = SafeOpenWrite( name );
 
 	/* print header */
