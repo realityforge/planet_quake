@@ -152,7 +152,8 @@ qboolean CG_AtmosphericKludge( void ) {
 
 	if(!Q_stricmp( cgs.mapname, "maps/q3dm1.bsp" )) {
 		//CG_EffectParse( "T=SNOW,B=5 10,C=0.5,G=0.3 2,BV=20 30,GV=25 40,W=3 5,D=2000" );
-		CG_EffectParse( "T=RAIN,D=800 800" );
+		CG_EffectParse( "T=SNOW,BV=30 30,GV=60 20,D=800 800" );
+		//CG_EffectParse( "T=RAIN,D=800 800" );
 		return( kludgeResult = qtrue );
 	} else
 	if( !Q_stricmp( cgs.mapname, "maps/etf_2night3.bsp" ) )

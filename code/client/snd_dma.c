@@ -315,11 +315,9 @@ static sfxHandle_t S_Base_RegisterSound( const char *name, qboolean compressed )
 	sfx_t	*sfx;
 
 	compressed = qfalse;
-#ifndef __WASM__
 	if (!s_soundStarted) {
 		return 0;
 	}
-#endif
 
 	if ( strlen( name ) >= MAX_QPATH ) {
 		Com_Printf( "Sound name exceeds MAX_QPATH\n" );
@@ -365,10 +363,8 @@ S_BeginRegistration
 static void S_Base_BeginRegistration( void ) {
 	s_soundMuted = qfalse;		// we can play again
 
-#ifndef __WASM__
 	if ( s_numSfx )
 		return;
-#endif
 
 	SND_setup();
 
@@ -1487,7 +1483,6 @@ void S_FreeOldestSound( void ) {
 // =======================================================================
 
 static void S_Base_Shutdown( void ) {
-
 	if ( !s_soundStarted ) {
 		return;
 	}
@@ -1506,35 +1501,13 @@ static void S_Base_Shutdown( void ) {
 #else
   // free all the sounds not used
   for ( int i = 1 ; i < s_numSfx ; i++ ) {
-    sfx_t	*sfx, *prevSfx;
-    int hash;
-    sndBuffer	*buffer, *nbuffer;
-    if ( !s_knownSfx[i].inMemory && s_knownSfx[i].soundName[0] ) {
-      buffer = s_knownSfx[i].soundData;
-      while(buffer != NULL) {
-        nbuffer = buffer->next;
-        SND_free(buffer);
-        buffer = nbuffer;
-      }
-      hash = S_HashSFXName( s_knownSfx[i].soundName );
-      prevSfx = NULL;
-      sfx = sfxHash[hash];
-      while (sfx) {
-        if (!Q_stricmp(sfx->soundName, s_knownSfx[i].soundName) ) {
-          if(prevSfx == NULL)
-            sfxHash[hash] = sfx->next;
-          else
-            prevSfx->next = sfx->next; // take it out of the list
-          break;
-        } else {
-          prevSfx = sfx;
-        }
-        sfx = sfx->next;
-      }
-      s_knownSfx[i].inMemory = qfalse;
-      s_knownSfx[i].soundData = NULL;
-      s_knownSfx[i].soundName[0] = '\0';
-    }
+		s_knownSfx[i].inMemory = qfalse;
+		s_knownSfx[i].soundData = NULL;
+		s_knownSfx[i].soundCompressed = qfalse;
+		s_knownSfx[i].soundChannels = 0;
+		s_knownSfx[i].soundLength = 0;
+		s_knownSfx[i].lastTimeUsed = 0;
+		//s_knownSfx[i].soundName[0] = '\0';
   }
 #endif
 

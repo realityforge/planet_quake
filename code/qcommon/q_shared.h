@@ -128,10 +128,10 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #if defined(USE_MULTIVM_CLIENT) || defined(USE_MULTIVM_SERVER)
 // Cyrax's Multiview is what makes multiworld possible.
-//#define USE_UNLOCKED_CVARS 1
-//#define USE_ENGINE_TELE 1
+#define USE_UNLOCKED_CVARS 1
+#define USE_ENGINE_TELE 1
 #define USE_LAZY_MEMORY 1
-//#define USE_LAZY_LOAD 1
+#define USE_LAZY_LOAD 1
 #ifndef USE_MV
 #define USE_MV 1
 #endif

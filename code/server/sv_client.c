@@ -3555,11 +3555,11 @@ void SV_ExecuteClientMessage( client_t *cl, msg_t *msg ) {
 #ifdef USE_MULTIVM_SERVER
 	if ( c == clc_mvMove || c == clc_mvMoveNoDelta ) {
 		int igs = MSG_ReadByte( msg );
-		if(!sv_mvWorld->integer || sv_mvOmnipresent->integer > 0) {
+		//if(!sv_mvWorld->integer || sv_mvOmnipresent->integer > 0) {
 			gvmi = igs;
 			CM_SwitchMap(gameWorlds[gvmi]);
 			SV_SetAASgvm(gvmi);
-		}
+		//}
 		SV_UserMove( cl, msg, c == clc_mvMove );
 	} else 
 #endif

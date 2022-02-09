@@ -2617,15 +2617,6 @@ static shader_t *GeneratePermanentShader( void ) {
 
 	*newShader = shader;
 
-#ifdef USE_MULTIVM_CLIENT
-	trWorlds[0].shaders[ trWorlds[0].numShaders ] = newShader;
-	newShader->index = trWorlds[0].numShaders;
-
-	trWorlds[0].sortedShaders[ trWorlds[0].numShaders ] = newShader;
-	newShader->sortedIndex = trWorlds[0].numShaders;
-
-	trWorlds[0].numShaders++;
-#else
 	tr.shaders[ tr.numShaders ] = newShader;
 	newShader->index = tr.numShaders;
 
@@ -2633,6 +2624,12 @@ static shader_t *GeneratePermanentShader( void ) {
 	newShader->sortedIndex = tr.numShaders;
 
 	tr.numShaders++;
+#ifdef USE_MULTIVM_CLIENT
+	if(rwi != 0) {
+		trWorlds[0].shaders[ trWorlds[0].numShaders ] = newShader;
+		trWorlds[0].sortedShaders[ trWorlds[0].numShaders ] = newShader;
+		trWorlds[0].numShaders++;
+	}
 #endif
 
 	for ( i = 0 ; i < newShader->numUnfoggedPasses ; i++ ) {
@@ -3638,10 +3635,6 @@ void	R_ShaderList_f (void) {
 	const shader_t *sh;
 
 	ri.Printf (PRINT_ALL, "-----------------------\n");
-#ifdef USE_MULTIVM_CLIENT
-	rwi = 0;
-	ri.Printf (PRINT_ALL, "%i total shaders\n", tr.numShaders);
-#endif
 
 	count = 0;
 	for ( i = 0 ; i < tr.numShaders ; i++ ) {
@@ -4027,9 +4020,10 @@ void RE_ReloadShaders( qboolean createNew ) {
 	}
 	if(rwi != 0) {
 		memcpy(&trWorlds[rwi], &trWorlds[0], sizeof(trGlobals_t));
-	//tr.numShaders = 0;
-	//tr.numLightmaps = 0;
-	//tr.numModels = 0;
+		//tr.numSkins = 0;
+		//tr.numShaders = 0;
+		//tr.numLightmaps = 0;
+		//tr.numModels = 0;
 		trWorlds[rwi].world = NULL;
 	}
 #endif

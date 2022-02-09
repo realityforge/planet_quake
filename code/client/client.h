@@ -177,8 +177,8 @@ int			serverTimeDeltas[MAX_NUM_VMS];
 
 	// cgame communicates a few values to the client system
 #ifdef USE_MULTIVM_CLIENT
-	int			cgameUserCmdValue[MAX_NUM_VMS];	// current weapon to add to usercmd_t
-#define cgameUserCmdValue cgameUserCmdValue[igvm]
+	int			cgameUserCmdValues[MAX_NUM_VMS];	// current weapon to add to usercmd_t
+#define cgameUserCmdValue cgameUserCmdValues[igvm]
 #else
   int			cgameUserCmdValue;	// current weapon to add to usercmd_t
 #endif

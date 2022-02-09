@@ -1499,12 +1499,7 @@ static void R_Register( void )
 	r_detailTextures = ri.Cvar_Get( "r_detailtextures", "1", CVAR_ARCHIVE_ND | CVAR_LATCH );
 	r_texturebits = ri.Cvar_Get( "r_texturebits", "0", CVAR_ARCHIVE_ND | CVAR_LATCH );
 
-#ifdef USE_LAZY_MEMORY
-	// turn off lightmap merge so they can be updated every time the world loads
-	r_mergeLightmaps = ri.Cvar_Get( "r_mergeLightmaps", "0", CVAR_ROM );
-#else
 	r_mergeLightmaps = ri.Cvar_Get( "r_mergeLightmaps", "1", CVAR_ARCHIVE_ND | CVAR_LATCH );
-#endif
 	r_vbo = ri.Cvar_Get( "r_vbo", "0", CVAR_ARCHIVE_ND | CVAR_LATCH );
 
 	r_mapGreyScale = ri.Cvar_Get( "r_mapGreyScale", "0", CVAR_ARCHIVE_ND | CVAR_LATCH );
@@ -1512,7 +1507,7 @@ static void R_Register( void )
 
 	r_subdivisions = ri.Cvar_Get( "r_subdivisions", "4", CVAR_ARCHIVE_ND | CVAR_LATCH );
 
-	r_fogColor = ri.Cvar_Get("r_fogColor", "0xFFFFFFFF", CVAR_ARCHIVE_ND );
+	r_fogColor = ri.Cvar_Get("r_fogColor", "0x00000000", CVAR_ARCHIVE_ND );
 	r_fogDepth = ri.Cvar_Get("r_fogDepth", "10000", CVAR_ARCHIVE_ND );
 
 	r_maxpolys = ri.Cvar_Get( "r_maxpolys", va("%i", MAX_POLYS ), CVAR_LATCH);

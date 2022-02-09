@@ -218,7 +218,7 @@ static int numModelLoaders = ARRAY_LEN(modelLoaders);
 */
 model_t	*R_GetModelByHandle( qhandle_t index ) {
 	model_t		*mod;
-#ifdef USE_MULTIVM_CLIENT
+#if 0 //def USE_MULTIVM_CLIENT
 	int i = floor(index / MAX_MOD_KNOWN);
 	index = index % MAX_MOD_KNOWN;
 	if(!trWorlds[i].models[index]) {
@@ -253,12 +253,16 @@ model_t *R_AllocModel( void ) {
 	}
 
 	mod = ri.Hunk_Alloc( sizeof( *tr.models[tr.numModels] ), h_low );
-#ifdef USE_MULTIVM_CLIENT
+#if 0 //def USE_MULTIVM_CLIENT
 	mod->index = rwi * MAX_MOD_KNOWN + tr.numModels;
 #else
 	mod->index = tr.numModels;
 #endif
 	tr.models[tr.numModels] = mod;
+#ifdef USE_MULTIVM_CLIENT
+	if(rwi != 0)
+		trWorlds[0].models[trWorlds[0].numModels++] = mod;
+#endif
 	tr.numModels++;
 
 	return mod;
@@ -360,6 +364,7 @@ qhandle_t RE_RegisterModel( const char *name )
 
 	// only set the name after the model has been successfully loaded
 	Q_strncpyz( mod->name, name, sizeof( mod->name ) );
+	printf("model: %i -> %s\n", tr.numModels, mod->name);
 
 	mod->type = MOD_BAD;
 	mod->numLods = 0;

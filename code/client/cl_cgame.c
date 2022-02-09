@@ -934,6 +934,9 @@ static intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 		S_StartLocalSound( args[1], args[2] );
 		return 0;
 	case CG_S_CLEARLOOPINGSOUNDS:
+#ifdef USE_MULTIVM_CLIENT
+		if(clientScreens[cgvmi][0] > -1)
+#endif
 		S_ClearLoopingSounds(args[1]);
 		return 0;
 	case CG_S_ADDLOOPINGSOUND:
@@ -1179,6 +1182,9 @@ static intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 		return botlib_export->PC_SourceFileAndLine( args[1], VMA(2), VMA(3) );
 
 	case CG_S_STOPBACKGROUNDTRACK:
+#ifdef USE_MULTIVM_CLIENT
+		if(clientScreens[cgvmi][0] > -1)
+#endif
 		S_StopBackgroundTrack();
 		return 0;
 
