@@ -21801,3 +21801,13 @@
 "origin" "936 2472 392"
 "target" "camera_1"
 }
+
+// entity 241
+{
+	"spawnflags" "1"
+	"classname" "trigger_always"
+	"targetShaderNewName" "textures/gothic_door/door02_portal"
+	"targetShaderName" "textures/gothic_door/door02_i_ornate5_fin"
+	"origin" "0.000000 0.000000 0.000000"
+
+}

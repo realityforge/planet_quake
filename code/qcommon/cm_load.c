@@ -721,7 +721,7 @@ cmdsAdded = qtrue;
 
 
 #ifdef USE_MEMORY_MAPS
-void SV_MakeMinimap(const char *minimap);
+void SV_MakeMinimap(void);
 extern cvar_t *sv_bspMinimap;
 #endif
 
@@ -848,7 +848,7 @@ int CM_LoadMap( const char *name, qboolean clientload, int *checksum ) {
 #ifndef BUILD_SLIM_CLIENT
 #ifdef USE_MEMORY_MAPS
 	if (sv_bspMinimap->integer) {
-		SV_MakeMinimap(name);
+		SV_MakeMinimap();
 	}
 #endif
 #endif

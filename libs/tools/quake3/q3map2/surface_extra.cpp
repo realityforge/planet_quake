@@ -200,7 +200,7 @@ void WriteSurfaceExtraFile( const char *path ){
 	/* open the file */
 	auto srfPath = StringOutputStream( 256 )( PathExtensionless( path ), ".srf" );
 	Sys_Printf( "Writing %s\n", srfPath.c_str() );
-	FILE *sf = SafeOpenWrite( srfPath, "wt" );
+	FILE *sf = SafeOpenWrite( srfPath.c_str(), "wt" );
 
 	/* lap through the extras list */
 	for ( i = -1; i < numSurfaceExtras; i++ )

@@ -153,6 +153,8 @@ cvar_t *sv_bspAAS;
 cvar_t *sv_bspRebuild;
 cvar_t *sv_bspMap;
 cvar_t *sv_bspSplice;
+cvar_t *sv_bspMiniSize;
+cvar_t *sv_bspMiniGrid;
 #endif
 
 #ifndef BUILD_SLIM_CLIENT

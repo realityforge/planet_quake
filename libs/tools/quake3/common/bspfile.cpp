@@ -400,11 +400,6 @@ void    WriteBSPFile( const char *filename ) {
 	header->ident = LittleLong( BSP_IDENT );
 	header->version = LittleLong( bsp_version );
 
-#ifdef LINKABLE
-	if(FS_OpenWrite) {
-		bspfile = FS_OpenWrite(filename);
-	} else
-#endif
 	bspfile = SafeOpenWrite( filename );
 	SafeWrite( bspfile, header, sizeof( dheader_t ) );    // overwritten later
 

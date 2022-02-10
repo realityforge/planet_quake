@@ -1786,9 +1786,11 @@ void LoadMapFile( char *filename, bool onlyLights, bool noCollapseGroups ){
 	Sys_FPrintf( SYS_VRB, "--- LoadMapFile ---\n" );
 	Sys_Printf( "Loading %s\n", filename );
 
+#ifndef LINKABLE
 	/* hack */
 	file = SafeOpenRead( filename );
 	fclose( file );
+#endif
 
 	/* load the map file */
 	LoadScriptFile( filename, -1 );

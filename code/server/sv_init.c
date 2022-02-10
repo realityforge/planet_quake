@@ -1111,6 +1111,8 @@ void SV_Init( void )
 	sv_bspMap = Cvar_Get( "sv_bspMap", "0", CVAR_TEMP );
 	sv_bspSplice = Cvar_Get( "sv_bspSplice", "", CVAR_TEMP );
 	sv_bspRebuild = Cvar_Get( "sv_bspRebuild", "0", CVAR_TEMP );
+	sv_bspMiniSize = Cvar_Get( "sv_bspMiniSize", "64", CVAR_TEMP );
+	sv_bspMiniGrid = Cvar_Get( "sv_bspMiniGrid", "16", CVAR_TEMP );
 #endif
 
 #ifdef USE_BANS

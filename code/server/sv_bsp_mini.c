@@ -4,6 +4,7 @@
 
 #include "../qcommon/cm_local.h"
 
+#if 0
 // TODO: try to copy the minimap code in here
 
 typedef enum
@@ -536,25 +537,7 @@ void WriteTGA( const char *filename, byte *data, int width, int height ) {
 	Z_Free( buffer );
 }
 
-void WriteTGAGray( const char *filename, byte *data, int width, int height ) {
-	byte buffer[18];
-	FILE    *f;
-
-	memset( buffer, 0, 18 );
-	buffer[2] = 3;      // uncompressed type
-	buffer[12] = width & 255;
-	buffer[13] = width >> 8;
-	buffer[14] = height & 255;
-	buffer[15] = height >> 8;
-	buffer[16] = 8; // pixel size
-
-	f = fopen( filename, "wb" );
-	fwrite( buffer, 1, 18, f );
-	fwrite( data, 1, width * height, f );
-	fclose( f );
-}
-
-void SV_MakeMinimap(const char *mapname) {
+void SV_MakeMinimap(void) {
 	char minimapFilename[MAX_QPATH];
 	float *data1f;
 	byte *data4b, *p;
@@ -628,10 +611,10 @@ void SV_MakeMinimap(const char *mapname) {
 			p++;
 		}
 	}
-	Com_Printf( " writing to %s...", minimapFilename );
-	COM_StripExtension(mapname, minimapFilename, sizeof(minimapFilename));
+	COM_StripExtension(cm.name, minimapFilename, sizeof(minimapFilename));
 	Q_strcat(minimapFilename, sizeof(minimapFilename), ".tga");
 	char *mapPath = FS_BuildOSPath( Cvar_VariableString("fs_homepath"), Cvar_VariableString("fs_game"), minimapFilename );
+	Com_Printf( " writing to %s...", mapPath );
 	WriteTGAGray( mapPath, data4b, sampleSize, sampleSize );
 
 	Z_Free(data4b);
@@ -947,6 +930,105 @@ void MiniMapBSPMain( const char *source ){
 
 	/* return to sender */
 	return;
+}
+#endif
+
+void WriteTGAGray( const char *filename, byte *data, int width, int height ) {
+	byte buffer[18];
+	FILE    *f;
+
+	memset( buffer, 0, 18 );
+	buffer[2] = 3;      // uncompressed type
+	buffer[12] = width & 255;
+	buffer[13] = width >> 8;
+	buffer[14] = height & 255;
+	buffer[15] = height >> 8;
+	buffer[16] = 8; // pixel size
+
+	f = fopen( filename, "wb" );
+	fwrite( buffer, 1, 18, f );
+	fwrite( data, 1, width * height, f );
+	fclose( f );
+}
+
+void SV_MakeMinimap() {
+	char minimapFilename[MAX_QPATH];
+	float *data1f;
+	byte *data4b, *p;
+	float *q;
+	trace_t		trace;
+	vec3_t scale, mins, maxs;
+	cmodel_t *map = CM_ClipHandleToModel(0);
+	vec3_t start, end, forward, right, up, size, midpoint, dist, median;
+
+	for(int i = 0; i < cm.numSubModels; i++) {
+		VectorAdd(mins, cm.cmodels[i].mins, mins);
+		VectorAdd(maxs, cm.cmodels[i].maxs, maxs);
+	}
+	VectorScale(mins, 1.0f/cm.numSubModels, mins);
+	VectorScale(maxs, 1.0f/cm.numSubModels, maxs);
+	VectorSubtract(map->maxs, map->mins, size);
+	VectorSubtract(maxs, mins, median);
+	VectorScale(median, 0.5, midpoint);
+	VectorSubtract(maxs, midpoint, midpoint);
+	AngleVectors( (vec3_t){89, 0, 0}, forward, right, up );
+	float height = MAX(size[0], size[1]);
+	midpoint[2] = map->maxs[2] + height;
+
+	data1f = (float *)Z_Malloc( sv_bspMiniSize->integer * sv_bspMiniSize->integer * sizeof( float ) );
+	memset(data1f, 0, sv_bspMiniSize->integer * sv_bspMiniSize->integer * sizeof( float ));
+	data4b = (byte *)Z_Malloc( sv_bspMiniSize->integer * sv_bspMiniSize->integer * 4 );
+	memset(data4b, 0, sv_bspMiniSize->integer * sv_bspMiniSize->integer * 4);
+
+	for(int i = 0; i < 3; i++) {
+		scale[i] = ceil(size[i] / sv_bspMiniSize->integer);
+	}
+
+	q = data1f;
+	for ( int y = 0; y < sv_bspMiniSize->integer; ++y ) {
+		for ( int x = 0; x < sv_bspMiniSize->integer; ++x ) {
+			vec3_t newStart = {map->mins[0] + scale[0] * x, map->mins[1] + scale[1] * y, midpoint[2]};
+			VectorMA( newStart, fabsf(size[2]) * 4, forward, end );
+			VectorCopy(newStart, start);
+			while (1) {
+				CM_BoxTrace( &trace, start, end, vec3_origin, vec3_origin, 0, MASK_PLAYERSOLID, qfalse );
+				//trap_Trace (&trace, tracefrom, NULL, NULL, end, passent, MASK_SHOT );
+				//if (trace.surfaceFlags & SURF_NOIMPACT)
+				//	break;
+
+				if (trace.surfaceFlags & SURF_SKY)
+					break;
+
+				// Hypo: break if we traversed length of vector tracefrom
+				if (trace.fraction == 1.0)
+					break;
+
+				VectorSubtract(start, trace.endpos, dist);
+				*q += fabsf(midpoint[2] - trace.endpos[2]) - height; //VectorLength(dist);
+				
+				// otherwise continue tracing thru walls
+				VectorMA (trace.endpos,1,forward,start);
+			}
+			q++;
+		}
+	}
+
+	q = data1f;
+	p = data4b;
+	for ( int y = 0; y < sv_bspMiniSize->integer; ++y ) {
+		for ( int x = 0; x < sv_bspMiniSize->integer; ++x ) {
+			*p = Com_Clamp( 0.f, 255.f / 256.f, *q / size[2] / 5 ) * 256;
+			q++;
+			p++;
+		}
+	}
+	COM_StripExtension(cm.name, minimapFilename, sizeof(minimapFilename));
+	Q_strcat(minimapFilename, sizeof(minimapFilename), ".tga");
+	char *mapPath = FS_BuildOSPath( Cvar_VariableString("fs_homepath"), Cvar_VariableString("fs_game"), minimapFilename );
+	Com_Printf( " writing to %s...", mapPath );
+	WriteTGAGray( mapPath, data4b, sv_bspMiniSize->integer, sv_bspMiniSize->integer );
+
+	Z_Free(data4b);
 }
 
 #endif

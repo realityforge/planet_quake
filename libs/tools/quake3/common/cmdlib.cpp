@@ -408,7 +408,21 @@ int Q_filelength( FILE *f ){
 }
 
 
+#ifdef LINKABLE
+extern "C" {
+extern FILE* (*FS_OpenWrite)(const char *filename);
+extern FILE* (*FS_OpenRead)(const char *filename);
+}
+#endif
+
 FILE *SafeOpenWrite( const char *filename, const char *mode ){
+#ifdef LINKABLE
+	if(FS_OpenWrite) {
+		FILE *f = FS_OpenWrite(filename);
+		if(f) return f;
+	}
+#endif
+
 	FILE *f = fopen( filename, mode );
 
 	if ( !f ) {
@@ -419,6 +433,13 @@ FILE *SafeOpenWrite( const char *filename, const char *mode ){
 }
 
 FILE *SafeOpenRead( const char *filename, const char *mode ){
+#ifdef LINKABLE
+	if(FS_OpenWrite) {
+		FILE *f = FS_OpenRead(filename);
+		if(f) return f;
+	}
+#endif
+
 	FILE *f = fopen( filename, mode );
 
 	if ( !f ) {

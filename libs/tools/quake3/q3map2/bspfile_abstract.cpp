@@ -426,7 +426,11 @@ void WriteBSPFile( const char *filename ){
 
 	/* make fake temp name so existing bsp file isn't damaged in case write process fails */
 	time( &tm );
+#ifndef LINKABLE
 	sprintf( tempname, "%s.%08X", filename, (int) tm );
+#else
+	sprintf( tempname, "%s", filename );
+#endif
 
 	/* byteswap, write the bsp, then swap back so it can be manipulated further */
 	SwapBSPFile();

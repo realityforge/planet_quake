@@ -586,6 +586,8 @@ extern  cvar_t *sv_bspAAS;
 extern  cvar_t *sv_bspRebuild;
 extern  cvar_t *sv_bspMap;
 extern  cvar_t *sv_bspSplice;
+extern  cvar_t *sv_bspMiniSize;
+extern  cvar_t *sv_bspMiniGrid;
 #endif
 
 
@@ -959,8 +961,10 @@ void SV_AddFilterCmd_f( void );
 #define  SIDE_BOTTOM 32
 #define  SIDE_ALL    63 // ?
 
+void SV_MakeMinimap(void);
 int SV_MakeMap( const char **memoryMap );
 void SV_ExportMap(void);
+void SV_LightMap(void);
 char *SV_MakeCube(
 	vec3_t p1, vec3_t p2, vec3_t p3, vec3_t p4,
 	vec3_t p5, vec3_t p6, vec3_t p7, vec3_t p8);

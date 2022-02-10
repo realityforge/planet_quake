@@ -142,7 +142,7 @@ extern "C" {
 
 int (*FS_ReadFile)(const char *qpath, void **buffer);
 FILE* (*FS_OpenWrite)(const char *filepath);
-
+FILE* (*FS_OpenRead)(const char *filepath);
 }
 #endif
 

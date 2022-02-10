@@ -432,10 +432,6 @@ void Error( const char *error, ... ){
 	vsprintf( tmp, error, argptr );
 	va_end( argptr );
 
-	if(Com_Error) {
-		Com_Error(tmp);
-	}
-
 	sprintf( out_buffer, "************ ERROR ************\n%s\n", tmp );
 
 	FPrintf( SYS_ERR, out_buffer );
@@ -448,6 +444,10 @@ void Error( const char *error, ... ){
 	//++timo HACK ALERT .. if we shut down too fast the xml stream won't reach the listener.
 	// a clean solution is to send a sync request node in the stream and wait for an answer before exiting
 	Sys_Sleep( 1000 );
+
+	if(Com_Error) {
+		Com_Error(tmp);
+	}
 
 	exit( 1 );
 }

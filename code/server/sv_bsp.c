@@ -107,10 +107,19 @@ static void SV_MapError(const char *error) {
 
 static FILE *SV_OpenWrite(const char *path) {
 	// sometimes q3map2 will all process directory
+	printf("writing: %s\n", path);
 	if(Q_stristr(path, Sys_Pwd())) {
 		path += strlen(Sys_Pwd()) + 1;
 	}
 	return Sys_FOpen(FS_BuildOSPath(Cvar_VariableString("fs_homepath"), FS_GetCurrentGameDir(), path), "wb");
+}
+
+static FILE *SV_OpenRead(const char *path) {
+	// sometimes q3map2 will all process directory
+	if(Q_stristr(path, Sys_Pwd())) {
+		path += strlen(Sys_Pwd()) + 1;
+	}
+	return Sys_FOpen(FS_BuildOSPath(Cvar_VariableString("fs_homepath"), FS_GetCurrentGameDir(), path), "rb");
 }
 
 static int SV_ReadFile(const char *path, void **buffer) {
@@ -118,7 +127,6 @@ static int SV_ReadFile(const char *path, void **buffer) {
 	if(Q_stristr(path, Sys_Pwd())) {
 		path += strlen(Sys_Pwd()) + 1;
 	}
-	printf("reading: %s\n", path);
 	return FS_ReadFile(path, buffer);
 }
 
@@ -158,6 +166,7 @@ void SV_ExportMap(void) {
 		"-vfs",
 		(char *)SV_ReadFile,
 		(char *)SV_OpenWrite,
+		(char *)SV_OpenRead,
 		"-convert",
 		"-keeplights",
 		"-format",
@@ -169,10 +178,127 @@ void SV_ExportMap(void) {
 	Cvar_Set( "buildingMap", "" );
 }
 
+
+void SV_LightMap(void) {
+	int length;
+	if(cm.name[0] == '\0') {
+		return;
+	}
+
+	if((length = FS_FOpenFileRead( va("maps/%s/lm_0000.tga", cm.name), NULL, qtrue )) != -1) {
+		return;
+	}
+	// then we can decide not to update LM?
+	char *compileLight[] = {
+		"q3map2",
+		"-v",
+		"-error",
+		(char *)SV_MapError,
+		"-light",
+		"-external",
+		"-fs_basepath",
+		(char *)Cvar_VariableString("fs_basepath"),
+		"-game",
+		"quake3",
+		"-fs_game",
+		(char *)FS_GetCurrentGameDir(),
+		"-vfs",
+		(char *)SV_ReadFile,
+		(char *)SV_OpenWrite,
+		(char *)SV_OpenRead,
+		"-fast",
+		"-patchshadows",
+		//"-gridsize",
+		//"512.0 512.0 512.0",
+		"-bounce",
+		"2", // really decent lighting, but not fast enough
+		//"-bouncegrid",
+		//"-trisoup",
+		"-samplesize",
+		"8",
+		cm.name
+	};
+	Q3MAP2Main(ARRAY_LEN(compileLight), compileLight);
+}
+
+
+void SV_MakeBSP(char *memoryMap) {
+	char *mapname = (char *)va("maps/%s.map", memoryMap);
+	// no bsp file exists, try to make one, check for .map file
+	if(!FS_RealPath( mapname )) {
+		return;
+	}
+
+	Cvar_Set( "buildingMap", memoryMap );
+	char *compileMeta[] = {
+		"q3map2",
+		"-meta",
+		"-v",
+		"-error",
+		(char *)SV_MapError,
+		"-fs_basepath",
+		(char *)Cvar_VariableString("fs_basepath"),
+		"-vfs",
+		(char *)SV_ReadFile,
+		(char *)SV_OpenWrite,
+		(char *)SV_OpenRead,
+		"-game",
+		"quake3",
+		"-fs_game",
+		(char *)FS_GetCurrentGameDir(),
+		//"-patchmeta", // makes compile  much slower
+		"-keeplights",
+		mapname
+	};
+	Q3MAP2Main(ARRAY_LEN(compileMeta), compileMeta);
+
+	/*
+	char *compileVis[] = {
+		"q3map2",
+		"-v",
+		"-fs_basepath",
+		(char *)Cvar_VariableString("fs_basepath"),
+		"-game",
+		"quake3",
+		"-fs_game",
+		(char *)FS_GetCurrentGameDir(),
+		"-vis",
+		mapPath
+	};
+	Q3MAP2Main(ARRAY_LEN(compileVis), compileVis);
+	*/
+
+	char *compileLight[] = {
+		"q3map2",
+		"-light",
+		"-v",
+		"-error",
+		(char *)SV_MapError,
+		"-fs_basepath",
+		(char *)Cvar_VariableString("fs_basepath"),
+		"-vfs",
+		(char *)SV_ReadFile,
+		(char *)SV_OpenWrite,
+		(char *)SV_OpenRead,
+		"-game",
+		"quake3",
+		"-fs_game",
+		(char *)FS_GetCurrentGameDir(),
+		"-faster",
+		"-cheap",
+		"-nolm",
+		"-notrace",
+		"-samplesize",
+		"128",
+		mapname
+	};
+	Q3MAP2Main(ARRAY_LEN(compileLight), compileLight);
+}
+
+
 int SV_MakeMap( const char **map ) {
 	static char memoryMap[MAX_QPATH];
 	char *mapPath;
-	char *bspPath;
   fileHandle_t mapfile;
 	int length = 0;
 	Q_strncpyz( memoryMap, *map, sizeof(memoryMap) );
@@ -182,7 +308,8 @@ int SV_MakeMap( const char **map ) {
 	}
 
 	// early exit unless we force rebuilding
-	if(!sv_bspRebuild->integer && FS_RealPath( va("maps/%s.bsp", memoryMap) )) {
+	mapPath = FS_RealPath( va("maps/%s.bsp", memoryMap) );
+	if(!sv_bspRebuild->integer && mapPath) {
 		return 1;
 	}
 
@@ -242,129 +369,15 @@ int SV_MakeMap( const char **map ) {
 
 	// TODO: add levelshot camera location
 	
-	if (!mapPath) {
-		// no bsp file exists, try to make one, check for .map file
-		mapPath = FS_RealPath( va("maps/%s.map", memoryMap) );
-		if(sv_bspRebuild->integer && mapPath) {
-			Cvar_Set( "buildingMap", memoryMap );
-			char *compileMeta[] = {
-				"q3map2",
-				"-v",
-				"-error",
-				(char *)SV_MapError,
-				"-meta",
-				"-fs_basepath",
-				(char *)Cvar_VariableString("fs_basepath"),
-				"-game",
-				"quake3",
-				"-fs_game",
-				(char *)FS_GetCurrentGameDir(),
-		    //"-patchmeta", // makes compile  much slower
-				"-keeplights",
-				mapPath
-			};
-			Q3MAP2Main(ARRAY_LEN(compileMeta), compileMeta);
-			/*
-			char *compileVis[] = {
-				"q3map2",
-				"-v",
-				"-fs_basepath",
-				(char *)Cvar_VariableString("fs_basepath"),
-				"-game",
-				"quake3",
-				"-fs_game",
-				(char *)FS_GetCurrentGameDir(),
-				"-vis",
-				mapPath
-			};
-			Q3MAP2Main(ARRAY_LEN(compileVis), compileVis);
-			*/
-			char *compileLight[] = {
-				"q3map2",
-				"-v",
-				"-error",
-				(char *)SV_MapError,
-				"-light",
-				"-fs_basepath",
-				(char *)Cvar_VariableString("fs_basepath"),
-				"-game",
-				"quake3",
-				"-fs_game",
-				(char *)FS_GetCurrentGameDir(),
-				"-faster",
-				"-cheap",
-				"-nolm",
-				"-notrace",
-				"-samplesize",
-				"128",
-				mapPath
-			};
-			Q3MAP2Main(ARRAY_LEN(compileLight), compileLight);
-		}
+	if (sv_bspRebuild->integer || !mapPath) {
+		SV_MakeBSP(memoryMap);
 	}
 
 	if(sv_bspLight->integer
-		&& ((length = FS_FOpenFileRead( va("maps/%s/lm_0000.tga", memoryMap), NULL, qtrue )) == -1
-		|| sv_bspSplice->string[0] != '\0') // always light spliced maps
+		|| sv_bspSplice->string[0] != '\0' // always light spliced maps
 	) {
-		// then we can decide not to update LM?
-		bspPath = FS_RealPath( va("maps/%s.bsp", memoryMap) );
-		char *compileLight[] = {
-				"q3map2",
-				"-v",
-				"-error",
-				(char *)SV_MapError,
-				"-light",
-				"-external",
-				"-fs_basepath",
-				(char *)Cvar_VariableString("fs_basepath"),
-				"-game",
-				"quake3",
-				"-fs_game",
-				(char *)FS_GetCurrentGameDir(),
-				"-fast",
-				"-patchshadows",
-				//"-gridsize",
-				//"512.0 512.0 512.0",
-				"-bounce",
-				"2", // really decent lighting, but not fast enough
-				//"-bouncegrid",
-				//"-trisoup",
-				"-samplesize",
-				"8",
-				bspPath
-			};
-			Q3MAP2Main(ARRAY_LEN(compileLight), compileLight);
+		SV_LightMap();
 	}
-
-
-	if (sv_bspMinimap->integer) {
-#if 0
-		// no bsp file exists, try to make one, check for .map file
-		mapPath = FS_RealPath( va("maps/%s.map", memoryMap) );
-		if(sv_bspRebuild->integer && mapPath) {
-			Cvar_Set( "buildingMap", memoryMap );
-			char *compileMap[] = {
-				"q3map2",
-				"-v",
-				"-error",
-				(char *)SV_MapError,
-				"-fs_basepath",
-				(char *)Cvar_VariableString("fs_basepath"),
-				"-game",
-				"quake3",
-				"-fs_game",
-				(char *)FS_GetCurrentGameDir(),
-				"-minimap",
-				mapPath
-			};
-			Q3MAP2Main(ARRAY_LEN(compileMap), compileMap);
-		}
-#else
-		//MiniMapBSPMain(va("maps/%s.bsp", memoryMap));
-#endif
-	}
-
 
 	// TODO: generate AAS file for bots, missing, or updated maps
 	if(sv_bspAAS->integer

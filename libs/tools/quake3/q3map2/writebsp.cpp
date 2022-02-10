@@ -395,7 +395,7 @@ void EndBSPFile( bool do_write ){
 		/* write the bsp */
 		auto path = StringOutputStream( 256 )( source, ".bsp" );
 		Sys_Printf( "Writing %s\n", path.c_str() );
-		WriteBSPFile( path );
+		WriteBSPFile( path.c_str() );
 	}
 }
 

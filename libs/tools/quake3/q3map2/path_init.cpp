@@ -353,10 +353,11 @@ void AddPakPath( char *path ){
 
 
 #ifdef LINKABLE
-
+extern "C" {
 extern int (*FS_ReadFile)(const char *qpath, void **buffer);
 extern int (*FS_OpenWrite)(const char *filename);
-
+extern int (*FS_OpenRead)(const char *filename);
+}
 #endif
 
 
@@ -490,6 +491,8 @@ void InitPaths( int *argc, char **argv ){
 			FS_ReadFile = reinterpret_cast<int (*)(const char *qpath, void **buffer)>(argv[i]);
 			argv[ i++ ] = NULL;
 			FS_OpenWrite = reinterpret_cast<int (*)(const char *filename)>(argv[i]);
+			argv[ i++ ] = NULL;
+			FS_OpenRead = reinterpret_cast<int (*)(const char *filename)>(argv[i]);
 			argv[ i ] = NULL;
 		}
 #endif
