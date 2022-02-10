@@ -936,8 +936,9 @@ void WriteTGA( const char *filename, byte *data, int width, int height ) {
 
 static void SV_TraceArea(vec3_t angle, vec3_t scale, float *data1f) {
 	trace_t		trace;
-	vec3_t start, end;
+	vec3_t start, end, forward, right, up;
 	//vec3_t dist;
+	AngleVectors( angle, forward, right, up );
 
 	for ( int y = 0; y < sv_bspMiniSize->integer; ++y ) {
 		for ( int x = 0; x < sv_bspMiniSize->integer; ++x ) {
@@ -950,14 +951,17 @@ static void SV_TraceArea(vec3_t angle, vec3_t scale, float *data1f) {
 				cm.cmodels[0].mins[1] + scale[1] * y, 
 				data1f[y * sv_bspMiniSize->integer + x] // bottom of sky brush
 			};
-			VectorMA( newStart, 8192, angle, end );
-			VectorMA (newStart,16,angle,start);
+			VectorMA( newStart, 8192, forward, end );
+			VectorMA ( newStart, 16, forward, start );
 			while (1) {
-				CM_BoxTrace( &trace, start, end, vec3_origin, vec3_origin, 0, MASK_PLAYERSOLID, qfalse );
+				CM_BoxTrace( &trace, start, end, vec3_origin, vec3_origin, 0, MASK_SOLID, qfalse );
 				//trap_Trace (&trace, tracefrom, NULL, NULL, end, passent, MASK_SHOT );
 
 				// Hypo: break if we traversed length of vector tracefrom
-				if (trace.fraction == 1.0 || trace.entityNum == ENTITYNUM_NONE) {
+				if (trace.fraction == 1.0 
+					|| trace.entityNum == ENTITYNUM_NONE
+					|| (trace.surfaceFlags & SURF_SKY)
+				) {
 					data1f[y * sv_bspMiniSize->integer + x] = MAX_MAP_BOUNDS; //VectorLength(dist);
 					break;
 				}
@@ -965,8 +969,8 @@ static void SV_TraceArea(vec3_t angle, vec3_t scale, float *data1f) {
 				// otherwise continue tracing thru walls
 				if ((trace.surfaceFlags & SURF_NODRAW)
 					|| (trace.surfaceFlags & SURF_NONSOLID)
-					|| (trace.surfaceFlags & SURF_SKY)) {
-					VectorMA (trace.endpos,16,angle,start);
+				) {
+					VectorMA (trace.endpos,16,forward,start);
 					continue;
 				}
 
@@ -1009,7 +1013,7 @@ void SV_MakeMinimap() {
 	float *q;
 	float *data1f;
 	byte *data4b, *p;
-	vec3_t scale, size, angle, right, up;
+	vec3_t scale, size;
 
 	VectorSubtract(cm.cmodels[0].maxs, cm.cmodels[0].mins, size);
 	for(int i = 0; i < 3; i++) {
@@ -1050,8 +1054,7 @@ void SV_MakeMinimap() {
 	}
 
 	// subtract sky
-	AngleVectors( (vec3_t){89, 0, 0}, angle, right, up );
-	SV_TraceArea(angle, scale, data1f);
+	SV_TraceArea((vec3_t){89, 0, 0}, scale, data1f);
 
 	// store every facet in half (aka 128 grid, vertical in case of rain/ground)
 	//   so that a trace from the bottom can be -128, and trace from top can be 128.
@@ -1080,16 +1083,15 @@ void SV_MakeMinimap() {
 	}
 
 	// subtract the area that passes through a ceiling starting from the floor we just calculated
-	AngleVectors( (vec3_t){-89, 0, 0}, angle, right, up );
-	SV_TraceArea(scale, angle, data1f);
+	SV_TraceArea((vec3_t){-89, 0, 0}, scale, data1f);
 
 	q = data1f;
 	p = data4b;
 	for ( int y = 0; y < sv_bspMiniSize->integer; ++y ) {
 		for ( int x = 0; x < sv_bspMiniSize->integer; ++x ) {
 			if(*q != MAX_MAP_BOUNDS) {
-				//*p++ = 0;
-				p++;
+				*p++ = 0;
+				//*p++ = 255;
 			} else {
 				p++;
 			}
