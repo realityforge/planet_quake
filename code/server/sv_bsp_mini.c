@@ -500,43 +500,6 @@ void MiniMapMakeSampleOffsets( void )
 	}
 }
 
-/*
-   ================
-   WriteTGA
-   ================
- */
-void WriteTGA( const char *filename, byte *data, int width, int height ) {
-	byte    *buffer;
-	int i;
-	int c;
-	FILE    *f;
-
-	buffer = Z_Malloc( width * height * 4 + 18 );
-	memset( buffer, 0, 18 );
-	buffer[2] = 2;      // uncompressed type
-	buffer[12] = width & 255;
-	buffer[13] = width >> 8;
-	buffer[14] = height & 255;
-	buffer[15] = height >> 8;
-	buffer[16] = 32;    // pixel size
-
-	// swap rgb to bgr
-	c = 18 + width * height * 4;
-	for ( i = 18 ; i < c ; i += 4 )
-	{
-		buffer[i] = data[i - 18 + 2];       // blue
-		buffer[i + 1] = data[i - 18 + 1];     // green
-		buffer[i + 2] = data[i - 18 + 0];     // red
-		buffer[i + 3] = data[i - 18 + 3];     // alpha
-	}
-
-	f = fopen( filename, "wb" );
-	fwrite( buffer, 1, c, f );
-	fclose( f );
-
-	Z_Free( buffer );
-}
-
 void SV_MakeMinimap(void) {
 	char minimapFilename[MAX_QPATH];
 	float *data1f;
@@ -933,100 +896,217 @@ void MiniMapBSPMain( const char *source ){
 }
 #endif
 
-void WriteTGAGray( const char *filename, byte *data, int width, int height ) {
-	byte buffer[18];
+/*
+   ================
+   WriteTGA
+   ================
+ */
+void WriteTGA( const char *filename, byte *data, int width, int height ) {
+	byte    *buffer;
+	int i;
+	int c;
 	FILE    *f;
 
+	buffer = Z_Malloc( width * height * 4 + 18 );
 	memset( buffer, 0, 18 );
-	buffer[2] = 3;      // uncompressed type
+	buffer[2] = 2;      // uncompressed type
 	buffer[12] = width & 255;
 	buffer[13] = width >> 8;
 	buffer[14] = height & 255;
 	buffer[15] = height >> 8;
-	buffer[16] = 8; // pixel size
+	buffer[16] = 32;    // pixel size
+
+	// swap rgb to bgr
+	c = 18 + width * height * 4;
+	for ( i = 18 ; i < c ; i += 4 )
+	{
+		buffer[i] = data[i - 18 + 2];       // blue
+		buffer[i + 1] = data[i - 18 + 1];     // green
+		buffer[i + 2] = data[i - 18 + 0];     // red
+		buffer[i + 3] = data[i - 18 + 3];     // alpha
+	}
 
 	f = fopen( filename, "wb" );
-	fwrite( buffer, 1, 18, f );
-	fwrite( data, 1, width * height, f );
+	fwrite( buffer, 1, c, f );
 	fclose( f );
+
+	Z_Free( buffer );
 }
 
-void SV_MakeMinimap() {
-	char minimapFilename[MAX_QPATH];
-	float *data1f;
-	byte *data4b, *p;
-	float *q;
+
+static void SV_TraceArea(vec3_t angle, vec3_t scale, float *data1f) {
 	trace_t		trace;
-	vec3_t scale, mins, maxs;
-	cmodel_t *map = CM_ClipHandleToModel(0);
-	vec3_t start, end, forward, right, up, size, midpoint, dist, median;
+	vec3_t start, end;
+	//vec3_t dist;
 
-	for(int i = 0; i < cm.numSubModels; i++) {
-		VectorAdd(mins, cm.cmodels[i].mins, mins);
-		VectorAdd(maxs, cm.cmodels[i].maxs, maxs);
-	}
-	VectorScale(mins, 1.0f/cm.numSubModels, mins);
-	VectorScale(maxs, 1.0f/cm.numSubModels, maxs);
-	VectorSubtract(map->maxs, map->mins, size);
-	VectorSubtract(maxs, mins, median);
-	VectorScale(median, 0.5, midpoint);
-	VectorSubtract(maxs, midpoint, midpoint);
-	AngleVectors( (vec3_t){89, 0, 0}, forward, right, up );
-	float height = MAX(size[0], size[1]);
-	midpoint[2] = map->maxs[2] + height;
-
-	data1f = (float *)Z_Malloc( sv_bspMiniSize->integer * sv_bspMiniSize->integer * sizeof( float ) );
-	memset(data1f, 0, sv_bspMiniSize->integer * sv_bspMiniSize->integer * sizeof( float ));
-	data4b = (byte *)Z_Malloc( sv_bspMiniSize->integer * sv_bspMiniSize->integer * 4 );
-	memset(data4b, 0, sv_bspMiniSize->integer * sv_bspMiniSize->integer * 4);
-
-	for(int i = 0; i < 3; i++) {
-		scale[i] = ceil(size[i] / sv_bspMiniSize->integer);
-	}
-
-	q = data1f;
 	for ( int y = 0; y < sv_bspMiniSize->integer; ++y ) {
 		for ( int x = 0; x < sv_bspMiniSize->integer; ++x ) {
-			vec3_t newStart = {map->mins[0] + scale[0] * x, map->mins[1] + scale[1] * y, midpoint[2]};
-			VectorMA( newStart, fabsf(size[2]) * 4, forward, end );
-			VectorCopy(newStart, start);
+			if(data1f[y * sv_bspMiniSize->integer + x] == MAX_MAP_BOUNDS) {
+				continue;
+			}
+
+			vec3_t newStart = {
+				cm.cmodels[0].mins[0] + scale[0] * x, 
+				cm.cmodels[0].mins[1] + scale[1] * y, 
+				data1f[y * sv_bspMiniSize->integer + x] // bottom of sky brush
+			};
+			VectorMA( newStart, 8192, angle, end );
+			VectorMA (newStart,16,angle,start);
 			while (1) {
 				CM_BoxTrace( &trace, start, end, vec3_origin, vec3_origin, 0, MASK_PLAYERSOLID, qfalse );
 				//trap_Trace (&trace, tracefrom, NULL, NULL, end, passent, MASK_SHOT );
-				//if (trace.surfaceFlags & SURF_NOIMPACT)
-				//	break;
-
-				if (trace.surfaceFlags & SURF_SKY)
-					break;
 
 				// Hypo: break if we traversed length of vector tracefrom
-				if (trace.fraction == 1.0)
+				if (trace.fraction == 1.0 || trace.entityNum == ENTITYNUM_NONE) {
+					data1f[y * sv_bspMiniSize->integer + x] = MAX_MAP_BOUNDS; //VectorLength(dist);
 					break;
+				}
 
-				VectorSubtract(start, trace.endpos, dist);
-				*q += fabsf(midpoint[2] - trace.endpos[2]) - height; //VectorLength(dist);
-				
 				// otherwise continue tracing thru walls
-				VectorMA (trace.endpos,1,forward,start);
+				if ((trace.surfaceFlags & SURF_NODRAW)
+					|| (trace.surfaceFlags & SURF_NONSOLID)
+					|| (trace.surfaceFlags & SURF_SKY)) {
+					VectorMA (trace.endpos,16,angle,start);
+					continue;
+				}
+
+				//VectorSubtract(newStart, trace.endpos, dist);
+				data1f[y * sv_bspMiniSize->integer + x] = trace.endpos[2]; //VectorLength(dist);
+				break;
 			}
-			q++;
 		}
 	}
+
+}
+
+
+static void SV_FindFacets(int surfaceFlags, vec3_t scale, float *data1f) {
+	for(int i = 0; i < cm.numBrushes; i++) {
+		for(int j = 0; j < cm.brushes[i].numsides; j++) {
+			//vec3_t cover;
+			if (cm.brushes[i].sides[j].surfaceFlags & surfaceFlags) {
+				//VectorScale(cm.brushes[i].sides[j].plane->normal, cm.brushes[i].sides[j].plane->dist, cover);
+				//if(cm.brushes[i].sides[j].plane->normal[2]) {
+				int startX = (cm.brushes[i].bounds[0][0] - cm.cmodels[0].mins[0]) / scale[0];
+				int startY = (cm.brushes[i].bounds[0][1] - cm.cmodels[0].mins[1]) / scale[1];
+				int endX = (cm.brushes[i].bounds[1][0] - cm.cmodels[0].mins[0]) / scale[0];
+				int endY = (cm.brushes[i].bounds[1][1] - cm.cmodels[0].mins[1]) / scale[1];
+				for ( int y = startY; y < endY; ++y ) {
+					for ( int x = startX; x < endX; ++x ) {
+						// mark the spot as being covered by the surface requested
+						data1f[y * sv_bspMiniSize->integer + x] = cm.brushes[i].bounds[0][2]; //VectorLength(dist);
+					}
+				}
+			}
+		}
+	}
+
+}
+
+
+void SV_MakeMinimap() {
+	char minimapFilename[MAX_QPATH];
+	float *q;
+	float *data1f;
+	byte *data4b, *p;
+	vec3_t scale, size, angle, right, up;
+
+	VectorSubtract(cm.cmodels[0].maxs, cm.cmodels[0].mins, size);
+	for(int i = 0; i < 3; i++) {
+		// could use height from above to add a bunch of stupid black space around it
+		//   but I like the extra dexterity - Brian Cullinan
+		scale[i] = size[i] / sv_bspMiniSize->value;
+	}
+
+	data1f = (float *)Z_Malloc( sv_bspMiniSize->integer * sv_bspMiniSize->integer * sizeof( float ) );
+	memset(data1f, (float)MAX_MAP_BOUNDS, sv_bspMiniSize->integer * sv_bspMiniSize->integer * sizeof( float ));
+	data4b = (byte *)Z_Malloc( sv_bspMiniSize->integer * sv_bspMiniSize->integer * 4 );
+	memset(data4b, 0, sv_bspMiniSize->integer * sv_bspMiniSize->integer * 4);
+
+	// this is where a combination solution comes in handy
+	//   if trace from infinity, it hits the top of the skybox
+	//   trace again and again and again and get some sort of solution
+	// combo-solution, trace downward from all sky shaders, then trace
+	//   upwards to make sure we hit sky again, if not, then we trace through a ceiling
+	// thats only a 2 pass trace solution
+	SV_FindFacets(SURF_SKY, scale, data1f);
 
 	q = data1f;
 	p = data4b;
 	for ( int y = 0; y < sv_bspMiniSize->integer; ++y ) {
 		for ( int x = 0; x < sv_bspMiniSize->integer; ++x ) {
-			*p = Com_Clamp( 0.f, 255.f / 256.f, *q / size[2] / 5 ) * 256;
-			q++;
+			byte val = Com_Clamp( 0.f, 127.f / 128.f, *q / cm.cmodels[0].maxs[2] ) * 128;
+			// sky, probably dealing with high numbers (i.e. close to top of map), 
+			//   so subtract it from 128 to get very low numbers, this will have a less 
+			//   boring effect on the redness of the image
+			// this has a neat side effect of showing full bright where there is no rain,
+			//   i.e. start AND stop in the sky, don't come down at all
+			*p++ = *q == MAX_MAP_BOUNDS ? 0 : (128 - val + 1);
 			p++;
+			p++;
+			*p++ = 255;
+			q++;
 		}
 	}
+
+	// subtract sky
+	AngleVectors( (vec3_t){89, 0, 0}, angle, right, up );
+	SV_TraceArea(angle, scale, data1f);
+
+	// store every facet in half (aka 128 grid, vertical in case of rain/ground)
+	//   so that a trace from the bottom can be -128, and trace from top can be 128.
+	// Or up to 6 traces can be summarized for things like caves, if we wanted
+	//   automatically simulate a cave in or rocks falling during Ground Zero opening maps
+
+	q = data1f;
+	p = data4b;
+	for ( int y = 0; y < sv_bspMiniSize->integer; ++y ) {
+		for ( int x = 0; x < sv_bspMiniSize->integer; ++x ) {
+			byte val = Com_Clamp( 0.f, 127.f / 128.f, *q / cm.cmodels[0].maxs[2] ) * 128;
+			// subtracting from 128 here is descriptive of the distance that the rain
+			//   falls in the image, but in the RGB values we can 2 offsets and distance,
+			//   i.e. the brighter the red the further the rain falls
+			if(*q == MAX_MAP_BOUNDS) {
+				*p++ = 0;
+				//p++;
+			} else {
+				*p++ |= val << 4;
+			}
+			p++;
+			p++;
+			*p++ = 255;
+			q++;
+		}
+	}
+
+	// subtract the area that passes through a ceiling starting from the floor we just calculated
+	AngleVectors( (vec3_t){-89, 0, 0}, angle, right, up );
+	SV_TraceArea(scale, angle, data1f);
+
+	q = data1f;
+	p = data4b;
+	for ( int y = 0; y < sv_bspMiniSize->integer; ++y ) {
+		for ( int x = 0; x < sv_bspMiniSize->integer; ++x ) {
+			if(*q != MAX_MAP_BOUNDS) {
+				//*p++ = 0;
+				p++;
+			} else {
+				p++;
+			}
+			p++;
+			p++;
+			*p++ = 255;
+			q++;
+		}
+	}
+
 	COM_StripExtension(cm.name, minimapFilename, sizeof(minimapFilename));
 	Q_strcat(minimapFilename, sizeof(minimapFilename), ".tga");
 	char *mapPath = FS_BuildOSPath( Cvar_VariableString("fs_homepath"), Cvar_VariableString("fs_game"), minimapFilename );
 	Com_Printf( " writing to %s...", mapPath );
-	WriteTGAGray( mapPath, data4b, sv_bspMiniSize->integer, sv_bspMiniSize->integer );
+	WriteTGA( mapPath, data4b, sv_bspMiniSize->integer, sv_bspMiniSize->integer );
+
+	Com_Printf( " done.\n" );
 
 	Z_Free(data4b);
 }
