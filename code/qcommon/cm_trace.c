@@ -28,6 +28,9 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 //#define CAPSULE_DEBUG
 
+// TODO: add CM_TraceMap for estimatable traces like rain
+
+
 /*
 ===============================================================================
 
