@@ -20,6 +20,9 @@ Atlantis arena, will be a special kind of water based map where players must swi
 
 ## Procedural Features
 
+  * New facet system for minimizing trace calculations and estimating values for atmospheric effects. Can be generated on the fly or stored and transfered to clients through regular images. 
+  ![Facets](../docs/q3dm1-facets.png?raw=true)
+  ![Facets](../docs/q3dm15-facets.png?raw=true)
   * Procedurally generated game content and maps, sv_bsp procedurally generates a map of any size and transfers to the client. 
   * Use `+map \*memory0` to see a generated skybox, the source `.map` and generated bsp file are stored in the game home path. 
   * Map splicing by min and max dimensions. 

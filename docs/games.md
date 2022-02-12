@@ -182,6 +182,7 @@ Special multiworld features like cameras and portals. See [multiworld](../docs/m
 
 ## TODO
 
+  * Add radius damage to lighting bolt only in the rain.
   * Add atmospheric effects, smoke and sparks over lava, dust, worldly fog, to old maps.
   * Multiworld camera features
   * Add stray rounds to projectiles

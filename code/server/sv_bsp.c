@@ -154,6 +154,7 @@ void SV_ExportMap(void) {
 	Cvar_Set( "buildingMap", cm.name );
 	char *compileMap[] = {
 		"q3map2",
+		"-convert",
 		"-v",
 		"-error",
 		(char *)SV_MapError,
@@ -167,7 +168,6 @@ void SV_ExportMap(void) {
 		(char *)SV_ReadFile,
 		(char *)SV_OpenWrite,
 		(char *)SV_OpenRead,
-		"-convert",
 		"-keeplights",
 		"-format",
 		"map",
@@ -191,10 +191,10 @@ void SV_LightMap(void) {
 	// then we can decide not to update LM?
 	char *compileLight[] = {
 		"q3map2",
+		"-light",
 		"-v",
 		"-error",
 		(char *)SV_MapError,
-		"-light",
 		"-external",
 		"-fs_basepath",
 		(char *)Cvar_VariableString("fs_basepath"),

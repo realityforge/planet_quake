@@ -518,7 +518,7 @@ static void RB_BeginDrawingView( void ) {
 	// clear relevant buffers
 	clearBits = GL_DEPTH_BUFFER_BIT;
 
-	if ( r_shadows->integer == 2 )
+	if ( r_shadows->integer >= 2 )
 	{
 		clearBits |= GL_STENCIL_BUFFER_BIT;
 	}
