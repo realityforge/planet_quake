@@ -132,7 +132,7 @@ void RB_ShadowTessEnd( void ) {
 	}
 
 #ifdef USE_PMLIGHT
-	if ( r_dlightMode->integer == 2 && r_shadows->integer >= 2 )
+	if ( r_dlightMode->integer == 2 && r_shadows->integer >= 1 )
 		VectorCopy( backEnd.currentEntity->shadowLightDir, lightDir );
 	else
 #endif
@@ -257,7 +257,7 @@ void RB_ShadowFinish( void ) {
 
 	backEnd.doneShadows = qfalse;
 
-	if ( r_shadows->integer != 2 ) {
+	if ( r_shadows->integer == 0 ) {
 		return;
 	}
 	if ( glConfig.stencilBits < 4 ) {
@@ -316,7 +316,7 @@ void RB_ProjectionShadowDeform( void ) {
 	groundDist = backEnd.or.origin[2] - backEnd.currentEntity->e.shadowPlane;
 
 #ifdef USE_PMLIGHT
-	if ( r_dlightMode->integer == 2 && r_shadows->integer >= 2 )
+	if ( r_dlightMode->integer == 2 && r_shadows->integer >= 1 )
 		VectorCopy( backEnd.currentEntity->shadowLightDir, lightDir );
 	else
 #endif

@@ -1327,7 +1327,11 @@ static qboolean R_MirrorViewBySurface( const drawSurf_t *drawSurf, int entityNum
 	}
 #endif
 
-	if ( tess.numVertexes > 2 /* && r_fastsky->integer */ ) {
+	if ( tess.numVertexes > 2 
+#ifdef THIS_IS_A_SLOW_COMPUTER
+	 && r_fastsky->integer
+#endif
+	) {
 		int mins[2], maxs[2];
 		R_GetModelViewBounds( mins, maxs );
 		newParms.scissorX = newParms.viewportX + mins[0];

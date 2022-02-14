@@ -962,6 +962,8 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 		}
 	}
 
+
+	//Com_Printf("view: %f, %f, %f\n", cg.refdefViewAngles[0], cg.refdefViewAngles[1], cg.refdefViewAngles[2]);
 	// actually issue the rendering calls
 	CG_DrawActive( stereoView );
 

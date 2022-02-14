@@ -8,24 +8,22 @@ var {spawn} = require('child_process')
 var {unpackPk3s} = require('./compress.js')
 var {convertGameFiles} = require('./convert.js');
 var {loadDefaultDirectories} = require('../lib/asset.game.js')
+var YEAR = (new Date()).getFullYear();
 
 //  + '-' + (new Date()).getMonth() + '-' + (new Date()).getDate()
+var UPDATE_DIRNAME = 'bestmaps-' + YEAR
 if(fs.existsSync('/Volumes/External/Personal/planet_quake_data/lvlworld'))
 {
   var downloadAll = true
-  var UPDATE_DIRNAME = 'bestmaps'
-  var UPDATE_DIRECTORY = '/Volumes/External/Personal/planet_quake_data/lvlworld/' + UPDATE_DIRNAME + '-' + (new Date()).getFullYear()
-} else {
-  var downloadAll = false
-  var UPDATE_DIRNAME = 'bestmaps-' + (new Date()).getFullYear()
-  var UPDATE_DIRECTORY = '/Applications/ioquake3/' + UPDATE_DIRNAME
-}
-if(fs.existsSync('/Volumes/External/Personal/planet_quake_data')) {
+  var UPDATE_DIRECTORY = '/Volumes/External/Personal/planet_quake_data/lvlworld/' + UPDATE_DIRNAME
   var TEMP_DIR = '/Volumes/External/Personal/planet_quake_data'
 } else {
+  var downloadAll = false
   var TEMP_DIR = path.join(process.env.HOME || process.env.HOMEPATH 
     || process.env.USERPROFILE || os.tmpdir(), '/.quake3')
+  var UPDATE_DIRECTORY = path.join(TEMP_DIR, UPDATE_DIRNAME + '-c');
 }
+
 var DIRMAP = [
   /[a-f]/i, 'a-f',
   /[g-l]/i, 'g-l',
@@ -112,7 +110,7 @@ async function downloadMapIndex() {
   var maps
   await new Promise(resolve => {
     https.get('https://lvlworld.com/metadata/from:'
-      + (new Date()).getFullYear() + '-01-01/limit:200',
+      + YEAR + '-01-01/limit:200',
       function(res) {
         var body = ''
         res.on('data', function(chunk) {

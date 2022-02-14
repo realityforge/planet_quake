@@ -40,6 +40,7 @@
 
 #define MAX_CHANNELS 20
 
+#define TRACE_DISTANCE  0x0   // the default trace, returns the distance from the trace starting point
 #define TRACE_HEIGHTS   0x1   // the most basic trace is to show a heightmap from the top down
 #define TRACE_VOLUME    0x2   // add each trace difference on to eachother to create a thickness map
 #define TRACE_FLOORS    0x4   // set the trace area to all the floor values
@@ -56,6 +57,10 @@
 #define TRACE_FACETS    0x2000 // find a specific facet to mask future traces against
 #define TRACE_INVERTED  0x4000 // invert the sampling values far shows up bright, and near shows up dark
 #define TRACE_CORRECTED 0x8000  // fix ceiling/floor/opposite heights as we xray
+
+#define TRACE_BIAS      0x10000
+#define TRACE_RADIAL    0x20000
+#define TRACE_NORMAL    0x40000
 
 #define TRACE_XRAY1     0x10000000  // x-ray one time, early out that doesn't look up again, unless being corrected
 #define TRACE_XRAY2     0x20000000  // x-ray 2 times, get an idea if there is a sub-surface
@@ -152,11 +157,91 @@ void WriteTGA( const char *mapname, byte *data, int width, int height, uint32_t 
 }
 
 
-static void SV_TraceArea(vec3_t angle, vec3_t scale, float *d1, int mask) {
+static float SV_TraceThrough(trace_t *trace, vec3_t forward, vec3_t start, vec3_t end, int mask) {
+	vec3_t dist;
+	while (1) {
+		printf("trace: %f, %f, %f -> %f, %f, %f\n", start[0], start[1], start[2], end[0], end[1], end[2]);
+		CM_BoxTrace( trace, start, end, vec3_origin, vec3_origin, 0, mask, qfalse );
+		//trap_Trace (&trace, tracefrom, NULL, NULL, end, passent, MASK_SHOT );
+
+		// Hypo: break if we traversed length of vector tracefrom
+		if (trace->fraction == 1.0 
+			|| trace->entityNum == ENTITYNUM_NONE
+			|| isnan(trace->endpos[2])
+		) {
+			return MAX_MAP_BOUNDS; //VectorLength(dist);
+			break;
+		}
+
+		// otherwise continue tracing thru walls
+		if ((mask & CONTENTS_SOLID) && mask != CONTENTS_NODE // this should be the TRACE_UNMASK option
+			&& ((trace->surfaceFlags & SURF_NODRAW)
+			|| (trace->surfaceFlags & SURF_NONSOLID)
+			// this is a bit odd, normally we'd stop, but this helps trace through the
+			//   tops of skyboxes for outlines
+			|| (trace->surfaceFlags & SURF_SKY))
+		) {
+			VectorMA(trace->endpos, 1, forward, start);
+			continue;
+		}
+
+		// something was hit
+		VectorSubtract(start, trace->endpos, dist);
+		//VectorMA(trace->endpos, 1, forward, end);
+		//VectorCopy(trace->endpos, end);
+		return VectorLength(dist);
+		//return trace->endpos[2]; // VectorLength(dist);
+		break;
+	}
+}
+
+static void SV_PrintAngles(vec3_t angle) {
+	vec3_t temp;
+	CrossProduct(cm.cmodels[0].mins, angle, temp);
+	printf("mins: %f, %f, %f\n", 
+		temp[0], temp[1], temp[2]);
+	CrossProduct(cm.cmodels[0].maxs, angle, temp);
+	printf("maxs: %f, %f, %f\n", 
+		temp[0], temp[1], temp[2]);
+}
+
+
+static void SV_TraceTopDown(float *d1, int mask) {
 	trace_t		trace;
 	vec3_t start, end, forward, right, up;
-	//vec3_t dist;
-	AngleVectors( angle, forward, right, up );
+	vec3_t center, midpoint;
+	vec3_t newMins, newMaxs, newScale, newAngle;
+	float radius;
+	newAngle[0] = 89.9;
+	newAngle[1] = 0.1;
+	newAngle[2] = 0.1;
+
+	AngleVectors(newAngle, forward, right, up);
+	VectorCopy(cm.cmodels[0].mins, newMins);
+	VectorCopy(cm.cmodels[0].maxs, newMaxs);
+	VectorSubtract(newMaxs, newMins, newScale);
+	radius = VectorLength(newScale) / 2;
+	VectorScale(newScale, 0.5f, center);
+	VectorAdd(newMins, center, center);
+	VectorMA(center, -radius, forward, midpoint);
+	VectorScale(newScale, 1.0f / sv_bspMiniSize->value, newScale);
+
+/*
+( Vec3 mins, Vec3 maxs, Vec3 angles ) {
+  Vec3 forward, right, up;
+  VectorAngles( angles, &forward, &right, &up );
+
+  Vec3 center = ( mins + maxs ) / 2;
+  float radius = Length( maxs - mins ) / 2;
+  
+  Vec3 onSphere = center - forward * radius;
+  for( float x = -1; x <= 1; x += 0.1 ) {
+    for( float y = -1; y <= 1; y += 0.1 ) {
+      //Vec3 onPlane = onSphere + x * right + y * up;
+      //Trace( onPlane, forward );
+    }
+  }
+*/
 
 	for ( int y = 0; y < sv_bspMiniSize->integer; ++y ) {
 		for ( int x = 0; x < sv_bspMiniSize->integer; ++x ) {
@@ -164,43 +249,60 @@ static void SV_TraceArea(vec3_t angle, vec3_t scale, float *d1, int mask) {
 				continue;
 			}
 
-			vec3_t newStart = {
-				cm.cmodels[0].mins[0] + scale[0] * x, 
-				cm.cmodels[0].mins[1] + scale[1] * y, 
-				d1[y * sv_bspMiniSize->integer + x] // bottom of sky brush
-			};
-			VectorMA( newStart, 8192, forward, end );
-			VectorMA ( newStart, 1, forward, start );
-			while (1) {
-				CM_BoxTrace( &trace, start, end, vec3_origin, vec3_origin, 0, mask, qfalse );
-				//trap_Trace (&trace, tracefrom, NULL, NULL, end, passent, MASK_SHOT );
+			// TODO: at least 2 different types of traces
+			//   1) Subtract the distance of the map and scan x/y to the scale perpendicular to view angle
+			//   2) This might make for more interesting distance point mappings, rotate the traces 
+			//      around the minimum circumferencing ellipses centered on the viewangle
+			VectorMA(midpoint, (y - sv_bspMiniSize->integer / 2) * newScale[1], up, start );
+			VectorMA(start, (x - sv_bspMiniSize->integer / 2) * newScale[0], right, start );
+			VectorMA(start, 8192, forward, end);
 
-				// Hypo: break if we traversed length of vector tracefrom
-				if (trace.fraction == 1.0 
-					|| trace.entityNum == ENTITYNUM_NONE
-					|| isnan(trace.endpos[2])
-				) {
-					d1[y * sv_bspMiniSize->integer + x] = MAX_MAP_BOUNDS; //VectorLength(dist);
-					break;
-				}
-
-				// otherwise continue tracing thru walls
-				if ((trace.surfaceFlags & SURF_NODRAW)
-					|| (trace.surfaceFlags & SURF_NONSOLID)
-					// this is a bit odd, normally we'd stop, but this helps trace through the tops of skyboxes for outlines
-					|| (trace.surfaceFlags & SURF_SKY) 
-				) {
-					VectorMA (trace.endpos,1,forward,start);
-					continue;
-				}
-
-				//VectorSubtract(newStart, trace.endpos, dist);
-				d1[y * sv_bspMiniSize->integer + x] = trace.endpos[2]; //VectorLength(dist);
-				break;
-			}
+			d1[y * sv_bspMiniSize->integer + x] = SV_TraceThrough(&trace, forward, start, end, mask);
 		}
 	}
+}
 
+
+static void SV_TraceArea(vec3_t angle, vec3_t scale, float *d1, int mask) {
+	trace_t		trace;
+	vec3_t start, end, forward, right, up;
+	vec3_t center, midpoint;
+	vec3_t newMins, newMaxs, newScale, newAngle;
+	float radius;
+
+	VectorCopy(angle, newAngle);
+	AngleVectors(newAngle, forward, right, up);
+	VectorCopy(cm.cmodels[0].mins, newMins);
+	VectorCopy(cm.cmodels[0].maxs, newMaxs);
+	VectorSubtract(newMaxs, newMins, newScale);
+	radius = VectorLength(newScale) / 2;
+	VectorScale(newScale, 0.5f, center);
+	VectorAdd(newMins, center, center);
+	VectorMA(center, -radius, forward, midpoint);
+
+	//CrossProduct(newMins, right, newMins);
+	VectorMA(center, 2 * -radius, up, newMins);
+	VectorMA(newMins, 2 * -radius, right, newMins);
+	VectorMA(center, 2 * radius, up, newMaxs);
+	VectorMA(newMaxs, 2 * radius, right, newMaxs);
+	VectorSubtract(newMaxs, newMins, newScale);
+
+	VectorScale(newScale, 1.0f / sv_bspMiniSize->value, newScale);
+	printf("scale: %f, %f, %f\n", newScale[0], newScale[1], newScale[2]);
+
+	for ( int y = 0; y < sv_bspMiniSize->integer; ++y ) {
+		for ( int x = 0; x < sv_bspMiniSize->integer; ++x ) {
+			if(d1[y * sv_bspMiniSize->integer + x] == MAX_MAP_BOUNDS) {
+				continue;
+			}
+
+			VectorMA(midpoint, (y - sv_bspMiniSize->integer / 2) * newScale[1], up, start );
+			VectorMA(start, (x - sv_bspMiniSize->integer / 2) * newScale[0], right, start );
+			VectorMA(start, 8192, forward, end);
+
+			d1[y * sv_bspMiniSize->integer + x] = SV_TraceThrough(&trace, forward, start, end, mask);
+		}
+	}
 }
 
 
@@ -232,12 +334,20 @@ static void SV_FindFacets(int surfaceFlags, vec3_t angle, vec3_t scale,
 						//   from the opposite side
 						if(fromBottom) {
 							// mins of max-bounds
-							d1[y * sv_bspMiniSize->integer + x] = MIN(cm.brushes[i].bounds[1][2],
-								d1[y * sv_bspMiniSize->integer + x]);
+							if(d1[y * sv_bspMiniSize->integer + x] != MAX_MAP_BOUNDS) {
+								d1[y * sv_bspMiniSize->integer + x] = MIN(cm.brushes[i].bounds[1][2],
+									d1[y * sv_bspMiniSize->integer + x]);
+							} else {
+								d1[y * sv_bspMiniSize->integer + x] = cm.brushes[i].bounds[1][2];
+							}
 						} else {
 							// max of min bounds
-							d1[y * sv_bspMiniSize->integer + x] = MAX(cm.brushes[i].bounds[0][2],
-								d1[y * sv_bspMiniSize->integer + x]);
+							if(d1[y * sv_bspMiniSize->integer + x] != MAX_MAP_BOUNDS) {
+								d1[y * sv_bspMiniSize->integer + x] = MAX(cm.brushes[i].bounds[0][2],
+									d1[y * sv_bspMiniSize->integer + x]);
+							} else {
+								d1[y * sv_bspMiniSize->integer + x] = cm.brushes[i].bounds[0][2];
+							}
 						}
 					}
 				}
@@ -251,16 +361,18 @@ static void SV_FindFacets(int surfaceFlags, vec3_t angle, vec3_t scale,
 
 // display distance between ground and sub surfaces, i.e. thickness on green channel
 //  trace down to find a starting position for measuring the ceiling of the floor
-void SV_XRay(float *d1, float *d2, float *d3, vec3_t scale, int mask) {
+void SV_XRay(vec3_t angle, float *d1, float *d2, float *d3, vec3_t scale, int mask) {
+	vec3_t opposite;
+	VectorScale(opposite, -1, opposite);
 	Sys_SetStatus("X-raying clip map... this might take a while");
 	Com_Printf("X-raying clip map... this might take a while\n");
 	// basically the original inverted heightmap is not subtracted from the 
 	//   alpha channel since it is stored on red, so the heightmap can be reconstructed,
 	//   this has the nice side-effect of making the alpha channel nice and bright
 	memcpy(d2, d1, sv_bspMiniSize->integer * sv_bspMiniSize->integer * sizeof( float ));
-	SV_TraceArea((vec3_t){89, 0, 0}, scale, d2, mask);
+	SV_TraceArea(angle, scale, d2, mask);
 	memcpy(d3, d2, sv_bspMiniSize->integer * sv_bspMiniSize->integer * sizeof( float ));
-	SV_TraceArea((vec3_t){-89, 0, 0}, scale, d3, mask);
+	SV_TraceArea(opposite, scale, d3, mask);
 }
 
 
@@ -304,7 +416,7 @@ static float *data1f1, *data1f2, *data1f3;
 static byte *data4b;
 
 
-static void SV_ResetData(float defaultValue) {
+static void SV_InitData() {
 	if(!data1f1)
 		data1f1 = (float *)Z_Malloc( sv_bspMiniSize->integer * sv_bspMiniSize->integer * sizeof( float ) );
 	if(!data1f2)
@@ -313,15 +425,29 @@ static void SV_ResetData(float defaultValue) {
 		data1f3 = (float *)Z_Malloc( sv_bspMiniSize->integer * sv_bspMiniSize->integer * sizeof( float ) );
 	if(!data4b)
 		data4b = (byte *)Z_Malloc( sv_bspMiniSize->integer * sv_bspMiniSize->integer * 4 );
-
 	memset(data4b, 0, sv_bspMiniSize->integer * sv_bspMiniSize->integer * 4);
-	for (size_t i = 0; i < sv_bspMiniSize->integer * sv_bspMiniSize->integer; ++i) {
-		data1f1[i] = defaultValue;
-		data1f2[i] = defaultValue;
-		data1f3[i] = defaultValue;
-	}
+	memset(data1f1, 0, sv_bspMiniSize->integer * sv_bspMiniSize->integer * sizeof( float ));
+	memset(data1f2, 0, sv_bspMiniSize->integer * sv_bspMiniSize->integer * sizeof( float ));
+	memset(data1f3, 0, sv_bspMiniSize->integer * sv_bspMiniSize->integer * sizeof( float ));
+
 }
 
+
+static void SV_ResetData(uint32_t flags) {
+	// if ! find facets because this will do a rotation also
+	// TODO: use +/- VectorLength(size)
+	for (size_t i = 0; i < sv_bspMiniSize->integer * sv_bspMiniSize->integer; ++i) {
+		if(!(flags & TRACE_MINS)) {
+			data1f1[i] = cm.cmodels[0].maxs[2];
+			data1f2[i] = cm.cmodels[0].maxs[2];
+			data1f3[i] = cm.cmodels[0].maxs[2];
+		} else {
+			data1f1[i] = cm.cmodels[0].mins[2];
+			data1f2[i] = cm.cmodels[0].mins[2];
+			data1f3[i] = cm.cmodels[0].mins[2];
+		}
+	}
+}
 
 
 // there are only a few types of data that can be derived
@@ -329,20 +455,11 @@ static void SV_ResetData(float defaultValue) {
 //   2) the length of vectors between wals
 //   3) types of surfaces
 void SV_MakeMinimap() {
-	vec3_t scale, size;
+	vec3_t size, angle, opposite, forward, right, up;
+	vec3_t scale, newMins, newMaxs;
+	float length;
 
-	VectorSubtract(cm.cmodels[0].maxs, cm.cmodels[0].mins, size);
-	for(int i = 0; i < 3; i++) {
-		// could use height from above to add a bunch of stupid black space around it
-		//   but I like the extra dexterity - Brian Cullinan
-		scale[i] = size[i] / sv_bspMiniSize->value;
-	}
-
-	SV_ResetData(MAX_MAP_BOUNDS);
-
-	float *d1 = data1f1;
-	float *d2 = data1f2;
-	float *d3 = data1f3;
+	SV_InitData();
 
 	// this is where a combination solution comes in handy
 	//   if trace from infinity, it hits the top of the skybox
@@ -351,65 +468,95 @@ void SV_MakeMinimap() {
 	//   upwards to make sure we hit sky again, if not, then we trace through a ceiling
 	// thats only a 2 pass trace solution
 	int *CURRENT_IMAGE = NULL;
-	int CURRENT_CHANNEL = CHANNEL_TOPDOWN % 4;
-	uint32_t pass = PASSES[CURRENT_CHANNEL];
+	int CURRENT_CHANNEL = -4;
+	//uint32_t pass = TRACE_HEIGHTS|TRACE_XRAY1|TRACE_MASK|TRACE_FACETS|TRACE_UNMASK|TRACE_MAXS;
+	uint32_t pass = TRACE_MAXS|TRACE_VOLUME; 
+	//uint32_t pass = PASSES[CURRENT_CHANNEL];
 	uint32_t all = pass;
 	int max = (all & TRACE_XRAY8) ? 8 : (all & TRACE_XRAY4) ? 4 : (all & TRACE_XRAY2) ? 2 : 1;
 	int i = 0;
 
+	if(qtrue) {
+		angle[0] = 60.1f;
+		angle[1] = 0.1f;
+		angle[2] = 0.1f;
+		VectorScale(opposite, -3, opposite);
+	}
+	AngleVectors(angle, forward, right, up);
+	VectorCopy(cm.cmodels[0].mins, newMins);
+	VectorCopy(cm.cmodels[0].maxs, newMaxs);
+
+	// could use height from above to add a bunch of stupid black space around it
+	//   but I like the extra dexterity - Brian Cullinan
+	VectorSubtract(newMaxs, newMins, size);
+	length = VectorLength(size);
+	for(int i = 0; i < 3; i++) {
+		scale[i] = size[i] / sv_bspMiniSize->value;
+	}
+	printf("scale: %f, %f, %f\n", scale[0], scale[1], scale[2]);
+
+	SV_ResetData(pass);
+
+
+	i = 0;
 	while(i < max) {
 		if(i == 0 && (pass & TRACE_FACETS)) {
-			if(pass & TRACE_UNMASK) {
-				if(pass & TRACE_MAXS)
-					SV_ResetData(cm.cmodels[0].maxs[2]);
-				else {
-					SV_ResetData(cm.cmodels[0].mins[2]);
-				}
-			}
 			if(pass & TRACE_MAXS) {
-				//SV_FindFacets(SURF_SKY, (vec3_t){89, 0, 0}, scale, d1, qfalse);
+				SV_FindFacets(SURF_SKY, angle, scale, data1f2, qfalse);
 			} else {
-				//SV_FindFacets(SURF_SKY, (vec3_t){-89, 0, 0}, scale, d1, qtrue);
+				SV_FindFacets(SURF_SKY, opposite, scale, data1f2, qtrue);
 			}
 		}
 
-		if(i == 0
-		 	&& max == 1
-			&& !(pass & TRACE_CORRECTED)) {
-			SV_TraceArea((vec3_t){89, 0, 0}, scale, d1, MASK_SOLID|MASK_WATER);
-			memcpy(d2, d1, sv_bspMiniSize->integer * sv_bspMiniSize->integer * sizeof( float ));
+		if(i == 0 && max == 1
+			&& !(pass & TRACE_CORRECTED)
+		) {
+			if(CURRENT_CHANNEL == CHANNEL_TOPDOWN) {
+				SV_TraceTopDown(data1f2, MASK_SOLID|MASK_WATER);
+			} else if((pass & TRACE_HEIGHTS) || (pass & TRACE_UNMASK)) {
+				SV_TraceArea(angle, scale, data1f2, MASK_SOLID|MASK_WATER);
+			} else {
+				//SV_TraceArea(angle, scale, data1f2, CONTENTS_STRUCTURAL|CONTENTS_DETAIL);
+				SV_TraceArea(angle, scale, data1f2, CONTENTS_NODE);
+			}
 		} else if ((pass & TRACE_XRAY1)
 			|| (pass & TRACE_XRAY2)
 			|| (pass & TRACE_XRAY4)
 			|| (pass & TRACE_XRAY8)) {
-			SV_XRay(d1, d2, d3, scale, MASK_PLAYERSOLID);
+			SV_XRay(angle, data1f1, data1f2, data1f3, scale, MASK_PLAYERSOLID);
 		}
 
 		for ( int y = 0; y < sv_bspMiniSize->integer; ++y ) {
 			for ( int x = 0; x < sv_bspMiniSize->integer; ++x ) {
-				if(d2[y * sv_bspMiniSize->integer + x] == MAX_MAP_BOUNDS) {
+				if(data1f2[y * sv_bspMiniSize->integer + x] == MAX_MAP_BOUNDS) {
 					// subtract sky
 					if(pass & TRACE_MASK) {
-						data4b[((y * sv_bspMiniSize->integer + x) * 4) + CURRENT_CHANNEL] = 0;
+						data4b[((y * sv_bspMiniSize->integer + x) * 4) + CURRENT_CHANNEL % 4] = 0;
 					}
 					if(pass & TRACE_CORRECTED) {
 						// to get an outline of the map?
-						if(d1[y * sv_bspMiniSize->integer + x] != MAX_MAP_BOUNDS) {
-							d2[y * sv_bspMiniSize->integer + x] = d1[y * sv_bspMiniSize->integer + x];
+						if(data1f1[y * sv_bspMiniSize->integer + x] != MAX_MAP_BOUNDS) {
+							data1f2[y * sv_bspMiniSize->integer + x] = data1f1[y * sv_bspMiniSize->integer + x];
 						} else {
-							d1[y * sv_bspMiniSize->integer + x] = cm.cmodels[0].maxs[2];
+							data1f1[y * sv_bspMiniSize->integer + x] = cm.cmodels[0].maxs[2];
 						}
-						//data4b[((y * sv_bspMiniSize->integer + x) * 4) + CURRENT_CHANNEL] = (int)( Com_Clamp( 0.f, 255.f / 256.f, (cm.cmodels[0].maxs[2] - d2[y * sv_bspMiniSize->integer + x]) / size[2] ) * 256 ) | 1;
+						//data4b[((y * sv_bspMiniSize->integer + x) * 4) + CURRENT_CHANNEL] = (int)( Com_Clamp( 0.f, 255.f / 256.f, (cm.cmodels[0].maxs[2] - data1f2[y * sv_bspMiniSize->integer + x]) /length ) * 256 ) | 1;
 					} else {
-						data4b[((y * sv_bspMiniSize->integer + x) * 4) + CURRENT_CHANNEL] = 0;
+						data4b[((y * sv_bspMiniSize->integer + x) * 4) + CURRENT_CHANNEL % 4] = 0;
 					}
 				} else {
 					if(pass & TRACE_MASK) {
-						data4b[((y * sv_bspMiniSize->integer + x) * 4) + CURRENT_CHANNEL] = 255;
+						data4b[((y * sv_bspMiniSize->integer + x) * 4) + CURRENT_CHANNEL % 4] = 255;
 					}
 					if(pass & TRACE_HEIGHTS) {
 						// always guarantee this is somewhat red to indicate it should rain
-						data4b[((y * sv_bspMiniSize->integer + x) * 4) + CURRENT_CHANNEL] = (int)( Com_Clamp( 0.f, 254.f / 255.f, (cm.cmodels[0].maxs[2] - d2[y * sv_bspMiniSize->integer + x]) / size[2] ) * 255 + 1) | 1;
+						data4b[((y * sv_bspMiniSize->integer + x) * 4) + CURRENT_CHANNEL % 4] = (int)( Com_Clamp( 0.f, 254.f / 255.f, (cm.cmodels[0].maxs[2] - data1f2[y * sv_bspMiniSize->integer + x]) / length ) * 255 + 1) | 1;
+					}
+
+					if(pass & TRACE_VOLUME) {
+						//data4b[((y * sv_bspMiniSize->integer + x) * 4) + CURRENT_CHANNEL] -= Com_Clamp( 0.f, 255.f / 256.f, (data1f3[y * sv_bspMiniSize->integer + x] - data1f2[y * sv_bspMiniSize->integer + x]) / size[2] ) * 256;
+						data4b[((y * sv_bspMiniSize->integer + x) * 4) + CURRENT_CHANNEL % 4] = (int)( Com_Clamp( 0.f, 254.f / 255.f, 1.0f - data1f2[y * sv_bspMiniSize->integer + x] / length ) * 255 + 1) | 1;
+						//data4b[((y * sv_bspMiniSize->integer + x) * 4) + CURRENT_CHANNEL] -= 255;
 					}
 
 				}
@@ -417,7 +564,9 @@ void SV_MakeMinimap() {
 		}
 
 		// switch the floor starting point, d2 will be overwritten
-		memcpy(d1, d2, sv_bspMiniSize->integer * sv_bspMiniSize->integer * sizeof( float ));
+		if(i < max - 1) {
+			memcpy(data1f1, data1f2, sv_bspMiniSize->integer * sv_bspMiniSize->integer * sizeof( float ));
+		}
 		i++;
 	}
 

@@ -489,6 +489,10 @@ static void RB_FogPass( void ) {
 	const fog_t	*fog;
 	int			i;
 
+	if(tess.fogNum == 1 && !r_fogDepth->integer) {
+		return;
+	}
+
 	fog = tr.world->fogs + tess.fogNum;
 
 	for ( i = 0; i < tess.numVertexes; i++ ) {
@@ -696,7 +700,7 @@ if(tess.fogNum == 1 /* && !(tess.shader->surfaceFlags & SURF_NOLIGHTMAP) */) {
 	//
 	// fog adjustment for colors to fade out as fog increases
 	//
-	if ( tess.fogNum )
+	if ( tess.fogNum && (tess.fogNum > 1 || r_fogDepth->integer) )
 	{
 		switch ( pStage->adjustColorsForFog )
 		{

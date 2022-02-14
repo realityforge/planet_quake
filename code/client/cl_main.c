@@ -1431,6 +1431,8 @@ void CL_ShutdownAll( void ) {
 #ifdef __WASM__
 	cls.firstClick = qtrue;
 #endif
+
+	SCR_Done();
 }
 
 
