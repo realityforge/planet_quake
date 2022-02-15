@@ -3,16 +3,16 @@
 #include "../renderercommon/tr_public.h"
 #include "./sys_glw.h"
 
-EM_JS(int, SDL_ShowCursor, ( int toggle ), 
+EM_EXPORT(int, SDL_ShowCursor, ( int toggle ), 
 { return SDL_ShowCursor(toggle) });
 
-EM_JS(void, SDL_SetWindowGrab, ( void *window, qboolean grabbed ), 
+EM_EXPORTNR(void, SDL_SetWindowGrab, ( void *window, qboolean grabbed ), 
 { return SDL_SetWindowGrab(window, grabbed) });
 
-EM_JS(uint32_t, SDL_GetWindowFlags, (void *window), 
+EM_EXPORT(uint32_t, SDL_GetWindowFlags, (void *window), 
 { return SDL_GetWindowFlags(window) });
 
-EM_JS(void, SDL_StopTextInput, ( void ), 
+EM_EXPORTNR(void, SDL_StopTextInput, ( void ), 
 { SDL_StopTextInput() });
 
 /**

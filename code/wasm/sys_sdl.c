@@ -66,47 +66,47 @@ void *SDL_glContext = NULL;
 cvar_t *r_stereoEnabled;
 cvar_t *in_nograb;
 
-EM_JS(void *, GL_CreateContext, ( void *window ), 
+EM_EXPORTNR(void *, GL_CreateContext, ( void *window ), 
 { return Sys_GLimpInit(flags) });
 
-EM_JS(int, SDL_Init, ( uint32_t flags ), 
+EM_EXPORT(int, SDL_Init, ( uint32_t flags ), 
 { return Sys_GLimpInit(flags) });
 
-EM_JS(char *, SDL_GetError, ( void ), 
+EM_EXPORT(char *, SDL_GetError, ( void ), 
 { return SDL_GetError() });
 
-EM_JS(int, SYS_DisplayMode, ( int displayIndex, SDL_DisplayMode *mode ), 
+EM_EXPORT(int, SYS_DisplayMode, ( int displayIndex, SDL_DisplayMode *mode ), 
 { return Sys_GetDisplayMode(displayIndex, mode) });
 
-EM_JS(int, SYS_GetWindowDisplayMode, ( void *window, SDL_DisplayMode *mode ), 
+EM_EXPORT(int, SYS_GetWindowDisplayMode, ( void *window, SDL_DisplayMode *mode ), 
 { return Sys_GetDisplayMode(window, mode) });
 
-EM_JS(int, SDL_GL_SetAttribute, ( int attr, int value ), 
+EM_EXPORT(int, SDL_GL_SetAttribute, ( int attr, int value ), 
 { return Sys_GL_SetAttribute(attr, value) });
 
-EM_JS(void *, SDL_CreateWindow, ( const char *title,
+EM_EXPORTNR(void *, SDL_CreateWindow, ( const char *title,
                               int x, int y, int w,
                               int h, uint32_t flags ), 
 { return SDL_CreateWindow(title, x, y, w, h, flags) });
 
-EM_JS(int, SDL_SetWindowDisplayMode, ( void *window, const SDL_DisplayMode *mode ), 
+EM_EXPORT(int, SDL_SetWindowDisplayMode, ( void *window, const SDL_DisplayMode *mode ), 
 { return SDL_SetWindowDisplayMode(window, mode) });
 
-EM_JS(void, SDL_GL_GetDrawableSize, ( void *window, int *w, int *h ), 
+EM_EXPORTNR(void, SDL_GL_GetDrawableSize, ( void *window, int *w, int *h ), 
 { SDL_GL_GetDrawableSize(window, w, h) });
 
-EM_JS(uint32_t, SDL_WasInit, ( uint32_t flags ), 
+EM_EXPORT(uint32_t, SDL_WasInit, ( uint32_t flags ), 
 { return SDL_WasInit(flags) });
 
-EM_JS(SDL_AudioDeviceID, SDL_OpenAudioDevice, ( const char *device, int iscapture,
+EM_EXPORT(SDL_AudioDeviceID, SDL_OpenAudioDevice, ( const char *device, int iscapture,
                     const SDL_AudioSpec * desired, SDL_AudioSpec * obtained,
                     int allowed_changes ), 
 { return SDL_OpenAudioDevice(device, iscapture, desired, obtained, allowed_changes) });
 
-EM_JS(void, SDL_PauseAudioDevice, ( SDL_AudioDeviceID dev, int pause_on ), 
+EM_EXPORTNR(void, SDL_PauseAudioDevice, ( SDL_AudioDeviceID dev, int pause_on ), 
 { SDL_PauseAudioDevice(dev, pause_on) });
 
-EM_JS(void, SDL_CloseAudioDevice, ( SDL_AudioDeviceID dev ), 
+EM_EXPORTNR(void, SDL_CloseAudioDevice, ( SDL_AudioDeviceID dev ), 
 { SDL_CloseAudioDevice(dev) });
 
 void SDL_LockAudioDevice(SDL_AudioDeviceID dev) { }

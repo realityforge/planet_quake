@@ -201,8 +201,7 @@ void CIN_CloseAllVideos( void );
 
 #ifdef __WASM__
 
-EM_JS(void, DebugBreak, ( void ), 
-{ debugger; debugger; });
+EM_EXPORTNR(void, DebugBreak, ( void ), { debugger; debugger; });
 
 #endif
 

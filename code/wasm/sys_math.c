@@ -3,8 +3,7 @@
 #include <stdlib.h>
 
 #define CALL_JS_1(cname, jsname, type, casttype) \
-  EM_JS(type, JS_##cname, (type x), { return jsname(x) }); \
-  type cname(type x) { return JS_##cname((casttype)x); }
+  EM_EXPORT(type, cname, (type x), { return jsname(x) });
 
 #define CALL_JS_1_TRIPLE(cname, jsname) \
   CALL_JS_1(cname, jsname, double, double) \
@@ -24,8 +23,7 @@ CALL_JS_1_TRIPLE(ceil, Math.ceil)
 CALL_JS_1_TRIPLE(floor, Math.floor)
 
 #define CALL_JS_2(cname, jsname, type, casttype) \
-  EM_JS(type, JS_##cname, (type x, type y), { return jsname(x, y) }); \
-  type cname(type x, type y) { return JS_##cname((casttype)x, (casttype)y); }
+  EM_EXPORT(type, cname, (type x, type y), { return jsname(x, y) });
 
 #define CALL_JS_2_TRIPLE(cname, jsname) \
   CALL_JS_2(cname, jsname, double, double) \
@@ -35,8 +33,7 @@ CALL_JS_2_TRIPLE(atan2, Math.atan2)
 CALL_JS_2_TRIPLE(pow, Math.pow)
 
 #define CALL_JS_1_IMPL(cname, type, casttype, impl) \
-  EM_JS(type, JS_##cname, (type x), impl); \
-  type cname(type x) { return JS_##cname((casttype)x); }
+  EM_EXPORT(type, cname, (type x), impl);
 
 #define CALL_JS_1_IMPL_TRIPLE(cname, impl) \
   CALL_JS_1_IMPL(cname, double, double, impl) \
@@ -52,14 +49,11 @@ CALL_JS_1_IMPL_TRIPLE(rint,  {
   return (x - Math.floor(x) != .5) ? round(x) : round(x / 2) * 2;
 })
 
-EM_JS(int, JS_rand, (void), { return Math.random(x) });
-int rand(void) { return JS_rand(); }
+EM_EXPORT(int, rand, (void), { return Math.random(x) });
 
-EM_JS(void, JS_srand, (unsigned s), {  });
-void srand(unsigned s) { return JS_srand(s); }
+EM_EXPORT(void, srand, (unsigned s), {  });
 
-EM_JS(int, JS_abs, (double x), { return Math.abs(x) });
-int abs(int x) { return JS_abs((int)x); }
+EM_EXPORT(int, abs, (int x), { return Math.abs(x) });
 
 double nearbyint(double x) { return rint(x); }
 float nearbyintf(float x) { return rintf(x); }

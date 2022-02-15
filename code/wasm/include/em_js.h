@@ -69,3 +69,16 @@
   __attribute__((section("em_js"), aligned(1))) char __em_js__##name[] =                           \
     #params "<::>" #__VA_ARGS__;                                                                   \
   _EM_JS_CPP_END
+
+
+extern uint32_t makeFunc( const char * ) EM_IMPORT(makeFunc);
+
+#define EM_EXPORT(ret, name, params, ...)  \
+  ret name params {                        \
+    return (ret)makeFunc(#params "<::>" #__VA_ARGS__); \
+  }
+
+#define EM_EXPORTNR(ret, name, params, ...)  \
+  ret name params {                        \
+    makeFunc(#params "<::>" #__VA_ARGS__); \
+  }

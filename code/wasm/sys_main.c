@@ -64,15 +64,11 @@ extern void IN_Shutdown( void );
 extern void IN_Init( void );
 extern void IN_Frame( void );
 
-EM_JS(char **, SYS_CmdArgs, ( void ), 
+EM_EXPORT(char **, Sys_CmdArgs, ( void ), 
 { return Sys_Main_CmdArgs() });
-char **Sys_CmdArgs( void )
-{ return SYS_CmdArgs(); }
 
-EM_JS(int, SYS_CmdArgsC, ( void ), 
+EM_EXPORT(int, Sys_CmdArgsC, ( void ), 
 { return Sys_Main_CmdArgsC() });
-int Sys_CmdArgsC( void )
-{ return SYS_CmdArgsC(); }
 
 // =======================================================================
 // General routines
@@ -586,7 +582,7 @@ va_end( ap );
 
 
 __attribute__((nothrow))
-EM_JS(int, ASM_const_int, ( const char* code, const char* arg_sigs, intptr_t *args ), 
+EM_EXPORT(int, ASM_const_int, ( const char* code, const char* arg_sigs, intptr_t *args ), 
 { return asm_const_int(code, arg_sigs, args) });
 int asm_const_int(const char* code, const char* arg_sigs, ...)
 {
@@ -594,52 +590,34 @@ int asm_const_int(const char* code, const char* arg_sigs, ...)
   return ASM_const_int(code, arg_sigs, args); 
 }
 
-EM_JS(void, SYS_SocksConnect, ( void ), 
+EM_EXPORTNR(void, Sys_SocksConnect, ( void ), 
 { Sys_SocksConnect() });
-void Sys_SocksConnect( void )
-{ SYS_SocksConnect(); }
 
-EM_JS(void, SYS_NET_MulticastLocal, ( int sock, int length, const int *data ), 
+EM_EXPORTNR(void, Sys_NET_MulticastLocal, ( int sock, int length, const int *data ), 
 { return SYS_NET_MulticastLocal(sock, length, data) });
-void Sys_NET_MulticastLocal( int sock, int length, const int *data )
-{ return SYS_NET_MulticastLocal(sock, length, data); }
 
-EM_JS(void *, SYS_LoadFunction, ( void *handle, const char *name ), 
+EM_EXPORTNR(void *, Sys_LoadFunction, ( void *handle, const char *name ), 
 { return Sys_LoadFunction(handle, name) });
-void *Sys_LoadFunction( void *handle, const char *name )
-{ return SYS_LoadFunction(handle, name); }
 
-EM_JS(void, SYS_UnloadLibrary, ( void *handle ), 
+EM_EXPORTNR(void, Sys_UnloadLibrary, ( void *handle ), 
 { return Sys_UnloadLibrary(handle) });
-void Sys_UnloadLibrary( void *handle )
-{ return SYS_UnloadLibrary(handle); }
 
-EM_JS(void *, SYS_LoadLibrary, ( const char *name ), 
+EM_EXPORTNR(void *, Sys_LoadLibrary, ( const char *name ), 
 { return Sys_LoadLibrary(name) });
-void *Sys_LoadLibrary( const char *name )
-{ return SYS_LoadLibrary(name); }
 
-EM_JS(void, SYS_Offline, ( void ), 
+EM_EXPORTNR(void, Sys_Offline, ( void ), 
 { Sys_FS_Offline() });
-void Sys_Offline( void )
-{ SYS_Offline(); }
 
-EM_JS(__attribute((noreturn)) void, SYS_Exit, ( int code ), 
+EM_EXPORTNR(__attribute((noreturn)) void, Sys_Exit, ( int code ), 
 { Sys_Main_PlatformExit(code) });
-__attribute((noreturn)) void Sys_Exit( int code )
-{ SYS_Exit(code); }
 
-EM_JS(char *, SYS_GetClipboardData, ( void ), 
+EM_EXPORT(char *, Sys_GetClipboardData, ( void ), 
 { return Sys_GetClipboardData() });
-char *Sys_GetClipboardData( void )
-{ return SYS_GetClipboardData(); }
 
-EM_JS(qboolean, SYS_Main_RandomBytes, ( byte *string, int len ), 
+EM_EXPORT(qboolean, Sys_RandomBytes, ( byte *string, int len ), 
 { return Sys_RandomBytes(string, len) });
-qboolean Sys_RandomBytes( byte *string, int len )
-{ return SYS_Main_RandomBytes(string, len); }
 
-EM_JS(void, SYS_Main_SetStatus, ( const char *format, intptr_t *args ), 
+EM_EXPORTNR(void, SYS_Main_SetStatus, ( const char *format, intptr_t *args ), 
 { Sys_SetStatus.apply(null, [format].concat(args)) });
 void QDECL Sys_SetStatus( const char *format, ... )
 {
@@ -647,36 +625,26 @@ void QDECL Sys_SetStatus( const char *format, ... )
   SYS_Main_SetStatus(format, args); 
 }
 
-EM_JS(char **, SYS_FS_List, ( const char *directory, const char *extension, const char *filter, int *numfiles, qboolean wantsubs ), 
+EM_EXPORT(char **, Sys_ListFiles, ( const char *directory, const char *extension, const char *filter, int *numfiles, qboolean wantsubs ), 
 { return Sys_ListFiles(directory, extension, filter, numfiles, wantsubs) });
-char **Sys_ListFiles( const char *directory, const char *extension, const char *filter, int *numfiles, qboolean wantsubs )
-{ return SYS_FS_List(directory, extension, filter, numfiles, wantsubs); }
 
-EM_JS(FILE *, SYS_FS_FOpen, (const char *ospath, const char *mode), 
+EM_EXPORT(FILE *, Sys_FOpen, (const char *ospath, const char *mode), 
 { return Sys_FOpen(ospath, mode) });
-FILE *Sys_FOpen( const char *ospath, const char *mode )
-{ return SYS_FS_FOpen(ospath, mode); }
 
-EM_JS(void, SYS_FS_Shutdown, (void), { Sys_FS_Shutdown() });
+EM_EXPORTNR(void, SYS_FS_Shutdown, (void), { Sys_FS_Shutdown() });
 void Sys_FS_Shutdown(void) { return SYS_FS_Shutdown(); }
 
-EM_JS(void, SYS_FS_Startup, (void), { Sys_FS_Startup() });
+EM_EXPORTNR(void, SYS_FS_Startup, (void), { Sys_FS_Startup() });
 void Sys_FS_Startup(void) { return SYS_FS_Startup(); }
 
-EM_JS(int, SYS_Milliseconds, (void), { return Sys_Main_Milliseconds() });
+EM_EXPORT(int, SYS_Milliseconds, (void), { return Sys_Main_Milliseconds() });
 int Sys_Milliseconds(void) { return SYS_Milliseconds(); }
 
 
-EM_JS(void, SYS_longjmp, ( sigjmp_buf buf, int ret ), 
+EM_EXPORTNR(__attribute((noreturn)) void, longjmp, ( sigjmp_buf buf, int ret ), 
 { throw new Error('longjmp', buf, ret) });
-void longjmp( sigjmp_buf buf, int ret )
-{ return SYS_longjmp( buf, ret ); }
 
-
-EM_JS(int, SYS_setjmp, ( sigjmp_buf buf ), 
-{  });
-int setjmp( sigjmp_buf buf )
-{ SYS_setjmp( buf ); }
+EM_EXPORT(int, setjmp, ( sigjmp_buf buf ), {  });
 
 
 int emscripten_resize_heap(size_t size) {
