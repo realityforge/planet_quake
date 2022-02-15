@@ -21,11 +21,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 #include "client.h"
 
-#ifdef __WASM__
-EM_JS(void, SYS_SetClipboardData, (void *field), { Sys_Input_SetClipboardData(field) });
-void Sys_SetClipboardData(void *field) { return SYS_SetClipboardData(field); }
-#endif
-
 /*
 
 key up events are sent even if in console mode
@@ -174,14 +169,26 @@ Field_Paste
 ================
 */
 static void Field_Paste( field_t *edit ) {
-#ifdef __WASM__
-  Sys_SetClipboardData(edit);
-  return;
-#else
 	char	*cbd;
 	int		pasteLen, i;
+#ifdef __WASM__
+	// because this happens asynchronously, the char events are created when the browser keypress event fires
+	//   all this does is set the field now, so that when something is pasted it can be send to playername
+	//   or console, etc.
+	// this is called a second time by the browser when the text is ready
+	static field_t *previousEdit = NULL;
 
+	if(edit) {
+		cbd = (void *)edit;
+		edit = previousEdit;
+		previousEdit = NULL;
+	} else {
+		previousEdit = edit;
+		return;
+	}
+#else
 	cbd = Sys_GetClipboardData();
+#endif
 
 	if ( !cbd ) {
 		return;
@@ -194,7 +201,6 @@ static void Field_Paste( field_t *edit ) {
 	}
 
 	Z_Free( cbd );
-#endif
 }
 
 
@@ -869,7 +875,7 @@ void CL_DropFile( char *file, int len ) {
   const char *to = FS_DescribeGameFile(file, &demoNames, &demos, &mapNames, 
     &maps, &imageNames, &images, &videoNames, &videos, &soundNames, &sounds, 
     &pk3Names, &pk3s);
-printf("new name: %s\n", to);
+
   // TODO: make an autocomplete for drop files
   if(command[0] == '\0') {
     if(demos) {

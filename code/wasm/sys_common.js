@@ -246,3 +246,106 @@ function Sys_Debug () {
 		console.log(e)
 	}
 }
+
+
+function Sys_ResizeHeap(requestedSize) {
+  var oldSize = HEAPU8.length;
+  requestedSize = requestedSize >>> 0;
+  #if ALLOW_MEMORY_GROWTH == 0
+  #if ABORTING_MALLOC
+  abortOnCannotGrowMemory(requestedSize);
+  #else
+  return false; // malloc will report failure
+  #endif // ABORTING_MALLOC
+  #else // ALLOW_MEMORY_GROWTH == 0
+  // With pthreads, races can happen (another thread might increase the size in between), so return a failure, and let the caller retry.
+  #if USE_PTHREADS
+  if (requestedSize <= oldSize) {
+    return false;
+  }
+  #endif // USE_PTHREADS
+  #if ASSERTIONS && !USE_PTHREADS
+  assert(requestedSize > oldSize);
+  #endif
+  
+  #if EMSCRIPTEN_TRACING
+  // Report old layout one last time
+  _emscripten_trace_report_memory_layout();
+  #endif
+  
+  // Memory resize rules:
+  // 1. Always increase heap size to at least the requested size, rounded up to next page multiple.
+  // 2a. If MEMORY_GROWTH_LINEAR_STEP == -1, excessively resize the heap geometrically: increase the heap size according to 
+  //                                         MEMORY_GROWTH_GEOMETRIC_STEP factor (default +20%),
+  //                                         At most overreserve by MEMORY_GROWTH_GEOMETRIC_CAP bytes (default 96MB).
+  // 2b. If MEMORY_GROWTH_LINEAR_STEP != -1, excessively resize the heap linearly: increase the heap size by at least MEMORY_GROWTH_LINEAR_STEP bytes.
+  // 3. Max size for the heap is capped at 2048MB-WASM_PAGE_SIZE, or by MAXIMUM_MEMORY, or by ASAN limit, depending on which is smallest
+  // 4. If we were unable to allocate as much memory, it may be due to over-eager decision to excessively reserve due to (3) above.
+  //    Hence if an allocation fails, cut down on the amount of excess growth, in an attempt to succeed to perform a smaller allocation.
+  
+  // A limit is set for how much we can grow. We should not exceed that
+  // (the wasm binary specifies it, so if we tried, we'd fail anyhow).
+  // In CAN_ADDRESS_2GB mode, stay one Wasm page short of 4GB: while e.g. Chrome is able to allocate full 4GB Wasm memories, the size will wrap
+  // back to 0 bytes in Wasm side for any code that deals with heap sizes, which would require special casing all heap size related code to treat
+  // 0 specially.
+  var maxHeapSize = {{{ Math.min(MAXIMUM_MEMORY, FOUR_GB - WASM_PAGE_SIZE) }}};
+  if (requestedSize > maxHeapSize) {
+  #if ASSERTIONS
+    err('Cannot enlarge memory, asked to go up to ' + requestedSize + ' bytes, but the limit is ' + maxHeapSize + ' bytes!');
+  #endif
+  #if ABORTING_MALLOC
+    abortOnCannotGrowMemory(requestedSize);
+  #else
+    return false;
+  #endif
+  }
+  
+  // Loop through potential heap size increases. If we attempt a too eager reservation that fails, cut down on the
+  // attempted size and reserve a smaller bump instead. (max 3 times, chosen somewhat arbitrarily)
+  for (var cutDown = 1; cutDown <= 4; cutDown *= 2) {
+  #if MEMORY_GROWTH_LINEAR_STEP == -1
+    var overGrownHeapSize = oldSize * (1 + {{{ MEMORY_GROWTH_GEOMETRIC_STEP }}} / cutDown); // ensure geometric growth
+  #if MEMORY_GROWTH_GEOMETRIC_CAP
+    // but limit overreserving (default to capping at +96MB overgrowth at most)
+    overGrownHeapSize = Math.min(overGrownHeapSize, requestedSize + {{{ MEMORY_GROWTH_GEOMETRIC_CAP }}} );
+  #endif
+  
+  #else
+    var overGrownHeapSize = oldSize + {{{ MEMORY_GROWTH_LINEAR_STEP }}} / cutDown; // ensure linear growth
+  #endif
+  
+    var newSize = Math.min(maxHeapSize, alignUp(Math.max(requestedSize, overGrownHeapSize), {{{ WASM_PAGE_SIZE }}}));
+  
+  #if ASSERTIONS == 2
+    var t0 = _emscripten_get_now();
+  #endif
+    var replacement = emscripten_realloc_buffer(newSize);
+  #if ASSERTIONS == 2
+    var t1 = _emscripten_get_now();
+    console.log('Heap resize call from ' + oldSize + ' to ' + newSize + ' took ' + (t1 - t0) + ' msecs. Success: ' + !!replacement);
+  #endif
+    if (replacement) {
+  #if ASSERTIONS && WASM2JS
+      err('Warning: Enlarging memory arrays, this is not fast! ' + [oldSize, newSize]);
+  #endif
+  
+  #if EMSCRIPTEN_TRACING
+      _emscripten_trace_js_log_message("Emscripten", "Enlarging memory arrays from " + oldSize + " to " + newSize);
+      // And now report the new layout
+      _emscripten_trace_report_memory_layout();
+  #endif
+      return true;
+    }
+  }
+  #if ASSERTIONS
+  err('Failed to grow the heap from ' + oldSize + ' bytes to ' + newSize + ' bytes, not enough memory!');
+  #endif
+  #if ABORTING_MALLOC
+  abortOnCannotGrowMemory(requestedSize);
+  #else
+  return false;
+  #endif
+  #endif // ALLOW_MEMORY_GROWTH
+  },
+  
+}

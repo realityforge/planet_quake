@@ -10,6 +10,7 @@ USE_LAZY_LOAD    := 1
 USE_LAZY_MEMORY  := 1
 USE_MASTER_LAN   := 1
 USE_CURL         := 0
+USE_SDL          := 0
 
 include make/configure.make
 

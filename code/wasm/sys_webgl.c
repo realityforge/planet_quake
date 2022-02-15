@@ -959,3 +959,101 @@ EM_JS(GLvoid, SYS_NamedFramebufferRenderbufferEXT, ( GLuint framebuffer, GLenum 
 { return glNamedFramebufferRenderbufferEXT(framebuffer,attachment,renderbuffertarget,renderbuffer) });
 GLvoid qglNamedFramebufferRenderbufferEXT( GLuint framebuffer, GLenum attachment, GLenum renderbuffertarget, GLuint renderbuffer )
 { return SYS_NamedFramebufferRenderbufferEXT(framebuffer,attachment,renderbuffertarget,renderbuffer ); }
+
+
+
+
+EM_JS(GLvoid, SYS_BindProgramARB, ( GLenum target, GLuint program ), 
+{ return assert(program == 0) });
+GLvoid qglBindProgramARB( GLenum target, GLuint program )
+{ return SYS_BindProgramARB(target,program); }
+
+EM_JS(GLvoid, SYS_ProgramLocalParameter4f, ( GLenum target, GLuint index, GLfloat x, GLfloat y, GLfloat z, GLfloat w ), 
+{ return assert(program == 0) });
+GLvoid qglProgramLocalParameter4fARB( GLenum target, GLuint index, GLfloat x, GLfloat y, GLfloat z, GLfloat w )
+{ return SYS_ProgramLocalParameter4f(target,index,x,y,z,w); }
+
+EM_JS(GLvoid, SYS_ProgramLocalParameter4fv, ( GLenum target, GLuint index, const GLfloat *params ), 
+{ return assert(program == 0) });
+GLvoid qglProgramLocalParameter4fvARB( GLenum target, GLuint index, const GLfloat *params )
+{ return SYS_ProgramLocalParameter4fv(target,index,params); }
+
+EM_JS(GLvoid, SYS_NormalPointer, ( GLenum type, GLsizei stride, const GLvoid *ptr ), 
+{ return assert(program == 0) });
+GLvoid qglNormalPointer( GLenum type, GLsizei stride, const GLvoid *ptr )
+{ return SYS_NormalPointer(type,stride,ptr); }
+
+EM_JS(GLvoid, SYS_LockArrays, ( GLint first, GLsizei count ), 
+{ return assert(program == 0) });
+GLvoid qglLockArraysEXT( GLint first, GLsizei count )
+{ return SYS_LockArrays(first,count); }
+
+EM_JS(GLvoid, SYS_UnlockArrays, ( void ), 
+{ return assert(program == 0) });
+GLvoid qglUnlockArraysEXT( void )
+{ return SYS_UnlockArrays(); }
+
+EM_JS(GLvoid, SYS_ProgramString, ( GLenum target, GLenum format, GLsizei len, const void *string ), 
+{ return assert(program == 0) });
+GLvoid qglProgramStringARB( GLenum target, GLenum format, GLsizei len, const void *string )
+{ return SYS_ProgramString(target,format,len,string); }
+
+EM_JS(GLvoid, SYS_DeletePrograms, ( GLsizei n, const GLuint *programs ), 
+{ return assert(program == 0) });
+GLvoid qglDeleteProgramsARB( GLsizei n, const GLuint *programs )
+{ return SYS_DeletePrograms(n,programs); }
+
+EM_JS(GLvoid, SYS_GenPrograms, ( GLsizei n, GLuint *programs ), 
+{ return assert(program == 0) });
+GLvoid qglGenProgramsARB( GLsizei n, GLuint *programs )
+{ return SYS_GenPrograms(n,programs); }
+
+EM_JS(GLvoid, SYS_GetInternalformat, ( GLenum target, GLenum internalformat, GLenum pname, GLsizei bufSize, GLint *params ), 
+{ return assert(program == 0) });
+GLvoid qglGetInternalformativ( GLenum target, GLenum internalformat, GLenum pname, GLsizei bufSize, GLint *params )
+{ return SYS_GetInternalformat(target, internalformat, pname, bufSize, params); }
+
+GLvoid qglBindBufferARB( GLenum target, GLuint buffer )
+{ return SYS_BindBuffer(target, buffer); }
+
+GLvoid qglDeleteBuffersARB( GLsizei n, const GLuint *buffers )
+{ return SYS_DeleteBuffers(n, buffers); }
+
+GLvoid qglGenBuffersARB( GLsizei n, GLuint *buffers )
+{ return SYS_GenBuffers(n, buffers); }
+
+GLvoid qglActiveTextureARB( GLenum texture )
+{ return SYS_ActiveTexture(texture ); }
+
+EM_JS(GLvoid, SYS_TexEnvi, ( GLenum target, GLenum pname, GLint param ), 
+{ return glTexEnvi(target,pname,param) });
+GLvoid  qglTexEnvi( GLenum target, GLenum pname, GLint param )
+{ return SYS_TexEnvi(target,pname,param ); }
+
+EM_JS(GLvoid, SYS_ClientActiveTexture, ( GLenum texture ), 
+{ return glClientActiveTexture(texture) });
+GLvoid  qglClientActiveTextureARB( GLenum texture )
+{ return SYS_ClientActiveTexture( texture ); }
+
+EM_JS(GLvoid, SYS_MultiTexCoord2f, ( GLenum target, const GLfloat *v ), 
+{ return glMultiTexCoord2f(target,v) });
+GLvoid  qglMultiTexCoord2fARB( GLenum target, const GLfloat *v )
+{ return SYS_MultiTexCoord2f( target, v ); }
+
+GLvoid qglBufferDataARB( GLenum target, GLsizeiptrARB size, const void *data, GLenum usage )
+{ return SYS_BufferData( target, size, data, usage ); }
+
+EM_JS(GLvoid, SYS_GetRenderbufferParameter, ( GLenum target, GLenum pname, GLint *params ), 
+{ return glGetRenderbufferParameter(target, pname, params) });
+GLvoid  qglGetRenderbufferParameteriv( GLenum target, GLenum pname, GLint *params )
+{ return SYS_GetRenderbufferParameter( target, pname, params ); }
+
+EM_JS(GLvoid, SYS_IsFramebuffer, ( GLuint framebuffer ), 
+{ return glIsFramebuffer(framebuffer) });
+GLvoid  qglIsFramebuffer( GLuint framebuffer )
+{ return SYS_IsFramebuffer( framebuffer ); }
+
+EM_JS(GLvoid, SYS_GetFramebufferAttachmentParameter, ( GLenum target, GLenum attachment, GLenum pname, GLint *params ), 
+{ return glGetFramebufferAttachmentParameter(target, attachment, pname, params) });
+GLvoid  qglGetFramebufferAttachmentParameteriv( GLenum target, GLenum attachment, GLenum pname, GLint *params )
+{ return SYS_GetFramebufferAttachmentParameter( target, attachment, pname, params ); }

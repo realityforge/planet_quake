@@ -126,6 +126,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define MAX_CLIENT_ROLES 24
 #endif
 
+
 #if defined(USE_MULTIVM_CLIENT) || defined(USE_MULTIVM_SERVER)
 // Cyrax's Multiview is what makes multiworld possible.
 #define USE_UNLOCKED_CVARS 1
@@ -238,14 +239,14 @@ if(Com_PreviousEventPtr() == &x) { \
 } \
 
 #define ASYNCF(x, f) \
-Sys_BeginDownload(f); \
+Cbuf_AddText( va("directdl %s\n", f) ); \
 x##_Requeue: \
 ASYNC(x); \
 if(!FS_FileExists(f)) \
 goto x##_Requeue; \
 
 #define ASYNCPF(x, y, f) \
-Sys_BeginDownload(f); \
+Cbuf_AddText( va("directdl %s\n", f) ); \
 x##_Requeue: \
 ASYNCP(x, y); \
 if(!FS_FileExists(f)) \

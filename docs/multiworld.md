@@ -47,6 +47,7 @@ Finally, I want to use multiworld for streaming game content to clients. Where t
 
 ## TODO
 
+  * Still something wrong with marks on walls in second world.
   * Use cm_entityString or something to communicate portal changes to multiple QVMs
   * Fix multiworld deltas... again... or make no-delta the requirement.
   * Fix scene rendering, skipping, and replaying entity cmds between frames. Not critical because I haven't seen a drop in FPS since I made the trWorld_t change.

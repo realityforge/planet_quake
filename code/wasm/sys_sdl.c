@@ -66,99 +66,60 @@ void *SDL_glContext = NULL;
 cvar_t *r_stereoEnabled;
 cvar_t *in_nograb;
 
-
-EM_JS(void *, SYS_CreateContext, ( void *window ), 
-{ return Sys_GL_CreateContext(window) });
-void *SDL_GL_CreateContext(void *window)
-{ return SYS_CreateContext(window); }
-
-EM_JS(int, SYS_SDL_Init, ( uint32_t flags ), 
+EM_JS(void *, GL_CreateContext, ( void *window ), 
 { return Sys_GLimpInit(flags) });
-int SDL_Init(uint32_t flags)
-{ return SYS_SDL_Init(flags); }
 
-EM_JS(char *, SYS_SDL_GetError, ( void ), 
+EM_JS(int, SDL_Init, ( uint32_t flags ), 
+{ return Sys_GLimpInit(flags) });
+
+EM_JS(char *, SDL_GetError, ( void ), 
 { return SDL_GetError() });
-char *SDL_GetError( void )
-{ return SYS_SDL_GetError(); }
 
 EM_JS(int, SYS_DisplayMode, ( int displayIndex, SDL_DisplayMode *mode ), 
 { return Sys_GetDisplayMode(displayIndex, mode) });
-int SDL_GetDesktopDisplayMode(int displayIndex, SDL_DisplayMode *mode)
-{ return SYS_DisplayMode(displayIndex, mode); }
 
 EM_JS(int, SYS_GetWindowDisplayMode, ( void *window, SDL_DisplayMode *mode ), 
 { return Sys_GetDisplayMode(window, mode) });
-int SDL_GetWindowDisplayMode(void *window, SDL_DisplayMode *mode)
-{ return SYS_GetWindowDisplayMode(window, mode); }
 
-EM_JS(int, SYS_GL_SetAttribute, ( int attr, int value ), 
+EM_JS(int, SDL_GL_SetAttribute, ( int attr, int value ), 
 { return Sys_GL_SetAttribute(attr, value) });
-int SDL_GL_SetAttribute(int attr, int value)
-{ return SYS_GL_SetAttribute(attr, value); }
 
-EM_JS(void *, SYS_SDL_CreateWindow, ( const char *title,
+EM_JS(void *, SDL_CreateWindow, ( const char *title,
                               int x, int y, int w,
                               int h, uint32_t flags ), 
 { return SDL_CreateWindow(title, x, y, w, h, flags) });
-void *SDL_CreateWindow(const char *title,
-                              int x, int y, int w,
-                              int h, uint32_t flags)
-{ return SYS_SDL_CreateWindow(title, x, y, w, h, flags); }
 
-EM_JS(int, SYS_SetDisplay, ( void *window, const SDL_DisplayMode *mode ), 
+EM_JS(int, SDL_SetWindowDisplayMode, ( void *window, const SDL_DisplayMode *mode ), 
 { return SDL_SetWindowDisplayMode(window, mode) });
-int SDL_SetWindowDisplayMode(void *window, const SDL_DisplayMode *mode)
-{ return SYS_SetDisplay(window, mode); }
 
-EM_JS(void, SYS_GetDrawable, ( void *window, int *w, int *h ), 
+EM_JS(void, SDL_GL_GetDrawableSize, ( void *window, int *w, int *h ), 
 { SDL_GL_GetDrawableSize(window, w, h) });
-void SDL_GL_GetDrawableSize(void *window, int *w, int *h)
-{ SYS_GetDrawable(window, w, h); }
 
-EM_JS(uint32_t, SYS_WasInit, ( uint32_t flags ), 
+EM_JS(uint32_t, SDL_WasInit, ( uint32_t flags ), 
 { return SDL_WasInit(flags) });
-uint32_t SDL_WasInit(uint32_t flags)
-{ return SYS_WasInit(flags); }
 
-EM_JS(int, SYS_ShowCursor, ( int toggle ), 
+EM_JS(int, SDL_ShowCursor, ( int toggle ), 
 { return SDL_ShowCursor(toggle) });
-int SDL_ShowCursor(int toggle)
-{ return SYS_ShowCursor(toggle); }
 
-EM_JS(void, SYS_SetWindowGrab, ( void *window, qboolean grabbed ), 
+EM_JS(void, SDL_SetWindowGrab, ( void *window, qboolean grabbed ), 
 { return SDL_SetWindowGrab(window, grabbed) });
-void SDL_SetWindowGrab(void *window, qboolean grabbed)
-{ return SYS_SetWindowGrab(window, grabbed); }
 
-EM_JS(uint32_t, SYS_GetWindowFlags, (void *window), 
+EM_JS(uint32_t, SDL_GetWindowFlags, (void *window), 
 { return SDL_GetWindowFlags(window) });
-uint32_t SDL_GetWindowFlags(void *window)
-{ return SYS_GetWindowFlags(window); }
 
-EM_JS(void, SYS_StopTextInput, ( void ), 
+EM_JS(void, SDL_StopTextInput, ( void ), 
 { SDL_StopTextInput() });
-void SDL_StopTextInput(void)
-{ SYS_StopTextInput(); }
 
-EM_JS(SDL_AudioDeviceID, SYS_OpenAudio, ( const char *device, int iscapture,
+EM_JS(SDL_AudioDeviceID, SDL_OpenAudioDevice, ( const char *device, int iscapture,
                     const SDL_AudioSpec * desired, SDL_AudioSpec * obtained,
                     int allowed_changes ), 
 { return SDL_OpenAudioDevice(device, iscapture, desired, obtained, allowed_changes) });
-SDL_AudioDeviceID SDL_OpenAudioDevice(const char *device, int iscapture,
-                    const SDL_AudioSpec * desired, SDL_AudioSpec * obtained,
-                    int allowed_changes)
-{ return SYS_OpenAudio(device, iscapture, desired, obtained, allowed_changes); }
 
-EM_JS(void, SYS_PauseAudio, ( SDL_AudioDeviceID dev, int pause_on ), 
+EM_JS(void, SDL_PauseAudioDevice, ( SDL_AudioDeviceID dev, int pause_on ), 
 { SDL_PauseAudioDevice(dev, pause_on) });
-void SDL_PauseAudioDevice(SDL_AudioDeviceID dev, int pause_on)
-{ SYS_PauseAudio(dev, pause_on); }
 
-EM_JS(void, SYS_CloseAudio, ( SDL_AudioDeviceID dev ), 
+EM_JS(void, SDL_CloseAudioDevice, ( SDL_AudioDeviceID dev ), 
 { SDL_CloseAudioDevice(dev) });
-void SDL_CloseAudioDevice(SDL_AudioDeviceID dev)
-{ SYS_CloseAudio(dev); }
 
 void SDL_LockAudioDevice(SDL_AudioDeviceID dev) { }
 
@@ -283,7 +244,7 @@ static int GLW_SetMode( int mode, const char *modeFS, qboolean fullscreen, qbool
     //Com_Printf("Selected display: %i\n", display );
   }
 
-  if ( display >= 0 && SDL_GetDesktopDisplayMode( display, &desktopMode ) == 0 )
+  if ( display >= 0 && SYS_DisplayMode( display, &desktopMode ) == 0 )
   {
     glw_state.desktop_width = desktopMode.w;
     glw_state.desktop_height = desktopMode.h;
@@ -466,7 +427,7 @@ static int GLW_SetMode( int mode, const char *modeFS, qboolean fullscreen, qbool
         continue;
       }
 
-      if ( SDL_GetWindowDisplayMode( SDL_window, &mode ) >= 0 )
+      if ( SYS_GetWindowDisplayMode( SDL_window, &mode ) >= 0 )
       {
         config->displayFrequency = mode.refresh_rate;
         config->vidWidth = mode.w;
@@ -485,9 +446,9 @@ static int GLW_SetMode( int mode, const char *modeFS, qboolean fullscreen, qbool
           SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
           SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
         }
-        if ( ( SDL_glContext = SDL_GL_CreateContext( SDL_window ) ) == NULL )
+        if ( ( SDL_glContext = GL_CreateContext( SDL_window ) ) == NULL )
         {
-          Com_DPrintf( "SDL_GL_CreateContext failed: %s\n", SDL_GetError( ) );
+          Com_DPrintf( "GL_CreateContext failed: %s\n", SDL_GetError( ) );
           SDL_DestroyWindow( SDL_window );
           SDL_window = NULL;
           continue;

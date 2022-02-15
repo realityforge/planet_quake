@@ -135,18 +135,6 @@ cvar_t  *cl_lnInvoice;
 
 #ifdef __WASM__
 cvar_t  *cl_returnURL;
-
-EM_JS(void, SYS_BeginDownload, ( const char *remoteName ), 
-{ Sys_BeginDownload(remoteName) });
-void Sys_BeginDownload( const char *remoteName )
-{ SYS_BeginDownload(remoteName); }
-
-
-EM_JS(void, SYS_DownloadLocalFile, ( char *fileName ), 
-{ return Sys_Main_DownloadLocalFile(fileName) });
-void Sys_DownloadLocalFile( char *fileName )
-{ return SYS_DownloadLocalFile(fileName); }
-
 #endif
 
 #ifdef USE_LAZY_LOAD
@@ -2939,11 +2927,7 @@ static void CL_BeginDownload( const char *localName, const char *remoteName ) {
 	clc.downloadBlock = 0; // Starting new file
 	clc.downloadCount = 0;
 
-#ifdef __WASM__
-  Sys_BeginDownload(remoteName);
-#else
 	CL_AddReliableCommand( va("download %s", remoteName), qfalse );
-#endif
 }
 
 
@@ -4569,9 +4553,6 @@ static void CL_InitRef( void ) {
 	rimp.Spy_InputText = Spy_InputText;
 	rimp.Spy_Banner = Spy_Banner;
 #endif
-#ifdef __WASM__
-	rimp.Sys_DownloadLocalFile = Sys_DownloadLocalFile;
-#endif
 
 	ret = GetRefAPI( REF_API_VERSION, &rimp );
 
@@ -6081,12 +6062,6 @@ static void CL_LocalServers_f( void ) {
 	}
 	Com_Memset( &to, 0, sizeof( to ) );
 
-	// The 'xxx' in the message is a challenge that will be echoed back
-	// by the server.  We don't care about that here, but master servers
-	// can use that to prevent spoofed server responses from invalid ip
-	message = "\377\377\377\377getinfo xxx";
-	n = (int)strlen( message );
-
 #ifdef USE_MASTER_LAN
 	// emulate localhost
 	NET_StringToAdr( va("127.0.0.1:%i", PORT_SERVER), &to, NA_UNSPEC );
@@ -6097,7 +6072,6 @@ static void CL_LocalServers_f( void ) {
 	for ( i = 0; i < MAX_MASTER_SERVERS; i++ ) {
 		if(cls.numGlobalServerAddresses < MAX_GLOBAL_SERVERS) {
 			netadr_t *addr = &cls.globalServerAddresses[cls.numGlobalServerAddresses];
-			qboolean found = qfalse;
 			if(!cl_master[i]->string[0]) {
 				continue;
 			}
@@ -6109,21 +6083,9 @@ static void CL_LocalServers_f( void ) {
 			if (NET_CompareAdr(&to, addr)) {
 				for(j = 0; j < cls.numlocalservers; j++) {
 					if ( NET_CompareAdr( addr, &cls.localServers[j].adr ) ) {
-						found = qtrue;
 						break;
 					}
 				}
-				/*
-				if(!found) {
-					CL_InitServerInfo(&cls.localServers[cls.numlocalservers], addr);
-					Q_strncpyz(
-						cls.localServers[cls.numlocalservers].hostName,
-						cl_master[i]->string, sizeof(cls.localServers[cls.numlocalservers].hostName));
-					cls.localServers[cls.numlocalservers].visible = qfalse;
-					cls.numlocalservers++;
-					cls.numGlobalServerAddresses++;
-				}
-				*/
 			} else {
 				Com_Printf( "Requesting servers from %s (%s)...\n", cl_master[i]->string, NET_AdrToStringwPort(addr) );
 				NET_OutOfBandPrint( NS_CLIENT, addr, "getservers 68 " );
@@ -6133,6 +6095,12 @@ static void CL_LocalServers_f( void ) {
 		}
 	}
 #else
+	// The 'xxx' in the message is a challenge that will be echoed back
+	// by the server.  We don't care about that here, but master servers
+	// can use that to prevent spoofed server responses from invalid ip
+	message = "\377\377\377\377getinfo xxx";
+	n = (int)strlen( message );
+
 	// send each message twice in case one is dropped
 	for ( i = 0 ; i < 2 ; i++ ) {
 		// send a broadcast packet on each server port
@@ -6655,6 +6623,8 @@ static void CL_ShowIP_f( void ) {
 }
 
 
+// TODO: something else for server and dedicated, perhaps download from 
+//   list of CDN sources, repacking?
 #ifdef USE_CURL
 
 qboolean CL_Download( const char *cmd, const char *pakname, qboolean autoDownload )

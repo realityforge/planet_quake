@@ -525,7 +525,7 @@ static bool claim_more_memory(size_t numBytes)
 
 // Initialize malloc during static initialization with highest constructor priority,
 // so that it initializes before any other static initializers in compilation units.
-static void EMSCRIPTEN_KEEPALIVE __attribute__((constructor(0))) initialize_malloc_heap()
+static void EM_KEEPALIVE __attribute__((constructor(0))) initialize_malloc_heap()
 {
 #if __EMSCRIPTEN_PTHREADS__
   // This function should be called on the main thread before any pthreads have been
@@ -1197,7 +1197,7 @@ struct mallinfo emmalloc_mallinfo()
   struct mallinfo info;
   // Non-mmapped space allocated (bytes): For emmalloc,
   // let's define this as the difference between heap size and dynamic top end.
-  info.arena = emscripten_get_heap_size() - (size_t)sbrk(0);
+  info.arena = __builtin_wasm_memory_size(0) << 16 - (size_t)sbrk(0);
   // Number of "ordinary" blocks. Let's define this as the number of highest
   // size blocks. (subtract one from each, since there is a sentinel node in each list)
   info.ordblks = count_linked_list_size(&freeRegionBuckets[NUM_FREE_BUCKETS-1])-1;

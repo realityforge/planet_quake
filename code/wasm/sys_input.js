@@ -545,7 +545,7 @@ function Sys_GetClipboardData () {
 	return 0;
 }
 
-function Sys_Input_SetClipboardData (field) {
+function Sys_SetClipboardData (field) {
   SYSI.field = field
 }
 

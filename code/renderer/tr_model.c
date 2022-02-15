@@ -364,7 +364,6 @@ qhandle_t RE_RegisterModel( const char *name )
 
 	// only set the name after the model has been successfully loaded
 	Q_strncpyz( mod->name, name, sizeof( mod->name ) );
-	printf("model: %i -> %s\n", tr.numModels, mod->name);
 
 	mod->type = MOD_BAD;
 	mod->numLods = 0;

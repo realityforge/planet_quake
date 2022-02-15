@@ -153,12 +153,14 @@ function setCrossOriginHeaders(res) {
   res.setHeader('Cross-Origin-Opener-Policy', 'same-origin')
 }
 
-if(ufs.existsSync(path.join(__dirname, '../../../build/release-js-js/quake3e.js')))
+if(ufs.existsSync(path.join(__dirname, '../../../build/release-js-js/quake3e.wasm'))
+  || ufs.existsSync(path.join(__dirname, '../../../build/release-js-js/quake3e_slim.wasm')))
   app.use(serveStatic(path.join(__dirname, '../../../build/release-js-js'), {
     setHeaders: setCrossOriginHeaders
   }))
 
-else if(ufs.existsSync(path.join(__dirname, '../../../build/debug-js-js/quake3e.js')))
+else if(ufs.existsSync(path.join(__dirname, '../../../build/debug-js-js/quake3e.wasm'))
+  || ufs.existsSync(path.join(__dirname, '../../../build/debug-js-js/quake3e_slim.wasm')))
   app.use(serveStatic(path.join(__dirname, '../../../build/debug-js-js'), {
     setHeaders: setCrossOriginHeaders
   }))

@@ -18,10 +18,14 @@ WORKDIRS         += musl          musl/string musl/stdio  musl/stdlib    \
                     musl/internal musl/time   musl/locale musl/network   \
                     musl/select   musl/stat   musl/dirent musl/misc      \
                     musl/fcntl    musl/ctype  musl/exit   musl/env       \
-                    musl/thread   musl/mman   musl/process musl/multibyte
+                    musl/thread   musl/mman   musl/process \
+                    musl/multibyte musl/malloc
 
 CLEANS           += musl $(CNAME)$(ARCHEXT).bc $(CNAME)$(ARCHEXT).o
 endif
+
+#                    malloc/lite_malloc.o malloc/free.o malloc/calloc.o malloc/realloc.o \
+
 
 MUSL_LOBJ        := string/stpcpy.o  string/memset.o  string/memcpy.o    \
                     string/memmove.o string/memcmp.o  string/memchr.o    \
@@ -33,7 +37,7 @@ MUSL_LOBJ        := string/stpcpy.o  string/memset.o  string/memcpy.o    \
                     string/strcspn.o string/strpbrk.o string/strdup.o    \
                     \
                     internal/shgetc.o    internal/syscall_ret.o internal/intscan.o \
-                    internal/floatscan.o internal/procfdname.o \
+                    internal/floatscan.o internal/procfdname.o internal/libc.o \
                     \
                     stdio/sprintf.o  stdio/fprintf.o   stdio/vsnprintf.o \
                     stdio/vfprintf.o stdio/fwrite.o    stdio/sscanf.o    \
@@ -55,7 +59,7 @@ MUSL_LOBJ        := string/stpcpy.o  string/memset.o  string/memcpy.o    \
                     \
                     \
                     stdlib/atoi.o   stdlib/atof.o   stdlib/strtod.o \
-                    stdlib/qsort.o  stdlib/strtol.o \
+                    stdlib/qsort.o  stdlib/strtol.o stdlib/atol.o \
                     \
                     ctype/tolower.o ctype/isalnum.o  ctype/isspace.o \
                     ctype/isdigit.o ctype/iswdigit.o ctype/isupper.o \
@@ -64,7 +68,9 @@ MUSL_LOBJ        := string/stpcpy.o  string/memset.o  string/memcpy.o    \
                     signal/signal.o      signal/sigaddset.o   signal/sigemptyset.o \
                     signal/sigprocmask.o signal/sigaction.o   signal/block.o \
 										signal/raise.o       signal/sigismember.o signal/restore.o \
+                    \
                     errno/strerror.o errno/__errno_location.o \
+                    \
 										process/posix_spawn_file_actions_init.o \
 										process/posix_spawn_file_actions_adddup2.o \
 										process/posix_spawn_file_actions_destroy.o \
@@ -114,10 +120,13 @@ MUSL_LOBJ        := string/stpcpy.o  string/memset.o  string/memcpy.o    \
                     stat/umask.o stat/mkdir.o stat/stat.o stat/fstatat.o \
                     \
                     dirent/readdir.o dirent/closedir.o dirent/opendir.o \
+                    \
                     misc/dirname.o misc/ioctl.o misc/uname.o \
+                    \
                     mman/munmap.o mman/mmap.o \
                     \
-                    env/getenv.o \
+                    env/getenv.o env/__environ.o \
+                    \
                     fcntl/fcntl.o fcntl/open.o \
                     \
                     thread/__lock.o       thread/pthread_sigmask.o \
@@ -126,7 +135,7 @@ MUSL_LOBJ        := string/stpcpy.o  string/memset.o  string/memcpy.o    \
                     \
                     multibyte/mbrtowc.o   multibyte/mbstowcs.o multibyte/wctomb.o \
                     multibyte/mbsrtowcs.o multibyte/wcrtomb.o  multibyte/mbsinit.o \
-                    multibyte/mbtowc.o    multibyte/btowc.o \
+                    multibyte/mbtowc.o    multibyte/btowc.o    multibyte/internal.o \
 
 
 MUSL_OBJ         += $(addprefix $(B)/musl/,$(MUSL_LOBJ))

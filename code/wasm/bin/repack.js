@@ -241,11 +241,9 @@ if(!noProgress) {
 }
 
 // load these modules down here to the console is overridden
+var {mapGameAssets} = require('../lib/asset.qvm.js')
 var {
-  loadQVM, loadQVMData, getGameAssets, mapGameAssets, MATCH_ENTS
-} = require('../lib/asset.qvm.js')
-var {
-  deDuplicate, graphGame, loadDefaultDirectories, graphModels, graphMaps, graphShaders, TEMP_NAME
+  deDuplicate, graphGame, loadDefaultDirectories, TEMP_NAME
 } = require('../lib/asset.game.js')
 var {compressDirectory, unpackPk3s} = require('../bin/compress.js')
 var {
@@ -253,9 +251,7 @@ var {
   audioTypes, imageTypes, findTypes,
   allTypes, whitelist
 } = require('../bin/repack-whitelist.js')
-var {
-  convertGameFiles, convertNonAlpha, convertAudio
-} = require('../bin/convert.js')
+var {convertGameFiles} = require('../bin/convert.js')
 var {getLeaves} = require('../lib/asset.graph.js')
 var {makeIndexJson, makeMapIndex} = require('../bin/content.js')
 

@@ -26,6 +26,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include <sys/time.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <setjmp.h>
 #include <fcntl.h>
 #include <stdarg.h>
 #include <stdio.h>
@@ -664,3 +665,31 @@ void Sys_FS_Startup(void) { return SYS_FS_Startup(); }
 
 EM_JS(int, SYS_Milliseconds, (void), { return Sys_Main_Milliseconds() });
 int Sys_Milliseconds(void) { return SYS_Milliseconds(); }
+
+
+EM_JS(void, SYS_longjmp, ( sigjmp_buf buf, int ret ), 
+{ throw new Error('longjmp', buf, ret) });
+void longjmp( sigjmp_buf buf, int ret )
+{ return SYS_longjmp( buf, ret ); }
+
+
+EM_JS(int, SYS_setjmp, ( sigjmp_buf buf ), 
+{  });
+int setjmp( sigjmp_buf buf )
+{ SYS_setjmp( buf ); }
+
+
+int emscripten_resize_heap(size_t size) {
+#ifdef __EMSCRIPTEN_MEMORY_GROWTH__
+  size_t old_size = __builtin_wasm_memory_size(0) * WASM_PAGE_SIZE;
+  assert(old_size < size);
+  ssize_t diff = (size - old_size + WASM_PAGE_SIZE - 1) / WASM_PAGE_SIZE;
+  size_t result = __builtin_wasm_memory_grow(0, diff);
+  if (result != (size_t)-1) {
+    // Success, update JS (see https://github.com/WebAssembly/WASI/issues/82)
+    emscripten_notify_memory_growth(0);
+    return 1;
+  }
+#endif
+  return 0;
+}

@@ -502,9 +502,6 @@ void RB_TakeScreenshot(int x, int y, int width, int height, char *fileName)
 	ri.FS_WriteFile(fileName, buffer, memcount + 18);
 
 	ri.Hunk_FreeTempMemory(allbuf);
-#ifdef __WASM__
-	ri.Sys_DownloadLocalFile(fileName);
-#endif
 }
 
 /* 
@@ -528,9 +525,6 @@ void RB_TakeScreenshotJPEG(int x, int y, int width, int height, char *fileName)
 
 	ri.CL_SaveJPG(fileName, r_screenshotJpegQuality->integer, width, height, buffer + offset, padlen);
 	ri.Hunk_FreeTempMemory(buffer);
-#ifdef __WASM__
-	ri.Sys_DownloadLocalFile(fileName);
-#endif
 }
 
 /*

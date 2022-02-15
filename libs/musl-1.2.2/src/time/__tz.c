@@ -8,10 +8,12 @@
 #include "lock.h"
 #include "fork_impl.h"
 
+#ifndef __WASM__
 #define malloc __libc_malloc
 #define calloc undef
 #define realloc undef
 #define free undef
+#endif
 
 long  __timezone = 0;
 int   __daylight = 0;

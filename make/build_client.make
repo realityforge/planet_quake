@@ -313,13 +313,7 @@ ifeq ($(PLATFORM),js)
 $(B)/$(TARGET_CLIENT): $(Q3OBJ)
 	$(echo_cmd) "LD $@"
 	$(Q)$(LD) -o $@ $(Q3OBJ) $(CLIENT_LDFLAGS) $(LDFLAGS)
-	
-#$(B)/$(TARGET_CLIENT): $(Q3OBJ) 
-#	$(Q)llvm-link -o $(B)/$(CNAME)$(ARCHEXT).bc $(Q3OBJ) 
-#	$(Q)opt -Os $(B)/$(CNAME)$(ARCHEXT).bc -o $(B)/$(CNAME)$(ARCHEXT).bc
-#	$(Q)llc -O3 -march=wasm32 -filetype=obj $(B)/$(CNAME)$(ARCHEXT).bc -o $(B)/$(CNAME)$(ARCHEXT).o
-#	$(Q)$(LD) -o $@ $(B)/$(CNAME)$(ARCHEXT).o $(CLIENT_LDFLAGS) $(LDFLAGS)
-#	$(Q)wasm-opt -Os --no-validation -o $@ $@
+	$(Q)wasm-opt -Os --no-validation -o $@ $@
 
 else
 $(B)/$(TARGET_CLIENT): $(Q3OBJ)

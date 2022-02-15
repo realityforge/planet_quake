@@ -307,7 +307,7 @@ async function findMissingTextures(project, progress, previous) {
 
   var initial = {}
   for(var j = 1; j < BASEMOD_DIRS.length; j++) {
-    var pk3dir = path.basename(BASEMOD_DIRS[j]).replace(/-cc*r*/ig, '') + '.pk3dir'
+    var pk3dir = path.basename(BASEMOD_DIRS[j]).replace(/-cc*/ig, '') + '.pk3dir'
     var missing = game.baseq3[j].map((search) => {
       var lookup = search
         .replace(/\/\//ig, '/')
