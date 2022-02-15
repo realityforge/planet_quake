@@ -98,18 +98,6 @@ EM_JS(void, SDL_GL_GetDrawableSize, ( void *window, int *w, int *h ),
 EM_JS(uint32_t, SDL_WasInit, ( uint32_t flags ), 
 { return SDL_WasInit(flags) });
 
-EM_JS(int, SDL_ShowCursor, ( int toggle ), 
-{ return SDL_ShowCursor(toggle) });
-
-EM_JS(void, SDL_SetWindowGrab, ( void *window, qboolean grabbed ), 
-{ return SDL_SetWindowGrab(window, grabbed) });
-
-EM_JS(uint32_t, SDL_GetWindowFlags, (void *window), 
-{ return SDL_GetWindowFlags(window) });
-
-EM_JS(void, SDL_StopTextInput, ( void ), 
-{ SDL_StopTextInput() });
-
 EM_JS(SDL_AudioDeviceID, SDL_OpenAudioDevice, ( const char *device, int iscapture,
                     const SDL_AudioSpec * desired, SDL_AudioSpec * obtained,
                     int allowed_changes ), 

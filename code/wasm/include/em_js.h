@@ -57,7 +57,6 @@
 // emJsFuncs metadata is read in emscripten.py's create_em_js, which creates an
 // array of JS function strings to be included in the JS output.
 #define WASM_EXPORT __attribute__((visibility("default")))
-#define WASM_IMPORT(n) __attribute__((import_module("env"), import_name(#n))) 
 
 #define EM_KEEPALIVE __attribute__((used))
 
@@ -66,7 +65,7 @@
 #define EM_JS(ret, name, params, ...)                                                              \
   _EM_JS_CPP_BEGIN                                                                                 \
   ret name params EM_IMPORT(name);                                                                 \
-  EM_KEEPALIVE                                                                             \
+  EM_KEEPALIVE                                                                                     \
   __attribute__((section("em_js"), aligned(1))) char __em_js__##name[] =                           \
     #params "<::>" #__VA_ARGS__;                                                                   \
   _EM_JS_CPP_END

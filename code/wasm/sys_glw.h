@@ -215,15 +215,11 @@ extern uint32_t SDL_WasInit(uint32_t flags);
 extern int   SDL_Init(uint32_t flags);
 extern void  SDL_GL_SwapWindow(void *window);
 extern void *Sys_LoadLibrary(const char *f);
-WASM_IMPORT(SDL_ShowCursor)
 extern int   SDL_ShowCursor(int toggle);
-WASM_IMPORT(SDL_SetWindowGrab)
 extern void  SDL_SetWindowGrab(void *window, qboolean grabbed);
 extern int   SDL_SetRelativeMouseMode(qboolean enabled);
-WASM_IMPORT(SDL_GetWindowFlags)
 extern uint32_t SDL_GetWindowFlags(void *window);
 extern void  SDL_StartTextInput(void);
-WASM_IMPORT(SDL_StopTextInput)
 extern void  SDL_StopTextInput(void);
 
 void HandleEvents( void );

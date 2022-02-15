@@ -3,6 +3,18 @@
 #include "../renderercommon/tr_public.h"
 #include "./sys_glw.h"
 
+EM_JS(int, SDL_ShowCursor, ( int toggle ), 
+{ return SDL_ShowCursor(toggle) });
+
+EM_JS(void, SDL_SetWindowGrab, ( void *window, qboolean grabbed ), 
+{ return SDL_SetWindowGrab(window, grabbed) });
+
+EM_JS(uint32_t, SDL_GetWindowFlags, (void *window), 
+{ return SDL_GetWindowFlags(window) });
+
+EM_JS(void, SDL_StopTextInput, ( void ), 
+{ SDL_StopTextInput() });
+
 /**
  *  Used as a mask when testing buttons in buttonstate.
  *   - Button 1:  Left mouse button

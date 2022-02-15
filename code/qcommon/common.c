@@ -200,7 +200,10 @@ static void Com_WriteConfig_f( void );
 void CIN_CloseAllVideos( void );
 
 #ifdef __WASM__
-WASM_IMPORT(DebugBreak) void DebugBreak( void );
+
+EM_JS(void, DebugBreak, ( void ), 
+{ debugger; debugger; });
+
 #endif
 
 //============================================================================
