@@ -432,6 +432,9 @@ __attribute__((import_module("env"), import_name("Sys_StringToSockaddr")));
 void *gethostbyname (const char *)
 __attribute__((import_module("env"), import_name("gethostbyname")));
 
+void  Sys_Print(const char *s)
+__attribute__((import_module("env"), import_name("Sys_Print")));
+
 struct in_addr { uint32_t s_addr; };
 
 struct sockaddr_in {

@@ -13,18 +13,17 @@ function addressToString(addr, length) {
   return newString
 }
 
-function stringsToMemory(addr, list) {
-  Q3e.paged32[(addr+0)>>2] = list.length; // first set to count of strings to follow
-  let posInSeries = addr + 1
+function stringsToMemory(addr, list, ) {
+  let posInSeries = addr + list.length // add list length so we can return addresses like char **
   for (let i = 0; i < list.length; i++) {
+    Q3e.paged32[(addr+i*4)>>2] = posInSeries // save the starting address in the list
     for(let j = 0; j < list[i].length; j++) {
       Q3e.paged[posInSeries+j] = list[i].charCodeAt(j)
     }
     Q3e.paged[posInSeries+list[i].length] = 0
     posInSeries += list[i].length + 1
   }
-  Q3e.paged32[(addr+0)>>2] = posInSeries; // then set to total length of strings
-  return posInSeries
+  return posInSeries + list.length
 }
 
 function Sys_ListFiles (directory, ext, filter, numfiles, dironly) {
@@ -46,7 +45,7 @@ function Sys_ListFiles (directory, ext, filter, numfiles, dironly) {
   //   overwritten the data won't be needed, should only keep shared storage around
   //   for events and stuff that might take more than 1 frame
   //Q3e.sharedCounter += inMemory
-  return Q3e.sharedCounter + 1 // skip length because count is used
+  return Q3e.shared + Q3e.sharedCounter + matches.length // skip address-list because for loop is used with numfiles
 }
 
 function Sys_Offline() {
@@ -114,7 +113,7 @@ function SDL_GL_SetAttribute(attr, value) {
 
 function SDL_GetError() {
   stringsToMemory(Q3e.shared + Q3e.sharedCounter, ['Unknown WebGL error.'])
-  return Q3e.sharedCounter + 1
+  return Q3e.shared + Q3e.sharedCounter + 1
 }
 
 function SDL_SetWindowDisplayMode () { 
@@ -174,7 +173,7 @@ var Q3e = {
     let lastDlError = Q3e.lastDlError
     Q3e.lastDlError = NULL
     stringsToMemory(Q3e.shared + Q3e.sharedCounter, [lastDlError])
-    return Q3e.sharedCounter + 1
+    return Q3e.shared + Q3e.sharedCounter + 1
   },
   dlclose: function dlclose() {
     // TODO: delete something
@@ -184,21 +183,18 @@ var Q3e = {
   },
   fprintf: function (f, err, args) {
     // TODO: rewrite va_args in JS for convenience?
-    console.log(addressToString(err), 
-    Array.from(Q3e['paged']
-      .slice(Q3e.paged32[(args) >> 2], Q3e.paged32[(args) >> 2] + 10))
-        .map(c => String.fromCharCode(c))
-          .join(''));
+    console.log(addressToString(err), addressToString(Q3e.paged32[(args) >> 2]));
   },
   srand: function srand() {}, // TODO: highly under-appreciated game dynamic
-  atoi: parseInt,
-  atof: parseFloat,
+  atoi: function (i) { return parseInt(addressToString(i)) },
+  atof: function (f) { return parseFloat(addressToString(f)) },
   popen: function popen() {},
-  assert: console.assert,
+  assert: console.assert, // TODO: convert to variadic fmt for help messages
   asctime: function () {
     // Don't really care what time it is because this is what the engine does
     //   right above this call
-    return stringsToMemory(Q3e.shared + Q3e.sharedCounter, [new Date().toLocaleString()])
+    stringsToMemory(Q3e.shared + Q3e.sharedCounter, [new Date().toLocaleString()])
+    return Q3e.shared + Q3e.sharedCounter + 1
   },
   Sys_SockaddrToString: Sys_SockaddrToString,
   Sys_StringToSockaddr: Sys_StringToSockaddr,
@@ -208,9 +204,13 @@ var Q3e = {
   NET_OpenIP: NET_OpenIP,
   Sys_StringToAdr: Sys_StringToAdr,
   Sys_SendPacket: Sys_SendPacket,
-  Sys_IsLANAddress: Sys_IsLANAddress
+  Sys_IsLANAddress: Sys_IsLANAddress,
+  Sys_Print: Sys_Print,
+
 }
 
+// These can be assigned automatically? but only because they deal only with numbers and not strings
+//   TODO: What about converting between float, endian, and shorts?
 let maths = Object.getOwnPropertyNames(Math)
 for(let j = 0; j < maths.length; j++) {
   Q3e[maths[j]] = Math[maths[j]]
@@ -227,7 +227,7 @@ function init(env) {
   fetch('./quake3e_slim.wasm').then(function(response) {
     return response.arrayBuffer()
   }).then(function(bytes) {
-    Q3e['memory'] = new WebAssembly['Memory']( {'initial': 512} )
+    Q3e['memory'] = new WebAssembly['Memory']( {'initial': 2048} )
     Q3e['paged'] = new Uint8Array( Q3e['memory'].buffer )
     Q3e['paged32'] = new Uint32Array( Q3e['memory'].buffer )
    return WebAssembly.instantiate(bytes, { env: env, GL: GL, Math: Math })
@@ -252,8 +252,10 @@ function init(env) {
       '+set', 'sv_pure', '0', // require for now, TODO: server side zips
     ];
     let startupArgs = stringsToMemory(Q3e.shared + Q3e.sharedCounter, startup);
-    Q3e.sharedCounter += startupArgs
-    return RunGame(startup.length, startupArgs)
+    let posArgInMemory = Q3e.shared + Q3e.sharedCounter
+    // Whoops, startup args is expecting a char ** list
+    Q3e.sharedCounter += startupArgs // add total length of stringsToMemory
+    return RunGame(startup.length, posArgInMemory)
   });
 }
 
@@ -318,4 +320,8 @@ function NET_OpenIP() {
 
 function Sys_IsLANAddress() {
   
+}
+
+function Sys_Print(message) {
+  console.log(addressToString(message))
 }

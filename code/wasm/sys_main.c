@@ -234,13 +234,6 @@ void *Sys_LoadDll( const char *name, dllSyscall_t *entryPoint, dllSyscall_t syst
 }
 
 
-
-void Sys_Print( const char *msg )
-{
-  fputs( msg, stderr );
-}
-
-
 void Sys_PrintBinVersion( const char* name )
 {
 	const char *date = __DATE__;

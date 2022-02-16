@@ -2333,7 +2333,6 @@ static void Com_InitZoneMemory( void ) {
 	// allocate the random block zone
 	cv = Cvar_Get( "com_zoneMegs", XSTRING( DEF_COMZONEMEGS ), CVAR_LATCH | CVAR_ARCHIVE );
 	Cvar_CheckRange( cv, "1", NULL, CV_INTEGER );
-
 #ifndef USE_MULTI_SEGMENT
 	if ( cv->integer < DEF_COMZONEMEGS )
 		mainZoneSize = 1024 * 1024 * DEF_COMZONEMEGS;

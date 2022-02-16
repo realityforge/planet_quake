@@ -397,7 +397,7 @@ cvar_t *Cvar_Get( const char *var_name, const char *var_value, int flags ) {
 #endif
 
 	var = Cvar_FindVar (var_name);
-	
+
 	if(var)
 	{
 		int vm_created = (flags & CVAR_VM_CREATED);
@@ -522,6 +522,7 @@ cvar_t *Cvar_Get( const char *var_name, const char *var_value, int flags ) {
 	} else {
 		var->integer = atoi( var->string );
 	}
+
 	var->resetString = CopyString( var_value );
 	var->validator = CV_NONE;
 	var->description = NULL;
