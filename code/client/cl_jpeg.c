@@ -120,6 +120,10 @@ void CL_LoadJPG( const char *filename, unsigned char **pic, int *width, int *hei
 	 * VERY IMPORTANT: use "b" option to fopen() if you are on a machine that
 	 * requires it in order to read binary files.
 	*/
+#ifdef USE_ASYNCHRONOUS
+	if(!FS_Initialized())
+		return;
+#endif
 
 	len = FS_ReadFile( ( char * ) filename, &fbuffer.v );
 	if ( !fbuffer.b || len < 0 ) {

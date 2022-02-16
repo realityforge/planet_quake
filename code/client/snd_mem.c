@@ -271,6 +271,11 @@ qboolean S_LoadSound( sfx_t *sfx )
 	snd_info_t	info;
 //	int		size;
 
+#ifdef USE_ASYNCHRONOUS
+	if(!FS_Initialized())
+		return qfalse;
+#endif
+
 	// load it in
 	data = S_CodecLoad(sfx->soundName, &info);
 	if(!data)

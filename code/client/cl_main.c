@@ -4224,7 +4224,7 @@ static void CL_InitRenderer( void ) {
 
 	// load character sets
 	cls.charSetShader = re.RegisterShader( "gfx/2d/bigchars" );
-	cls.whiteShader = re.RegisterShader( "white" );
+	cls.whiteShader = re.RegisterShader( "<whiteShader>" );
   cls.lagometerShader = re.RegisterShader( "lagometer" );
 #ifndef USE_NO_CONSOLE
 	cls.consoleShader = re.RegisterShader( "console" );
@@ -4299,6 +4299,9 @@ void CL_StartHunkUsers( void ) {
 	if ( re.BeginRegistration && !cls.uiStarted
 #ifdef BUILD_GAME_STATIC
     && !Cvar_VariableIntegerValue("skipLoadUI")
+#endif
+#ifdef USE_ASYNCHRONOUS
+		&& FS_Initialized()
 #endif
   ) {
 		cls.uiStarted = qtrue;
@@ -4378,6 +4381,7 @@ static void CL_SetScaling( float factor, int captureWidth, int captureHeight ) {
 	cls.captureHeight = captureHeight;
 }
 
+
 #if defined(USE_MULTIVM_CLIENT) || defined(USE_MULTIVM_SERVER)
 byte	*CL_CM_ClusterPVS (int cluster, int cmi)
 {
@@ -4397,6 +4401,15 @@ void	CL_CM_Trace( trace_t *results, const vec3_t start, const vec3_t mins, const
 }
 #endif
 
+
+#ifdef USE_ASYNCHRONOUS
+static int CL_FS_ReadFile( const char *qpath, void **buffer ) {
+	if(!FS_Initialized())
+		return -1;
+printf("file: %s\n", qpath);
+	return FS_ReadFile(qpath, buffer);
+}
+#endif
 
 
 /*
@@ -4481,7 +4494,11 @@ static void CL_InitRef( void ) {
 	rimp.CM_ClusterPVS = CL_CM_ClusterPVS;
 	rimp.CM_DrawDebugSurface = CM_DrawDebugSurface;
 
+#ifndef USE_ASYNCHRONOUS
 	rimp.FS_ReadFile = FS_ReadFile;
+#else
+	rimp.FS_ReadFile = CL_FS_ReadFile;
+#endif
 	rimp.FS_FreeFile = FS_FreeFile;
 	rimp.FS_WriteFile = FS_WriteFile;
 	rimp.FS_FreeFileList = FS_FreeFileList;

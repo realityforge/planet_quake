@@ -838,6 +838,7 @@ qboolean Com_EarlyParseCmdLine( char *commandLine, char *con_title, int title_si
     }
 #endif
 #ifdef USE_ASYNCHRONOUS
+		//com_skipLoadUI = qtrue; // always start with console, since it reports update errors
     if( !strcmp(Cmd_Argv(0), "connect") ) {
       com_consoleLines[i][0] = '\0';
       Q_strncpyz( com_earlyConnect, Cmd_Argv( 1 ), sizeof( com_earlyConnect ) );

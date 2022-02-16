@@ -4060,7 +4060,9 @@ void R_InitShaders( void ) {
 
 	CreateInternalShaders();
 
+#ifndef USE_ASYNCHRONOUS // this will happen again when game starts so who cares?
 	ScanAndLoadShaderFiles();
+#endif
 
 	CreateExternalShaders();
 }
