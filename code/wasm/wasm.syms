@@ -1,3 +1,12 @@
-Sys_UpdateSound
-Sys_UpdateModel
-Sys_UpdateShader
+Sys_RandomBytes
+sin
+cos
+srand
+pow
+acosf
+SDL_StopTextInput
+NET_GetPacket
+Sys_IsLANAddress
+Sys_SendPacket
+Sys_StringToAdr
+NET_OpenIP

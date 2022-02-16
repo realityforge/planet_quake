@@ -42,7 +42,6 @@
 #include <stdint.h>
 #include <unistd.h>
 #include <memory.h>
-#include <assert.h>
 #include <malloc.h>
 #include <emscripten.h>
 #include <emscripten/heap.h>

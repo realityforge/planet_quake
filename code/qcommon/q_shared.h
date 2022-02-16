@@ -368,7 +368,82 @@ goto x##_Requeue; \
  **********************************************************************/
 
 
+#ifdef Q3_VM
+
+#include "../game/bg_lib.h"
+
+#else
+
+#ifndef __WASM__
+#include <assert.h>
+#include <stddef.h>
+#include <math.h>
+#endif
+#include <stdio.h>
+#include <stdarg.h>
+#include <string.h>
+#include <stdlib.h>
+#include <time.h>
+#include <ctype.h>
+#include <limits.h>
+
 #ifdef __WASM__
+#include <syscall_arch.h>
+#define a_crash Sys_Exit
+#define abort Sys_Exit
+
+int ED_vsprintf( char *buffer, const char *fmt, va_list ap );
+int BG_sprintf( char *buf, const char *format, ... ) ;
+int Q_sscanf( const char *buffer, const char *fmt, ... ) ;
+#define vsnprintf(x, y, z, ...) ED_vsprintf(x, z, __VA_ARGS__)
+#define vsprintf ED_vsprintf
+#define snprintf(x, y, ...) BG_sprintf(x, __VA_ARGS__)
+#define sprintf(x, ...) BG_sprintf(x, __VA_ARGS__)
+#define sscanf Q_sscanf
+
+int assert_fail(const char *exprStr, const char *file, int line, const char *func)
+__attribute__((import_module("env"), import_name("assert")));
+
+#define assert(expr) (!(expr)?assert_fail(#expr, __FILE__, __LINE__, __func__):0)
+
+char *asctime(const struct tm *tm)
+__attribute__((import_module("env"), import_name("asctime")));
+
+int fprintf(FILE *f, const char *fmt, ...)
+__attribute__((import_module("env"), import_name("fprintf")));
+int atoi(const char *)
+__attribute__((import_module("env"), import_name("atoi")));
+double atof(const char *)
+__attribute__((import_module("env"), import_name("atof")));
+long atol(const char *)
+__attribute__((import_module("env"), import_name("atoi")));
+FILE *popen(const char *cmd, const char *mode)
+__attribute__((import_module("env"), import_name("popen")));
+FILE *popen(const char *cmd, const char *mode)
+__attribute__((import_module("env"), import_name("popen")));
+
+void Sys_SockaddrToString(char *dest, int destlen, const void *input)
+__attribute__((import_module("env"), import_name("Sys_SockaddrToString")));
+
+int Sys_StringToSockaddr(const char *s, void *sadr, int sadr_len)
+__attribute__((import_module("env"), import_name("Sys_StringToSockaddr")));
+#define Sys_StringToSockaddr(x, y, z, w) Sys_StringToSockaddr(x, y, z)
+
+void *gethostbyname (const char *)
+__attribute__((import_module("env"), import_name("gethostbyname")));
+
+struct in_addr { uint32_t s_addr; };
+
+struct sockaddr_in {
+	int sin_family;
+	uint16_t sin_port;
+	struct in_addr sin_addr;
+	uint8_t sin_zero[8];
+};
+
+int NET_OpenIP(void)
+__attribute__((import_module("env"), import_name("NET_OpenIP")));
+
 double cos(double)
 __attribute__((import_module("Math"), import_name("cos")));
 double sin(double)
@@ -443,30 +518,6 @@ int abs(int)
 __attribute__((import_module("Math"), import_name("abs")));
 long labs(long)
 __attribute__((import_module("Math"), import_name("abs")));
-
-#endif
-
-#ifdef Q3_VM
-
-#include "../game/bg_lib.h"
-
-#else
-
-#include <assert.h>
-#include <stddef.h>
-#ifndef __WASM__
-#include <math.h>
-#endif
-#include <stdio.h>
-#include <stdarg.h>
-#include <string.h>
-#include <stdlib.h>
-#include <time.h>
-#include <ctype.h>
-#include <limits.h>
-
-#ifdef __WASM__
-#include <syscall_arch.h>
 #endif
 
 #endif

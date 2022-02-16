@@ -635,6 +635,7 @@ static void CL_GetClipboardData( char *buf, int buflen ) {
 	char	*cbd;
 
 #ifdef __WASM__
+	cbd = NULL;
 #else
 	cbd = Sys_GetClipboardData();
 #endif

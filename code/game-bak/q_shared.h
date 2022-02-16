@@ -44,8 +44,8 @@
 
 #else
 
-#include <assert.h>
 #ifndef __WASM__
+#include <assert.h>
 #include <math.h>
 #endif
 #include <stdio.h>

@@ -12,6 +12,7 @@ USE_LAZY_MEMORY  := 1
 USE_MASTER_LAN   := 1
 USE_CURL         := 0
 USE_SDL          := 0
+USE_IPV6         := 0
 
 include make/configure.make
 
@@ -22,10 +23,10 @@ BINEXT           := .wasm
 
 SHLIBEXT         := wasm
 SHLIBCFLAGS      := 
-SHLIBLDFLAGS     := --import-memory --error-limit=0 --export-dynamic \
+SHLIBLDFLAGS     := --import-memory --error-limit=200 --export-dynamic \
                     --no-entry --strip-all
-LDFLAGS          := --import-memory --error-limit=0 --export-dynamic \
-                    --no-entry --allow-undefined
+LDFLAGS          := --import-memory --error-limit=200 --export-dynamic \
+                    --no-entry --allow-undefined-file=code/wasm/wasm.syms \
 
 CLIENT_LDFLAGS   := code/wasm/include/wasi/libclang_rt.builtins-wasm32.a
 
@@ -33,6 +34,8 @@ BASE_CFLAGS      += -Wall --target=wasm32 \
                     -Wimplicit -fstrict-aliasing \
                     -Wno-bitwise-op-parentheses \
                     -Wno-shift-op-parentheses \
+                    -Wno-unused-but-set-variable \
+                    -Wno-unused-function \
                     -DGL_GLEXT_PROTOTYPES=1 -DGL_ARB_ES2_compatibility=1 \
                     -DGL_EXT_direct_state_access=1 \
                     -DUSE_Q3KEY -DUSE_MD5 \
@@ -47,7 +50,7 @@ BASE_CFLAGS      += -Wall --target=wasm32 \
                     -Ilibs/musl-1.2.2/arch/generic \
 
 DEBUG_CFLAGS     := $(BASE_CFLAGS) \
-                    -std=c11 -DDEBUG -D_DEBUG -frtti -fPIC -O0 -g
+                    -std=c11 -DDEBUG -D_DEBUG -frtti -fPIC -O0 -g -g3 -gdwarf -gfull
 
 RELEASE_CFLAGS   := $(BASE_CFLAGS) \
                     -std=c11 -DNDEBUG -O3 -Oz -flto -fPIC -Ofast

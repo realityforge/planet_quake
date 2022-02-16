@@ -339,7 +339,12 @@ qboolean	NET_GetLoopPacket( netsrc_t sock, netadr_t *net_from, msg_t *net_messag
 void		NET_JoinMulticast6( void );
 void		NET_LeaveMulticast6( void );
 #endif
+#ifndef __WASM__
 qboolean	NET_Sleep( int timeout );
+#else
+int NET_Sleep(int timeout)
+__attribute__((import_module("env"), import_name("NET_Sleep")));
+#endif
 
 #define	MAX_PACKETLEN	1400	// max size of a network packet
 
@@ -1567,6 +1572,9 @@ void	Sys_DisplaySystemConsole( qboolean show );
 
 void	Sys_ShowConsole( int level, qboolean quitOnClose );
 void	Sys_SetErrorText( const char *text );
+#ifndef __WASM__
+__attribute__((import_module("env"), import_name("Sys_SendPacket")))
+#endif
 void	Sys_SendPacket( int length, const void *data, const netadr_t *to );
 
 qboolean	Sys_StringToAdr( const char *s, netadr_t *a, netadrtype_t family );

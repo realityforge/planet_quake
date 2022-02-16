@@ -102,9 +102,6 @@ void *GL_GetProcAddress( const char *symbol )
 	return sym;
 }
 
-//char *do_dlerror( void );
-
-
 /*
 ** QGL_Init
 **

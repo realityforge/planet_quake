@@ -89,19 +89,23 @@ static qboolean	winsockInitialized = qfalse;
 #	endif
 
 # include <netinet/tcp.h>
+#ifndef __WASM__
 #	include <sys/socket.h>
 #	include <errno.h>
 #	include <netdb.h>
 #	include <netinet/in.h>
 #	include <arpa/inet.h>
+#endif
 #	include <net/if.h>
 #	include <sys/ioctl.h>
 #	include <sys/types.h>
 #	include <sys/time.h>
 #	include <unistd.h>
+#ifndef __WASM__
 #	if !defined(__sun) && !defined(__sgi)
 #		include <ifaddrs.h>
 #	endif
+#endif
 
 #	ifdef __sun
 #		include <sys/filio.h>
@@ -113,14 +117,20 @@ typedef int SOCKET;
 #	define closesocket			close
 #	define ioctlsocket			ioctl
 typedef int	ioctlarg_t;
+#ifndef __WASM__
 #	define socketError			errno
+#else
+extern int socketError;
+#endif
 
 #endif
 
 typedef union {
 	struct sockaddr_in v4;
+#ifndef __WASM__
 	struct sockaddr_in6 v6;
 	struct sockaddr_storage ss;
+#endif
 } sockaddr_t;
 
 #pragma pack(push,1)
@@ -203,9 +213,6 @@ static SOCKET	ip_sockets[MAX_NUM_PORTS] = {
 static SOCKET	ip_socket = INVALID_SOCKET;
 #endif
 #ifdef __WASM__
-extern void Sys_SocksMessage( void );
-extern void Sys_SocksConnect( void );
-static void NET_OpenIP( void );
 // maybe on desktop we have the luxury of maintaining separate connections
 //  but the web browser is limit to 3 per thread
 #define socks_socket ip_socket
@@ -237,7 +244,11 @@ typedef struct
 	char ifname[IF_NAMESIZE];
 	
 	netadrtype_t type;
+#ifndef __WASM__
 	sa_family_t family;
+#else
+	int family;
+#endif
 	sockaddr_t addr;
 	sockaddr_t netmask;
 } nip_localaddr_t;
@@ -313,6 +324,7 @@ static char *NET_ErrorString( void ) {
 }
 
 
+#ifndef __WASM__
 static void NetadrToSockadr( const netadr_t *a, sockaddr_t *s ) {
 	switch ( a->type ) {
 		case NA_BROADCAST:
@@ -398,6 +410,7 @@ static const char *gai_error_str( int ecode )
 			return gai_strerror( ecode );
 	}
 }
+
 
 
 /*
@@ -526,6 +539,7 @@ qboolean Sys_StringToAdr( const char *s, netadr_t *a, netadrtype_t family ) {
 	SockadrToNetadr( &sadr, a );
 	return qtrue;
 }
+#endif
 
 
 /*
@@ -619,7 +633,9 @@ const char *NET_AdrToString( const netadr_t *a )
 #endif
 	{
 		sockaddr_t sadr;
+#ifndef __WASM__
 		NetadrToSockadr( a, &sadr );
+#endif
 		Sys_SockaddrToString( s, sizeof(s), &sadr );
 	}
 
@@ -696,6 +712,8 @@ qboolean NET_IsLocalAddress( const netadr_t *adr )
 
 //=============================================================================
 
+
+#ifndef __WASM__
 /*
 ==================
 NET_GetPacket
@@ -827,9 +845,11 @@ static qboolean NET_GetPacket( netadr_t *net_from, msg_t *net_message, const fd_
 	return qfalse;
 }
 
+
 //=============================================================================
 
 
+#ifndef __WASM__
 /*
 ==================
 Sys_SendPacket
@@ -930,9 +950,26 @@ void Sys_SendPacket( int length, const void *data, const netadr_t *to )
 	}
 }
 
+#endif
+
+
+#else
+#ifdef USE_MULTIVM_SERVER
+int NET_GetPacket( netadr_t *net_from, msg_t *net_message, const fd_set *fdr, int igvm )
+__attribute__((import_module("env"), import_name("NET_GetPacket")));
+#else
+int NET_GetPacket( netadr_t *net_from, msg_t *net_message, const fd_set *fdr )
+__attribute__((import_module("env"), import_name("NET_GetPacket")));
+#endif
+
+void Sys_SendPacket( int length, const void *data, const netadr_t *to )
+__attribute__((import_module("env"), import_name("Sys_SendPacket")));
+#endif
+
 
 //=============================================================================
 
+#ifndef __WASM__
 /*
 ==================
 Sys_IsLANAddress
@@ -1020,6 +1057,7 @@ qboolean Sys_IsLANAddress( const netadr_t *adr ) {
 	
 	return qfalse;
 }
+#endif
 
 
 /*
@@ -1047,7 +1085,7 @@ void Sys_ShowIP( void ) {
 
 //=============================================================================
 
-
+#ifndef __WASM__
 /*
 ====================
 NET_IPSocket
@@ -1322,7 +1360,11 @@ NET_OpenSocks
 int porto;
 static void NET_OpenSocks( int port ) {
 	struct sockaddr_in	address;
+#ifdef __WASM__
+	uint32_t h;
+#else
 	struct hostent		*h;
+#endif
 	int					len;
 	unsigned char		buf[4 + 255 * 2];
 	socks5_request_t	cmd;
@@ -1371,18 +1413,7 @@ static void NET_OpenSocks( int port ) {
     Com_Printf( "NET_OpenSocks: connect: %s\n", NET_ErrorString() );
     return;
 #else
-    if(Q_stricmp(NET_ErrorString(), "Operation in progress") != 0) {
-      Com_Printf( "NET_OpenSocks: connect: %s\n", NET_ErrorString() );
-      Cvar_Set("net_socksLoading", "0");
-      socks_socket = INVALID_SOCKET;
-    	if ( connect( socks_socket, ( struct sockaddr * )&address, sizeof( struct sockaddr_in ) ) == SOCKET_ERROR ) {
-    		Com_Printf( "%s: connect: %s\n", __func__, NET_ErrorString() );
-    		return;
-    	}
-    }
-    porto = port;
-    Cvar_Set("net_socksLoading", "1");
-    Sys_SocksConnect(); // don't wait until next frame to attach to websocket events
+//	TODO: insert async macro
 #endif
 	}
 	buf[0] = 5;	// SOCKS version
@@ -1585,7 +1616,6 @@ static void NET_AddLocalAddress( const char *ifname, const struct sockaddr *addr
 	}
 }
 
-
 #ifndef _WIN32
 static void NET_GetLocalAddress( void )
 {
@@ -1672,6 +1702,7 @@ static void NET_GetLocalAddress( void ) {
 		freeaddrinfo( res );
 }
 #endif // _WIN32
+#endif
 
 
 #ifdef USE_PRINT_CONSOLE
@@ -1679,6 +1710,8 @@ static void NET_GetLocalAddress( void ) {
 #define PRINT_FLAGS PC_INIT
 #endif
 
+
+#ifndef __WASM__
 /*
 ====================
 NET_OpenIP
@@ -1720,7 +1753,9 @@ void NET_OpenIP( int igvm )
 	port6 = net_port6->integer;
 #endif
 
+#ifndef __WASM__
 	NET_GetLocalAddress();
+#endif
 
 	// automatically scan for a valid port, so multiple
 	// dedicated servers can be started without requiring
@@ -1778,6 +1813,7 @@ void NET_OpenIP( int igvm )
 			Com_Printf( "WARNING: Couldn't bind to a v4 ip address.\n");
 	}
 }
+#endif
 
 
 //===================================================================
@@ -2088,6 +2124,8 @@ static void NET_Event( const fd_set *fdr )
 }
 
 
+#ifndef __WASM__
+
 /*
 ====================
 NET_Sleep
@@ -2194,6 +2232,8 @@ qboolean NET_Sleep( int timeout )
 
 	return qtrue;
 }
+
+#endif
 
 
 /*

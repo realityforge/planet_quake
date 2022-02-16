@@ -288,17 +288,7 @@ Sys_FreeFileList
 =================
 */
 void Sys_FreeFileList( char **list ) {
-	int		i;
-
-	if ( !list ) {
-		return;
-	}
-
-	for ( i = 0 ; list[i] ; i++ ) {
-		Z_Free( list[i] );
-	}
-
-	Z_Free( list );
+	// don't need to free, using rotating bullshit storage
 }
 
 

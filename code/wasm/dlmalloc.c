@@ -1496,7 +1496,6 @@ size_t bulk_free(void**, size_t n_elements) __attribute__((weak, alias("dlbulk_f
 #undef assert
 #define assert(x) if(!(x)) ABORT
 #else /* ABORT_ON_ASSERT_FAILURE */
-#include <assert.h>
 #endif /* ABORT_ON_ASSERT_FAILURE */
 #else  /* DEBUG */
 #ifndef assert

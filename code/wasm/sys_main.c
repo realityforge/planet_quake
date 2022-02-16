@@ -19,28 +19,8 @@ along with Quake III Arena source code; if not, write to the Free Software
 Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 ===========================================================================
 */
-#include <unistd.h>
-#include <signal.h>
-#include <stdlib.h>
-#include <limits.h>
-#include <sys/time.h>
-#include <sys/types.h>
-#include <unistd.h>
-#include <setjmp.h>
-#include <fcntl.h>
-#include <stdarg.h>
 #include <stdio.h>
-#include <sys/ipc.h>
-#include <sys/shm.h>
 #include <sys/stat.h>
-#include <string.h>
-#include <ctype.h>
-#include <sys/wait.h>
-#include <sys/mman.h>
-#include <errno.h>
-#include <libgen.h> // dirname
-
-#include <dlfcn.h>
 
 #include "../qcommon/q_shared.h"
 #include "../qcommon/qcommon.h"
@@ -121,21 +101,22 @@ void Sys_In_Restart_f( void )
 // =============================================================
 
 
-void CON_SigTStp( int signum )
-{
-	sigset_t mask;
-
-	sigemptyset( &mask );
-	sigaddset( &mask, SIGTSTP );
-	sigprocmask( SIG_UNBLOCK, &mask, NULL );
-	
-	signal( SIGTSTP, SIG_DFL );
-	
-	kill( getpid(),  SIGTSTP );
-}
-
 __attribute__((import_module("env"), import_name("Sys_Exit")))
 void Sys_Exit( int code ) __attribute((noreturn));
+
+__attribute__((import_module("env"), import_name("dlopen")))
+void *try_dlopen( const char* base, const char* gamedir, const char* fname );
+
+__attribute__((import_module("env"), import_name("dlerror")))
+char *dlerror( void );
+
+__attribute__((import_module("env"), import_name("dlsym")))
+void *dlsym( void *handle, char *symbol );
+
+__attribute__((import_module("env"), import_name("dlclose")))
+void *dlclose( void *handle );
+
+const char *Sys_Pwd( void ) { return "/base"; }
 
 void Sys_Quit( void )
 {
@@ -166,18 +147,6 @@ void Sys_Error( const char *format, ... )
 	va_list     argptr;
 	char        text[1024];
 
-#ifdef _DEBUG
-	DebugBreak();
-#endif
-
-	// change stdin to non blocking
-	// NOTE TTimo not sure how well that goes with tty console mode
-	if ( stdin_active )
-	{
-//		fcntl( STDIN_FILENO, F_SETFL, fcntl( STDIN_FILENO, F_GETFL, 0) & ~FNDELAY );
-		fcntl( STDIN_FILENO, F_SETFL, stdin_flags );
-	}
-
 	va_start( argptr, format );
 	Q_vsnprintf( text, sizeof( text ), format, argptr );
 	va_end( argptr );
@@ -192,61 +161,9 @@ void Sys_Error( const char *format, ... )
 }
 
 
-void floating_point_exception_handler( int whatever )
-{
-	signal( SIGFPE, floating_point_exception_handler );
-}
-
-
 void Sys_SendKeyEvents( void )
 {
 
-}
-
-
-char *do_dlerror( void )
-{
-	return dlerror();
-}
-
-
-void Sys_UnloadDll( void *dllHandle ) {
-
-	if ( !dllHandle )
-	{
-		Com_Printf( "Sys_UnloadDll(NULL)\n" );
-		return;
-	}
-
-	dlclose( dllHandle );
-	{
-		const char* err; // rb010123 - now const
-		err = dlerror();
-		if ( err != NULL )
-			Com_Printf ( "Sys_UnloadDLL failed on dlclose: \"%s\"!\n", err );
-	}
-}
-
-
-static void* try_dlopen( const char* base, const char* gamedir, const char* fname )
-{
-	void* libHandle;
-	char* fn;
-
-	fn = FS_BuildOSPath( base, gamedir, fname );
-	Com_Printf( "Sys_LoadDll(%s)... \n", fn );
-
-	libHandle = dlopen( fn, RTLD_NOW );
-
-	if( !libHandle ) 
-	{
-    	Com_Printf( "Sys_LoadDll(%s) failed:\n\"%s\"\n", fn, do_dlerror() );
-		return NULL;
-	}
-
-	Com_Printf ( "Sys_LoadDll(%s): succeeded ...\n", fn );
-
-	return libHandle;
 }
 
 
@@ -254,9 +171,6 @@ void *Sys_LoadDll( const char *name, dllSyscall_t *entryPoint, dllSyscall_t syst
 {
 	void		*libHandle;
 	dllEntry_t	dllEntry;
-#ifdef DEBUG
-	char		currpath[MAX_OSPATH];
-#endif
 	char		fname[MAX_OSPATH];
 	const char	*basepath;
 	const char	*homepath;
@@ -276,9 +190,7 @@ void *Sys_LoadDll( const char *name, dllSyscall_t *entryPoint, dllSyscall_t syst
 	}
 
 #ifdef DEBUG
-	if ( getcwd( currpath, sizeof( currpath ) ) )
-		libHandle = try_dlopen( currpath, gamedir, fname );
-	else
+	libHandle = try_dlopen( Sys_Pwd(), gamedir, fname );
 #endif
 	libHandle = NULL;
 
@@ -299,14 +211,14 @@ void *Sys_LoadDll( const char *name, dllSyscall_t *entryPoint, dllSyscall_t syst
 
 	if ( !*entryPoint || !dllEntry )
 	{
-		err = do_dlerror();
+		err = dlerror();
 #ifndef NDEBUG // bk001206 - in debug abort on failure
 		Com_Error ( ERR_FATAL, "Sys_LoadDll(%s) failed dlsym(vmMain):\n\"%s\" !\n", name, err );
 #else
 		Com_Printf ( "Sys_LoadDll(%s) failed dlsym(vmMain):\n\"%s\" !\n", name, err );
 #endif
 		dlclose( libHandle );
-		err = do_dlerror();
+		err = dlerror();
 		if ( err != NULL ) 
 		{
 			Com_Printf( "Sys_LoadDll(%s) failed dlcose:\n\"%s\"\n", name, err );
@@ -322,109 +234,10 @@ void *Sys_LoadDll( const char *name, dllSyscall_t *entryPoint, dllSyscall_t syst
 }
 
 
-static struct Q3ToAnsiColorTable_s
-{
-	const char Q3color;
-	const char *ANSIcolor;
-} tty_colorTable[ ] =
-{
-	{ COLOR_BLACK,    "30" },
-	{ COLOR_RED,      "31" },
-	{ COLOR_GREEN,    "32" },
-	{ COLOR_YELLOW,   "33" },
-	{ COLOR_BLUE,     "34" },
-	{ COLOR_CYAN,     "36" },
-	{ COLOR_MAGENTA,  "35" },
-	{ COLOR_WHITE,    "0" }
-};
-
-
-void Sys_ANSIColorify( const char *msg, char *buffer, int bufferSize )
-{
-  int   msgLength;
-  int   i, j;
-  const char *escapeCode;
-  char  tempBuffer[ 7 ];
-
-  if( !msg || !buffer )
-    return;
-
-  msgLength = strlen( msg );
-  i = 0;
-  buffer[ 0 ] = '\0';
-
-  while( i < msgLength )
-  {
-    if( msg[ i ] == '\n' )
-    {
-      Com_sprintf( tempBuffer, 7, "%c[0m\n", 0x1B );
-      strncat( buffer, tempBuffer, bufferSize - 1);
-      i++;
-    }
-    else if( msg[ i ] == Q_COLOR_ESCAPE )
-    {
-      i++;
-
-      if( i < msgLength )
-      {
-        escapeCode = NULL;
-        for( j = 0; j < ARRAY_LEN( tty_colorTable ); j++ )
-        {
-          if( msg[ i ] == tty_colorTable[ j ].Q3color )
-          {
-            escapeCode = tty_colorTable[ j ].ANSIcolor;
-            break;
-          }
-        }
-
-        if( escapeCode )
-        {
-          Com_sprintf( tempBuffer, 7, "%c[%sm", 0x1B, escapeCode );
-          strncat( buffer, tempBuffer, bufferSize - 1);
-        }
-
-        i++;
-      }
-    }
-    else
-    {
-      Com_sprintf( tempBuffer, 7, "%c", msg[ i++ ] );
-      strncat( buffer, tempBuffer, bufferSize - 1);
-    }
-  }
-}
-
 
 void Sys_Print( const char *msg )
 {
   fputs( msg, stderr );
-}
-
-
-void Sys_ConfigureFPU( void )  // bk001213 - divide by zero
-{
-#ifdef __linux__
-#ifdef __i386
-#ifndef NDEBUG
-	// bk0101022 - enable FPE's in debug mode
-	static int fpu_word = _FPU_DEFAULT & ~(_FPU_MASK_ZM | _FPU_MASK_IM);
-	int current = 0;
-	_FPU_GETCW( current );
-	if ( current!=fpu_word)
-	{
-#if 0
-		Com_Printf("FPU Control 0x%x (was 0x%x)\n", fpu_word, current );
-		_FPU_SETCW( fpu_word );
-		_FPU_GETCW( current );
-		assert(fpu_word==current);
-#endif
-	}
-#else // NDEBUG
-	static int fpu_word = _FPU_DEFAULT;
-	_FPU_SETCW( fpu_word );
-#endif // NDEBUG
-#endif // __i386 
-#endif // __linux
 }
 
 
@@ -436,9 +249,9 @@ void Sys_PrintBinVersion( const char* name )
 
 	fprintf( stdout, "\n\n%s\n", sep );
 #ifdef DEDICATED
-	fprintf( stdout, "Linux Quake3 Dedicated Server [%s %s]\n", date, time );
+	fprintf( stdout, "WAST Quake3 Dedicated Server [%s %s]\n", date, time );
 #else
-	fprintf( stdout, "Linux Quake3 Full Executable  [%s %s]\n", date, time );
+	fprintf( stdout, "WAST Quake3 Full Executable  [%s %s]\n", date, time );
 #endif
 	fprintf( stdout, " local install: %s\n", name );
 	fprintf( stdout, "%s\n\n", sep );
@@ -493,10 +306,6 @@ Q_EXPORT int RunGame( int argc, char* argv[] )
 		return 1;
 	}
 
-	DebugBreak();
-
-return 1;
-		
 	if ( Sys_ParseArgs( argc, argv ) ) // added this for support
 		return 0;
 
@@ -569,8 +378,6 @@ char *Sys_ConsoleInput( void ) { return NULL; }
 void Sys_Mkdir( const char *path ) { mkdir( path, 0750 ); }
 
 const char *Sys_DefaultBasePath( void ) { return "/base"; }
-
-const char *Sys_Pwd( void ) { return "/base"; }
 
 qboolean Sys_ResetReadOnlyAttribute( const char *ospath ) { return qfalse; }
 

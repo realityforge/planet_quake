@@ -21,13 +21,18 @@
  *   Software.
  */
 
+
+#ifndef __WASM__
 #include <assert.h>
+#endif
 #include <limits.h>
 #include <stdlib.h>
 #include <string.h>
 #include <limits.h>
 #include "q_shared.h"
 #include "qrcodegen.h"
+
+#ifdef USE_LNBITS
 
 #ifndef QRCODEGEN_TEST
 	#define testable static  // Keep functions private
@@ -1020,3 +1025,5 @@ static int numCharCountBits(enum qrcodegen_Mode mode, int version) {
 		default:  assert(false);  return -1;  // Dummy value
 	}
 }
+
+#endif

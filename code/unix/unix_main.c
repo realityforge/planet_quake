@@ -357,12 +357,6 @@ void Sys_Error( const char *format, ... )
 }
 
 
-void floating_point_exception_handler( int whatever )
-{
-	signal( SIGFPE, floating_point_exception_handler );
-}
-
-
 // initialize the console input (tty mode if wanted and possible)
 // warning: might be called from signal handler
 tty_err Sys_ConsoleInputInit( void )

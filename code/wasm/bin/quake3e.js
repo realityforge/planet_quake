@@ -20,32 +20,33 @@ function stringsToMemory(addr, list) {
     for(let j = 0; j < list[i].length; j++) {
       Q3e.paged[posInSeries+j] = list[i].charCodeAt(j)
     }
-    Q3e.paged[posInSeries+j] = 0
+    Q3e.paged[posInSeries+list[i].length] = 0
     posInSeries += list[i].length + 1
   }
   Q3e.paged32[(addr+0)>>2] = posInSeries; // then set to total length of strings
-  return addr
+  return posInSeries
 }
 
 function Sys_ListFiles (directory, ext, filter, numfiles, dironly) {
   let files = {
     'default.cfg': {
       mtime: 0,
-
+      size: 1024,
+      
     }
   }
   let matches = Object.keys(files).reduce(function (list, name) {
    // TODO: match directory 
    return !ext || name.lastIndexOf(ext) === (name.length - ext.length)
   }, [])
-  let inMemory = stringsToMemory(Q3e.sharedCounter, matches)
+  /* let inMemory = */ stringsToMemory(Q3e.shared + Q3e.sharedCounter, matches)
   Q3e.paged32[(numfiles+0)>>2] = matches.length;
   // here's the thing, I know for a fact that all the callers copy this stuff
   //   so I don't need to increase my temporary storage because by the time it's
   //   overwritten the data won't be needed, should only keep shared storage around
   //   for events and stuff that might take more than 1 frame
-  //Q3e.sharedCounter += Q3e.paged32[(Q3e.sharedCounter+0)>>2]
-  return inMemory + 1 // skip length because count is used
+  //Q3e.sharedCounter += inMemory
+  return Q3e.sharedCounter + 1 // skip length because count is used
 }
 
 function Sys_Offline() {
@@ -92,7 +93,6 @@ function SDL_CreateWindow (title, x, y, w, h, flags) {
   return win;
 }
 
-
 function SDL_GL_CreateContext(canvas) {
   let webGLContextAttributes = {
     failIfMajorPerformanceCaveat: true
@@ -113,8 +113,8 @@ function SDL_GL_SetAttribute(attr, value) {
 }
 
 function SDL_GetError() {
-  let inMemory = stringsToMemory(Q3e.sharedCounter, ['Unknown WebGL error.'])
-  return inMemory + 1
+  stringsToMemory(Q3e.shared + Q3e.sharedCounter, ['Unknown WebGL error.'])
+  return Q3e.sharedCounter + 1
 }
 
 function SDL_SetWindowDisplayMode () { 
@@ -130,6 +130,10 @@ function SDL_SetWindowGrab (window, grabbed) {
   }
 }
 
+function SDL_StopTextInput () {
+  SDL.textInput = false;
+}
+
 function SDL_ShowCursor() {
   // TODO: some safety stuff?
   Q3e.canvas.exitPointerLock();
@@ -140,10 +144,6 @@ var Q3e = {
   longjmp: function (id, code) { throw new Error('longjmp', id, code) },
   setjmp: function (id) { try {} catch (e) {} },
   exportMappings: {},
-  Sys_Milliseconds: Sys_Milliseconds,
-  Sys_ListFiles: Sys_ListFiles,
-  Sys_Offline: Sys_Offline,
-  Sys_NET_MulticastLocal: Sys_NET_MulticastLocal,
   SDL_GetDesktopDisplayMode: SDL_GetDesktopDisplayMode,
   SDL_GL_SetAttribute: SDL_GL_SetAttribute,
   SDL_CreateWindow: SDL_CreateWindow,
@@ -156,12 +156,59 @@ var Q3e = {
   SDL_OpenAudioDevice: function () {},
   SDL_PauseAudioDevice: function () {},
   SDL_CloseAudioDevice: function () {},
+  SDL_StopTextInput: SDL_StopTextInput,
+  SDL_SetWindowGrab: SDL_SetWindowGrab,
+  SDL_ShowCursor: SDL_ShowCursor,
+  Sys_RandomBytes: Sys_RandomBytes,
+  Sys_Milliseconds: Sys_Milliseconds,
+  Sys_ListFiles: Sys_ListFiles,
+  Sys_Offline: Sys_Offline,
+  Sys_NET_MulticastLocal: Sys_NET_MulticastLocal,
   Sys_Exit: function () {
     // TODO: was Sys_Main_PlatformExit
   },
-  SDL_SetWindowGrab: SDL_SetWindowGrab,
-  SDL_ShowCursor: SDL_ShowCursor,
+  dlopen: function dlopen (base, gamedir, fname) {
+    // TODO: download and callback
+  },
+  dlerror: function dlerror() { 
+    let lastDlError = Q3e.lastDlError
+    Q3e.lastDlError = NULL
+    stringsToMemory(Q3e.shared + Q3e.sharedCounter, [lastDlError])
+    return Q3e.sharedCounter + 1
+  },
+  dlclose: function dlclose() {
+    // TODO: delete something
+  },
+  dlsym: function dlsym(handle, symbol) {
 
+  },
+  fprintf: function (f, err, args) {
+    // TODO: rewrite va_args in JS for convenience?
+    console.log(addressToString(err), 
+    Array.from(Q3e['paged']
+      .slice(Q3e.paged32[(args) >> 2], Q3e.paged32[(args) >> 2] + 10))
+        .map(c => String.fromCharCode(c))
+          .join(''));
+  },
+  srand: function srand() {}, // TODO: highly under-appreciated game dynamic
+  atoi: parseInt,
+  atof: parseFloat,
+  popen: function popen() {},
+  assert: console.assert,
+  asctime: function () {
+    // Don't really care what time it is because this is what the engine does
+    //   right above this call
+    return stringsToMemory(Q3e.shared + Q3e.sharedCounter, [new Date().toLocaleString()])
+  },
+  Sys_SockaddrToString: Sys_SockaddrToString,
+  Sys_StringToSockaddr: Sys_StringToSockaddr,
+  NET_GetPacket: NET_GetPacket,
+  NET_Sleep: NET_Sleep,
+  NET_SendPacket: NET_SendPacket,
+  NET_OpenIP: NET_OpenIP,
+  Sys_StringToAdr: Sys_StringToAdr,
+  Sys_SendPacket: Sys_SendPacket,
+  Sys_IsLANAddress: Sys_IsLANAddress
 }
 
 let maths = Object.getOwnPropertyNames(Math)
@@ -199,7 +246,14 @@ function init(env) {
     Q3e['sharedCounter'] = 0
     // Wow, look at all the unfuckery I don't have to do with startup options because
     //   I'm not using emscripten anymore.
-    return RunGame()
+    let startup = [
+      'quake3e_web',
+      '+set', 'fs_basepath', '/base',
+      '+set', 'sv_pure', '0', // require for now, TODO: server side zips
+    ];
+    let startupArgs = stringsToMemory(Q3e.shared + Q3e.sharedCounter, startup);
+    Q3e.sharedCounter += startupArgs
+    return RunGame(startup.length, startupArgs)
   });
 }
 
@@ -216,4 +270,52 @@ function Sys_Milliseconds() {
   } else {
     return Date.now() - SYS.timeBase();
   }
+}
+
+function Sys_RandomBytes (string, len) {
+	if(typeof crypto != 'undefined') {
+		crypto.getRandomValues(Q3e.paged.subarray(string, string+len))
+	} else {
+		for(var i = 0; i < len; i++) {
+			Q3e.paged[string] = Math.random() * 255
+		}
+	}
+	return true;
+}
+
+function Sys_SockaddrToString() {
+  // DNS doesn't work in the browser, but UDP works with SOCKS
+  //   How complicated to add DNS lookup through SOCK?
+}
+
+function Sys_StringToAdr() {
+
+}
+
+function Sys_StringToSockaddr() {
+  
+}
+
+function Sys_SendPacket() {
+
+}
+
+function NET_GetPacket() {
+
+}
+
+function NET_Sleep() {
+
+}
+
+function NET_SendPacket() {
+
+}
+
+function NET_OpenIP() {
+
+}
+
+function Sys_IsLANAddress() {
+  
 }
