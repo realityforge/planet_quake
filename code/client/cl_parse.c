@@ -1240,11 +1240,6 @@ static void CL_ParseCommandString( msg_t *msg ) {
 			Com_Printf( "%s\n", text );
 			if ( !CL_Disconnect( qtrue, qtrue ) ) { // restart client if not done already
 				CL_FlushMemory();
-#ifdef USE_ASYNCHRONOUS
-				if(!FS_Initialized()) {
-					ASYNCV(CL_StartHunkUsers);
-				}
-#endif
 			}
 			return;
 		}

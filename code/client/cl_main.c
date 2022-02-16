@@ -774,11 +774,6 @@ static void CL_DemoCompleted( void ) {
 	}
 
 	CL_Disconnect( qtrue, qtrue );
-#ifdef USE_ASYNCHRONOUS
-  if(!FS_Initialized()) {
-    ASYNCV(CL_NextDemo);
-  }
-#endif
 	CL_NextDemo();
 }
 
@@ -2540,9 +2535,6 @@ doesn't know what graphics to reload
 =================
 */
 static void CL_Vid_Restart( qboolean keepWindow ) {
-#ifdef USE_ASYNCHRONOUS
-  ASYNC_ReturnToPtr(CL_Vid_Restart);
-#endif
 
 #ifdef USE_VID_FAST
   char *arg = Cmd_Argv(0);
@@ -2581,13 +2573,6 @@ static void CL_Vid_Restart( qboolean keepWindow ) {
 	Cvar_Set( "cl_paused", "0" );
 
 	CL_ClearMemory();
-
-#ifdef USE_ASYNCHRONOUS
-	if(!FS_Initialized()) {
-		ASYNCP(CL_Vid_Restart, keepWindow);
-	}
-#endif
-
 
 	// startup all the client stuff
 	CL_StartHunkUsers();
@@ -3789,11 +3774,6 @@ static void CL_CheckTimeout( void ) {
 			if ( FS_Initialized() && uivm ) {
 				VM_Call( uivm, 1, UI_SET_ACTIVE_MENU, UIMENU_MAIN );
 			}
-#ifdef USE_ASYNCHRONOUS
-			if(!FS_Initialized()) {
-				ASYNCE(CL_FlushMemory);
-			}
-#endif
 			return;
 		}
 	} else {
@@ -3898,6 +3878,7 @@ void CL_Frame( int msec, int realMsec ) {
 		Com_DL_Perform( &download );
 	}
 #endif
+
 #ifdef USE_ASYNCHRONOUS
   if(!com_cl_running || !com_cl_running->integer) {
     CL_SendCmd();
@@ -3931,7 +3912,7 @@ void CL_Frame( int msec, int realMsec ) {
   if(cgvm && VM_IsSuspended(cgvm)) {
     unsigned int result = VM_Resume(cgvm);
     if (result != 0xDEADBEEF) {
-      ASYNCEP(CL_InitCGame, 0);
+
     }
   }
 #else
@@ -3945,7 +3926,7 @@ void CL_Frame( int msec, int realMsec ) {
 				continue;
 			}
 			if (cls.state == CA_LOADING) {
-        ASYNCEP(CL_InitCGame, cgvmi);
+
 			}
 		}
 	}
@@ -5467,9 +5448,7 @@ void CL_Init( void ) {
 	Cmd_SetDescription("cinematic", "Play a video or RoQ file\nUsage: cinematic <videofile>");
 	Cmd_AddCommand ("stoprecord", CL_StopRecord_f);
 	Cmd_SetDescription("stoprecord", "Stop recording a demo\nUsage: stoprecord");
-#ifndef USE_ASYNCHRONOUS
 	Cmd_AddCommand ("connect", CL_Connect_f);
-#endif
 	Cmd_SetDescription("connect", "Connect to a server\nUsage: connect ([-4|-6]) <serveraddress>");
 	Cmd_AddCommand ("reconnect", CL_Reconnect_f);
 	Cmd_SetDescription("reconnect", "Reinitialize the connection to the last server you were connected to\nUsage: reconnect");

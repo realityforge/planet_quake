@@ -1333,9 +1333,6 @@ void CL_InitCGame( int inVM ) {
   }
   int igs = cgvmi;
 #endif
-#ifdef USE_ASYNCHRONOUS
-  ASYNC_ReturnToPtr(CL_InitCGame);
-#endif
 
 	t1 = Sys_Milliseconds();
 
@@ -1394,11 +1391,6 @@ void CL_InitCGame( int inVM ) {
 		return;
 	}
 
-#ifdef USE_MULTIVM_CLIENT
-  ASYNCP(CL_InitCGame, inVM);
-#else
-  ASYNCP(CL_InitCGame, 0);
-#endif
 #endif
 
 	// reset any CVAR_CHEAT cvars registered by cgame

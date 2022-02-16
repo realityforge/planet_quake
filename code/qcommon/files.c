@@ -4694,9 +4694,15 @@ static void FS_AddGameDirectory( const char *path, const char *dir, int igvm ) {
 	}
 #else
   searchpath_t *sprev;
+	if(!FS_Initialized()) {
+		// this is unusual because this is usually what initializes it
+		//   but this flag will be set elsewhere when the initial files are
+		//   downloaded and UI/Cgame is ready to start loading
+		return;
+	}
   // but it could just be the path marker with no pk3s in it yet
   for ( sp = fs_searchpaths ; sp ; sp = sp->next, sprev = sp ) {
-		if ( sp->dir && !Q_stricmp( sp->dir->path, path ) && !Q_stricmp( sp->dir->gamedir, dir )) {
+		if ( sp && sp->dir && !Q_stricmp( sp->dir->path, path ) && !Q_stricmp( sp->dir->gamedir, dir )) {
       if ( sp->pack )
   		{
         FS_FreePak(sp->pack);
@@ -5352,9 +5358,6 @@ static void FS_Startup( void ) {
 #ifdef USE_PRINT_CONSOLE
   Com_PrintFlags(PC_INIT);
 #endif
-#ifdef USE_ASYNCHRONOUS
-  ASYNC_ReturnToPtr(FS_Startup);
-#endif
 
 	Com_Printf( "----- FS_Startup -----\n" );
 
@@ -5406,7 +5409,7 @@ static void FS_Startup( void ) {
 		FS_AddGamePath( fs_basepath->string, fs_basegame->string, 0 );
 	if ( fs_homepath->string[0] && Q_stricmp( fs_homepath->string, fs_basepath->string ) )
 		FS_AddGamePath( fs_homepath->string, fs_basegame->string, 0 );
-	ASYNC_FileDownload(FS_Startup, CACHE_FILE_NAME);
+	Cbuf_AddText( va("directdl %s\n", CACHE_FILE_NAME) );
 #endif
 
 	start = Sys_Milliseconds();
@@ -5457,7 +5460,9 @@ static void FS_Startup( void ) {
 
 	end = Sys_Milliseconds();
 
+#ifndef USE_ASYNCHRONOUS
 	Com_ReadCDKey( fs_basegame->string );
+#endif
 
 	if ( fs_gamedirvar->string[0] && Q_stricmp( fs_gamedirvar->string, fs_basegame->string ) ) {
 		Com_AppendCDKey( fs_gamedirvar->string );
@@ -6175,10 +6180,6 @@ void FS_Restart( int checksumFeed ) {
 
 	static qboolean execConfig = qfalse;
 
-#ifdef USE_ASYNCHRONOUS
-  ASYNC_ReturnToPtr(FS_Restart);
-#endif
-
 	// free anything we currently have loaded
 	FS_Shutdown( qfalse );
 
@@ -6193,7 +6194,10 @@ void FS_Restart( int checksumFeed ) {
 	if(fs_gamedirvar->string[0] == '\0') {
 		downloadFile = va("%s/default.cfg", FS_GetBaseGameDir());
 	}
-	ASYNCPF(FS_Restart, checksumFeed, downloadFile);
+	Cbuf_AddText( va("directdl %s\n", downloadFile) );
+	if(!FS_Initialized()) {
+		return;
+	}
 #endif
 
 	// if we can't find default.cfg, assume that the paths are

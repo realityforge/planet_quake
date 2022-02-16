@@ -3434,13 +3434,6 @@ void Com_GameRestart( int checksumFeed, qboolean clientRestart )
 
 		FS_Restart( checksumFeed );
 		
-#ifdef USE_ASYNCHRONOUS
-  com_gameRestarting = qfalse;
-  ASYNCE(Com_ExecuteCfg);
-  if(clientRestart) {
-    ASYNCV(CL_StartHunkUsers);
-  } else return;
-#endif
 		// Load new configuration
 		Com_ExecuteCfg();
 	
@@ -4537,20 +4530,6 @@ void Com_Frame( qboolean noDelay ) {
 	timeBeforeClient = 0;
 	timeAfter = 0;
 
-#ifdef USE_ASYNCHRONOUS
-  if(!com_fullyInitialized) {
-    lastTime = com_frameTime;
-    com_frameTime = Com_EventLoop();
-    NET_FlushPacketQueue();
-    NET_Sleep( 500 ); // if we got here we're probably syncing file-system
-  	realMsec = com_frameTime - lastTime;
-  	Cbuf_Execute();
-  	msec = Com_ModifyMsec( realMsec );
-    CL_Frame(msec, realMsec);
-    return;
-  }
-#endif
-
 	// write config file if anything changed
 #ifndef DELAY_WRITECONFIG
 	Com_WriteConfiguration();
@@ -4747,7 +4726,9 @@ void Com_Frame( qboolean noDelay ) {
 	}
 #endif
 
+#ifndef USE_ASYNCHRONOUS
 	NET_FlushPacketQueue();
+#endif
 
 	//
 	// report timing information

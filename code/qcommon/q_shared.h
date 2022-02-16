@@ -195,75 +195,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define USE_LAZY_MEMORY 1
 #endif
 
-#ifdef USE_ASYNCHRONOUS
 
-#ifdef _DEBUG
-#define ASYNCEP(x, y) \
-/* Com_Printf("Queing event: SE_ASYNCP from %s\n", __func__); */ \
-Sys_QueEvent(Sys_Milliseconds(), SE_ASYNCP, y, sizeof(y), sizeof(intptr_t), &x); \
-
-#define ASYNCE(x) \
-/* Com_Printf("Queing event: SE_ASYNC from %s\n", __func__); */ \
-Sys_QueEvent(Sys_Milliseconds(), SE_ASYNC, 0, 0, sizeof(intptr_t), &x); \
-
-#else
-#define ASYNCEP(x, y) \
-Sys_QueEvent(Sys_Milliseconds(), SE_ASYNCP, y, sizeof(y), sizeof(intptr_t), &x); \
-
-#define ASYNCE(x) \
-Sys_QueEvent(Sys_Milliseconds(), SE_ASYNC, 0, 0, sizeof(intptr_t), &x); \
-
-#endif
-
-
-#define ASYNCVP(x, y) \
-ASYNCEP(x, y); \
-return; \
-
-#define ASYNCV(x) \
-ASYNCE(x); \
-return; \
-
-#define ASYNCP(x, y) \
-ASYNCVP(x, y); \
-x##_After_Async: \
-
-#define ASYNC(x) \
-ASYNCV(x); \
-x##_After_Async: \
-
-#define ASYNC_ReturnToPtr(x) \
-if(Com_PreviousEventPtr() == &x) { \
-  goto x##_After_Async; \
-} \
-
-#define ASYNC_FileDownload(x, f) \
-Cbuf_AddText( va("directdl %s\n", f) ); \
-x##_Requeue: \
-ASYNC(x); \
-if(!FS_FileExists(f)) \
-goto x##_Requeue; \
-
-#define ASYNCPF(x, y, f) \
-Cbuf_AddText( va("directdl %s\n", f) ); \
-x##_Requeue: \
-ASYNCP(x, y); \
-if(!FS_FileExists(f)) \
-goto x##_Requeue; \
-
-#define ASYNCB(x, b) \
-x##_Requeue: \
-ASYNC(x); \
-if(b) \
-goto x##_Requeue; \
-
-#define ASYNCPB(x, y, b) \
-x##_Requeue: \
-ASYNCP(x, y); \
-if(b) \
-goto x##_Requeue; \
-
-#endif
 
 
 #ifdef USE_LAZY_LOAD
