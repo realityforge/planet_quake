@@ -139,9 +139,9 @@ function SDL_ShowCursor() {
 }
 
 var Q3e = {
-  DebugBreak: function () { debugger; debugger; },
+  DebugBreak: function () { debugger; },
   longjmp: function (id, code) { throw new Error('longjmp', id, code) },
-  setjmp: function (id) { try {} catch (e) {} },
+  setjmp: function (id) { try {  } catch (e) { } },
   exportMappings: {},
   SDL_GetDesktopDisplayMode: SDL_GetDesktopDisplayMode,
   SDL_GL_SetAttribute: SDL_GL_SetAttribute,
@@ -166,6 +166,7 @@ var Q3e = {
   Sys_Exit: function () {
     // TODO: was Sys_Main_PlatformExit
   },
+  Sys_Error: Sys_Error,
   dlopen: function dlopen (base, gamedir, fname) {
     // TODO: download and callback
   },
@@ -255,7 +256,15 @@ function init(env) {
     let posArgInMemory = Q3e.shared + Q3e.sharedCounter
     // Whoops, startup args is expecting a char ** list
     Q3e.sharedCounter += startupArgs // add total length of stringsToMemory
-    return RunGame(startup.length, posArgInMemory)
+    // start a brand new call frame
+    setTimeout(function () {
+      try {
+        RunGame(startup.length, posArgInMemory)
+      } catch (e) {
+        console.log(e)
+      }
+    }, 13)
+    return true
   });
 }
 
@@ -324,4 +333,11 @@ function Sys_IsLANAddress() {
 
 function Sys_Print(message) {
   console.log(addressToString(message))
+}
+
+function Sys_Error(fmt, args) {
+  let len = BG_sprintf(Q3e.shared + Q3e.sharedCounter, fmt, args)
+  if(len > 0)
+    console.log('Sys_Error: ', addressToString(Q3e.shared + Q3e.sharedCounter))
+  throw new Error(addressToString(fmt))
 }

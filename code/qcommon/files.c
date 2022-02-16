@@ -5353,13 +5353,12 @@ static void FS_Startup( void ) {
   Com_PrintFlags(PC_INIT);
 #endif
 #ifdef USE_ASYNCHRONOUS
-  ASYNCR(FS_Startup);
+  ASYNC_ReturnToPtr(FS_Startup);
 #endif
 
 	Com_Printf( "----- FS_Startup -----\n" );
 
 // TODO: add file checks for QVM change time and restart vid
-
 	fs_debug = Cvar_Get( "fs_debug", "0", 0 );
 	fs_copyfiles = Cvar_Get( "fs_copyfiles", "0", CVAR_INIT );
 	fs_basepath = Cvar_Get( "fs_basepath", Sys_DefaultBasePath(), CVAR_INIT | CVAR_PROTECTED | CVAR_PRIVATE );
@@ -5400,16 +5399,14 @@ static void FS_Startup( void ) {
   Cvar_SetFilesDescriptions();
 
 #ifdef USE_ASYNCHRONOUS
-  if(!com_dedicated->integer) {
     // setup paths for downloading to use
-    if ( fs_steampath->string[0] )
-  		FS_AddGamePath( fs_steampath->string, fs_basegame->string, 0 );
-  	if ( fs_basepath->string[0] )
-  		FS_AddGamePath( fs_basepath->string, fs_basegame->string, 0 );
-  	if ( fs_homepath->string[0] && Q_stricmp( fs_homepath->string, fs_basepath->string ) )
-  		FS_AddGamePath( fs_homepath->string, fs_basegame->string, 0 );
-    ASYNCF(FS_Startup, CACHE_FILE_NAME);
-  }
+	if ( fs_steampath->string[0] )
+		FS_AddGamePath( fs_steampath->string, fs_basegame->string, 0 );
+	if ( fs_basepath->string[0] )
+		FS_AddGamePath( fs_basepath->string, fs_basegame->string, 0 );
+	if ( fs_homepath->string[0] && Q_stricmp( fs_homepath->string, fs_basepath->string ) )
+		FS_AddGamePath( fs_homepath->string, fs_basegame->string, 0 );
+	ASYNC_FileDownload(FS_Startup, CACHE_FILE_NAME);
 #endif
 
 	start = Sys_Milliseconds();
@@ -6179,7 +6176,7 @@ void FS_Restart( int checksumFeed ) {
 	static qboolean execConfig = qfalse;
 
 #ifdef USE_ASYNCHRONOUS
-  ASYNCR(FS_Restart);
+  ASYNC_ReturnToPtr(FS_Restart);
 #endif
 
 	// free anything we currently have loaded
@@ -6190,14 +6187,13 @@ void FS_Restart( int checksumFeed ) {
 
 	// try to start up normally
 	FS_Startup();
+
 #ifdef USE_ASYNCHRONOUS
-  if(!com_dedicated->integer) {
-    const char *downloadFile = va("%s/default.cfg", fs_gamedirvar->string);
-    if(fs_gamedirvar->string[0] == '\0') {
-      downloadFile = va("%s/default.cfg", FS_GetBaseGameDir());
-    }
-    ASYNCPF(FS_Restart, checksumFeed, downloadFile);
-  }
+	const char *downloadFile = va("%s/default.cfg", fs_gamedirvar->string);
+	if(fs_gamedirvar->string[0] == '\0') {
+		downloadFile = va("%s/default.cfg", FS_GetBaseGameDir());
+	}
+	ASYNCPF(FS_Restart, checksumFeed, downloadFile);
 #endif
 
 	// if we can't find default.cfg, assume that the paths are

@@ -2541,7 +2541,7 @@ doesn't know what graphics to reload
 */
 static void CL_Vid_Restart( qboolean keepWindow ) {
 #ifdef USE_ASYNCHRONOUS
-  ASYNCR(CL_Vid_Restart);
+  ASYNC_ReturnToPtr(CL_Vid_Restart);
 #endif
 
 #ifdef USE_VID_FAST

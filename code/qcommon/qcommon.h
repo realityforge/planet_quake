@@ -27,17 +27,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "../qcommon/cm_public.h"
 
 
-#ifdef __WASM__
-#include <setjmp.h>
-__attribute__((import_module("env"), import_name("longjmp")))
-extern void longjmp( sigjmp_buf buf, int ret )
-__attribute((noreturn));
-
-__attribute__((import_module("env"), import_name("setjmp")))
-extern int setjmp( sigjmp_buf buf );
-#endif
-
-
 //Ignore __attribute__ on non-gcc/clang platforms
 #if !defined(__GNUC__) && !defined(__clang__)
 #ifndef __attribute__
@@ -1178,7 +1167,10 @@ void 		QDECL Com_DPrintfReal( char *file, int line, const uint32_t source, const
 void 		QDECL Com_Printf( const char *fmt, ... ) __attribute__ ((format (printf, 1, 2)));
 void 		QDECL Com_DPrintf( const char *fmt, ... ) __attribute__ ((format (printf, 1, 2)));
 #endif
-void 		QDECL Com_Error( errorParm_t code, const char *fmt, ... ) __attribute__ ((noreturn, format (printf, 2, 3)));
+#ifndef __WASM__
+__attribute__ ((noreturn, format (printf, 2, 3)))
+#endif
+void 		QDECL Com_Error( errorParm_t code, const char *fmt, ... );
 void 		Com_Quit_f( void );
 void		Com_GameRestart( int checksumFeed, qboolean clientRestart );
 
@@ -1529,8 +1521,15 @@ void	Sys_SendKeyEvents( void );
 void	Sys_Sleep( int msec );
 char	*Sys_ConsoleInput( void );
 
-void	QDECL Sys_Error( const char *error, ...) __attribute__ ((noreturn, format (printf, 1, 2)));
-void	Sys_Quit (void) __attribute__ ((noreturn));
+#ifndef __WASM__
+__attribute__ ((noreturn, format (printf, 1, 2)))
+#endif
+void	QDECL Sys_Error( const char *error, ...);
+
+#ifndef __WASM__
+__attribute__ ((noreturn))
+#endif
+void	Sys_Quit (void);
 
 #ifdef __WASM__
 void JS_Field_CharEvent( field_t *edit, int ch );
@@ -1563,7 +1562,9 @@ void	Sys_SnapVector( float *vector );
 qboolean Sys_RandomBytes( byte *string, int len );
 
 #ifdef USE_ASYNCHRONOUS
+#ifdef __WASM__
 __attribute__((import_module("env"), import_name("Sys_Offline")))
+#endif
 void Sys_Offline( void );
 #endif
 
@@ -1572,7 +1573,7 @@ void	Sys_DisplaySystemConsole( qboolean show );
 
 void	Sys_ShowConsole( int level, qboolean quitOnClose );
 void	Sys_SetErrorText( const char *text );
-#ifndef __WASM__
+#ifdef __WASM__
 __attribute__((import_module("env"), import_name("Sys_SendPacket")))
 #endif
 void	Sys_SendPacket( int length, const void *data, const netadr_t *to );

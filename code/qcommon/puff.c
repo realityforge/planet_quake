@@ -69,7 +69,10 @@
  * 1.8   9 Jan 2004     - Added some comments on no distance codes case
  */
 
+#ifndef __WASM__
 #include <setjmp.h>             /* for setjmp(), longjmp(), and jmp_buf */
+#endif
+
 #include "puff.h"		/* prototype for puff() */
 
 #define local static            /* for local function definitions */

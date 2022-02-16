@@ -233,12 +233,12 @@ x##_After_Async: \
 ASYNCV(x); \
 x##_After_Async: \
 
-#define ASYNCR(x) \
+#define ASYNC_ReturnToPtr(x) \
 if(Com_PreviousEventPtr() == &x) { \
   goto x##_After_Async; \
 } \
 
-#define ASYNCF(x, f) \
+#define ASYNC_FileDownload(x, f) \
 Cbuf_AddText( va("directdl %s\n", f) ); \
 x##_Requeue: \
 ASYNC(x); \
@@ -392,6 +392,17 @@ goto x##_Requeue; \
 #define a_crash Sys_Exit
 #define abort Sys_Exit
 
+__attribute__((import_module("env"), import_name("Sys_Error")))
+void Sys_Error( const char *error, ... );
+
+typedef void*jmp_buf;
+__attribute__((import_module("env"), import_name("longjmp")))
+void longjmp( void *buf, int ret );
+
+__attribute__((import_module("env"), import_name("setjmp")))
+int setjmp( void *buf );
+
+uint16_t ntohs(uint16_t n);
 int ED_vsprintf( char *buffer, const char *fmt, va_list ap );
 int BG_sprintf( char *buf, const char *format, ... ) ;
 int Q_sscanf( const char *buffer, const char *fmt, ... ) ;
@@ -1416,7 +1427,10 @@ int Info_RemoveKey( char *s, const char *key );
 
 // this is only here so the functions in q_shared.c and bg_*.c can link
 void Com_Outside_Error(int level, char *msg);
-void	QDECL Com_Error( errorParm_t level, const char *fmt, ... ) __attribute__ ((noreturn, format (printf, 2, 3)));
+#ifndef __WASM__
+__attribute__ ((noreturn, format (printf, 2, 3)))
+#endif
+void	QDECL Com_Error( errorParm_t level, const char *fmt, ... ) ;
 #ifdef USE_PRINT_CONSOLE
 void	QDECL Com_PrintfReal( char *file, int line, const uint32_t source, const uint32_t flags, const char *msg, ... ) __attribute__ ((format (printf, 5, 6)));
 void	QDECL Com_DPrintfReal( char *file, int line, const uint32_t source, const uint32_t flags, const char *msg, ... ) __attribute__ ((format (printf, 5, 6)));

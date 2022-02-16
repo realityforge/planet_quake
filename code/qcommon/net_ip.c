@@ -179,7 +179,9 @@ typedef union socks5_udp_request_s {
 #pragma pack(pop)
 
 
+#ifndef __WASM__
 static qboolean usingSocks = qfalse;
+#endif
 static int networkingEnabled = 0;
 
 static cvar_t	*net_enabled;
@@ -200,7 +202,9 @@ static cvar_t	*net_mcast6iface;
 #endif
 static cvar_t	*net_dropsim;
 
+#ifndef __WASM__
 static sockaddr_t socksRelayAddr;
+#endif
 
 #ifdef USE_MULTIVM_SERVER
 #define ip_socket ip_sockets[igvm]
@@ -713,6 +717,20 @@ qboolean NET_IsLocalAddress( const netadr_t *adr )
 //=============================================================================
 
 
+#ifdef __WASM__
+#ifdef USE_MULTIVM_SERVER
+int NET_GetPacket( netadr_t *net_from, msg_t *net_message, const fd_set *fdr, int igvm )
+__attribute__((import_module("env"), import_name("NET_GetPacket")));
+#else
+int NET_GetPacket( netadr_t *net_from, msg_t *net_message, const fd_set *fdr )
+__attribute__((import_module("env"), import_name("NET_GetPacket")));
+#endif
+
+void Sys_SendPacket( int length, const void *data, const netadr_t *to )
+__attribute__((import_module("env"), import_name("Sys_SendPacket")));
+#endif
+
+
 #ifndef __WASM__
 /*
 ==================
@@ -849,7 +867,6 @@ static qboolean NET_GetPacket( netadr_t *net_from, msg_t *net_message, const fd_
 //=============================================================================
 
 
-#ifndef __WASM__
 /*
 ==================
 Sys_SendPacket
@@ -950,26 +967,9 @@ void Sys_SendPacket( int length, const void *data, const netadr_t *to )
 	}
 }
 
-#endif
-
-
-#else
-#ifdef USE_MULTIVM_SERVER
-int NET_GetPacket( netadr_t *net_from, msg_t *net_message, const fd_set *fdr, int igvm )
-__attribute__((import_module("env"), import_name("NET_GetPacket")));
-#else
-int NET_GetPacket( netadr_t *net_from, msg_t *net_message, const fd_set *fdr )
-__attribute__((import_module("env"), import_name("NET_GetPacket")));
-#endif
-
-void Sys_SendPacket( int length, const void *data, const netadr_t *to )
-__attribute__((import_module("env"), import_name("Sys_SendPacket")));
-#endif
-
 
 //=============================================================================
 
-#ifndef __WASM__
 /*
 ==================
 Sys_IsLANAddress

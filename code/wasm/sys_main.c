@@ -102,7 +102,7 @@ void Sys_In_Restart_f( void )
 
 
 __attribute__((import_module("env"), import_name("Sys_Exit")))
-void Sys_Exit( int code ) __attribute((noreturn));
+void Sys_Exit( int code );
 
 __attribute__((import_module("env"), import_name("dlopen")))
 void *try_dlopen( const char* base, const char* gamedir, const char* fname );
@@ -139,25 +139,6 @@ void Sys_Init( void )
 	Cvar_Set( "arch", OS_STRING " " ARCH_STRING );
 
 	//IN_Init();   // rcg08312005 moved into glimp.
-}
-
-
-void Sys_Error( const char *format, ... )
-{
-	va_list     argptr;
-	char        text[1024];
-
-	va_start( argptr, format );
-	Q_vsnprintf( text, sizeof( text ), format, argptr );
-	va_end( argptr );
-
-#ifndef DEDICATED
-	CL_Shutdown( text, qtrue );
-#endif
-
-	fprintf( stderr, "Sys_Error: %s\n", text );
-
-	Sys_Exit( 1 ); // bk010104 - use single exit point.
 }
 
 

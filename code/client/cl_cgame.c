@@ -1334,7 +1334,7 @@ void CL_InitCGame( int inVM ) {
   int igs = cgvmi;
 #endif
 #ifdef USE_ASYNCHRONOUS
-  ASYNCR(CL_InitCGame);
+  ASYNC_ReturnToPtr(CL_InitCGame);
 #endif
 
 	t1 = Sys_Milliseconds();

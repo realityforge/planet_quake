@@ -23,7 +23,9 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #include "q_shared.h"
 #include "qcommon.h"
+#ifndef __WASM__
 #include <setjmp.h>
+#endif
 #ifndef _WIN32
 #ifndef __WASM__
 #include <netinet/in.h>
@@ -51,6 +53,12 @@ const int demo_protocols[] = { 66, 67, PROTOCOL_VERSION, NEW_PROTOCOL_VERSION, 0
 
 #define USE_MULTI_SEGMENT // allocate additional zone segments on demand
 
+#ifdef __WASM__
+#define MIN_COMHUNKMEGS		32
+#define DEF_COMHUNKMEGS		56
+
+#else
+
 #ifdef USE_MULTIVM_CLIENT
 #define MIN_COMHUNKMEGS		256
 #define DEF_COMHUNKMEGS		1024
@@ -68,6 +76,8 @@ const int demo_protocols[] = { 66, 67, PROTOCOL_VERSION, NEW_PROTOCOL_VERSION, 0
 #define DEF_COMHUNKMEGS		128
 #endif
 #endif
+#endif
+
 #endif
 
 #ifdef USE_MULTI_SEGMENT
@@ -654,6 +664,9 @@ void QDECL Com_Error( errorParm_t code, const char *fmt, ... ) {
 
 	calledSysError = qtrue;
 	Sys_Error( "%s", com_errorMessage );
+#ifdef __WASM__
+	Q_longjmp( abortframe, 1 ); // not using noreturn so must bubble up
+#endif
 }
 
 
@@ -2445,7 +2458,11 @@ static void Com_InitHunkMemory( void ) {
 	}
 
 	// allocate the stack based hunk allocator
+#ifdef __WASM__
+	cv = Cvar_Get( "com_hunkMegs", XSTRING( DEF_COMHUNKMEGS ), CVAR_TEMP );
+#else
 	cv = Cvar_Get( "com_hunkMegs", XSTRING( DEF_COMHUNKMEGS ), CVAR_LATCH | CVAR_ARCHIVE );
+#endif
 	Cvar_CheckRange( cv, XSTRING( MIN_COMHUNKMEGS ), NULL, CV_INTEGER );
 
 	s_hunkTotal = cv->integer * 1024 * 1024;
@@ -3949,14 +3966,9 @@ Com_Init
 
 void Com_Init( char *commandLine ) {
 	const char *s;
-#ifndef USE_ASYNCHRONOUS
 	int	qport;
-#endif
 #ifdef USE_PRINT_CONSOLE
   Com_PrintFlags(PC_INIT);
-#endif
-#ifdef USE_ASYNCHRONOUS
-  ASYNCR(Com_Init);
 #endif
 
 	Com_Printf( "%s %s %s\n", SVN_VERSION, PLATFORM_STRING, __DATE__ );
@@ -4052,44 +4064,17 @@ void Com_Init( char *commandLine ) {
 	// done early so bind command exists
 	Com_InitKeyCommands();
 
-#ifdef USE_ASYNCHRONOUS
-// TODO: won't act differently when server-to-server is ready
-//   because server will also act like a client to another server
-#ifndef DEDICATED
-  com_dedicated = Cvar_Get( "dedicated", "0", CVAR_LATCH );
-  Cvar_CheckRange( com_dedicated, "0", "2", CV_INTEGER );
-  cl_allowDownload = Cvar_Get( "cl_allowDownload", XSTRING(DLF_ENABLE), CVAR_ARCHIVE_ND );
-  cl_dlURL = Cvar_Get( "cl_dlURL", "http://quake.games/assets", CVAR_ARCHIVE_ND );
-  com_gamename = Cvar_Get("com_gamename", GAMENAME_FOR_MASTER, CVAR_SERVERINFO | CVAR_INIT);
-  cl_packetdelay = Cvar_Get ("cl_packetdelay", "0", CVAR_CHEAT);
-  com_timescale = Cvar_Get( "timescale", "1", CVAR_CHEAT | CVAR_SYSTEMINFO );
-  com_fixedtime = Cvar_Get ("fixedtime", "0", CVAR_CHEAT);
-  com_cameraMode = Cvar_Get ("com_cameraMode", "0", CVAR_CHEAT);
-  cl_shownet = Cvar_Get ("cl_shownet", "0", CVAR_TEMP );
-  cl_paused = Cvar_Get ("cl_paused", "0", CVAR_ROM | CVAR_USERINFO);
-  Cmd_AddCommand( "directdl", CL_Download_f );
-  Cmd_AddCommand( "connect", CL_Connect_f );
-  Cmd_AddCommand( "quit", Com_Quit_f );
-#endif
-#endif
-
 	FS_InitFilesystem();
 
-#ifdef USE_ASYNCHRONOUS
-  if(!com_dedicated->integer) {
-    if(com_earlyConnect[0] != '\0') {
-      Cbuf_ExecuteText( EXEC_INSERT, va("connect %s\n", com_earlyConnect) );
-    }
-    ASYNCB(Com_Init, !FS_Initialized());
-  }
-#endif
 #ifdef USE_PRINT_CONSOLE
   Com_PrintFlags(PC_INIT);
 #endif
 
+#ifndef USE_ASYNCHRONOUS
 	Com_InitJournaling();
 
 	Com_ExecuteCfg();
+#endif
 
 	// override anything from the config files with command line args
 	Com_StartupVariable( NULL );
@@ -4099,15 +4084,11 @@ void Com_Init( char *commandLine ) {
 	com_dedicated = Cvar_Get( "dedicated", "1", CVAR_INIT );
 	Cvar_CheckRange( com_dedicated, "1", "2", CV_INTEGER );
 #else
-#ifndef USE_ASYNCHRONOUS
 	com_dedicated = Cvar_Get( "dedicated", "0", CVAR_LATCH );
 	Cvar_CheckRange( com_dedicated, "0", "2", CV_INTEGER );
 #endif
-#endif
 	// allocate the stack based hunk allocator
 	Com_InitHunkMemory();
-
-	FS_SetMapIndex( "" );
 
 	// if any archived cvars are modified after this, we will trigger a writing
 	// of the config file
@@ -4226,9 +4207,7 @@ void Com_Init( char *commandLine ) {
 		Cmd_SetDescription( "freeze", "Create an artificial freeze for testing\nUsage: freeze" );
 	}
 
-#ifndef USE_ASYNCHRONOUS
 	Cmd_AddCommand( "quit", Com_Quit_f );
-#endif
 	Cmd_SetDescription( "quit", "Quit arena and quit Quake 3 Arena and return to your OS\nUsage: quit" );
 	Cmd_AddCommand( "changeVectors", MSG_ReportChangeVectors_f );
 	Cmd_SetDescription( "changeVectors", "Change to vector defined by FIND_NEW_CHANGE_VECTORS as in vector graphics\nUsage: changevectors" );
@@ -4240,9 +4219,7 @@ void Com_Init( char *commandLine ) {
 
 	s = va( "%s %s %s", Q3_VERSION, PLATFORM_STRING, __DATE__ );
 	com_version = Cvar_Get( "version", s, CVAR_PROTECTED | CVAR_ROM | CVAR_SERVERINFO );
-#ifndef USE_ASYNCHRONOUS
 	com_gamename = Cvar_Get("com_gamename", GAMENAME_FOR_MASTER, CVAR_SERVERINFO | CVAR_INIT);
-#endif
 
 	// this cvar is the single entry point of the entire extension system
 	Cvar_Get( "//trap_GetValue", va( "%i", COM_TRAP_GETVALUE ), CVAR_PROTECTED | CVAR_ROM | CVAR_NOTABCOMPLETE );
@@ -4265,11 +4242,9 @@ void Com_Init( char *commandLine ) {
 		Sys_SetAffinityMask( com_affinityMask->integer );
 #endif
 
-#ifndef USE_ASYNCHRONOUS
 	// Pick a random port value
 	Com_RandomBytes( (byte*)&qport, sizeof( qport ) );
 	Netchan_Init( qport & 0xffff );
-#endif
 
   AddClipMapCommands();
 	VM_Init();
@@ -4300,6 +4275,12 @@ void Com_Init( char *commandLine ) {
   } else if (com_skipLoadUI) {
     Cvar_Set("skipLoadUI", "1");
   }
+
+#ifdef USE_ASYNCHRONOUS
+	if(com_earlyConnect[0] != '\0') {
+		Cbuf_ExecuteText( EXEC_INSERT, va("connect %s\n", com_earlyConnect) );
+	}
+#endif
 
 #ifndef DEDICATED
 	CL_StartHunkUsers();
@@ -5845,7 +5826,7 @@ reswitch:
 }
 
 
-int BG_sprintf( char *buf, const char *format, ... ) 
+Q_EXPORT int BG_sprintf( char *buf, const char *format, ... ) 
 {
 	int len;
 	va_list	argptr;

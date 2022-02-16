@@ -13,7 +13,9 @@
 #include <stdlib.h>
 #endif
 
+#ifndef __WASM__
 #include <setjmp.h>
+#endif
 
 static jmp_buf q3map2done;	// an ERR_DROP occurred, exit the entire frame
 

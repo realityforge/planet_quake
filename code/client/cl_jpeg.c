@@ -22,7 +22,9 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #include "client.h"
 //#include "../qcommon/q_shared.h"
+#ifndef __WASM__
 #include <setjmp.h>
+#endif
 
 #if defined(USE_INTERNAL_JPEG) || defined(USE_SYSTEM_JPEG)
 

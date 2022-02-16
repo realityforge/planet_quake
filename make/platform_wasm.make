@@ -36,6 +36,7 @@ BASE_CFLAGS      += -Wall --target=wasm32 \
                     -Wno-shift-op-parentheses \
                     -Wno-unused-but-set-variable \
                     -Wno-unused-function \
+                    -Wno-incompatible-library-redeclaration \
                     -DGL_GLEXT_PROTOTYPES=1 -DGL_ARB_ES2_compatibility=1 \
                     -DGL_EXT_direct_state_access=1 \
                     -DUSE_Q3KEY -DUSE_MD5 \
