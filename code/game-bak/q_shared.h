@@ -45,7 +45,9 @@
 #else
 
 #include <assert.h>
+#ifndef __WASM__
 #include <math.h>
+#endif
 #include <stdio.h>
 #include <stdarg.h>
 #include <string.h>

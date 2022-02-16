@@ -329,6 +329,7 @@ static qboolean CL_GetSnapshot( int snapshotNumber, snapshot_t *snapshot ) {
   }
 #endif
 
+#if 0
 	// check for a use_item event and don't print in renderer
 	// TODO: using game VM hack instead
 	for ( i = clSnap->ps.eventSequence - MAX_PS_EVENTS ; i < clSnap->ps.eventSequence ; i++ ) {
@@ -345,6 +346,7 @@ static qboolean CL_GetSnapshot( int snapshotNumber, snapshot_t *snapshot ) {
 			}
 		}
 	}
+#endif
 
 	Com_Memcpy( snapshot->areamask, clSnap->areamask, sizeof( snapshot->areamask ) );
 	snapshot->ps = clSnap->ps;

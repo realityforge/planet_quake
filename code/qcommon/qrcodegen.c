@@ -26,6 +26,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <limits.h>
+#include "q_shared.h"
 #include "qrcodegen.h"
 
 #ifndef QRCODEGEN_TEST

@@ -26,6 +26,18 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include <sys/types.h>
 #include "../qcommon/cm_public.h"
 
+
+#ifdef __WASM__
+#include <setjmp.h>
+__attribute__((import_module("env"), import_name("longjmp")))
+extern void longjmp( sigjmp_buf buf, int ret )
+__attribute((noreturn));
+
+__attribute__((import_module("env"), import_name("setjmp")))
+extern int setjmp( sigjmp_buf buf );
+#endif
+
+
 //Ignore __attribute__ on non-gcc/clang platforms
 #if !defined(__GNUC__) && !defined(__clang__)
 #ifndef __attribute__
@@ -49,6 +61,14 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #undef USE_AFFINITY_MASK
 #endif
 #endif
+
+#ifdef __WASM__
+
+void DebugBreak( void )
+__attribute__((import_module("env"), import_name("DebugBreak")));
+
+#endif
+
 
 // stringify macro
 #define XSTRING(x)	STRING(x)
@@ -1510,6 +1530,9 @@ void	Sys_Quit (void) __attribute__ ((noreturn));
 #ifdef __WASM__
 void JS_Field_CharEvent( field_t *edit, int ch );
 #endif
+#ifdef __WASM__
+__attribute__((import_module("env"), import_name("Sys_GetClipboardData")))
+#endif
 char	*Sys_GetClipboardData( void );	// note that this isn't journaled...
 void	Sys_SetClipboardBitmap( const byte *bitmap, int length );
 
@@ -1524,6 +1547,9 @@ void	Sys_SetAffinityMask( int mask );
 
 // Sys_Milliseconds should only be used for profiling purposes,
 // any game related timing information should come from event timestamps
+#ifdef __WASM__
+__attribute__((import_module("env"), import_name("Sys_Milliseconds")))
+#endif
 int		Sys_Milliseconds( void );
 int64_t	Sys_Microseconds( void );
 
@@ -1532,6 +1558,7 @@ void	Sys_SnapVector( float *vector );
 qboolean Sys_RandomBytes( byte *string, int len );
 
 #ifdef USE_ASYNCHRONOUS
+__attribute__((import_module("env"), import_name("Sys_Offline")))
 void Sys_Offline( void );
 #endif
 
@@ -1549,6 +1576,9 @@ qboolean	Sys_IsLANAddress(const netadr_t *adr);
 void		Sys_ShowIP(void);
 
 void	Sys_Mkdir( const char *path );
+#ifdef __WASM__
+__attribute__((import_module("env"), import_name("Sys_ListFiles")))
+#endif
 FILE	*Sys_FOpen( const char *ospath, const char *mode );
 qboolean Sys_ResetReadOnlyAttribute( const char *ospath );
 
@@ -1557,6 +1587,9 @@ const char *Sys_DefaultBasePath( void );
 const char *Sys_DefaultHomePath( void );
 const char *Sys_SteamPath( void );
 
+#ifdef __WASM__
+__attribute__((import_module("env"), import_name("Sys_ListFiles")))
+#endif
 char **Sys_ListFiles( const char *directory, const char *extension, const char *filter, int *numfiles, qboolean wantsubs );
 void Sys_FreeFileList( char **list );
 
@@ -1569,9 +1602,21 @@ qboolean Sys_LowPhysicalMemory( void );
 
 int Sys_MonkeyShouldBeSpanked( void );
 
+#ifdef __WASM__
+__attribute__((import_module("env"), import_name("Sys_ListFiles")))
+#endif
 void *Sys_LoadLibrary( const char *name );
+#ifdef __WASM__
+__attribute__((import_module("env"), import_name("Sys_ListFiles")))
+#endif
 void *Sys_LoadFunction( void *handle, const char *name );
+#ifdef __WASM__
+__attribute__((import_module("env"), import_name("Sys_ListFiles")))
+#endif
 int   Sys_LoadFunctionErrors( void );
+#ifdef __WASM__
+__attribute__((import_module("env"), import_name("Sys_ListFiles")))
+#endif
 void  Sys_UnloadLibrary( void *handle );
 
 // adaptive huffman functions

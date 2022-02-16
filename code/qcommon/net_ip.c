@@ -1891,12 +1891,13 @@ static void NET_Config( qboolean enableNetworking ) {
 		enableNetworking = qfalse;
 	}
 
+#ifdef __WASM__
+	if(qfalse)
+#endif
 	// if enable state is the same and no cvars were modified, we have nothing to do
-#ifndef __WASM__
 	if( enableNetworking == networkingEnabled && !modified ) {
 		return;
 	}
-#endif
 
 	if( enableNetworking == networkingEnabled ) {
 		if( enableNetworking ) {

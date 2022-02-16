@@ -66,6 +66,7 @@ static const char *netsrcString[2] = {
 	"server"
 };
 
+__attribute__((import_module("env"), import_name("Sys_NET_MulticastLocal")))
 extern void Sys_NET_MulticastLocal( int sock, int length, const int *data );
 
 /*

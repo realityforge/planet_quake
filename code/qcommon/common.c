@@ -199,12 +199,6 @@ static void Com_Shutdown( void );
 static void Com_WriteConfig_f( void );
 void CIN_CloseAllVideos( void );
 
-#ifdef __WASM__
-
-EM_EXPORTNR(void, DebugBreak, ( void ), { debugger; debugger; });
-
-#endif
-
 //============================================================================
 
 static char	*rd_buffer;
@@ -1830,6 +1824,9 @@ void *Z_TagMalloc( int size, memtag_t tag ) {
 Z_Malloc
 ========================
 */
+#ifdef __WASM__
+Q_EXPORT 
+#endif
 #ifdef ZONE_DEBUG
 void *Z_MallocDebug( int size, char *label, char *file, int line ) {
 #else
@@ -2296,7 +2293,7 @@ void Com_TouchMemory( void ) {
 
 	end = Sys_Milliseconds();
 
-	Com_Printf( "Com_TouchMemory: %i msec\n", end - start );
+	Com_Printf( "Com_TouchMemory: %i msec, %i total\n", end - start, sum );
 }
 
 
@@ -4368,8 +4365,11 @@ Writes key bindings and archived cvars to config file if modified
 void Com_WriteConfiguration( void ) {
 #ifndef DEDICATED
 	const char *basegame;
+#ifndef STANDALONE
 	const char *gamedir;
 #endif
+#endif
+
 	// if we are quiting without fully initializing, make sure
 	// we don't write out anything
 	if ( !com_fullyInitialized ) {
@@ -4384,9 +4384,9 @@ void Com_WriteConfiguration( void ) {
 	Com_WriteConfigToFile( Q3CONFIG_CFG );
 
 #ifndef DEDICATED
-	gamedir = Cvar_VariableString( "fs_game" );
 	basegame = Cvar_VariableString( "fs_basegame" );
 #ifndef STANDALONE
+	gamedir = Cvar_VariableString( "fs_game" );
 	if ( UI_usesUniqueCDKey() && gamedir[0] && Q_stricmp( basegame, gamedir ) ) {
 		Com_WriteCDKey( gamedir, &cl_cdkey[16] );
 	} else 

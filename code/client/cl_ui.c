@@ -634,7 +634,10 @@ CL_GetClipboardData
 static void CL_GetClipboardData( char *buf, int buflen ) {
 	char	*cbd;
 
+#ifdef __WASM__
+#else
 	cbd = Sys_GetClipboardData();
+#endif
 
 	if ( !cbd ) {
 		*buf = '\0';

@@ -625,7 +625,8 @@ void SV_DemoWriteAllEntityShared(void)
 		if (i >= sv_maxclients->integer && i < MAX_CLIENTS)
 			continue;
 		entity = SV_GentityNum(i);
-		MSG_WriteDeltaSharedEntity(&msg, &sv.demoEntities[i].r, &entity->r, qfalse, i);
+		// TODO: use multiview recording instead
+		//MSG_WriteDeltaSharedEntity(&msg, &sv.demoEntities[i].r, &entity->r, qfalse, i);
 		sv.demoEntities[i].r = entity->r;
 	}
 	MSG_WriteBits(&msg, ENTITYNUM_NONE, GENTITYNUM_BITS); // End marker/Condition to break: since we don't know prior how many entities we store, when reading  the demo we will use an empty entity to break from our while loop
@@ -1040,7 +1041,7 @@ void SV_DemoReadAllEntityShared( msg_t *msg )
         // Load an empty entity
 		entity = SV_GentityNum(num);
         // Interpolate the new entity state from previous state in sv.demoEntities
-		MSG_ReadDeltaSharedEntity(msg, &sv.demoEntities[num].r, &entity->r, num);
+		//MSG_ReadDeltaSharedEntity(msg, &sv.demoEntities[num].r, &entity->r, num);
 
 		entity->r.svFlags &= ~SVF_BOT; // fix bots camera freezing issues - because since now the engine will consider these democlients just as normal players, it won't be using anymore special bots fields and instead just use the standard viewangles field to replay the camera movements
 

@@ -367,6 +367,85 @@ goto x##_Requeue; \
 
  **********************************************************************/
 
+
+#ifdef __WASM__
+double cos(double)
+__attribute__((import_module("Math"), import_name("cos")));
+double sin(double)
+__attribute__((import_module("Math"), import_name("sin")));
+double tan(double)
+__attribute__((import_module("Math"), import_name("tan")));
+double acos(double)
+__attribute__((import_module("Math"), import_name("acos")));
+double asin(double)
+__attribute__((import_module("Math"), import_name("asin")));
+double atan(double)
+__attribute__((import_module("Math"), import_name("atan")));
+double exp(double)
+__attribute__((import_module("Math"), import_name("exp")));
+double log(double)
+__attribute__((import_module("Math"), import_name("log")));
+double sqrt(double)
+__attribute__((import_module("Math"), import_name("sqrt")));
+double fabs(double)
+__attribute__((import_module("Math"), import_name("abs")));
+double ceil(double)
+__attribute__((import_module("Math"), import_name("ceil")));
+double floor(double)
+__attribute__((import_module("Math"), import_name("floor")));
+
+float cosf(float)
+__attribute__((import_module("Math"), import_name("cos")));
+float sinf(float)
+__attribute__((import_module("Math"), import_name("sin")));
+float tanf(float)
+__attribute__((import_module("Math"), import_name("tan")));
+float acosf(float)
+__attribute__((import_module("Math"), import_name("acos")));
+float asinf(float)
+__attribute__((import_module("Math"), import_name("asin")));
+float atanf(float)
+__attribute__((import_module("Math"), import_name("atan")));
+float expf(float)
+__attribute__((import_module("Math"), import_name("exp")));
+float logf(float)
+__attribute__((import_module("Math"), import_name("log")));
+float sqrtf(float)
+__attribute__((import_module("Math"), import_name("sqrt")));
+float fabsf(float)
+__attribute__((import_module("Math"), import_name("abs")));
+float ceilf(float)
+__attribute__((import_module("Math"), import_name("ceil")));
+float floorf(float)
+__attribute__((import_module("Math"), import_name("floor")));
+
+double atan2(double, double)
+__attribute__((import_module("Math"), import_name("atan2")));
+double pow(double, double)
+__attribute__((import_module("Math"), import_name("pow")));
+
+float atan2f(float, float)
+__attribute__((import_module("Math"), import_name("atan2")));
+float powf(float, float)
+__attribute__((import_module("Math"), import_name("pow")));
+
+int rand(void)
+__attribute__((import_module("Math"), import_name("random")));
+double round(double)
+__attribute__((import_module("Math"), import_name("round")));
+float roundf(float)
+__attribute__((import_module("Math"), import_name("round")));
+double rint(double)
+__attribute__((import_module("Math"), import_name("round")));
+float rintf(float)
+__attribute__((import_module("Math"), import_name("round")));
+int abs(int)
+__attribute__((import_module("Math"), import_name("abs")));
+long labs(long)
+__attribute__((import_module("Math"), import_name("abs")));
+
+#endif
+
 #ifdef Q3_VM
 
 #include "../game/bg_lib.h"
@@ -375,7 +454,9 @@ goto x##_Requeue; \
 
 #include <assert.h>
 #include <stddef.h>
+#ifndef __WASM__
 #include <math.h>
+#endif
 #include <stdio.h>
 #include <stdarg.h>
 #include <string.h>
@@ -763,7 +844,6 @@ MATHLIB
 
 ==============================================================
 */
-
 
 typedef float vec_t;
 typedef vec_t vec2_t[2];
@@ -1561,12 +1641,28 @@ typedef struct {
 
 //=========================================================
 
+typedef enum {
+	PM_NORMAL,		// can accelerate and turn
+	PM_NOCLIP,		// noclip movement
+	PM_SPECTATOR,	// still run into walls
+	PM_DEAD,		// no acceleration or turning, but free falling
+	PM_FREEZE,		// stuck in place with no control
+#if defined(USE_GAME_FREEZETAG) || defined(USE_REFEREE_CMDS)
+  PM_FROZEN,
+#endif
+	PM_INTERMISSION,	// no movement or status bar
+	PM_SPINTERMISSION	// no movement or status bar
+} pmtype_t;
+
 // bit field limits
 #define	MAX_STATS				16
 #define	MAX_PERSISTANT			16
 #define	MAX_POWERUPS			16
 #define	MAX_WEAPONS				16		
 
+#define	EV_EVENT_BIT1		0x00000100
+#define	EV_EVENT_BIT2		0x00000200
+#define	EV_EVENT_BITS		(EV_EVENT_BIT1|EV_EVENT_BIT2)
 #define	MAX_PS_EVENTS			2
 
 #define PS_PMOVEFRAMECOUNTBITS	6

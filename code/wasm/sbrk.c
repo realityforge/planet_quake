@@ -28,6 +28,8 @@ extern size_t __heap_base;
 
 static uintptr_t sbrk_val = (uintptr_t)&__heap_base;
 
+int emscripten_resize_heap(size_t size);
+
 uintptr_t* emscripten_get_sbrk_ptr() {
 #ifdef __PIC__
   // In relocatable code we may call emscripten_get_sbrk_ptr() during startup,

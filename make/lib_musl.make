@@ -24,7 +24,7 @@ WORKDIRS         += musl          musl/string musl/stdio  musl/stdlib    \
 CLEANS           += musl $(CNAME)$(ARCHEXT).bc $(CNAME)$(ARCHEXT).o
 endif
 
-#                    malloc/lite_malloc.o malloc/free.o malloc/calloc.o malloc/realloc.o \
+#                malloc/lite_malloc.o malloc/free.o malloc/calloc.o malloc/realloc.o \
 
 
 MUSL_LOBJ        := string/stpcpy.o  string/memset.o  string/memcpy.o    \
@@ -54,8 +54,8 @@ MUSL_LOBJ        := string/stpcpy.o  string/memset.o  string/memcpy.o    \
                     stdio/__stdio_close.o stdio/__stdio_seek.o     \
                     stdio/__fopen_rb_ca.o stdio/__fmodeflags.o     \
                     stdio/__stdio_write.o stdio/__toread.o         \
-                    stdio/__stdio_read.o  stdio/__uflow.o          \
-                    stdio/__stdio_exit.o  stdio/__towrite.o        \
+                    stdio/__stdio_read.o  stdio/__towrite.o        \
+                    stdio/__stdio_exit.o  stdio/__uflow.o          \
                     \
                     \
                     stdlib/atoi.o   stdlib/atof.o   stdlib/strtod.o \
@@ -81,6 +81,8 @@ MUSL_LOBJ        := string/stpcpy.o  string/memset.o  string/memcpy.o    \
                     math/__fpclassify.o math/__fpclassifyf.o math/__fpclassifyl.o \
                     math/frexpl.o       math/scalbn.o        math/copysignl.o \
 										math/scalbnl.o      math/fmodl.o         math/fabsl.o \
+                    math/powf.o         math/__math_oflowf.o math/__math_uflowf.o \
+                    math/__math_invalidf.o math/__math_xflowf.o \
                     \
                     unistd/getpid.o unistd/getcwd.o unistd/readlink.o \
                     unistd/read.o   unistd/write.o  unistd/close.o \
@@ -184,5 +186,5 @@ $(B)/musl/%.o: $(MUSL_SOURCE)/src/%.c
 
 $(B)/$(MUSL_TARGET): $(MUSL_Q3OBJ)
 	$(echo_cmd) "LD $@"
-	$(Q)$(CC) -o $@ $(MUSL_Q3OBJ) $(SHLIBCFLAGS) $(SHLIBLDFLAGS)
+	$(Q)$(CC) -o $@ $(MUSL_Q3OBJ) $(CFLAGS) $(CLIENT_LDFLAGS)
 endif

@@ -5786,7 +5786,8 @@ int getAltChecksum(const char *pakName, int *altChecksum) {
 	const altChecksumFiles_t *alt;
 	int c, i;
 	qboolean found = qfalse;
-	int useChecksum = 0, useChecksum2;
+	int useChecksum = 0;
+	//int useChecksum2;
 	// add alternate checksums
 	for(c = 0; c < ARRAY_LEN(hardcoded_checksums); c++) {
 		alt = &hardcoded_checksums[c];
@@ -5796,7 +5797,7 @@ int getAltChecksum(const char *pakName, int *altChecksum) {
 					found = qtrue;
 					alt->headerLongs[0] = LittleLong( fs_checksumFeed );
 					useChecksum = Com_BlockChecksum( alt->headerLongs, sizeof( alt->headerLongs[0] ) * alt->numHeaderLongs );
-					useChecksum2 = Com_BlockChecksum( alt->headerLongs + 1, sizeof( alt->headerLongs[0] ) * (alt->numHeaderLongs - 1) );
+					//useChecksum2 = Com_BlockChecksum( alt->headerLongs + 1, sizeof( alt->headerLongs[0] ) * (alt->numHeaderLongs - 1) );
 					//Com_Printf( "FS_ReferencedPakPureChecksums: (%i) %i == %i (pure: %i, feed: %i)\n",
 					// 	alt->numHeaderLongs, alt->altChecksum, useChecksum2, useChecksum, fs_checksumFeed);
 					break;

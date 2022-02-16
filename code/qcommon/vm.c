@@ -37,7 +37,7 @@ and one exported function: Perform
 #include "vm_local.h"
 
 #ifdef BUILD_GAME_STATIC
-#include <game/bg_public.h>
+//#include <game/bg_public.h>
 #endif
 
 opcode_info_t ops[ OP_MAX ] = 

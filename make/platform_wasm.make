@@ -2,6 +2,7 @@ HAVE_VM_COMPILED := false
 BUILD_CLIENT     := 1
 BUILD_SERVER     := 0
 BUILD_STANDALONE := 1
+USE_RENDERER_DLOPEN := 1
 USE_SYSTEM_JPEG  := 0
 USE_SYSTEM_LIBC  := 0
 USE_ABS_MOUSE    := 1
@@ -21,13 +22,14 @@ BINEXT           := .wasm
 
 SHLIBEXT         := wasm
 SHLIBCFLAGS      := 
-SHLIBLDFLAGS     := --import-memory -error-limit=0 --export-dynamic --no-entry --strip-all
-LDFLAGS          := --import-memory -error-limit=0
+SHLIBLDFLAGS     := --import-memory --error-limit=0 --export-dynamic \
+                    --no-entry --strip-all
+LDFLAGS          := --import-memory --error-limit=0 --export-dynamic \
+                    --no-entry --allow-undefined
 
-CLIENT_LDFLAGS   := code/wasm/include/wasi/libclang_rt.builtins-wasm32.a \
-                    --export-dynamic --no-entry
+CLIENT_LDFLAGS   := code/wasm/include/wasi/libclang_rt.builtins-wasm32.a
 
-BASE_CFLAGS      += -Wall -Ofast --target=wasm32 \
+BASE_CFLAGS      += -Wall --target=wasm32 \
                     -Wimplicit -fstrict-aliasing \
                     -Wno-bitwise-op-parentheses \
                     -Wno-shift-op-parentheses \
@@ -48,7 +50,7 @@ DEBUG_CFLAGS     := $(BASE_CFLAGS) \
                     -std=c11 -DDEBUG -D_DEBUG -frtti -fPIC -O0 -g
 
 RELEASE_CFLAGS   := $(BASE_CFLAGS) \
-                    -std=c11 -DNDEBUG -O3 -Oz -flto -fPIC
+                    -std=c11 -DNDEBUG -O3 -Oz -flto -fPIC -Ofast
 
 export INCLUDE   := -Icode/wasm/include \
                     -Ilibs/musl-1.2.2/include \

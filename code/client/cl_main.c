@@ -5554,7 +5554,7 @@ void CL_Shutdown( const char *finalmsg, qboolean quit ) {
 	static qboolean recursive = qfalse;
 
 	// check whether the client is running at all.
-	if ( !( com_cl_running && com_cl_running->integer ) )
+	if ( !com_cl_running || !com_cl_running->integer )
 		return;
 
 	Com_Printf( "----- Client Shutdown (%s) -----\n", finalmsg );
@@ -6045,8 +6045,12 @@ CL_LocalServers_f
 ==================
 */
 static void CL_LocalServers_f( void ) {
+#ifndef USE_MASTER_LAN
 	char		*message;
 	int			i, j, n;
+#else
+	int i, j;
+#endif
 	netadr_t	to;
 
 	Com_Printf( "Scanning for servers on the local network...\n");

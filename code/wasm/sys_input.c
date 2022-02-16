@@ -3,18 +3,6 @@
 #include "../renderercommon/tr_public.h"
 #include "./sys_glw.h"
 
-EM_EXPORT(int, SDL_ShowCursor, ( int toggle ), 
-{ return SDL_ShowCursor(toggle) });
-
-EM_EXPORTNR(void, SDL_SetWindowGrab, ( void *window, qboolean grabbed ), 
-{ return SDL_SetWindowGrab(window, grabbed) });
-
-EM_EXPORT(uint32_t, SDL_GetWindowFlags, (void *window), 
-{ return SDL_GetWindowFlags(window) });
-
-EM_EXPORTNR(void, SDL_StopTextInput, ( void ), 
-{ SDL_StopTextInput() });
-
 /**
  *  Used as a mask when testing buttons in buttonstate.
  *   - Button 1:  Left mouse button
@@ -1449,10 +1437,6 @@ static void IN_DeactivateMouse( qboolean isFullscreen )
 	{
 		SDL_SetWindowGrab( SDL_window, SDL_FALSE );
 		SDL_SetRelativeMouseMode( SDL_FALSE );
-
-		// Don't warp the mouse unless the cursor is within the window
-		if ( SDL_GetWindowFlags( SDL_window ) & SDL_WINDOW_MOUSE_FOCUS )
-			SDL_WarpMouseInWindow( SDL_window, glw_state.window_width / 2, glw_state.window_height / 2 );
 
 		mouseActive = qfalse;
 	}

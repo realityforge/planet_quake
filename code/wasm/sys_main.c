@@ -51,7 +51,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "../client/client.h"
 #endif
 
-#ifdef Q_EXPORT
+#ifndef Q_EXPORT
 #define Q_EXPORT __attribute__((visibility("default")))
 #endif
 
@@ -64,11 +64,6 @@ extern void IN_Shutdown( void );
 extern void IN_Init( void );
 extern void IN_Frame( void );
 
-EM_EXPORT(char **, Sys_CmdArgs, ( void ), 
-{ return Sys_Main_CmdArgs() });
-
-EM_EXPORT(int, Sys_CmdArgsC, ( void ), 
-{ return Sys_Main_CmdArgsC() });
 
 // =======================================================================
 // General routines
@@ -139,6 +134,7 @@ void CON_SigTStp( int signum )
 	kill( getpid(),  SIGTSTP );
 }
 
+__attribute__((import_module("env"), import_name("Sys_Exit")))
 void Sys_Exit( int code ) __attribute((noreturn));
 
 void Sys_Quit( void )
@@ -169,6 +165,10 @@ void Sys_Error( const char *format, ... )
 {
 	va_list     argptr;
 	char        text[1024];
+
+#ifdef _DEBUG
+	DebugBreak();
+#endif
 
 	// change stdin to non blocking
 	// NOTE TTimo not sure how well that goes with tty console mode
@@ -479,18 +479,23 @@ void Sys_Frame( void ) {
 	Com_Frame( CL_NoDelay() );
 }
 
-Q_EXPORT int main( int argc, char* argv[] )
+
+Q_EXPORT int RunGame( int argc, char* argv[] )
 {
 	char con_title[ MAX_CVAR_VALUE_STRING ];
 	int xpos, ypos;
 	//qboolean useXYpos;
 	char  *cmdline;
 	int   len, i;
-	
-	// bullshit because onRuntimeInitialized does execute consistently
-	//   held up by some sort of WarningHandler race condition
-	argc = Sys_CmdArgsC();
-	argv = Sys_CmdArgs();
+
+	if(!argc) {
+		Sys_Error("No startup options specified.");
+		return 1;
+	}
+
+	DebugBreak();
+
+return 1;
 		
 	if ( Sys_ParseArgs( argc, argv ) ) // added this for support
 		return 0;
@@ -581,70 +586,6 @@ for (int i = 0; i < ARRAY_LEN( args ); i++ ) \
 va_end( ap );
 
 
-__attribute__((nothrow))
-EM_EXPORT(int, ASM_const_int, ( const char* code, const char* arg_sigs, intptr_t *args ), 
-{ return asm_const_int(code, arg_sigs, args) });
-int asm_const_int(const char* code, const char* arg_sigs, ...)
-{
-  VA_ARGS(14, arg_sigs);
-  return ASM_const_int(code, arg_sigs, args); 
-}
-
-EM_EXPORTNR(void, Sys_SocksConnect, ( void ), 
-{ Sys_SocksConnect() });
-
-EM_EXPORTNR(void, Sys_NET_MulticastLocal, ( int sock, int length, const int *data ), 
-{ return SYS_NET_MulticastLocal(sock, length, data) });
-
-EM_EXPORTNR(void *, Sys_LoadFunction, ( void *handle, const char *name ), 
-{ return Sys_LoadFunction(handle, name) });
-
-EM_EXPORTNR(void, Sys_UnloadLibrary, ( void *handle ), 
-{ return Sys_UnloadLibrary(handle) });
-
-EM_EXPORTNR(void *, Sys_LoadLibrary, ( const char *name ), 
-{ return Sys_LoadLibrary(name) });
-
-EM_EXPORTNR(void, Sys_Offline, ( void ), 
-{ Sys_FS_Offline() });
-
-EM_EXPORTNR(__attribute((noreturn)) void, Sys_Exit, ( int code ), 
-{ Sys_Main_PlatformExit(code) });
-
-EM_EXPORT(char *, Sys_GetClipboardData, ( void ), 
-{ return Sys_GetClipboardData() });
-
-EM_EXPORT(qboolean, Sys_RandomBytes, ( byte *string, int len ), 
-{ return Sys_RandomBytes(string, len) });
-
-EM_EXPORTNR(void, SYS_Main_SetStatus, ( const char *format, intptr_t *args ), 
-{ Sys_SetStatus.apply(null, [format].concat(args)) });
-void QDECL Sys_SetStatus( const char *format, ... )
-{
-  VA_ARGS(14, format);
-  SYS_Main_SetStatus(format, args); 
-}
-
-EM_EXPORT(char **, Sys_ListFiles, ( const char *directory, const char *extension, const char *filter, int *numfiles, qboolean wantsubs ), 
-{ return Sys_ListFiles(directory, extension, filter, numfiles, wantsubs) });
-
-EM_EXPORT(FILE *, Sys_FOpen, (const char *ospath, const char *mode), 
-{ return Sys_FOpen(ospath, mode) });
-
-EM_EXPORTNR(void, SYS_FS_Shutdown, (void), { Sys_FS_Shutdown() });
-void Sys_FS_Shutdown(void) { return SYS_FS_Shutdown(); }
-
-EM_EXPORTNR(void, SYS_FS_Startup, (void), { Sys_FS_Startup() });
-void Sys_FS_Startup(void) { return SYS_FS_Startup(); }
-
-EM_EXPORT(int, SYS_Milliseconds, (void), { return Sys_Main_Milliseconds() });
-int Sys_Milliseconds(void) { return SYS_Milliseconds(); }
-
-
-EM_EXPORTNR(__attribute((noreturn)) void, longjmp, ( sigjmp_buf buf, int ret ), 
-{ throw new Error('longjmp', buf, ret) });
-
-EM_EXPORT(int, setjmp, ( sigjmp_buf buf ), {  });
 
 
 int emscripten_resize_heap(size_t size) {

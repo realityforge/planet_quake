@@ -24,11 +24,6 @@ function readAsmConstArgs (sigPtr, buf) {
   return readAsmConstArgsArray;
 }
 
-function asm_const_int (code, sigPtr, argbuf) {
-  code -= {{{ GLOBAL_BASE }}};
-  var args = readAsmConstArgs(sigPtr, argbuf);
-  return ASM_CONSTS[code].apply(null, args);
-}
 
 function Cvar_VariableString (str) {
   intArrayFromString(str).forEach(function (c, i) { HEAP8[(SYSC.varStr+i)] = c })

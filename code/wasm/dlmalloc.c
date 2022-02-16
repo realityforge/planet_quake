@@ -559,7 +559,7 @@
 #endif /* DLMALLOC_VERSION */
 
 #ifndef DLMALLOC_EXPORT
-#define DLMALLOC_EXPORT extern
+#define DLMALLOC_EXPORT extern __attribute__((visibility("default")))
 #endif
 
 #ifndef WIN32
@@ -851,10 +851,14 @@ extern "C" {
     
     /* ------------------- Declarations of public routines ------------------- */
     
+#ifndef Q_EXPORT
+#define Q_EXPORT __attribute__((visibility("default")))
+#endif
+
 #ifndef USE_DL_PREFIX
 // XXX Emscripten XXX
 #if defined(__WASM__)
-void* malloc(size_t) __attribute__((weak, alias("dlmalloc")));
+Q_EXPORT void* malloc(size_t) __attribute__((weak, alias("dlmalloc")));
 void  free(void*) __attribute__((weak, alias("dlfree")));
 void* calloc(size_t, size_t) __attribute__((weak, alias("dlcalloc")));
 void* realloc(void*, size_t) __attribute__((weak, alias("dlrealloc")));
@@ -4592,6 +4596,7 @@ static void* tmalloc_small(mstate m, size_t nb) {
 }
 
 #if !ONLY_MSPACES
+
 
 void* dlmalloc(size_t bytes) {
     /*

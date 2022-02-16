@@ -66,49 +66,6 @@ void *SDL_glContext = NULL;
 cvar_t *r_stereoEnabled;
 cvar_t *in_nograb;
 
-EM_EXPORTNR(void *, GL_CreateContext, ( void *window ), 
-{ return Sys_GLimpInit(flags) });
-
-EM_EXPORT(int, SDL_Init, ( uint32_t flags ), 
-{ return Sys_GLimpInit(flags) });
-
-EM_EXPORT(char *, SDL_GetError, ( void ), 
-{ return SDL_GetError() });
-
-EM_EXPORT(int, SYS_DisplayMode, ( int displayIndex, SDL_DisplayMode *mode ), 
-{ return Sys_GetDisplayMode(displayIndex, mode) });
-
-EM_EXPORT(int, SYS_GetWindowDisplayMode, ( void *window, SDL_DisplayMode *mode ), 
-{ return Sys_GetDisplayMode(window, mode) });
-
-EM_EXPORT(int, SDL_GL_SetAttribute, ( int attr, int value ), 
-{ return Sys_GL_SetAttribute(attr, value) });
-
-EM_EXPORTNR(void *, SDL_CreateWindow, ( const char *title,
-                              int x, int y, int w,
-                              int h, uint32_t flags ), 
-{ return SDL_CreateWindow(title, x, y, w, h, flags) });
-
-EM_EXPORT(int, SDL_SetWindowDisplayMode, ( void *window, const SDL_DisplayMode *mode ), 
-{ return SDL_SetWindowDisplayMode(window, mode) });
-
-EM_EXPORTNR(void, SDL_GL_GetDrawableSize, ( void *window, int *w, int *h ), 
-{ SDL_GL_GetDrawableSize(window, w, h) });
-
-EM_EXPORT(uint32_t, SDL_WasInit, ( uint32_t flags ), 
-{ return SDL_WasInit(flags) });
-
-EM_EXPORT(SDL_AudioDeviceID, SDL_OpenAudioDevice, ( const char *device, int iscapture,
-                    const SDL_AudioSpec * desired, SDL_AudioSpec * obtained,
-                    int allowed_changes ), 
-{ return SDL_OpenAudioDevice(device, iscapture, desired, obtained, allowed_changes) });
-
-EM_EXPORTNR(void, SDL_PauseAudioDevice, ( SDL_AudioDeviceID dev, int pause_on ), 
-{ SDL_PauseAudioDevice(dev, pause_on) });
-
-EM_EXPORTNR(void, SDL_CloseAudioDevice, ( SDL_AudioDeviceID dev ), 
-{ SDL_CloseAudioDevice(dev) });
-
 void SDL_LockAudioDevice(SDL_AudioDeviceID dev) { }
 
 void SDL_UnlockAudioDevice(SDL_AudioDeviceID dev) { }
@@ -148,6 +105,14 @@ void SDL_GL_DeleteContext(void *context) {
 
 void *GL_GetProcAddress( const char *name ) { return NULL; }
 
+__attribute__((import_module("env"), import_name("SDL_OpenAudioDevice")))
+int SDL_OpenAudioDevice(const char *device, int iscapture,
+                    const SDL_AudioSpec * desired, SDL_AudioSpec * obtained,
+                    int allowed_changes);
+__attribute__((import_module("env"), import_name("SDL_PauseAudioDevice")))
+void SDL_PauseAudioDevice(int dev, int pause_on);
+__attribute__((import_module("env"), import_name("SDL_CloseAudioDevice")))
+void SDL_CloseAudioDevice(int dev);
 
 /*
 ===============
@@ -205,7 +170,6 @@ GLimp_SetMode
 static int GLW_SetMode( int mode, const char *modeFS, qboolean fullscreen, qboolean webGL2 )
 {
   glconfig_t *config = glw_state.config;
-  int perChannelColorBits;
   int colorBits, depthBits, stencilBits;
   int i;
   SDL_DisplayMode desktopMode;
@@ -232,7 +196,7 @@ static int GLW_SetMode( int mode, const char *modeFS, qboolean fullscreen, qbool
     //Com_Printf("Selected display: %i\n", display );
   }
 
-  if ( display >= 0 && SYS_DisplayMode( display, &desktopMode ) == 0 )
+  if ( display >= 0 && SDL_GetDesktopDisplayMode( display, &desktopMode ) == 0 )
   {
     glw_state.desktop_width = desktopMode.w;
     glw_state.desktop_height = desktopMode.h;
@@ -346,47 +310,6 @@ static int GLW_SetMode( int mode, const char *modeFS, qboolean fullscreen, qbool
         testStencilBits = 0;
     }
 
-    if ( testColorBits == 24 )
-      perChannelColorBits = 8;
-    else
-      perChannelColorBits = 4;
-
-    {
-
-#ifdef __sgi /* Fix for SGIs grabbing too many bits of color */
-      if (perChannelColorBits == 4)
-        perChannelColorBits = 0; /* Use minimum size for 16-bit color */
-
-      /* Need alpha or else SGIs choose 36+ bit RGB mode */
-      SDL_GL_SetAttribute( SDL_GL_ALPHA_SIZE, 1 );
-#endif
-
-      SDL_GL_SetAttribute( SDL_GL_RED_SIZE, perChannelColorBits );
-      SDL_GL_SetAttribute( SDL_GL_GREEN_SIZE, perChannelColorBits );
-      SDL_GL_SetAttribute( SDL_GL_BLUE_SIZE, perChannelColorBits );
-      SDL_GL_SetAttribute( SDL_GL_DEPTH_SIZE, testDepthBits );
-      SDL_GL_SetAttribute( SDL_GL_STENCIL_SIZE, testStencilBits );
-
-      SDL_GL_SetAttribute( SDL_GL_MULTISAMPLEBUFFERS, 0 );
-      SDL_GL_SetAttribute( SDL_GL_MULTISAMPLESAMPLES, 0 );
-
-      if ( r_stereoEnabled->integer )
-      {
-        config->stereoEnabled = qtrue;
-        SDL_GL_SetAttribute( SDL_GL_STEREO, 1 );
-      }
-      else
-      {
-        config->stereoEnabled = qfalse;
-        SDL_GL_SetAttribute( SDL_GL_STEREO, 0 );
-      }
-    
-      SDL_GL_SetAttribute( SDL_GL_DOUBLEBUFFER, 1 );
-
-      if ( !r_allowSoftwareGL->integer )
-        SDL_GL_SetAttribute( SDL_GL_ACCELERATED_VISUAL, 1 );
-    }
-
     if ( ( SDL_window = SDL_CreateWindow( cl_title, x, y, config->vidWidth, config->vidHeight, fullscreen ? SDL_WINDOW_FULLSCREEN : 0 ) ) == NULL )
     {
       Com_DPrintf( "SDL_CreateWindow failed: %s\n", SDL_GetError() );
@@ -415,7 +338,7 @@ static int GLW_SetMode( int mode, const char *modeFS, qboolean fullscreen, qbool
         continue;
       }
 
-      if ( SYS_GetWindowDisplayMode( SDL_window, &mode ) >= 0 )
+      if ( SDL_GetWindowDisplayMode( SDL_window, &mode ) >= 0 )
       {
         config->displayFrequency = mode.refresh_rate;
         config->vidWidth = mode.w;
@@ -434,9 +357,9 @@ static int GLW_SetMode( int mode, const char *modeFS, qboolean fullscreen, qbool
           SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
           SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
         }
-        if ( ( SDL_glContext = GL_CreateContext( SDL_window ) ) == NULL )
+        if ( ( SDL_glContext = SDL_GL_CreateContext( SDL_window ) ) == NULL )
         {
-          Com_DPrintf( "GL_CreateContext failed: %s\n", SDL_GetError( ) );
+          Com_DPrintf( "SDL_GL_CreateContext failed: %s\n", SDL_GetError( ) );
           SDL_DestroyWindow( SDL_window );
           SDL_window = NULL;
           continue;

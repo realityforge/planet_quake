@@ -200,7 +200,8 @@ float dvrYOffset = 0;
 static char gl_extensions[ 32768 ];
 
 #ifdef __WASM__
-#define GLE(ret, name, ...) extern ret APIENTRY q##name(__VA_ARGS__);
+#define GLE(ret, name, ...) ret APIENTRY q##name(__VA_ARGS__) \
+	__attribute__((import_module("GL"), import_name(#name)));
 #else
 #define GLE( ret, name, ... ) ret ( APIENTRY * q##name )( __VA_ARGS__ );
 #endif

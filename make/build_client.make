@@ -25,9 +25,11 @@ else
 include make/game_baseq3a.make
 endif
 endif
+
 ifeq ($(USE_SYSTEM_LIBC),0)
 include make/lib_musl.make
 endif
+
 ifneq ($(USE_RENDERER_DLOPEN),1)
 ifneq ($(USE_OPENGL2),1)
 include make/build_renderer.make
@@ -113,7 +115,7 @@ endif
 SYSTEM           := 
 
 ifeq ($(PLATFORM),js)
-SYSTEM           += sys_sdl.o sys_main.o sys_input.o sys_math.o sys_webgl.o \
+SYSTEM           += sys_sdl.o sys_main.o sys_input.o sys_webgl.o \
 										dlmalloc.o sbrk.o syscall.o
 endif
 

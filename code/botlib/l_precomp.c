@@ -65,7 +65,9 @@ typedef enum {qfalse, qtrue}	qboolean;
 #ifdef MEQCC
 #include "qcc.h"
 #include "time.h"   //time & ctime
+#ifndef __WASM__
 #include "math.h"   //fabs
+#endif
 #include "l_memory.h"
 #include "l_script.h"
 #include "l_precomp.h"

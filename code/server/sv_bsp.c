@@ -19,7 +19,7 @@ static jmp_buf q3map2done;	// an ERR_DROP occurred, exit the entire frame
 
 #include "../qcommon/vm_local.h"
 #include "../qcommon/cm_public.h"
-#include "../game/bg_public.h"
+//#include "../game/bg_public.h"
 
 #include "../qcommon/cm_local.h"
 

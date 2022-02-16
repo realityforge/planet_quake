@@ -106,7 +106,7 @@ static inline void a_spin()
 #define a_crash a_crash
 static inline void a_crash()
 {
-  EM_ASM0( abort() );
+  abort();
 }
 
 #endif
