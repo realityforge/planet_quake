@@ -3342,6 +3342,10 @@ shader_t *R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImag
 	//shader.needsST2 = qtrue;
 	//shader.needsColor = qtrue;
 
+	if(Q_stristr(strippedName, "white")) {
+		return tr.whiteShader;
+	}
+
 	//
 	// attempt to define shader from an explicit parameter file
 	//
@@ -3360,14 +3364,16 @@ shader_t *R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImag
 			// because the functions that call into this, e.g. RegisterShader(), don't return 0
 			//   and return sh->index instead when there are missing files, we need to discard
 			//   missing shaders entirely and recreate when the images become available
-			if(shader.stages[0]
+			if(!shader.stages[0]
 				//&& shader.stages[0]->bundle[0].isImplicit
-				&& shader.stages[0]->bundle[0].image[0] == NULL)
+				|| shader.stages[0]->bundle[0].image[0] == NULL)
 				return tr.defaultShader;
 #endif
 		}
 		sh = FinishShader();
 		return sh;
+	} else if(Q_stristr(strippedName, "console")) {
+		return tr.defaultShader;
 	}
 
 	//

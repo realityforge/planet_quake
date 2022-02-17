@@ -4210,7 +4210,7 @@ static void CL_InitRenderer( void ) {
 		Con_MakeCharsetShader();
 	}
 #endif
-	cls.whiteShader = re.RegisterShader( "<whiteShader>" );
+	cls.whiteShader = re.RegisterShader( "white" );
   cls.lagometerShader = re.RegisterShader( "lagometer" );
 #ifndef USE_NO_CONSOLE
 	cls.consoleShader = re.RegisterShader( "console" );

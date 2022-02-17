@@ -2948,12 +2948,8 @@ static sysEvent_t Com_GetSystemEvent( void )
 	const char	*s;
 	int			evTime;
 
-#ifndef USE_ASYNCHRONOUS
-  // TODO: not sure this is ever necessary
-	// return if we have data
 	if ( eventHead - eventTail > 0 )
 		return eventQue[ ( eventTail++ ) & MASK_QUED_EVENTS ];
-#endif
 
 	Sys_SendKeyEvents();
 
@@ -3154,9 +3150,11 @@ int Com_EventLoop( void ) {
 
 #ifdef USE_ASYNCHRONOUS
   int currentTail = eventHead;
+	int count = 2; // how many events can happen in a single frame?
   // limit event sequences to the current event because otherwise it could
   //   loop forever before the system fully starts, events trigger more events
-	while ( com_fullyInitialized || eventTail <= currentTail ) 
+
+	while ( count-- || com_fullyInitialized || currentTail - eventTail > 0 ) 
 #else
   while ( 1 ) 
 #endif
@@ -3175,7 +3173,9 @@ int Com_EventLoop( void ) {
 			}
 #endif
 #ifdef USE_ASYNCHRONOUS
-      if(com_fullyInitialized)
+      if(!com_fullyInitialized) {
+				return ev.evTime;
+			}
 #endif
 #ifndef BUILD_SLIM_CLIENT
 			while ( NET_GetLoopPacket( NS_SERVER, &evFrom, &buf ) ) {
@@ -3191,7 +3191,6 @@ int Com_EventLoop( void ) {
 
 			return ev.evTime;
 		}
-
 
 		switch ( ev.evType ) {
 #ifndef DEDICATED
@@ -4257,6 +4256,9 @@ void Com_Init( char *commandLine ) {
 	if ( !Com_AddStartupCommands() ) {
 #ifndef DEDICATED
 		// if the user didn't give any commands, run default action
+#ifdef USE_ASYNCHRONOUS
+		if(FS_Initialized())
+#endif
 		if ( !com_dedicated->integer ) {
 			if ( !com_skipIdLogo || !com_skipIdLogo->integer )
 				Cbuf_AddText( "cinematic idlogo.RoQ\n" );
@@ -4293,8 +4295,10 @@ void Com_Init( char *commandLine ) {
 	Cvar_Set( "ui_singlePlayerActive", "0" );
 #endif
 
+#ifndef USE_ASYNCHRONOUS
 	com_fullyInitialized = qtrue;
-  
+#endif
+
   Cvar_SetCommonDescriptions();
 	Com_Printf( "--- Common Initialization Complete ---\n" );
 
