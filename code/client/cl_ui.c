@@ -1325,10 +1325,20 @@ void CL_InitUI( qboolean loadNew ) {
 			FS_PureServerSetLoadedPaks( "", "" );
 			uivm = VM_Create( VM_UI, CL_UISystemCalls, UI_DllSyscall, interpret );
 			if ( !uivm ) {
+#ifdef USE_ASYNCHRONOUS
+				Com_Printf( S_COLOR_RED "VM_Create on UI failed\n" );
+				return;
+#else
 				Com_Error( ERR_DROP, "VM_Create on UI failed" );
+#endif
 			}
 		} else {
+#ifdef USE_ASYNCHRONOUS
+			Com_Printf( S_COLOR_RED "VM_Create on UI failed\n" );
+			return;
+#else
 			Com_Error( ERR_DROP, "VM_Create on UI failed" );
+#endif
 		}
 	}
 

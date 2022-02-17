@@ -538,6 +538,10 @@ qboolean Com_DL_Begin( download_t *dl, const char *localName, const char *remote
 		Q_strncpyz( dl->Name, localName, sizeof( dl->Name ) );
 
 	FS_StripExt( dl->Name, ".pk3" );
+#ifdef USE_ASYNCHRONOUS
+	// allow empty file names for directory listings
+	if ( autoDownload )
+#endif
 	if ( !dl->Name[0] )
 	{
 		Com_Printf( S_COLOR_YELLOW " empty filename after extension strip.\n" );
@@ -644,6 +648,31 @@ qboolean Com_DL_Perform( download_t *dl )
 			Com_sprintf( name, sizeof( name ), "%s%c%s", dl->gameDir, PATH_SEP, dl->Name );
 		}
 
+#ifdef USE_ASYNCHRONOUS
+void Sys_FileReady(const char *filename, const char *tempname);
+		// only take commands from server after valid connect
+		if(!dl->mapAutoDownload && cls.state < CA_CONNECTED) {
+			// use this as a marker for files not meant to be kept around
+			// remove it below, don't even bother moving it to HOME dir
+			if(strlen(dl->Name) <= 1) {
+				// send to files for a quick scanning and adding to directory index
+				Sys_FileReady( dl->Name, dl->TempName );
+				if ( FS_SV_FileExists( dl->TempName ) ) {
+					const char *s;
+					s = strchr( dl->TempName, '/' );
+					if ( s )
+						FS_HomeRemove( s+1 );
+					else
+						FS_HomeRemove( dl->TempName );
+				}
+			} else {
+				n = FS_GetZipChecksum( va("%s%c%s.pk3", dl->gameDir, PATH_SEP, dl->TempName) );
+				Com_sprintf( clc.downloadName, sizeof( clc.downloadName ), "%s.%08x.pk3", dl->Name, n );
+				FS_SV_Rename( dl->TempName, clc.downloadName );
+				Sys_FileReady(dl->Name, clc.downloadName);
+			}
+		} else
+#endif
 		if ( !FS_SV_FileExists( name ) )
 		{
       // copy name again because it is checked in CL_NextDownload
@@ -652,20 +681,12 @@ qboolean Com_DL_Perform( download_t *dl )
 		}
 		else
 		{
-			if(dl->mapAutoDownload) {
-				Com_sprintf( name, sizeof( name ), "%s%c%s.pk3", dl->gameDir, PATH_SEP, dl->TempName );
-			} else {
-				Com_sprintf( name, sizeof( name ), "%s%c%s", dl->gameDir, PATH_SEP, dl->TempName );
-			}
+			Com_sprintf( name, sizeof( name ), "%s%c%s.pk3", dl->gameDir, PATH_SEP, dl->TempName );
 			n = FS_GetZipChecksum( name );
-			if(dl->mapAutoDownload) {
-				Com_sprintf( name, sizeof( name ), "%s%c%s.%08x.pk3", dl->gameDir, PATH_SEP, dl->Name, n );
-			} else {
-				Com_sprintf( name, sizeof( name ), "%s%c%s.%08x", dl->gameDir, PATH_SEP, dl->Name, n );
-			}
+			Com_sprintf( name, sizeof( name ), "%s%c%s.%08x.pk3", dl->gameDir, PATH_SEP, dl->Name, n );
 
 			if ( FS_SV_FileExists( name ) )
-				FS_Remove( name );
+				FS_HomeRemove( name );
 
       // copy name again because it is checked in CL_NextDownload
       Q_strncpyz(clc.downloadName, name, sizeof(clc.downloadName));
@@ -690,12 +711,7 @@ qboolean Com_DL_Perform( download_t *dl )
 			cls.startCgame = qtrue;
 			Cbuf_ExecuteText( EXEC_APPEND, "vid_restart\n" );
 		} 
-#ifdef USE_ASYNCHRONOUS
-		else {
-			CL_NextDownload();
-			Sys_FileReady(clc.downloadName);
-		}
-#endif
+
 		return qfalse;
 	}
 	else

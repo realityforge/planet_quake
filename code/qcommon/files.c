@@ -448,66 +448,70 @@ void FS_Reload( void );
 #define PK3_HASH_SIZE 512
 static int FS_HashPK3( const char *name );
 // 
+static char tempReturnPath2[MAX_QPATH];
 static char tempReturnPath[MAX_QPATH];
 typedef struct downloadLazy_s {
-  char *name;
+  char *downloadName; // this is the of the file in the shader
+	char *loadingName; // this is the name of the shader to update
+	time_t lastRequested;
+	qboolean ready;
   struct downloadLazy_s *next;
 } downloadLazy_t;
 
 static downloadLazy_t *modelCallback[PK3_HASH_SIZE]; // MAX_MOD_KNOWN
 static downloadLazy_t *soundCallback[PK3_HASH_SIZE]; // 
 static downloadLazy_t *shaderCallback[PK3_HASH_SIZE]; // MAX_SHADERS
+static downloadLazy_t *filesCallback[PK3_HASH_SIZE]; // MAX_SHADERS
+downloadLazy_t* *downloadTables[4] = {
+	modelCallback,
+	soundCallback,
+	shaderCallback,
+	filesCallback,
+};
 
-char *Sys_UpdateShader( void ) {
-  for(int i = 0; i < ARRAY_LEN(shaderCallback); i++) {
-    if(shaderCallback[i] != NULL) {
-      char *result = shaderCallback[i]->name;
-      downloadLazy_t *next = shaderCallback[i]->next;
-      memcpy(tempReturnPath, result, sizeof(tempReturnPath));
-      Z_Free(shaderCallback[i]);
-      shaderCallback[i] = next;
-      return tempReturnPath;
+//static downloadLazy_t *readyFiles[256];
+//int numReadyFiles = 0;
+
+char *Sys_UpdateNeeded( int tableId, char **downloadNeeded ) {
+	downloadLazy_t* *downloadTable = downloadTables[tableId];
+	int time = Sys_Milliseconds();
+	tempReturnPath[0] = 0;
+	tempReturnPath2[0] = 0;
+	// TODO: loop over readyFiles instead?
+	for(int i = 0; i < PK3_HASH_SIZE; i++) {
+    if(downloadTable[i] != NULL) {
+			if(!downloadTable[i]->ready) {
+				if(downloadNeeded && !*downloadNeeded
+					&& time - downloadTable[i]->lastRequested > 1500) {
+					downloadTable[i]->lastRequested = time;
+					// copy name in case it gets deleted somehow
+					memcpy(tempReturnPath2, downloadTable[i]->downloadName, sizeof(tempReturnPath2));
+					tempReturnPath2[strlen(downloadTable[i]->downloadName)] = 0;
+					*downloadNeeded = tempReturnPath2;
+				}
+				continue;
+			} else if (tempReturnPath[0] != 0) {
+				if(!downloadNeeded || *downloadNeeded)
+					break; // we have both set
+				continue; // only set once
+			}
+      downloadLazy_t *next = downloadTable[i]->next;
+      memcpy(tempReturnPath, downloadTable[i]->loadingName, sizeof(tempReturnPath));
+			tempReturnPath[strlen(downloadTable[i]->loadingName)-1] = 0;
+      Z_Free(downloadTable[i]);
+      downloadTable[i] = next;
     }
   }
-  return NULL;
-}
-
-char *Sys_UpdateSound( void ) {
-  for(int i = 0; i < ARRAY_LEN(soundCallback); i++) {
-    if(soundCallback[i] != NULL) {
-      char *result = soundCallback[i]->name;
-      downloadLazy_t *next = soundCallback[i]->next;
-      memcpy(tempReturnPath, result, sizeof(tempReturnPath));
-      Z_Free(soundCallback[i]);
-      soundCallback[i] = next;
-      return tempReturnPath;
-    }
-  }
-  return NULL;
-}
-
-char *Sys_UpdateModel( void ) {
-  for(int i = 0; i < ARRAY_LEN(modelCallback); i++) {
-    if(modelCallback[i] != NULL) {
-      char *result = modelCallback[i]->name;
-      downloadLazy_t *next = modelCallback[i]->next;
-      memcpy(tempReturnPath, result, sizeof(tempReturnPath));
-      Z_Free(modelCallback[i]);
-      modelCallback[i] = next;
-      return tempReturnPath;
-    }
-  }
-  return NULL;
+  return tempReturnPath;
 }
 
 static void Sys_FileNeeded(const char *filename) {
   unsigned int hash;
-  int len;
 	const char *loading;
   downloadLazy_t* *downloadTable;
   downloadLazy_t *download;
+
 	// TODO: check index need to download
-	return;
   qboolean found = qfalse;
   loading = Cvar_VariableString("r_loadingShader");
 	if(!loading[0]) {
@@ -516,19 +520,25 @@ static void Sys_FileNeeded(const char *filename) {
 			loading = Cvar_VariableString("r_loadingModel");
 			if(loading[0]) {
 				downloadTable = modelCallback;
-		 	}
+			} else {
+				downloadTable = filesCallback; // special files for calling just below
+				loading = filename;
+			}
 		} else {
       downloadTable = soundCallback;
 		}
 	} else {
     downloadTable = shaderCallback;
 	}
+
   if(loading[0]) {
     hash = FS_HashPK3( loading );
+
+printf("file needed! %s %i", filename, hash);
     download = downloadTable[hash];
     while ( download )
     {
-      if ( Q_stricmp( loading, download->name ) == 0 ) {
+      if ( Q_stricmp( filename, download->downloadName ) == 0 ) {
         found = qtrue;
         break;
       } else {
@@ -536,27 +546,146 @@ static void Sys_FileNeeded(const char *filename) {
       }
     }
     if(!found) {
-      len = strlen(loading) + 1;
-      download = (downloadLazy_t *)Z_Malloc(sizeof(downloadLazy_t) + len);
-      download->name = &((void *)download)[sizeof(downloadLazy_t)];
-      memcpy(download->name, loading, len);
-      download->name[len - 1] = '\0';
+      download = (downloadLazy_t *)Z_TagMalloc(sizeof(downloadLazy_t)
+				 + strlen(loading) + 1 + strlen(filename) + 1, TAG_SMALL);
+      download->downloadName = &((void *)download)[sizeof(downloadLazy_t)] + strlen(loading) + 1;
+			download->loadingName = &((void *)download)[sizeof(downloadLazy_t)];
+      memcpy(download->downloadName, filename, strlen(filename));
+      download->downloadName[strlen(filename)] = '\0';
+      memcpy(download->loadingName, loading, strlen(loading));
+      download->loadingName[strlen(loading)] = '\0';
       download->next = downloadTable[hash];
+			download->ready = qfalse;
+			download->lastRequested = Sys_Milliseconds();
       downloadTable[hash] = download;
     }
   }
 }
 
 
-void Sys_FileReady(const char *filename) {
-	if(Q_stristr(filename, "default.cfg")) {
+void ParseHtmlList(char *buf, int len) {
+	// count <tr/<li/<td/<ol/<ul/<div/<h
+	//   until default.cfg is found, then add all the detected file names
+	//   to the pk3cache.dat file. This will make it easy for the server
+	//   provided q3cache.dat to checked at the same time.
+	char link[MAX_QPATH];
+	int lenLink = 0;
+	qboolean insideAnchor = qfalse;
+	qboolean insideHref = qfalse;
+	int c = 0;
+	while(c < len) {
+		if(buf[c] == '<') {
+			c++;
+
+			// tags
+			if(buf[c] == 'a' && buf[c+1] == ' ') {
+				insideAnchor = qtrue;
+				c++;
+			}
+		}
+
+		if(buf[c] == '>') {
+			insideAnchor = qfalse;
+			insideHref = qfalse;
+			// TODO: parse poorly formed links?
+		}
+
+		// attributes
+		if(insideAnchor
+			&& buf[c] == 'h' && buf[c+1] == 'r' && buf[c+2] == 'e' 
+			&& buf[c+3] == 'f' && buf[c+4] == '=') {
+			c += 5;
+			if(buf[c] == '"') {
+				c++;
+			}
+			insideHref = qtrue;
+			lenLink = 0;
+		}
+
+		if(insideHref) {
+			if(buf[c] == '"') {
+				insideHref = qfalse;
+				link[lenLink] = '\0';
+				if(Q_stristr(link, va("%s/", FS_GetCurrentGameDir()))) {
+					// inject filepath into pk3cache.dat with some unknown information
+					printf("link found! %s\n", link);
+					
+				}
+			} else {
+				link[lenLink] = buf[c];
+				lenLink++;
+			}
+		}
+
+		c++;
+	}
+} 
+
+static int FS_FileLength( FILE* h );
+
+// TODO: move this to cl_main?
+void Sys_FileReady(const char *filename, const char* tempname) {
+	char realName[ MAX_OSPATH ];
+	unsigned int hash;
+  downloadLazy_t *download;
+	const char *s;
+
+	// mark the correct file as ready
+	s = strchr( filename, '/' );
+	if(s) {
+		Com_sprintf(realName, sizeof(realName), "%s/%s", FS_GetCurrentGameDir(), s + 1);
+	} else {
+		Com_sprintf(realName, sizeof(realName), "%s/%s", FS_GetCurrentGameDir(), filename);
+	}
+	hash = FS_HashPK3( realName );
+
+	// mark the file as downloaded
+	for(int i = 0; i < 4; i++) {
+    download = downloadTables[i][hash];
+    while ( download )
+    {
+      if ( !Q_stricmp( download->downloadName, realName ) ) {
+				download->ready = qtrue;
+				break;
+			} else {
+				download = download->next;
+			}
+		}
+	}
+
+	// do some extra processing, restart UI if default.cfg is found
+	if(!Q_stricmp(filename, "default.cfg")) {
 		// will restart automatically from NextDownload()
 		//FS_Restart(0);
 		// TODO: try to restart UI VM
 		// TODO: check on networking, shaderlist, anything else we skipped, etc again
 		com_fullyInitialized = qtrue;
-
+		// we should have a directory index by now to check for VMs and files we need
 		CL_StartHunkUsers();
+	} else 
+	
+	// scan index files for HTTP directories and add links to q3cache.dat
+	if (Q_stristr(tempname, ".tmp") && Q_stristr(tempname, "/.")) {
+		// left in the temp directory, must be an index file
+		const char *realPath;
+		const char *s2;
+		s2 = strchr( tempname, '/' );
+		if(s2) {
+			realPath = FS_BuildOSPath(fs_homepath->string, FS_GetCurrentGameDir(), s2 + 1);
+		} else {
+			realPath = FS_BuildOSPath(fs_homepath->string, FS_GetCurrentGameDir(), tempname);
+		}
+
+		FILE *indexFile = Sys_FOpen(realPath, "rb");
+		int len = FS_FileLength(indexFile);
+		if(len < 1024 * 1024 * 50) {
+			char *buf = (char *)Z_TagMalloc(len + 1, TAG_GENERAL);
+			fread(buf, len, 1, indexFile);
+			buf[len] = '\0';
+			ParseHtmlList(buf, len);
+			Z_Free(buf);
+		}
+		fclose(indexFile);
 	}
 }
 
@@ -5429,7 +5558,7 @@ static void FS_Startup( void ) {
 			FS_AddGamePath( fs_basepath->string, fs_basegame->string, 0 );
 		if ( fs_homepath->string[0] && Q_stricmp( fs_homepath->string, fs_basepath->string ) )
 			FS_AddGamePath( fs_homepath->string, fs_basegame->string, 0 );
-		Cbuf_AddText( va("directdl %s\n", CACHE_FILE_NAME) );
+		Sys_FileNeeded(CACHE_FILE_NAME);
 	}
 	// TODO: use common FS notify API to callback when the download appears?
 
@@ -6216,7 +6345,11 @@ void FS_Restart( int checksumFeed ) {
 #ifdef USE_ASYNCHRONOUS
 	const char *downloadFile = va("%s/default.cfg", FS_GetCurrentGameDir());
 	if(!FS_SV_FileExists(downloadFile)) {
-		Cbuf_AddText( va("directdl %s\n", downloadFile) );
+		Sys_FileNeeded(downloadFile);
+	}
+	// snoop
+	if(!Cvar_VariableIntegerValue("sv_pure")) {
+		Sys_FileNeeded(va("%s/", FS_GetCurrentGameDir()));
 	}
 	if(!FS_Initialized()) {
 		return;

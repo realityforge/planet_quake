@@ -146,18 +146,18 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #endif
 #endif // USE_MV
 
+
 #if defined(USE_MULTIVM_CLIENT) || defined(USE_MULTIVM_SERVER)
 #undef Q3_VERSION
 #undef MV_PROTOCOL_VERSION
 #define Q3_VERSION            "Q3 1.32e MV"
 #define MV_MULTIWORLD_VERSION 2
 #define MV_PROTOCOL_VERSION MV_MULTIWORLD_VERSION
-// TODO: make compatible with legacy clients by sending gamestate and 
-//   switching level like normal, I think another engine mod/ioq3? did this
-//#define USE_LAZY_MEMORY 1
-//#define USE_ENGINE_TELE 1
-//#define USE_LAZY_LOAD
+#define USE_LAZY_MEMORY 1
+#define USE_ENGINE_TELE 1
+#define USE_LAZY_LOAD
 #endif
+
 
 
 #ifdef __WASM__
@@ -185,7 +185,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #undef USE_ASYNCHRONOUS
 #undef USE_LAZY_LOAD
 #endif
-
 
 
 // require all 3 of these engine options for asynchronous to work

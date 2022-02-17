@@ -195,11 +195,11 @@ static void CL_ServerInfoPacket( const netadr_t *from, msg_t *msg );
 #ifdef USE_ASYNCHRONOUS
 extern char com_earlyConnect[MAX_OSPATH];
 void Con_MakeCharsetShader( void );
-void CL_Download_f( void );
-#else
+#endif
+
+// TODO: make this same command work for web
 #ifdef USE_CURL
 static void CL_Download_f( void );
-#endif
 #endif
 static void CL_LocalServers_f( void );
 static void CL_GlobalServers_f( void );
@@ -2028,10 +2028,7 @@ static void CL_Reconnect_f( void ) {
 CL_Connect_f
 ================
 */
-#ifndef USE_ASYNCHRONOUS
-static 
-#endif
-void CL_Connect_f( void ) {
+static void CL_Connect_f( void ) {
 	netadrtype_t family;
 	netadr_t	addr;
 	char	buffer[ sizeof(cls.servername) ];  // same length as cls.servername
@@ -2836,11 +2833,12 @@ static void CL_DownloadsComplete( void ) {
 #ifdef USE_LAZY_MEMORY
 	S_DisableSounds();
 	re.ReloadShaders(qtrue);
-	//cls.charSetShader = re.RegisterShader( "gfx/2d/bigchars" );
+	// adopt the styles from the current mod
+	cls.charSetShader = re.RegisterShader( "gfx/2d/bigchars" );
 	//cls.whiteShader = re.RegisterShader( "white" );
-  //cls.lagometerShader = re.RegisterShader( "lagometer" );
+  cls.lagometerShader = re.RegisterShader( "lagometer" );
 #ifndef USE_NO_CONSOLE
-	//cls.consoleShader = re.RegisterShader( "console" );
+	cls.consoleShader = re.RegisterShader( "console" );
 #endif
 #ifndef __WASM__
 	cls.soundRegistered = qtrue;
@@ -3857,15 +3855,76 @@ static void CL_CheckUserinfo( void ) {
 }
 
 
+#ifdef USE_LAZY_LOAD
+/*
+	modelCallback,
+	soundCallback,
+	shaderCallback
+	filesCallback
+*/
+char *Sys_UpdateNeeded( int tableId, const char **downloadNeeded );
+void Sys_FileReady(const char *filename);
+
+static int secondTimer = 0;
+
+void FS_CheckLazyUpdates( void ) {
+	const char *downloadNeeded = NULL;
+	int newTime = Sys_Milliseconds();
+	if(newTime - secondTimer > 50) {
+		secondTimer = newTime;
+
+    // lazy load only if the screen it out of view in multiworld
+#ifdef USE_LAZY_LOAD
+		if(cl_lazyLoad->integer <= 2 || cls.lazyLoading)
+#endif
+		for(int j = 0; j < 4; j++) {
+			char *update;
+			// always returns the first download requested by FS_*
+			if(downloadNeeded) {
+				update = Sys_UpdateNeeded(j, NULL);
+			} else {
+				update = Sys_UpdateNeeded(j, &downloadNeeded);
+			}
+			if(!update || strlen(update) == 0) {
+				// if we break here, nothing will update while download is in progress
+				//if(downloadNeeded && downloadNeeded[0] != '\0')
+				//	break; 
+				continue;
+			}
+			if(j == 0) {
+				if(cls.rendererStarted)
+					re.UpdateModel(update);
+			} else if (j == 1) {
+				if(cls.soundRegistered)
+					S_UpdateSound(update, qtrue);
+			} else if (j == 2) {
+				update[12] = '\0';
+				if(cls.rendererStarted)
+					re.UpdateShader(&update[13], atoi(&update[0]));
+			} else if (j == 3) {
+				//Sys_FileReady(update); // called by cl_curl.c
+			}
+			break; // something updated, that's good for this frame
+		}
+
+		// check for files that need to be downloaded, runs on separate thread!?
+#ifdef USE_CURL
+		if(downloadNeeded && downloadNeeded[0] != '\0') {
+			if(!Com_DL_InProgress( &download )) {
+				CL_Download( "lazydl", downloadNeeded, qfalse );
+			}
+		}
+#endif
+	}
+}
+#endif
+
 /*
 ==================
 CL_Frame
 ==================
 */
-#ifdef USE_LAZY_LOAD
-static int secondTimer = 0;
-static int thirdTimer = 0;
-#endif
+
 void CL_Frame( int msec, int realMsec ) {
 	float fps;
 	float frameDuration;
@@ -3936,26 +3995,8 @@ void CL_Frame( int msec, int realMsec ) {
 #endif
 #endif
 
-#ifdef USE_LAZY_LOAD
-	if(cl_lazyLoad->integer > 0 && (cl_lazyLoad->integer <= 2
-    // lazy load only if the screen it out of view in multiworld
-    || cls.lazyLoading)) {
-		if((uivm || cgvm) && secondTimer > 20) {
-			secondTimer = 0;
-			CL_UpdateShader();
-		} else {
-			secondTimer += msec;
-		}
-		if((uivm || cgvm) && thirdTimer > 100) {
-			thirdTimer = 0;
-			if(cls.soundRegistered) { // && !cls.firstClick) {
-				CL_UpdateSound();
-			}
-			CL_UpdateModel();
-		} else {
-			thirdTimer += msec;
-		}
-	}
+#if defined(USE_LAZY_LOAD) || defined(USE_ASYNCHRONOUS)
+	FS_CheckLazyUpdates();
 #endif
 
 #ifdef USE_CURL
@@ -4408,7 +4449,6 @@ void	CL_CM_Trace( trace_t *results, const vec3_t start, const vec3_t mins, const
 static int CL_FS_ReadFile( const char *qpath, void **buffer ) {
 	if(!FS_Initialized())
 		return -1;
-printf("file: %s\n", qpath);
 	return FS_ReadFile(qpath, buffer);
 }
 #endif
@@ -5540,12 +5580,6 @@ void CL_Init( void ) {
 	Cmd_SetDescription( "dvr", "Change where the screen output is drawn using percentages\nUsage: dvr [clientnum] x y w h" );
 #endif
 
-#ifdef USE_ASYNCHRONOUS
-	Cmd_AddCommand( "directdl", CL_Download_f );
-	Cmd_SetDescription( "directdl", "Download a file directly from the server, such as directory cache "
-		" indexes that list which pk3s are available.");
-#endif
-
 	Cvar_Set( "cl_running", "1" );
 #ifdef USE_MD5
 	CL_GenerateQKey();
@@ -6671,10 +6705,19 @@ qboolean CL_Download( const char *cmd, const char *pakname, qboolean autoDownloa
 		pakname++;
 
 	// skip gamedir
+#ifndef USE_ASYNCHRONOUS
 	s = strrchr( pakname, '/' );
 	if ( s )
 		pakname = s+1;
 
+#else
+	s = strchr( pakname, '/' );
+	if ( s )
+		pakname = s+1;
+	if( !Q_stricmp( cmd, "lazydl" ) && strlen(pakname) <= 1) {
+		// must be looking for a directory index
+	} else
+#endif
 	if ( !Com_DL_ValidFileName( pakname ) )
 	{
 		Com_Printf( S_COLOR_YELLOW "invalid file name: '%s'.\n", pakname );
@@ -6706,34 +6749,12 @@ qboolean CL_Download( const char *cmd, const char *pakname, qboolean autoDownloa
 CL_Download_f
 ==================
 */
-#ifndef USE_ASYNCHRONOUS
-static 
-#endif
-void CL_Download_f( void ) {
+static void CL_Download_f( void ) {
 	if ( Cmd_Argc() < 2 || *Cmd_Argv( 1 ) == '\0' )
 	{
 		Com_Printf( "Usage: %s <mapname>\n", Cmd_Argv( 0 ) );
 		return;
 	}
-
-#ifdef USE_ASYNCHRONOUS
-  char *downloadName = Cmd_Argv( 1 );
-  if ( !Q_stricmp( Cmd_Argv( 0 ), "directdl" ) )
-  {
-    Q_strcat( clc.downloadList, sizeof( clc.downloadList ), va("@%s@%s", downloadName, downloadName) );
-		// if not already downloading, call the next download now
-		if(!(*clc.downloadName)
-#ifdef USE_CURL
-			&& !Com_DL_InProgress(&download)
-#endif
-			&& (cl_dlURL->string[0] != '\0' || cls.state > CA_PRIMED)
-		) {
-			CL_NextDownload();
-		}
-    return;
-  }
-#endif
-
 
 #ifdef USE_CURL
 	if ( !strcmp( Cmd_Argv(1), "-" ) )

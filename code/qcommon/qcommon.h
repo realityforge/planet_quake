@@ -68,14 +68,6 @@ __attribute__((import_module("env"), import_name("DebugBreak")));
 
 //============================================================================
 
-
-#ifdef USE_LAZY_LOAD
-char *Sys_UpdateShader( void );
-char *Sys_UpdateSound( void );
-char *Sys_UpdateModel( void );
-void Sys_FileReady(const char *filename);
-#endif
-
 //
 // msg.c
 //
