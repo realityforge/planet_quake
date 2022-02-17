@@ -35,13 +35,14 @@
   "dependencies": {
     "archiver": "^5.3.0",
     "buffer-crc32": "^0.2.13",
-    "express": "^4.17.1",
+    "express": "^4.17.3",
     "ftp": "^0.3.10",
     "glob": "^7.1.6",
     "ip6addr": "^0.2.3",
     "memfs": "^3.2.1",
     "mime": "^2.5.2",
     "node-stream-zip": "^1.13.2",
+    "serve-index": "^1.9.1",
     "unionfs": "^4.4.0",
     "ws": "^7.4.4"
   },

@@ -378,6 +378,10 @@ void FS_ReloadGame( void ) {
 }
 #endif
 
+#ifdef USE_ASYNCHRONOUS
+extern qboolean		com_fullyInitialized;
+#endif
+
 typedef union qfile_gus {
 	FILE*		o;
 	unzFile		z;
@@ -496,7 +500,7 @@ char *Sys_UpdateModel( void ) {
   return NULL;
 }
 
-void Sys_FileReady(const char *filename) {
+static void Sys_FileNeeded(const char *filename) {
   unsigned int hash;
   int len;
 	const char *loading;
@@ -542,12 +546,22 @@ void Sys_FileReady(const char *filename) {
     }
   }
 }
-#endif
 
 
-#ifdef USE_ASYNCHRONOUS
-extern qboolean		com_fullyInitialized;
+void Sys_FileReady(const char *filename) {
+	if(Q_stristr(filename, "default.cfg")) {
+		// will restart automatically from NextDownload()
+		//FS_Restart(0);
+		// TODO: try to restart UI VM
+		// TODO: check on networking, shaderlist, anything else we skipped, etc again
+		com_fullyInitialized = qtrue;
+
+		CL_StartHunkUsers();
+	}
+}
+
 #endif
+
 
 
 /*
@@ -1059,7 +1073,13 @@ fileHandle_t FS_SV_FOpenFileWrite( const char *filename ) {
 	fileHandle_t	f;
 	fileHandleData_t *fd;
 
-	if ( !fs_searchpaths ) {
+#ifdef USE_ASYNCHRONOUS
+	// allows writing files from cURL
+  if ( com_fullyInitialized && !fs_searchpaths )
+#else
+	if ( !fs_searchpaths )
+#endif
+	{
 		Com_Error( ERR_FATAL, "Filesystem call made without initialization" );
 	}
 
@@ -1349,7 +1369,7 @@ void FS_FCloseFile( fileHandle_t f ) {
 	fileHandleData_t *fd;
 
 #ifdef USE_ASYNCHRONOUS
-  if ( !com_fullyInitialized || !fs_searchpaths )
+  if ( com_fullyInitialized && !fs_searchpaths )
 #else
 	if ( !fs_searchpaths )
 #endif
@@ -1816,7 +1836,7 @@ int FS_FOpenFileRead( const char *filename, fileHandle_t *file, qboolean uniqueF
 					if ( !FS_FilenameCompare( pakFile->name, filename ) ) {
 						// found it!
 #ifdef USE_LAZY_LOAD
-						Sys_FileReady(filename);
+						Sys_FileNeeded(filename);
 #endif
 						return pakFile->size; 
 					}
@@ -1830,7 +1850,7 @@ int FS_FOpenFileRead( const char *filename, fileHandle_t *file, qboolean uniqueF
 					length = FS_FileLength( temp );
 					fclose( temp );
 #ifdef USE_LAZY_LOAD
-					Sys_FileReady(netpath);
+					Sys_FileNeeded(netpath);
 #endif
 					return length;
 				}
@@ -1874,7 +1894,7 @@ int FS_FOpenFileRead( const char *filename, fileHandle_t *file, qboolean uniqueF
 				if ( !FS_FilenameCompare( pakFile->name, filename ) ) {
 					// found it!
 #ifdef USE_LAZY_LOAD
-					Sys_FileReady(filename);
+					Sys_FileNeeded(filename);
 #endif
 					return FS_OpenFileInPak( file, pak, pakFile, uniqueFILE );
 				}
@@ -1891,7 +1911,7 @@ int FS_FOpenFileRead( const char *filename, fileHandle_t *file, qboolean uniqueF
 				continue;
 			}
 #ifdef USE_LAZY_LOAD
-			Sys_FileReady(netpath);
+			Sys_FileNeeded(netpath);
 #endif
 
 			*file = FS_HandleForFile();
@@ -2094,7 +2114,8 @@ int FS_Write( const void *buffer, int len, fileHandle_t h ) {
 	FILE	*f;
 
 #ifdef USE_ASYNCHRONOUS
-  if ( !com_fullyInitialized || !fs_searchpaths )
+	// allows writing downloads from cURL
+  if ( com_fullyInitialized && !fs_searchpaths )
 #else
 	if ( !fs_searchpaths )
 #endif
@@ -4694,12 +4715,7 @@ static void FS_AddGameDirectory( const char *path, const char *dir, int igvm ) {
 	}
 #else
   searchpath_t *sprev;
-	if(!FS_Initialized()) {
-		// this is unusual because this is usually what initializes it
-		//   but this flag will be set elsewhere when the initial files are
-		//   downloaded and UI/Cgame is ready to start loading
-		return;
-	}
+	printf("searching: %s\n", path);
   // but it could just be the path marker with no pk3s in it yet
   for ( sp = fs_searchpaths ; sp ; sp = sp->next, sprev = sp ) {
 		if ( sp && sp->dir && !Q_stricmp( sp->dir->path, path ) && !Q_stricmp( sp->dir->gamedir, dir )) {
@@ -5116,6 +5132,9 @@ void FS_Shutdown( qboolean closemfp )
 	Cmd_RemoveCommand( "fs_restart" );
 	Cmd_RemoveCommand ("fs_openedList");
 	Cmd_RemoveCommand ("fs_referencedList");
+#ifdef USE_ASYNCHRONOUS
+	Cmd_RemoveCommand ("offline");
+#endif
 }
 
 
@@ -5403,13 +5422,17 @@ static void FS_Startup( void ) {
 
 #ifdef USE_ASYNCHRONOUS
     // setup paths for downloading to use
-	if ( fs_steampath->string[0] )
-		FS_AddGamePath( fs_steampath->string, fs_basegame->string, 0 );
-	if ( fs_basepath->string[0] )
-		FS_AddGamePath( fs_basepath->string, fs_basegame->string, 0 );
-	if ( fs_homepath->string[0] && Q_stricmp( fs_homepath->string, fs_basepath->string ) )
-		FS_AddGamePath( fs_homepath->string, fs_basegame->string, 0 );
-	Cbuf_AddText( va("directdl %s\n", CACHE_FILE_NAME) );
+	if(!FS_SV_FileExists(CACHE_FILE_NAME)) {
+		if ( fs_steampath->string[0] )
+			FS_AddGamePath( fs_steampath->string, fs_basegame->string, 0 );
+		if ( fs_basepath->string[0] )
+			FS_AddGamePath( fs_basepath->string, fs_basegame->string, 0 );
+		if ( fs_homepath->string[0] && Q_stricmp( fs_homepath->string, fs_basepath->string ) )
+			FS_AddGamePath( fs_homepath->string, fs_basegame->string, 0 );
+		Cbuf_AddText( va("directdl %s\n", CACHE_FILE_NAME) );
+	}
+	// TODO: use common FS notify API to callback when the download appears?
+
 #endif
 
 	start = Sys_Milliseconds();
@@ -5419,6 +5442,7 @@ static void FS_Startup( void ) {
 	FS_LoadCache();
 #endif
 #endif
+
 
 	// add search path elements in reverse priority order
 	if ( fs_steampath->string[0] ) {
@@ -6190,11 +6214,10 @@ void FS_Restart( int checksumFeed ) {
 	FS_Startup();
 
 #ifdef USE_ASYNCHRONOUS
-	const char *downloadFile = va("%s/default.cfg", fs_gamedirvar->string);
-	if(fs_gamedirvar->string[0] == '\0') {
-		downloadFile = va("%s/default.cfg", FS_GetBaseGameDir());
+	const char *downloadFile = va("%s/default.cfg", FS_GetCurrentGameDir());
+	if(!FS_SV_FileExists(downloadFile)) {
+		Cbuf_AddText( va("directdl %s\n", downloadFile) );
 	}
-	Cbuf_AddText( va("directdl %s\n", downloadFile) );
 	if(!FS_Initialized()) {
 		return;
 	}

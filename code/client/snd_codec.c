@@ -167,7 +167,7 @@ void S_CodecInit( void )
 	S_CodecRegister(&wav_codec);
 
 #ifdef USE_LAZY_LOAD
-	s_lazyLoad = Cvar_Get( "cl_lazyLoad", "0", 0 );
+	s_lazyLoad = Cvar_Get( "cl_lazyLoad", "", 0 );
 	Cvar_Get("snd_loadingSound", "", CVAR_TEMP);
 	updateSound = s_lazyLoad->integer < 2;
 #endif

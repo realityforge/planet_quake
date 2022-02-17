@@ -307,12 +307,15 @@ static size_t Com_DL_CallbackWrite( void *ptr, size_t size, size_t nmemb, void *
 
 	if ( dl->fHandle == FS_INVALID_HANDLE )
 	{
+#ifndef USE_ASYNCHRONOUS
+		// TODO: some kind of CRC checksum validation instead?
 		if ( !CL_ValidPakSignature( ptr, size*nmemb ) ) 
 		{
 			Com_Printf( S_COLOR_YELLOW "Com_DL_CallbackWrite(): invalid pak signature for %s.\n",
 				dl->Name );
 			return (size_t)-1;
 		}
+#endif
 
 		dl->fHandle = FS_SV_FOpenFileWrite( dl->TempName );
 		if ( dl->fHandle == FS_INVALID_HANDLE ) 
@@ -635,7 +638,11 @@ qboolean Com_DL_Perform( download_t *dl )
 
 	if ( msg->msg == CURLMSG_DONE && msg->data.result == CURLE_OK )
 	{
-		Com_sprintf( name, sizeof( name ), "%s%c%s.pk3", dl->gameDir, PATH_SEP, dl->Name );
+		if(dl->mapAutoDownload) {
+			Com_sprintf( name, sizeof( name ), "%s%c%s.pk3", dl->gameDir, PATH_SEP, dl->Name );
+		} else {
+			Com_sprintf( name, sizeof( name ), "%s%c%s", dl->gameDir, PATH_SEP, dl->Name );
+		}
 
 		if ( !FS_SV_FileExists( name ) )
 		{
@@ -645,9 +652,17 @@ qboolean Com_DL_Perform( download_t *dl )
 		}
 		else
 		{
-      Com_sprintf( name, sizeof( name ), "%s%c%s.pk3", dl->gameDir, PATH_SEP, dl->TempName );
+			if(dl->mapAutoDownload) {
+				Com_sprintf( name, sizeof( name ), "%s%c%s.pk3", dl->gameDir, PATH_SEP, dl->TempName );
+			} else {
+				Com_sprintf( name, sizeof( name ), "%s%c%s", dl->gameDir, PATH_SEP, dl->TempName );
+			}
 			n = FS_GetZipChecksum( name );
-			Com_sprintf( name, sizeof( name ), "%s%c%s.%08x.pk3", dl->gameDir, PATH_SEP, dl->Name, n );
+			if(dl->mapAutoDownload) {
+				Com_sprintf( name, sizeof( name ), "%s%c%s.%08x.pk3", dl->gameDir, PATH_SEP, dl->Name, n );
+			} else {
+				Com_sprintf( name, sizeof( name ), "%s%c%s.%08x", dl->gameDir, PATH_SEP, dl->Name, n );
+			}
 
 			if ( FS_SV_FileExists( name ) )
 				FS_Remove( name );
@@ -674,7 +689,13 @@ qboolean Com_DL_Perform( download_t *dl )
 			// FIXME: there might be better solution than vid_restart
 			cls.startCgame = qtrue;
 			Cbuf_ExecuteText( EXEC_APPEND, "vid_restart\n" );
+		} 
+#ifdef USE_ASYNCHRONOUS
+		else {
+			CL_NextDownload();
+			Sys_FileReady(clc.downloadName);
 		}
+#endif
 		return qfalse;
 	}
 	else
@@ -687,10 +708,16 @@ qboolean Com_DL_Perform( download_t *dl )
 		FS_Remove( name );
 		if ( cls.state == CA_CONNECTED )
 		{
+#ifndef USE_ASYNCHRONOUS
+			// TODO: try again somewhere else?
       Com_Error(ERR_DROP, "Download Error: %s Code: %ld URL: %s",
   			qcurl_easy_strerror(msg->data.result),
   			code, clc.downloadURL);
+#endif
 		}
+#ifdef USE_ASYNCHRONOUS
+		CL_NextDownload();
+#endif
 	}
 
 	return qtrue;

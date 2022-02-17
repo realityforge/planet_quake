@@ -86,12 +86,13 @@ void		Con_Fixup( void );
 
 void Con_MakeCharsetShader( void ) {
 #define IMAGE_LAYOUT 16
-#define IMAGE_SIZE 512
-#define RASTER_BORDER 2
-#define RASTER_X (8.1f)
-#define RASTER_Y (13.1f)
-#define ALIAS 3.5
-#define MAX_ALIAS (ALIAS * (ALIAS + 1))
+#define IMAGE_SIZE 256
+#define RASTER_BORDER_X 1.5f
+#define RASTER_BORDER_Y 2.1f
+#define RASTER_X (8.0f)
+#define RASTER_Y (13.0f)
+#define ALIAS 3.1
+#define MAX_ALIAS (ALIAS * ALIAS * ALIAS)
 
 	float charSizeX = IMAGE_SIZE / IMAGE_LAYOUT + 0.1f;
 	float charSizeY = IMAGE_SIZE / IMAGE_LAYOUT + 0.1f;
@@ -200,28 +201,31 @@ void Con_MakeCharsetShader( void ) {
 
 	for(int y = 0; y < IMAGE_SIZE; y++) {
 		for(int x = 0; x < IMAGE_SIZE; x++) {
-			int charToSample = floor(x / charSizeX) + floor(128 - y / charSizeX) * IMAGE_LAYOUT;
-			float coordX = x - floor(x / charSizeX) * charSizeX - 1.0f; // x - mod float
-			float coordY = y - floor(y / charSizeY) * charSizeY - 1.0f; // y - mod float
-			int bitY = (int)rint(RASTER_Y * coordY / charSizeY);
-			int bitX = 8 - (int)rint(RASTER_X * coordX / charSizeX);
+			int charToSample = floor(x / charSizeX) + floor(128.0f - y / charSizeX) * IMAGE_LAYOUT;
+			float coordX = (x - RASTER_BORDER_X) - floor(x / charSizeX) * charSizeX; // x - mod float
+			float coordY = (y - RASTER_BORDER_Y) - floor(y / charSizeY) * charSizeY; // y - mod float
+
+			float rasterY = (coordY - (RASTER_BORDER_Y - 0.1f)) / (charSizeY - RASTER_BORDER_Y * 2.0f);
+			float rasterX = (coordX - (RASTER_BORDER_X - 0.1f)) / (charSizeX - RASTER_BORDER_X * 2.0f);
+			int bitY = (int)rint(RASTER_Y * rasterY);
+			int bitX = 8 - (int)rint(RASTER_X * rasterX);
 			int bitCount = 0;
 			if(charToSample % CHAR_RANGE < 32) {
 				continue;
 			}
 			charToSample = (charToSample - 32) % CHAR_RANGE;
 			byte *bitCharacter = alphaNumeric[charToSample % CHAR_RANGE];
-			if(coordX < RASTER_BORDER || coordY < RASTER_BORDER) {
+			if(coordX < RASTER_BORDER_X || coordY < RASTER_BORDER_Y ) {
 				
-			} else if (coordX > charSizeX - RASTER_BORDER || coordY > charSizeY - RASTER_BORDER) {
+			} else if (coordX + RASTER_BORDER_X >= charSizeX || coordY + RASTER_BORDER_Y >= charSizeY) {
 				
 			} else if (bitCharacter[bitY] & (1 << (bitX))) {
 				bitCount = MAX_ALIAS;
 				// shitty anti-aliasing
 				for(int j = -(ALIAS/2); j < ALIAS/2; j++) {
 					for(int k = -(ALIAS/2); k <  ALIAS/2; k++) {
-						if(bitX + j < 0 || bitX + j > 7
-							|| bitY + k < 0 || bitY + k > 13
+						if(bitX + j <= 0 || bitX + j >= 7
+							|| bitY + k <= 0 || bitY + k >= 12
 						) {
 							bitCount--;
 							continue;
@@ -236,10 +240,19 @@ void Con_MakeCharsetShader( void ) {
 			}
 			if(bitCount > MAX_ALIAS) bitCount = MAX_ALIAS;
 			if(bitCount < 0) bitCount = 0;
-			imageData[18 + ((IMAGE_SIZE - y) * IMAGE_SIZE + x) * 4 + 2] = 255;   // b
-			imageData[18 + ((IMAGE_SIZE - y) * IMAGE_SIZE + x) * 4 + 1] = 255;   // g
-			imageData[18 + ((IMAGE_SIZE - y) * IMAGE_SIZE + x) * 4 + 0] = 255;   // r
-			imageData[18 + ((IMAGE_SIZE - y) * IMAGE_SIZE + x) * 4 + 3] = 255 * bitCount / MAX_ALIAS;   // a
+			float alpha = 0;
+			float white = 0;
+			if(bitCount > 0) {
+				white = 255.0f; // * (bitCount / MAX_ALIAS) + 50.0f;
+				//if(white > 255) white = 255;
+				alpha = 255.0f * (1.0f - sqrtf(powf(rasterX, 2.0f) + powf(rasterY, 2.0f)) / 2.0f);
+			}
+			if(bitCount > 0) {
+				imageData[18 + ((IMAGE_SIZE - y) * IMAGE_SIZE + x) * 4 + 2] = white;  // b
+				imageData[18 + ((IMAGE_SIZE - y) * IMAGE_SIZE + x) * 4 + 1] = white;  // g
+				imageData[18 + ((IMAGE_SIZE - y) * IMAGE_SIZE + x) * 4 + 0] = white;  // r
+				imageData[18 + ((IMAGE_SIZE - y) * IMAGE_SIZE + x) * 4 + 3] = alpha;  // a
+			}
 		}
 	}
 
@@ -252,9 +265,9 @@ void Con_MakeCharsetShader( void ) {
 
 	cls.charSetShader = re.CreateShaderFromRaw("gfx/2d/bigchars_backup", &imageData[18], IMAGE_SIZE, IMAGE_SIZE);
 
-	FILE *f = fopen( "bigchars_backup.tga", "wb");
-	fwrite(imageData, IMAGE_SIZE * IMAGE_SIZE * 4 + 18, 1, f );
-	fclose(f);
+	//FILE *f = fopen( "bigchars_backup.tga", "wb");
+	//fwrite(imageData, IMAGE_SIZE * IMAGE_SIZE * 4 + 18, 1, f );
+	//fclose(f);
 	
 	Z_Free( imageData );
 }

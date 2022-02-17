@@ -143,6 +143,12 @@ static void Con_LoadHistory( void )
 	field_t *edit;
 	fileHandle_t f;
 
+#ifdef USE_ASYNCHRONOUS
+	if(!FS_Initialized()) {
+		return;
+	}
+#endif
+
 	for ( i = 0 ; i < COMMAND_HISTORY ; i++ ) {
 		Field_Clear( &historyEditLines[i] );
 	}
@@ -228,6 +234,12 @@ static void Con_SaveHistory( void )
 	int             i;
 	int             lineLength, saveBufferLength, additionalLength;
 	fileHandle_t    f;
+
+#ifdef USE_ASYNCHRONOUS
+	if(!FS_Initialized()) {
+		return;
+	}
+#endif
 
 	consoleSaveBuffer[ 0 ] = '\0';
 

@@ -193,6 +193,7 @@ static void CL_ServerStatusResponse( const netadr_t *from, msg_t *msg );
 static void CL_ServerInfoPacket( const netadr_t *from, msg_t *msg );
 
 #ifdef USE_ASYNCHRONOUS
+extern char com_earlyConnect[MAX_OSPATH];
 void Con_MakeCharsetShader( void );
 void CL_Download_f( void );
 #else
@@ -4299,6 +4300,13 @@ void CL_StartHunkUsers( void ) {
 	if(!uivm && !cls.uiStarted && cls.state == CA_DISCONNECTED) {
 		Key_SetCatcher( Key_GetCatcher( ) | KEYCATCH_CONSOLE );
 	}
+
+	// not connecting?
+	if(com_earlyConnect[0] != '\0') {
+		Cbuf_ExecuteText( EXEC_INSERT, va("connect %s\n", com_earlyConnect) );
+	} else {
+		Com_Printf( S_COLOR_RED "WARNING: Using asynchronous build without an early \\connect <address> command.\n");
+	}
 #endif
 
 }
@@ -6713,16 +6721,15 @@ void CL_Download_f( void ) {
   if ( !Q_stricmp( Cmd_Argv( 0 ), "directdl" ) )
   {
     Q_strcat( clc.downloadList, sizeof( clc.downloadList ), va("@%s@%s", downloadName, downloadName) );
-    if(
+		// if not already downloading, call the next download now
+		if(!(*clc.downloadName)
 #ifdef USE_CURL
-      !Com_DL_InProgress(&download) && 
+			&& !Com_DL_InProgress(&download)
 #endif
-      !(*clc.downloadName)
-      && cls.state > CA_PRIMED
-    ) {
-      // if not already downloading, call the next download now
-      CL_NextDownload();
-    }
+			&& (cl_dlURL->string[0] != '\0' || cls.state > CA_PRIMED)
+		) {
+			CL_NextDownload();
+		}
     return;
   }
 #endif

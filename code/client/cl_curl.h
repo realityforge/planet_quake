@@ -113,6 +113,8 @@ typedef struct download_s {
 	int			Count;
 	qboolean	headerCheck;
 	qboolean	mapAutoDownload;
+	qboolean  directDownload;
+
 
 	struct func_s {
 		char*		(*version)(void);

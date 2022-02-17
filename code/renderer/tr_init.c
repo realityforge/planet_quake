@@ -1740,7 +1740,7 @@ static void R_Register( void )
 
   r_developer = ri.Cvar_Get( "developer", "0", 0 );
 #ifdef USE_LAZY_LOAD
-	r_lazyLoad = ri.Cvar_Get( "cl_lazyLoad", "0", 0 );
+	r_lazyLoad = ri.Cvar_Get( "cl_lazyLoad", "", 0 );
 	ri.Cvar_Get("r_loadingModel", "", CVAR_TEMP);
 	ri.Cvar_Get("r_loadingShader", "", CVAR_TEMP);
 #endif

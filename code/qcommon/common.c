@@ -843,7 +843,7 @@ qboolean Com_EarlyParseCmdLine( char *commandLine, char *con_title, int title_si
       com_consoleLines[i][0] = '\0';
       Q_strncpyz( com_earlyConnect, Cmd_Argv( 1 ), sizeof( com_earlyConnect ) );
     } else {
-      Com_Printf("WARNING: Using asynchronous build without an early \\connect <address> command.");
+      Com_Printf("WARNING: Using asynchronous build without an early \\connect <address> command.\n");
     }
 #endif
 	}
@@ -3130,6 +3130,7 @@ void *Com_PreviousEventPtr( void )
 {
   return eventQue[ ( eventTail-1 ) & MASK_QUED_EVENTS ].evPtr;
 }
+
 #endif
 
 
@@ -4272,12 +4273,6 @@ void Com_Init( char *commandLine ) {
     Cvar_Set("skipLoadUI", "1");
   }
 
-#ifdef USE_ASYNCHRONOUS
-	if(com_earlyConnect[0] != '\0') {
-		Cbuf_ExecuteText( EXEC_INSERT, va("connect %s\n", com_earlyConnect) );
-	}
-#endif
-
 #ifndef DEDICATED
 	CL_StartHunkUsers();
 #endif
@@ -4295,7 +4290,13 @@ void Com_Init( char *commandLine ) {
 	Cvar_Set( "ui_singlePlayerActive", "0" );
 #endif
 
-#ifndef USE_ASYNCHRONOUS
+#ifdef USE_ASYNCHRONOUS
+	if(FS_SV_FileExists(va("%s/default.cfg", FS_GetCurrentGameDir()))) {
+		com_fullyInitialized = qtrue;
+		// run this again, because it wouldn't have started UI or Cgame the first time
+		CL_StartHunkUsers();
+	}
+#else
 	com_fullyInitialized = qtrue;
 #endif
 
