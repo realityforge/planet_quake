@@ -112,6 +112,8 @@ qhandle_t RE_RegisterShaderFromImage(const char *name, int lightmapIndex, image_
 qhandle_t RE_RegisterImage( int *dimensions, const char *name );
 void RE_RenderGeometry(void *vertices, int num_vertices, int* indices, 
                         int num_indices, qhandle_t texture, const vec2_t translation);
+#endif
+#if defined(USE_RMLUI) || defined(USE_ASYNCHRONOUS)
 qhandle_t RE_CreateShaderFromRaw(const char* name, const byte *pic, int width, int height);
 #endif
 

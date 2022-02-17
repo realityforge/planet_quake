@@ -1560,7 +1560,6 @@ qboolean S_Base_Init( soundInterface_t *si ) {
 #if defined(__linux__) && !defined(USE_SDL)
 	s_device = Cvar_Get( "s_device", "default", CVAR_ARCHIVE_ND | CVAR_LATCH );
 #endif
-  Cvar_Get( "com_soundMegs", "", 0 );
 
 #ifdef __WASM__
 	r = qfalse;

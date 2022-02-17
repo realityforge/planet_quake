@@ -2128,6 +2128,9 @@ refexport_t *GetRefAPI ( int apiVersion, refimport_t *rimp ) {
   re.RenderGeometry = RE_RenderGeometry;
   re.CreateShaderFromRaw = RE_CreateShaderFromRaw;
 #endif
+#ifdef USE_ASYNCHRONOUS
+	re.CreateShaderFromRaw = RE_CreateShaderFromRaw;
+#endif
 #ifdef USE_LAZY_LOAD
 	re.UpdateShader = RE_UpdateShader;
 	re.UpdateModel = R_UpdateModel;

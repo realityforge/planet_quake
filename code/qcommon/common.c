@@ -4105,7 +4105,7 @@ void Com_Init( char *commandLine ) {
 #endif
 
 #ifdef USE_CVAR_UNCHEAT
-  com_uncheat = Cvar_Get("uncheats", "cg_gun cg_gunX cg_gunY cg_gunZ", CVAR_ARCHIVE | CVAR_USERINFO);
+  com_uncheat = Cvar_Get("uncheats", "cg_gun cg_gunX cg_gunY cg_gunZ", CVAR_ARCHIVE_ND | CVAR_USERINFO);
   Cvar_SetModifiedFunc(com_uncheat, Com_UncheatModified);
   Com_InitUncheat();
 #endif

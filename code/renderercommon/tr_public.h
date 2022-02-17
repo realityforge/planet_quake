@@ -141,6 +141,8 @@ typedef struct {
   qhandle_t (*RegisterImage)( int *dimensions, const char *name );
   void (*RenderGeometry)(void *vertices, int num_vertices, int* indices, 
                           int num_indices, qhandle_t texture, const vec2_t translation);
+#endif
+#if defined(USE_RMLUI) || defined(USE_ASYNCHRONOUS)
   qhandle_t  (*CreateShaderFromRaw)(const char* name, const byte *pic, int width, int height);
 #endif
 #ifdef USE_VID_FAST

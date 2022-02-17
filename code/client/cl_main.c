@@ -193,6 +193,7 @@ static void CL_ServerStatusResponse( const netadr_t *from, msg_t *msg );
 static void CL_ServerInfoPacket( const netadr_t *from, msg_t *msg );
 
 #ifdef USE_ASYNCHRONOUS
+void Con_MakeCharsetShader( void );
 void CL_Download_f( void );
 #else
 #ifdef USE_CURL
@@ -3912,7 +3913,6 @@ void CL_Frame( int msec, int realMsec ) {
   if(cgvm && VM_IsSuspended(cgvm)) {
     unsigned int result = VM_Resume(cgvm);
     if (result != 0xDEADBEEF) {
-
     }
   }
 #else
@@ -4205,6 +4205,11 @@ static void CL_InitRenderer( void ) {
 
 	// load character sets
 	cls.charSetShader = re.RegisterShader( "gfx/2d/bigchars" );
+#ifdef USE_ASYNCHRONOUS
+	if(!cls.charSetShader) {
+		Con_MakeCharsetShader();
+	}
+#endif
 	cls.whiteShader = re.RegisterShader( "<whiteShader>" );
   cls.lagometerShader = re.RegisterShader( "lagometer" );
 #ifndef USE_NO_CONSOLE
@@ -4288,6 +4293,14 @@ void CL_StartHunkUsers( void ) {
 		cls.uiStarted = qtrue;
 		CL_InitUI(qfalse);
 	}
+
+#ifdef USE_ASYNCHRONOUS
+	// init with console down like Quake 1!
+	if(!uivm && !cls.uiStarted && cls.state == CA_DISCONNECTED) {
+		Key_SetCatcher( Key_GetCatcher( ) | KEYCATCH_CONSOLE );
+	}
+#endif
+
 }
 
 
@@ -5517,6 +5530,12 @@ void CL_Init( void ) {
 	Cmd_SetDescription( "tile", "Display multiview renderings in a grid\nUsage: tile [+/-] [x y] [clientnum]" );
 	Cmd_AddCommand ("dvr", CL_Dvr_f);
 	Cmd_SetDescription( "dvr", "Change where the screen output is drawn using percentages\nUsage: dvr [clientnum] x y w h" );
+#endif
+
+#ifdef USE_ASYNCHRONOUS
+	Cmd_AddCommand( "directdl", CL_Download_f );
+	Cmd_SetDescription( "directdl", "Download a file directly from the server, such as directory cache "
+		" indexes that list which pk3s are available.");
 #endif
 
 	Cvar_Set( "cl_running", "1" );

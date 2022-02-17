@@ -3361,7 +3361,7 @@ shader_t *R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImag
 			//   and return sh->index instead when there are missing files, we need to discard
 			//   missing shaders entirely and recreate when the images become available
 			if(shader.stages[0]
-				&& shader.stages[0]->bundle[0].isImplicit
+				//&& shader.stages[0]->bundle[0].isImplicit
 				&& shader.stages[0]->bundle[0].image[0] == NULL)
 				return tr.defaultShader;
 #endif
