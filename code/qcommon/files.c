@@ -593,8 +593,11 @@ printf("file needed! %s %s %i\n", filename, loading, hash);
       download->next = downloadTable[hash];
 			download->ready = qfalse;
       downloadTable[hash] = download;
-    }
-		download->lastRequested = Sys_Milliseconds();
+			download->lastRequested = 0; // request immediately
+    } else {
+			download->lastRequested = Sys_Milliseconds(); // add 1500 millis to whatever requested it a second time
+
+		}
   }
 }
 

@@ -25,7 +25,7 @@ I began working on this project by updating QuakeJS. At the time, around 2018, t
 
   * Drag and dropped content uploaded and accepted by the package manager for sharing with other clients/servers
   * Popup keyboard on mobile, somehow detecting a text box from UIVM, might not work on all mods. 
-  * Compile baseq3a from EC directly to WASM and load asynchronously, https://github.com/emscripten-core/emscripten/wiki/Linking
+  * IN PROGRESS: Compile baseq3a from EC directly to WASM and load asynchronously, https://github.com/emscripten-core/emscripten/wiki/Linking
   * Switching renderers to WebGL 1/OpenGL 1/ES 1+2, closer with dlopen work
   * r_smp 2 Software renderer for rendering far distances in a web-worker, WebGL if OffscreenCanvas is available, low resolution software GL is not available
   * Repacking-as-a-service, uploader for repacking game content
@@ -35,12 +35,10 @@ I began working on this project by updating QuakeJS. At the time, around 2018, t
   * Quit a server if all human clients disconnect 
   * Add websockets to native dedicated server instead of relying on proxy https://github.com/rohanrhu/cebsocket, 
   * Run without dedicated server worker in single thread on mobile (bring back r_smp 1 for dedicated server feature, r_smp 2 for renderer features, r_smp 0 for mobile/off)
-  * Bring back download commands for grabbing new content
   * Pre-download content like the repack graph mode sets up so less is downloaded in game
   * Use lvlworld.cfg and autoconfig after so people can save their settings (need a way to exit "preview mode" and play the game with networking, simple menu items in preview mode "start game" option with a sharable match hyperlink)
   * Add touch and mobile controls that look like this (https://jayanam.com/ugui-unity-mobile-touch-control/) but are actually generated from brushes and look in the direction they are being pulled like a 3D model like the head. Make all numbers and HUD controls 3D models. Since RMLUI will be simple we can focus on advanced HUD  features like resizing on demand. Player controls for video and demos https://www.google.com/search?q=simple+html+media+player+controls
   * SSE/SIMD support in vm_js.js Com_SnapVectors(), https://emscripten.org/docs/porting/simd.html
-  * Updated WebGL renderer
   * Combination solution would be best downloading and using pk3s for `sv_pure` validation, and using a directory of unpacked 'flat' files available for download.
 
 
