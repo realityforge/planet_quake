@@ -3330,10 +3330,6 @@ shader_t *R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImag
 		}
 	}
 
-#ifdef USE_LAZY_LOAD
-  ri.Cvar_Set( "r_loadingShader", va("%12i;%s", lightmapIndex, name) );
-#endif
-
 	InitShader( strippedName, lightmapIndex );
 
 	// FIXME: set these "need" values appropriately
@@ -3345,6 +3341,10 @@ shader_t *R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImag
 	if(Q_stristr(strippedName, "white")) {
 		return tr.whiteShader;
 	}
+
+#ifdef USE_LAZY_LOAD
+  ri.Cvar_Set( "r_loadingShader", va("%12i;%s", lightmapIndex, name) );
+#endif
 
 	//
 	// attempt to define shader from an explicit parameter file
@@ -3367,12 +3367,16 @@ shader_t *R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImag
 			if(!shader.stages[0]
 				//&& shader.stages[0]->bundle[0].isImplicit
 				|| shader.stages[0]->bundle[0].image[0] == NULL)
+				ri.Cvar_Set("r_loadingShader", "");
 				return tr.defaultShader;
 #endif
 		}
 		sh = FinishShader();
 		return sh;
 	} else if(Q_stristr(strippedName, "console")) {
+#ifdef USE_LAZY_LOAD
+		ri.Cvar_Set("r_loadingShader", "");
+#endif
 		return tr.defaultShader;
 	}
 
@@ -3403,6 +3407,7 @@ shader_t *R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImag
 			shader.defaultShader = qfalse;
 		} else if (!image) {
 			// it's not going to be able to load over the network because it doesn't exist
+			ri.Cvar_Set("r_loadingShader", "");
 			return tr.defaultShader;
 		}
 #else

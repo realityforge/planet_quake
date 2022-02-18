@@ -182,9 +182,7 @@ static void SV_Map_f( void ) {
 	FS_RestorePure();
 	if(len == -1) {
 #ifdef USE_LOCAL_DED
-		if(FS_InMapIndex(expanded)) {
-			len = 1;
-		} else if ( Q_stricmp(map, "q3dm0") && map[0] != '*') {
+		if ( Q_stricmp(map, "q3dm0") && map[0] != '*') {
 			Com_Printf("Error: Can't find map %s\n", expanded );
 			Cmd_Clear();
 			Cbuf_AddText("spmap q3dm0\n");

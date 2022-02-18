@@ -1326,6 +1326,7 @@ void CL_InitUI( qboolean loadNew ) {
 			uivm = VM_Create( VM_UI, CL_UISystemCalls, UI_DllSyscall, interpret );
 			if ( !uivm ) {
 #ifdef USE_ASYNCHRONOUS
+				cls.uiStarted = qfalse;
 				Com_Printf( S_COLOR_RED "VM_Create on UI failed\n" );
 				return;
 #else
@@ -1334,6 +1335,7 @@ void CL_InitUI( qboolean loadNew ) {
 			}
 		} else {
 #ifdef USE_ASYNCHRONOUS
+			cls.uiStarted = qfalse;
 			Com_Printf( S_COLOR_RED "VM_Create on UI failed\n" );
 			return;
 #else

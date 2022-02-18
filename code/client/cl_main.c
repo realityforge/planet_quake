@@ -3862,60 +3862,67 @@ static void CL_CheckUserinfo( void ) {
 	shaderCallback
 	filesCallback
 */
-char *Sys_UpdateNeeded( int tableId, const char **downloadNeeded );
-void Sys_FileReady(const char *filename);
+char *Sys_UpdateNeeded( int tableId, char *ready, char *downloadNeeded);
+void FS_UpdateFiles(const char *filename, const char* tempname);
 
 static int secondTimer = 0;
 
 void FS_CheckLazyUpdates( void ) {
-	const char *downloadNeeded = NULL;
+	char downloadNeeded[MAX_OSPATH];
+	char ready[MAX_OSPATH];
 	int newTime = Sys_Milliseconds();
-	if(newTime - secondTimer > 50) {
-		secondTimer = newTime;
 
-    // lazy load only if the screen it out of view in multiworld
-#ifdef USE_LAZY_LOAD
-		if(cl_lazyLoad->integer <= 2 || cls.lazyLoading)
-#endif
-		for(int j = 0; j < 4; j++) {
-			char *update;
-			// always returns the first download requested by FS_*
-			if(downloadNeeded) {
-				update = Sys_UpdateNeeded(j, NULL);
-			} else {
-				update = Sys_UpdateNeeded(j, &downloadNeeded);
-			}
-			if(!update || strlen(update) == 0) {
-				// if we break here, nothing will update while download is in progress
-				//if(downloadNeeded && downloadNeeded[0] != '\0')
-				//	break; 
-				continue;
-			}
-			if(j == 0) {
-				if(cls.rendererStarted)
-					re.UpdateModel(update);
-			} else if (j == 1) {
-				if(cls.soundRegistered)
-					S_UpdateSound(update, qtrue);
-			} else if (j == 2) {
-				update[12] = '\0';
-				if(cls.rendererStarted)
-					re.UpdateShader(&update[13], atoi(&update[0]));
-			} else if (j == 3) {
-				//Sys_FileReady(update); // called by cl_curl.c
-			}
-			break; // something updated, that's good for this frame
-		}
-
-		// check for files that need to be downloaded, runs on separate thread!?
-#ifdef USE_CURL
-		if(downloadNeeded && downloadNeeded[0] != '\0') {
-			if(!Com_DL_InProgress( &download )) {
-				CL_Download( "lazydl", downloadNeeded, qfalse );
-			}
-		}
-#endif
+	if(newTime - secondTimer < 50) {
+		return;
 	}
+
+	secondTimer = newTime;
+
+	downloadNeeded[0] = '\0';
+	ready[0] = '\0';
+	// lazy load only if the screen it out of view in multiworld
+#ifdef USE_LAZY_LOAD
+	if(cl_lazyLoad->integer <= 2 || cls.lazyLoading)
+#endif
+	for(int j = 0; j < 4; j++) {
+		// always returns the first download requested by FS_*
+		if(downloadNeeded[0] == '\0') {
+			Sys_UpdateNeeded(j, ready, downloadNeeded);
+			// check for files that need to be downloaded, runs on separate thread!?
+#ifdef USE_CURL
+			if(downloadNeeded[0] != '\0') {
+				if(!Com_DL_InProgress( &download )) {
+					CL_Download( "lazydl", downloadNeeded, qfalse );
+				}
+			}
+#endif
+		} else {
+			Sys_UpdateNeeded(j, ready, NULL);
+		}
+
+		if(strlen(ready) == 0) {
+			// if we break here, nothing will update while download is in progress
+			//if(downloadNeeded && downloadNeeded[0] != '\0')
+			//	break; 
+			continue;
+		}
+		if(j == 0) {
+			if(cls.rendererStarted)
+				re.UpdateModel(ready);
+		} else if (j == 1) {
+			if(cls.soundRegistered)
+				S_UpdateSound(ready, qtrue);
+		} else if (j == 2) {
+			ready[12] = '\0';
+			if(cls.rendererStarted)
+				re.UpdateShader(&ready[13], atoi(&ready[0]));
+		} else if (j == 3) {
+			ready[MAX_QPATH - 1] = '\0';
+			FS_UpdateFiles(ready, &ready[MAX_QPATH]); // called by cl_curl.c
+		}
+		break; // something updated, that's good for this frame
+	}
+
 }
 #endif
 
@@ -6714,7 +6721,8 @@ qboolean CL_Download( const char *cmd, const char *pakname, qboolean autoDownloa
 	s = strchr( pakname, '/' );
 	if ( s )
 		pakname = s+1;
-	if( !Q_stricmp( cmd, "lazydl" ) && strlen(pakname) <= 1) {
+
+	if( !Q_stricmp( cmd, "lazydl" ) ) {
 		// must be looking for a directory index
 	} else
 #endif

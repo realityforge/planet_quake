@@ -480,12 +480,16 @@ qboolean Com_DL_Begin( download_t *dl, const char *localName, const char *remote
 			Com_DL_Cleanup( dl );
 			return qfalse;
 		}
-    //if(i > 0) {
-    //  Q_strcat( escaped, sizeof( escaped ), "/" );
-    //}
+#ifndef USE_ASYNCHRONOUS
 		if(i == segmentCount - 1) {
 	    Q_strcat( escaped, sizeof( escaped ), escapedName );
 		}
+#else
+    if(i > 0) {
+      Q_strcat( escaped, sizeof( escaped ), "/" );
+    }
+		Q_strcat( escaped, sizeof( escaped ), escapedName );
+#endif
 		dl->func.free( escapedName );
     escapedCount += len + 1;
   }
@@ -531,10 +535,23 @@ qboolean Com_DL_Begin( download_t *dl, const char *localName, const char *remote
 
 	// try to extract game path from localName
 	// dl->Name should contain only pak name without game dir and extension
+#ifdef USE_ASYNCHRONOUS
+	// didn't we just do this in CL_Download()? 
+	//   this must be a safety thing
+	//s = strchr( localName, '/' );
+	// only used for temp name now
 	s = strrchr( localName, '/' );
+	if(!s)
+		s = (char *)localName;
+	if(*s == '/')
+		s++;
+#else
+	s = strrchr( localName, '/' );
+
 	if ( s ) 
 		Q_strncpyz( dl->Name, s+1, sizeof( dl->Name ) );
 	else
+#endif
 		Q_strncpyz( dl->Name, localName, sizeof( dl->Name ) );
 
 	FS_StripExt( dl->Name, ".pk3" );
@@ -548,8 +565,13 @@ qboolean Com_DL_Begin( download_t *dl, const char *localName, const char *remote
 		return qfalse;
 	}
 
+#ifdef USE_ASYNCHRONOUS
+	Com_sprintf( dl->TempName, sizeof( dl->TempName ), 
+		"%s%c%s.%08x.tmp", dl->gameDir, PATH_SEP, s, rand() | (rand() << 16) );
+#else
 	Com_sprintf( dl->TempName, sizeof( dl->TempName ), 
 		"%s%c%s.%08x.tmp", dl->gameDir, PATH_SEP, dl->Name, rand() | (rand() << 16) );
+#endif
 
 	if ( com_developer->integer )
 		dl->func.easy_setopt( dl->cURL, CURLOPT_VERBOSE, 1 );
@@ -604,6 +626,11 @@ qboolean Com_DL_Begin( download_t *dl, const char *localName, const char *remote
 }
 
 
+#ifdef USE_ASYNCHRONOUS
+void Sys_FileReady(const char *filename, const char *tempname);
+#endif
+
+
 qboolean Com_DL_Perform( download_t *dl )
 {
 	char name[ sizeof( dl->TempName ) ];
@@ -649,25 +676,16 @@ qboolean Com_DL_Perform( download_t *dl )
 		}
 
 #ifdef USE_ASYNCHRONOUS
-void Sys_FileReady(const char *filename, const char *tempname);
 		// only take commands from server after valid connect
 		if(!dl->mapAutoDownload && cls.state < CA_CONNECTED) {
 			// use this as a marker for files not meant to be kept around
 			// remove it below, don't even bother moving it to HOME dir
-			if(strlen(dl->Name) <= 1) {
+			if(Q_stristr(dl->TempName, "/.")) {
 				// send to files for a quick scanning and adding to directory index
 				Sys_FileReady( dl->Name, dl->TempName );
-				if ( FS_SV_FileExists( dl->TempName ) ) {
-					const char *s;
-					s = strchr( dl->TempName, '/' );
-					if ( s )
-						FS_HomeRemove( s+1 );
-					else
-						FS_HomeRemove( dl->TempName );
-				}
 			} else {
 				n = FS_GetZipChecksum( va("%s%c%s.pk3", dl->gameDir, PATH_SEP, dl->TempName) );
-				Com_sprintf( clc.downloadName, sizeof( clc.downloadName ), "%s.%08x.pk3", dl->Name, n );
+				Com_sprintf( clc.downloadName, sizeof( clc.downloadName ), "%s/%s", dl->gameDir, dl->Name );
 				FS_SV_Rename( dl->TempName, clc.downloadName );
 				Sys_FileReady(dl->Name, clc.downloadName);
 			}

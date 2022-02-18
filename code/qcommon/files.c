@@ -314,6 +314,23 @@ typedef struct pack_s {
 typedef struct {
 	char		*path;		// c:\quake3
 	char		*gamedir;	// baseq3
+#ifdef USE_ASYNCHRONOUS
+
+	// basically just storing a few zeros until allocated
+	//   append the base filesystem with a virtual path system
+	//   in addition to the file that are there
+	// when a valid but not yet existing file is request, queue it 
+	//   for download and indicate to the renderer/client that it is valid
+	//   and will be update when it arrives (i.e. returns 1 for a file length)
+
+	int				numfiles;					// number of files in pk3
+	int				hashSize;					// hash table size (power of 2)
+	fileInPack_t*	*hashTable;					// hash table
+	fileInPack_t*	buildBuffer;				// buffer with the filenames etc.
+
+	// TODO: add header longs for the new file-based checksum system
+
+#endif
 } directory_t;
 
 typedef enum {
@@ -421,10 +438,8 @@ static char		*fs_serverPakNames[MAX_REF_PAKS];		// pk3 names
 // only used for autodownload, to make sure the client has at least
 // all the pk3 files that are referenced at the server side
 static int		fs_numServerReferencedPaks;
-static int		fs_numMapPakNames;
 static int		fs_serverReferencedPaks[MAX_REF_PAKS];		// checksums
 static char		*fs_serverReferencedPakNames[MAX_REF_PAKS];	// pk3 names
-static char		fs_mapPakNames[MAX_REF_PAKS*100];		// pk3 names
 
 int	fs_lastPakIndex;
 
@@ -444,17 +459,24 @@ static void FS_CheckIdPaks( void );
 #endif
 void FS_Reload( void );
 
+
+
 #ifdef USE_LAZY_LOAD
 #define PK3_HASH_SIZE 512
+#define FS_HashFileName Com_GenerateHashValue
+static void FS_AddGameDirectory( const char *path, const char *dir, int igvm );
+static qboolean FS_BannedPakFile( const char *filename );
+static void FS_ConvertFilename( char *name );
+static int FS_FileLength( FILE* h );
+static int FS_PakHashSize( const int filecount );
 static int FS_HashPK3( const char *name );
-// 
-static char tempReturnPath2[MAX_QPATH];
-static char tempReturnPath[MAX_QPATH];
+
 typedef struct downloadLazy_s {
   char *downloadName; // this is the of the file in the shader
 	char *loadingName; // this is the name of the shader to update
 	time_t lastRequested;
-	qboolean ready;
+	qboolean ready; // ready for updating
+	qboolean downloaded; // already processes
   struct downloadLazy_s *next;
 } downloadLazy_t;
 
@@ -472,37 +494,43 @@ downloadLazy_t* *downloadTables[4] = {
 //static downloadLazy_t *readyFiles[256];
 //int numReadyFiles = 0;
 
-char *Sys_UpdateNeeded( int tableId, char **downloadNeeded ) {
+void Sys_UpdateNeeded( int tableId, char *ready, char *downloadNeeded ) {
 	downloadLazy_t* *downloadTable = downloadTables[tableId];
 	int time = Sys_Milliseconds();
-	tempReturnPath[0] = 0;
-	tempReturnPath2[0] = 0;
+	ready[0] = 0;
+	if(downloadNeeded) {
+		downloadNeeded[0] = 0;
+	}
 	// TODO: loop over readyFiles instead?
 	for(int i = 0; i < PK3_HASH_SIZE; i++) {
     if(downloadTable[i] != NULL) {
+			if(downloadTable[i]->downloaded) {
+				continue;
+			}
 			if(!downloadTable[i]->ready) {
-				if(downloadNeeded && !*downloadNeeded
+				if(!downloadNeeded) {
+					// NULL when alread set but still looking for a ready file on a different table
+				} else
+				if(downloadNeeded[0] == '\0'
 					&& time - downloadTable[i]->lastRequested > 1500) {
 					downloadTable[i]->lastRequested = time;
 					// copy name in case it gets deleted somehow
-					memcpy(tempReturnPath2, downloadTable[i]->downloadName, sizeof(tempReturnPath2));
-					tempReturnPath2[strlen(downloadTable[i]->downloadName)] = 0;
-					*downloadNeeded = tempReturnPath2;
+					strcpy(downloadNeeded, downloadTable[i]->downloadName);
 				}
 				continue;
-			} else if (tempReturnPath[0] != 0) {
-				if(!downloadNeeded || *downloadNeeded)
+			} else if (ready[0] != 0) {
+				if(!downloadNeeded || (*downloadNeeded))
 					break; // we have both set
 				continue; // only set once
 			}
-      downloadLazy_t *next = downloadTable[i]->next;
-      memcpy(tempReturnPath, downloadTable[i]->loadingName, sizeof(tempReturnPath));
-			tempReturnPath[strlen(downloadTable[i]->loadingName)-1] = 0;
-      Z_Free(downloadTable[i]);
-      downloadTable[i] = next;
+      //downloadLazy_t *next = downloadTable[i]->next;
+			// don't memcpy because it has 2 paths in 1 string
+			memcpy(ready, downloadTable[i]->loadingName, MAX_OSPATH);
+			downloadTable[i]->downloaded = qtrue; // incase its not cleared right away
+      //Z_Free(downloadTable[i]);
+      //downloadTable[i] = next;
     }
   }
-  return tempReturnPath;
 }
 
 static void Sys_FileNeeded(const char *filename) {
@@ -510,9 +538,14 @@ static void Sys_FileNeeded(const char *filename) {
 	const char *loading;
   downloadLazy_t* *downloadTable;
   downloadLazy_t *download;
+	int downloadSize;
+  qboolean found = qfalse;
+
+	// skip leading slashes
+	while ( *filename == '/' || *filename == '\\' )
+		filename++;
 
 	// TODO: check index need to download
-  qboolean found = qfalse;
   loading = Cvar_VariableString("r_loadingShader");
 	if(!loading[0]) {
 		loading = Cvar_VariableString("snd_loadingSound");
@@ -531,14 +564,14 @@ static void Sys_FileNeeded(const char *filename) {
     downloadTable = shaderCallback;
 	}
 
-  if(loading[0]) {
-    hash = FS_HashPK3( loading );
+  if(filename[0]) {
+    hash = FS_HashPK3( filename );
 
-printf("file needed! %s %i", filename, hash);
+printf("file needed! %s %s %i\n", filename, loading, hash);
     download = downloadTable[hash];
     while ( download )
     {
-      if ( Q_stricmp( filename, download->downloadName ) == 0 ) {
+      if ( !Q_stricmp( filename, download->downloadName ) ) {
         found = qtrue;
         break;
       } else {
@@ -546,33 +579,38 @@ printf("file needed! %s %i", filename, hash);
       }
     }
     if(!found) {
-      download = (downloadLazy_t *)Z_TagMalloc(sizeof(downloadLazy_t)
-				 + strlen(loading) + 1 + strlen(filename) + 1, TAG_SMALL);
-      download->downloadName = &((void *)download)[sizeof(downloadLazy_t)] + strlen(loading) + 1;
+			downloadSize = sizeof(downloadLazy_t)
+				 + MAX_OSPATH /* because it's replaced with temp download name strlen(loading) + 1 */ 
+				 + strlen(filename) + 1;
+      download = (downloadLazy_t *)Z_TagMalloc(downloadSize, TAG_SMALL);
+			memset(download, 0, downloadSize);
 			download->loadingName = &((void *)download)[sizeof(downloadLazy_t)];
-      memcpy(download->downloadName, filename, strlen(filename));
-      download->downloadName[strlen(filename)] = '\0';
-      memcpy(download->loadingName, loading, strlen(loading));
+      download->downloadName = download->loadingName + MAX_OSPATH;
+      strcpy(download->loadingName, loading);
+      strcpy(download->downloadName, filename);
       download->loadingName[strlen(loading)] = '\0';
+      download->downloadName[strlen(filename)] = '\0';
       download->next = downloadTable[hash];
 			download->ready = qfalse;
-			download->lastRequested = Sys_Milliseconds();
       downloadTable[hash] = download;
     }
+		download->lastRequested = Sys_Milliseconds();
   }
 }
 
 
-void ParseHtmlList(char *buf, int len) {
+static void ParseHtmlFileList(char *buf, int len, char *list, int *count, int *max) {
 	// count <tr/<li/<td/<ol/<ul/<div/<h
 	//   until default.cfg is found, then add all the detected file names
 	//   to the pk3cache.dat file. This will make it easy for the server
 	//   provided q3cache.dat to checked at the same time.
 	char link[MAX_QPATH];
 	int lenLink = 0;
+	int c = 0;
 	qboolean insideAnchor = qfalse;
 	qboolean insideHref = qfalse;
-	int c = 0;
+	if(max) *max = 0;
+	if(count) *count = 0;
 	while(c < len) {
 		if(buf[c] == '<') {
 			c++;
@@ -608,8 +646,12 @@ void ParseHtmlList(char *buf, int len) {
 				link[lenLink] = '\0';
 				if(Q_stristr(link, va("%s/", FS_GetCurrentGameDir()))) {
 					// inject filepath into pk3cache.dat with some unknown information
-					printf("link found! %s\n", link);
-					
+					if((*count) < 1024)
+						strcpy(list + (*max), link);
+					if(count)
+						(*count)++;
+					if(max)
+						(*max) += strlen(link) + 1;
 				}
 			} else {
 				link[lenLink] = buf[c];
@@ -619,48 +661,179 @@ void ParseHtmlList(char *buf, int len) {
 
 		c++;
 	}
-} 
+}
 
-static int FS_FileLength( FILE* h );
+
+void MakeDirectoryBuffer(char *paths, int count, int length, const char *localname) {
+	char localName[MAX_QPATH];
+	char *namePtr;
+	const char *s;
+	const char *realPath;
+	long hash;
+	int hashSize;
+	int dirSize;
+	void *dirStorage;
+	searchpath_t	*search;
+	qboolean found = qfalse;
+#define RESERVE_COUNT 1024 //count < 128 ? 128 : !fs_searchpaths ? 4096 : count;
+	hashSize = FS_PakHashSize( RESERVE_COUNT );
+
+	// give us some room to expand with additional directory requests
+	realPath = FS_BuildOSPath(fs_homepath->string, FS_GetCurrentGameDir(), localname);
+	
+
+	for ( search = fs_searchpaths ; search ; search = search->next ) {
+		if(search->dir 
+			&& !Q_stricmp(search->dir->gamedir, FS_GetCurrentGameDir())
+			&& !Q_stricmp(search->dir->path, fs_homepath->string)) {
+			found = qtrue;
+			break;
+		}
+	}
+
+	if(!found) {
+		Com_DPrintf( S_COLOR_YELLOW "WARNING: Requested search path %s not found in search paths.\n", realPath);
+		FS_AddGameDirectory(fs_homepath->string, FS_GetCurrentGameDir(), 0);
+		return;
+	}
+
+	if(!search->dir->hashTable) {
+		// laid out the same was as a pk3 buffer
+		dirSize = length + RESERVE_COUNT * MAX_OSPATH
+			+ hashSize * sizeof(intptr_t)
+			+ RESERVE_COUNT * sizeof(fileInPack_t);
+		dirStorage = Z_TagMalloc( dirSize, TAG_PACK );
+		Com_Memset( dirStorage, 0, dirSize );
+		search->dir->numfiles = 0;
+		search->dir->hashSize = hashSize;
+		search->dir->hashTable = (fileInPack_t **)dirStorage;
+		search->dir->buildBuffer = (fileInPack_t*)( search->dir->hashTable + hashSize );
+		// TODO: BUG! putting names in wrong place variable reserve count?
+		namePtr = (char*)( search->dir->buildBuffer + RESERVE_COUNT );
+	} else {
+		namePtr = (char*)( search->dir->buildBuffer + RESERVE_COUNT );
+		for(int i = 0; i < search->dir->numfiles; i++) {
+			namePtr += strlen(namePtr) + 1;
+		}
+	}
+	
+	// insert into the hash table
+	fileInPack_t* curFile = search->dir->buildBuffer + search->dir->numfiles;
+	char *currentPath = paths;
+	for ( int i = 0; i < count; i++ )
+	{
+		if(search->dir->numfiles >= RESERVE_COUNT) break;
+		curFile->name = namePtr;
+		// TODO: check if it matches current games?
+		strcpy( localName, currentPath );
+
+		s = localName;
+		// remove leading /
+		if(s[0] == '/') {
+			s++;
+		}
+
+		// remove game dir
+		s = strchr( s, '/' );
+		if(!s) {
+			s = localName;
+		} else {
+			s++;
+		}
+		strcpy(curFile->name, s);
+		curFile->name[strlen(s)] = '\0';
+		FS_ConvertFilename( curFile->name );
+		hash = FS_HashFileName( curFile->name, hashSize );
+		
+		//printf("adding %i, %s\n", hash, curFile->name);
+
+		// store the file position in the zip
+		// TODO: update this when Accept-Ranges is implemented
+		//curFile->size = it.size;
+		//curFile->pos = it.pos;
+
+		// download more directories recursively, at least for like 2 levels
+		if(!strrchr(currentPath, '.')
+			&& (Q_stristr(currentPath, "/maps")
+			|| Q_stristr(currentPath, "/vm"))
+		) {
+			// TODO: fix this, only works if directory listing allows slashes at the end?
+			Sys_FileNeeded(va("%s/", localName));
+		}
+
+		// update hash table
+		namePtr += strlen( curFile->name ) + 1;
+		currentPath += strlen( currentPath ) + 1;
+		curFile->next = search->dir->hashTable[ hash ];
+		search->dir->hashTable[ hash ] = curFile;
+		search->dir->numfiles++;
+		curFile++;
+	}
+
+}
+
 
 // TODO: move this to cl_main?
 void Sys_FileReady(const char *filename, const char* tempname) {
-	char realName[ MAX_OSPATH ];
-	unsigned int hash;
   downloadLazy_t *download;
-	const char *s;
+	unsigned int hash;
+	char localName[ MAX_OSPATH ];
+	//const char *s;
+	qboolean found = qfalse;
+
+	// skip leading slashes
+	while ( *filename == '/' || *filename == '\\' )
+		filename++;
 
 	// mark the correct file as ready
-	s = strchr( filename, '/' );
-	if(s) {
-		Com_sprintf(realName, sizeof(realName), "%s/%s", FS_GetCurrentGameDir(), s + 1);
-	} else {
-		Com_sprintf(realName, sizeof(realName), "%s/%s", FS_GetCurrentGameDir(), filename);
-	}
-	hash = FS_HashPK3( realName );
+	//s = strchr( filename, '/' );
+	//if(s) {
+	//	Com_sprintf(localName, sizeof(localName), "%s/%s", FS_GetCurrentGameDir(), s + 1);
+	//} else {
+		Com_sprintf(localName, sizeof(localName), "%s/%s", FS_GetCurrentGameDir(), filename);
+	//}
+	hash = FS_HashPK3( localName );
 
 	// mark the file as downloaded
 	for(int i = 0; i < 4; i++) {
     download = downloadTables[i][hash];
     while ( download )
     {
-      if ( !Q_stricmp( download->downloadName, realName ) ) {
+      if ( !Q_stricmp( download->downloadName, localName ) ) {
 				download->ready = qtrue;
+				strcpy(&download->loadingName[MAX_QPATH], tempname);
+				found = qtrue;
 				break;
 			} else {
 				download = download->next;
 			}
 		}
+		if(found) break;
+	}
+
+	if(!found) {
+		// TODO: DPrintf
+		// should never happen!
+		Com_Error(ERR_FATAL, "WARNING: %i %s not found in download list.\n", hash, localName);
+	}
+
+}
+
+void FS_UpdateFiles(const char *filename, const char *tempname) {
+
+	// try to reload UI with current game if needed
+	if(Q_stristr(filename, "ui.qvm")) {
+		CL_StartHunkUsers();
 	}
 
 	// do some extra processing, restart UI if default.cfg is found
 	if(!Q_stricmp(filename, "default.cfg")) {
 		// will restart automatically from NextDownload()
-		//FS_Restart(0);
+		if(!fs_searchpaths)
+			FS_Restart(0);
 		// TODO: try to restart UI VM
 		// TODO: check on networking, shaderlist, anything else we skipped, etc again
 		com_fullyInitialized = qtrue;
-		// we should have a directory index by now to check for VMs and files we need
 		CL_StartHunkUsers();
 	} else 
 	
@@ -668,28 +841,39 @@ void Sys_FileReady(const char *filename, const char* tempname) {
 	if (Q_stristr(tempname, ".tmp") && Q_stristr(tempname, "/.")) {
 		// left in the temp directory, must be an index file
 		const char *realPath;
-		const char *s2;
-		s2 = strchr( tempname, '/' );
-		if(s2) {
-			realPath = FS_BuildOSPath(fs_homepath->string, FS_GetCurrentGameDir(), s2 + 1);
+		const char *s;
+		s = strchr( tempname, '/' );
+		if(s) {
+			s++;
+			realPath = FS_BuildOSPath(fs_homepath->string, FS_GetCurrentGameDir(), s);
 		} else {
-			realPath = FS_BuildOSPath(fs_homepath->string, FS_GetCurrentGameDir(), tempname);
+			s = tempname;
+			realPath = FS_BuildOSPath(fs_homepath->string, FS_GetCurrentGameDir(), s);
 		}
+
+		Com_DPrintf("Adding %s (from: %s) to directory index.\n", filename, realPath);
 
 		FILE *indexFile = Sys_FOpen(realPath, "rb");
 		int len = FS_FileLength(indexFile);
 		if(len < 1024 * 1024 * 50) {
+			char paths[1024 * MAX_QPATH];
+			int count = 0, nameLength = 0;
 			char *buf = (char *)Z_TagMalloc(len + 1, TAG_GENERAL);
 			fread(buf, len, 1, indexFile);
 			buf[len] = '\0';
-			ParseHtmlList(buf, len);
+			ParseHtmlFileList(buf, len, paths, &count, &nameLength);
+			MakeDirectoryBuffer(paths, count, nameLength, filename);
 			Z_Free(buf);
 		}
 		fclose(indexFile);
+		FS_HomeRemove( s );
+		// we should have a directory index by now to check for VMs and files we need
+		CL_StartHunkUsers();
 	}
 }
 
 #endif
+
 
 
 
@@ -1918,6 +2102,9 @@ int FS_FOpenFileRead( const char *filename, fileHandle_t *file, qboolean uniqueF
 	FILE			*temp;
 	int				length;
 	fileHandleData_t *f;
+#ifdef USE_LAZY_LOAD
+	qboolean isInIndex = qfalse;
+#endif
 
 #ifdef USE_ASYNCHRONOUS
   if ( !com_fullyInitialized || !fs_searchpaths )
@@ -1964,13 +2151,14 @@ int FS_FOpenFileRead( const char *filename, fileHandle_t *file, qboolean uniqueF
 					// case and separator insensitive comparisons
 					if ( !FS_FilenameCompare( pakFile->name, filename ) ) {
 						// found it!
-#ifdef USE_LAZY_LOAD
-						Sys_FileNeeded(filename);
-#endif
 						return pakFile->size; 
 					}
 					pakFile = pakFile->next;
 				} while ( pakFile != NULL );
+#ifdef USE_LAZY_LOAD
+				// TODO: check q3cache?
+				Sys_FileNeeded(filename);
+#endif
 			} else if ( search->dir && search->policy != DIR_DENY ) {
 				dir = search->dir;
 				netpath = FS_BuildOSPath( dir->path, dir->gamedir, filename );
@@ -1978,22 +2166,15 @@ int FS_FOpenFileRead( const char *filename, fileHandle_t *file, qboolean uniqueF
 				if ( temp ) {
 					length = FS_FileLength( temp );
 					fclose( temp );
-#ifdef USE_LAZY_LOAD
-					Sys_FileNeeded(netpath);
-#endif
 					return length;
 				}
-				length = strlen(netpath);
-				if(FS_IsExt(filename, ".bsp", length) && FS_InMapIndex(netpath)) {
-					return 1;
+#ifdef USE_LAZY_LOAD
+				else {
+					Sys_FileNeeded(netpath);
 				}
+#endif
 			}
 		}
-		
-		//length = strlen(filename);
-		//if(FS_IsExt(filename, ".bsp", length) && FS_InMapIndex(filename)) {
-		//	return 1;
-		//}
 		
 		return -1;
 	}
@@ -2022,9 +2203,6 @@ int FS_FOpenFileRead( const char *filename, fileHandle_t *file, qboolean uniqueF
 				// case and separator insensitive comparisons
 				if ( !FS_FilenameCompare( pakFile->name, filename ) ) {
 					// found it!
-#ifdef USE_LAZY_LOAD
-					Sys_FileNeeded(filename);
-#endif
 					return FS_OpenFileInPak( file, pak, pakFile, uniqueFILE );
 				}
 				pakFile = pakFile->next;
@@ -2037,11 +2215,26 @@ int FS_FOpenFileRead( const char *filename, fileHandle_t *file, qboolean uniqueF
 
 			temp = Sys_FOpen( netpath, "rb" );
 			if ( temp == NULL ) {
+#ifdef USE_LAZY_LOAD
+				if(search->dir->hashTable) {
+					hash = fullHash & (search->dir->hashSize-1);
+					// TODO: check path of first directory and see if we can propagate 
+					//   on the server with more FS_FileNeeded(dir/dir/)
+					if(search->dir->hashTable[hash]) {
+						pakFile = search->dir->hashTable[hash];
+						do {
+							if ( !FS_FilenameCompare( pakFile->name, filename ) ) {
+								isInIndex = qtrue;
+								break;
+							}
+							pakFile = pakFile->next;
+						} while ( pakFile != NULL );
+					}
+				}
+
+#endif
 				continue;
 			}
-#ifdef USE_LAZY_LOAD
-			Sys_FileNeeded(netpath);
-#endif
 
 			*file = FS_HandleForFile();
 			f = &fsh[ *file ];
@@ -2059,6 +2252,11 @@ int FS_FOpenFileRead( const char *filename, fileHandle_t *file, qboolean uniqueF
 			return FS_FileLength( f->handleFiles.file.o );
 		}
 	}
+#ifdef USE_LAZY_LOAD
+	if(isInIndex) {
+		Sys_FileNeeded(va("%s/%s", FS_GetCurrentGameDir(), filename));
+	}
+#endif
 
 #ifdef FS_MISSING
 	if ( missingFiles ) {
@@ -4758,56 +4956,6 @@ static void FS_Which_f( void ) {
 }
 
 
-
-
-#ifdef USE_ASYNCHRONOUS
-static void FS_AddGamePath( const char *path, const char *dir, int igvm ) {
-  searchpath_t *sp;
-  int				len;
-  searchpath_t	*search;
-  int				path_len;
-	int				dir_len;
-
-  for ( sp = fs_searchpaths ; sp ; sp = sp->next ) {
-		if ( sp->dir && !Q_stricmp( sp->dir->path, path ) && !Q_stricmp( sp->dir->gamedir, dir )) {
-			return;	// we've already got this one
-		}
-	}
-
-  Q_strncpyz( fs_gamedir, dir, sizeof( fs_gamedir ) );
-
-  //
-  // add the directory to the search path
-  //
-  path_len = (int) strlen( path ) + 1;
-  path_len = PAD( path_len, sizeof( int ) );
-  dir_len = (int) strlen( dir ) + 1;
-  dir_len = PAD( dir_len, sizeof( int ) );
-  len = sizeof( *search ) + sizeof( *search->dir ) + path_len + dir_len;
-
-  search = Z_TagMalloc( len, TAG_SEARCH_PATH );
-  Com_Memset( search, 0, len );
-#ifdef USE_MULTIFS
-  search->worldPolicy = igvm;
-#endif
-  search->dir = (directory_t*)( search + 1 );
-  search->dir->path = (char*)( search->dir + 1 );
-  search->dir->gamedir = (char*)( search->dir->path + path_len );
-
-  strcpy( search->dir->path, path );
-  strcpy( search->dir->gamedir, dir );
-
-  search->next = fs_searchpaths;
-  fs_searchpaths = search;
-  fs_dirCount++;
-  
-  // TODO: something here for __WASM__ like mount
-}
-
-#endif
-
-
-
 //===========================================================================
 
 /*
@@ -4844,7 +4992,6 @@ static void FS_AddGameDirectory( const char *path, const char *dir, int igvm ) {
 	}
 #else
   searchpath_t *sprev;
-	printf("searching: %s\n", path);
   // but it could just be the path marker with no pk3s in it yet
   for ( sp = fs_searchpaths ; sp ; sp = sp->next, sprev = sp ) {
 		if ( sp && sp->dir && !Q_stricmp( sp->dir->path, path ) && !Q_stricmp( sp->dir->gamedir, dir )) {
@@ -5550,18 +5697,10 @@ static void FS_Startup( void ) {
   Cvar_SetFilesDescriptions();
 
 #ifdef USE_ASYNCHRONOUS
-    // setup paths for downloading to use
+	// setup paths for downloading to use
 	if(!FS_SV_FileExists(CACHE_FILE_NAME)) {
-		if ( fs_steampath->string[0] )
-			FS_AddGamePath( fs_steampath->string, fs_basegame->string, 0 );
-		if ( fs_basepath->string[0] )
-			FS_AddGamePath( fs_basepath->string, fs_basegame->string, 0 );
-		if ( fs_homepath->string[0] && Q_stricmp( fs_homepath->string, fs_basepath->string ) )
-			FS_AddGamePath( fs_homepath->string, fs_basegame->string, 0 );
 		Sys_FileNeeded(CACHE_FILE_NAME);
 	}
-	// TODO: use common FS notify API to callback when the download appears?
-
 #endif
 
 	start = Sys_Milliseconds();
@@ -6347,7 +6486,7 @@ void FS_Restart( int checksumFeed ) {
 	if(!FS_SV_FileExists(downloadFile)) {
 		Sys_FileNeeded(downloadFile);
 	}
-	// snoop
+	// snoop on directory index
 	if(!Cvar_VariableIntegerValue("sv_pure")) {
 		Sys_FileNeeded(va("%s/", FS_GetCurrentGameDir()));
 	}
@@ -6782,136 +6921,4 @@ void *FS_LoadLibrary( const char *name )
 	}
 
 	return libHandle;
-}
-
-void FS_SetMapIndex(const char *mapname) {
-	searchpath_t	*search;
-	int r, i, csi = 0, ki = 0, level = 0, mpi = 0;
-	int mapCount = 0;
-	const char *mapNameIndex = NULL;
-	fileHandle_t indexfile;
-	char buf[MAX_OSPATH], key[MAX_OSPATH], key2[MAX_OSPATH];
-	qboolean isKey = qfalse;
-	qboolean isKey2 = qfalse, isChecksum = qfalse;
-	//char *mapsMatch = va("maps/%s", mapname);
-
-	//	Com_sprintf( descPath, sizeof ( descPath ), "%s%cdescription.txt", modDir, PATH_SEP );
-	FS_FOpenFileRead("index.json", &indexfile, qtrue);
-
-	// set by server, don't interfere
-	if ( fs_debug->integer ) {
-		Com_Printf( "FS_SetMapIndex: Searching index for map %s\n", mapname );
-	}
-
-	if(indexfile)
-	{
-		do {
-			r = FS_Read(buf, MAX_OSPATH, indexfile);
-			// Do simple JSON parse to find just the paks required for the map
-			for(i = 0; i < r; i++) {
-				if(buf[i] == '{') {
-					level++;
-				} else if(buf[i] == '}') {
-					level--;
-				} else if(buf[i] == '"' && level == 1 && !isKey && !isKey2 && !isChecksum) {
-					isKey = qtrue;
-				} else if(buf[i] == '"' && level == 1 && isKey && !isKey2 && !isChecksum) {
-					isKey = qfalse;
-					key[ki] = '\0';
-					mapNameIndex = Q_stristr(key, "maps/");
-					if(mapNameIndex != NULL
-					 	&& (Q_stristr(key, "pak9") != NULL // from repack all map bsp files are indexed in pak9### prefixed pk3s
-						|| Q_stristr(key, ".bsp") != NULL)) {
-						//const char *bspext = Q_stristr(key, ".bsp");
-						//if(bspext) {
-						//	key[strlen(key) - 4] = '\0';
-						//}
-						if((mpi + ki) < sizeof(fs_mapPakNames)) {
-							Com_Memcpy(&fs_mapPakNames[mpi], mapNameIndex, strlen(mapNameIndex));
-							Q_strlwr(&fs_mapPakNames[mpi]);
-							if ( fs_debug->integer ) {
-								//Com_Printf( "FS_SetMapIndex: Map in index %s\n", &fs_mapPakNames[mpi] );
-							}
-							mpi += strlen(mapNameIndex);
-							fs_mapPakNames[mpi] = '\0';
-							mpi++;
-							mapCount++;
-						} else if ( fs_debug->integer )
-							Com_Printf( "FS_SetMapIndex: Too many maps %s\n", key );
-					}
-					ki = 0;
-				} else if(isKey) {
-					key[ki] = buf[i];
-					ki++;
-				} else if (buf[i] == '"' && level == 2 && !isKey && !isKey2) {
-					isKey2 = qtrue;
-				} else if (buf[i] == '"' && level == 2 && isKey2 && !isKey) {
-					isKey2 = qfalse;
-					key2[ki] = '\0';
-					ki = 0;
-					if(!Q_stricmp(key2, "checksums") && Q_stristr(key, "pk3") != NULL) {
-						isChecksum = qfalse;
-						for ( search = fs_searchpaths ; search ; search = search->next ) {
-							if((search->pack && Q_stristr(search->pack->pakFilename, key))
-								|| (search->dir && Q_stristr(search->dir->path, key))) {
-								isChecksum = qtrue;
-								csi = 0;
-								if ( fs_debug->integer ) {
-									Com_Printf( "FS_SetMapIndex: Found checksums for %s\n", key );
-								}
-								break;
-							}
-						}
-					}
-				} else if (isKey2) {
-					key2[ki] = buf[i];
-					ki++;
-				} else if (buf[i] >= '0' && buf[i] <= '9' && isChecksum && !isKey && !isKey2) {
-					//search->altChecksums[csi] *= 10;
-					//search->altChecksums[csi] += buf[i] - '0';
-				} else if (buf[i] == ',' && isChecksum && !isKey && !isKey2) {
-					csi++; // increment alternative checksum index
-				} else if (buf[i] == ']' && isChecksum) {
-					isChecksum = qfalse;
-				}
-			}
-		} while(r > 0);
-		// set by server, don't interfere
-		fs_numMapPakNames = mapCount;
-		FS_FCloseFile( indexfile );
-	}
-}
-
-qboolean FS_InMapIndex(const char *filename) {
-	int			i, len, extpos, start, mpi = 0;
-	char mapname[MAX_QPATH];
-	len = strlen(filename);
-	Com_Printf( "FS_InMapIndex: Searching %i maps for %s\n", fs_numMapPakNames, filename );
-	if(len < 1) {
-		return qfalse;
-	}
-	extpos = strlen(strrchr(filename, '.'));
-	len -= extpos;
-	start = 0;
-	if(Q_stristr(filename, "maps/")) {
-		start = Q_stristr(filename, "maps/") - filename + 5;
-	}
-	if(len - start < 1) {
-		return qfalse;
-	}
-	Q_strncpyz(mapname, &filename[start], len - start + 1);
-	Q_strlwr(mapname);
-	for(i = 0; i < fs_numMapPakNames; i++) {
-		if(Q_stristr(&fs_mapPakNames[mpi], filename)) {
-			if ( fs_debug->integer ) {
-				Com_Printf( "FS_InMapIndex: Map in index %s\n", mapname );
-			}
-			return qtrue;
-		}
-		mpi += strlen(&fs_mapPakNames[mpi]) + 1;
-	}
-	if ( fs_debug->integer ) {
-		Com_Printf( "FS_InMapIndex: Map NOT in index %s\n", mapname );
-	}
-	return qfalse;
 }
