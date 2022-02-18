@@ -332,6 +332,36 @@ void longjmp( void *buf, int ret );
 __attribute__((import_module("env"), import_name("setjmp")))
 int setjmp( void *buf );
 
+__attribute__((import_module("env"), import_name("CL_Download")))
+int CL_Download( const char *cmd, const char *pakname, int autoDownload );
+
+
+__attribute__((import_module("FS"), import_name("Sys_FTell")))
+long Sys_FTell(FILE *f);
+
+__attribute__((import_module("FS"), import_name("Sys_FSeek")))
+int Sys_FSeek(FILE *f, long off, int whence);
+
+__attribute__((import_module("FS"), import_name("Sys_FClose")))
+int Sys_FClose(FILE *f);
+
+__attribute__((import_module("FS"), import_name("Sys_FWrite")))
+size_t Sys_FWrite(const void *restrict src, size_t size, size_t nmemb, FILE *restrict f);
+
+__attribute__((import_module("FS"), import_name("Sys_FFlush")))
+int Sys_FFlush(FILE *f);
+
+__attribute__((import_module("FS"), import_name("Sys_FRead")))
+size_t Sys_FRead(void *restrict destv, size_t size, size_t nmemb, FILE *restrict f);
+
+__attribute__((import_module("FS"), import_name("Sys_Remove")))
+size_t Sys_Remove(const char *);
+
+__attribute__((import_module("FS"), import_name("Sys_Rename")))
+size_t Sys_Rename(const char *, const char *);
+
+
+
 uint16_t ntohs(uint16_t n);
 int ED_vsprintf( char *buffer, const char *fmt, va_list ap );
 int BG_sprintf( char *buf, const char *format, ... ) ;
@@ -352,10 +382,19 @@ __attribute__((import_module("env"), import_name("asctime")));
 
 int fprintf(FILE *f, const char *fmt, ...)
 __attribute__((import_module("env"), import_name("fprintf")));
+
 int atoi(const char *)
 __attribute__((import_module("env"), import_name("atoi")));
+
+double strtod(const char *, char **)
+__attribute__((import_module("env"), import_name("strtof")));
+
+float strtof(const char *, char **)
+__attribute__((import_module("env"), import_name("strtof")));
+
 double atof(const char *)
 __attribute__((import_module("env"), import_name("atof")));
+
 long atol(const char *)
 __attribute__((import_module("env"), import_name("atoi")));
 FILE *popen(const char *cmd, const char *mode)
@@ -364,14 +403,14 @@ FILE *popen(const char *cmd, const char *mode)
 __attribute__((import_module("env"), import_name("popen")));
 
 void Sys_SockaddrToString(char *dest, int destlen, const void *input)
-__attribute__((import_module("env"), import_name("Sys_SockaddrToString")));
+__attribute__((import_module("NET"), import_name("Sys_SockaddrToString")));
 
 int Sys_StringToSockaddr(const char *s, void *sadr, int sadr_len)
-__attribute__((import_module("env"), import_name("Sys_StringToSockaddr")));
+__attribute__((import_module("NET"), import_name("Sys_StringToSockaddr")));
 #define Sys_StringToSockaddr(x, y, z, w) Sys_StringToSockaddr(x, y, z)
 
 void *gethostbyname (const char *)
-__attribute__((import_module("env"), import_name("gethostbyname")));
+__attribute__((import_module("NET"), import_name("gethostbyname")));
 
 void  Sys_Print(const char *s)
 __attribute__((import_module("env"), import_name("Sys_Print")));
@@ -384,9 +423,6 @@ struct sockaddr_in {
 	struct in_addr sin_addr;
 	uint8_t sin_zero[8];
 };
-
-int NET_OpenIP(void)
-__attribute__((import_module("env"), import_name("NET_OpenIP")));
 
 double cos(double)
 __attribute__((import_module("Math"), import_name("cos")));
@@ -1358,8 +1394,9 @@ int Info_RemoveKey( char *s, const char *key );
 // this is only here so the functions in q_shared.c and bg_*.c can link
 void Com_Outside_Error(int level, char *msg);
 #ifndef __WASM__
-__attribute__ ((noreturn, format (printf, 2, 3)))
+__attribute__ ((noreturn))
 #endif
+__attribute__ ((format (printf, 2, 3)))
 void	QDECL Com_Error( errorParm_t level, const char *fmt, ... ) ;
 #ifdef USE_PRINT_CONSOLE
 void	QDECL Com_PrintfReal( char *file, int line, const uint32_t source, const uint32_t flags, const char *msg, ... ) __attribute__ ((format (printf, 5, 6)));

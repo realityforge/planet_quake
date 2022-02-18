@@ -1213,17 +1213,17 @@ int Q_isalpha( int c )
 qboolean Q_isanumber( const char *s )
 {
 #ifdef Q3_VM
-    //FIXME: implement
-    return qfalse;
+	//FIXME: implement
+	return qfalse;
 #else
-    char *p;
+	char *p;
 
 	if( *s == '\0' )
         return qfalse;
 
 	strtod( s, &p );
 
-    return *p == '\0';
+	return *p == '\0';
 #endif
 }
 

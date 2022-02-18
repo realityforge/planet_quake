@@ -138,11 +138,28 @@ function SDL_ShowCursor() {
   Q3e.canvas.exitPointerLock();
 }
 
+function CL_Download() {
+  debugger;
+}
+
+function Sys_UnloadLibrary() {
+
+}
+
+function Sys_LoadLibrary() {
+  
+}
+
+function Sys_LoadFunction() {
+  
+}
+
 var Q3e = {
   DebugBreak: function () { debugger; },
   longjmp: function (id, code) { throw new Error('longjmp', id, code) },
   setjmp: function (id) { try {  } catch (e) { } },
   exportMappings: {},
+  CL_Download: CL_Download,
   SDL_GetDesktopDisplayMode: SDL_GetDesktopDisplayMode,
   SDL_GL_SetAttribute: SDL_GL_SetAttribute,
   SDL_CreateWindow: SDL_CreateWindow,
@@ -160,28 +177,17 @@ var Q3e = {
   SDL_ShowCursor: SDL_ShowCursor,
   Sys_RandomBytes: Sys_RandomBytes,
   Sys_Milliseconds: Sys_Milliseconds,
-  Sys_ListFiles: Sys_ListFiles,
   Sys_Offline: Sys_Offline,
   Sys_NET_MulticastLocal: Sys_NET_MulticastLocal,
   Sys_Exit: function () {
     // TODO: was Sys_Main_PlatformExit
   },
   Sys_Error: Sys_Error,
-  dlopen: function dlopen (base, gamedir, fname) {
-    // TODO: download and callback
-  },
-  dlerror: function dlerror() { 
-    let lastDlError = Q3e.lastDlError
-    Q3e.lastDlError = NULL
-    stringsToMemory(Q3e.shared + Q3e.sharedCounter, [lastDlError])
-    return Q3e.shared + Q3e.sharedCounter + 1
-  },
-  dlclose: function dlclose() {
-    // TODO: delete something
-  },
-  dlsym: function dlsym(handle, symbol) {
+  
+  Sys_UnloadLibrary: Sys_UnloadLibrary,
+  Sys_LoadLibrary: Sys_LoadLibrary,
+  Sys_LoadFunction: Sys_LoadFunction,
 
-  },
   fprintf: function (f, err, args) {
     // TODO: rewrite va_args in JS for convenience?
     console.log(addressToString(err), addressToString(Q3e.paged32[(args) >> 2]));
@@ -189,6 +195,17 @@ var Q3e = {
   srand: function srand() {}, // TODO: highly under-appreciated game dynamic
   atoi: function (i) { return parseInt(addressToString(i)) },
   atof: function (f) { return parseFloat(addressToString(f)) },
+  strtof: function (f, n) { 
+    let str = addressToString(f)
+    let result = parseFloat(str)
+    if(isNaN(result)) {
+      if(n) Q3e.paged32[(n) >> 2] = f
+      return 0
+    } else {
+      if(n) Q3e.paged32[(n) >> 2] = f + str.length
+      return result
+    }
+  },
   popen: function popen() {},
   assert: console.assert, // TODO: convert to variadic fmt for help messages
   asctime: function () {
@@ -197,6 +214,24 @@ var Q3e = {
     stringsToMemory(Q3e.shared + Q3e.sharedCounter, [new Date().toLocaleString()])
     return Q3e.shared + Q3e.sharedCounter + 1
   },
+  Sys_Print: Sys_Print,
+
+
+}
+
+// These can be assigned automatically? but only because they deal only with numbers and not strings
+//   TODO: What about converting between float, endian, and shorts?
+let maths = Object.getOwnPropertyNames(Math)
+for(let j = 0; j < maths.length; j++) {
+  Q3e[maths[j] + 'f'] = Math[maths[j]]
+  Q3e[maths[j]] = Math[maths[j]]
+}
+
+var GL = {
+
+}
+
+var NET = {
   Sys_SockaddrToString: Sys_SockaddrToString,
   Sys_StringToSockaddr: Sys_StringToSockaddr,
   NET_GetPacket: NET_GetPacket,
@@ -206,23 +241,24 @@ var Q3e = {
   Sys_StringToAdr: Sys_StringToAdr,
   Sys_SendPacket: Sys_SendPacket,
   Sys_IsLANAddress: Sys_IsLANAddress,
-  Sys_Print: Sys_Print,
 
 }
 
-// These can be assigned automatically? but only because they deal only with numbers and not strings
-//   TODO: What about converting between float, endian, and shorts?
-let maths = Object.getOwnPropertyNames(Math)
-for(let j = 0; j < maths.length; j++) {
-  Q3e[maths[j]] = Math[maths[j]]
+var FS = {
+  Sys_ListFiles: Sys_ListFiles,
+  Sys_FTell: Sys_FTell,
+  Sys_FSeek: Sys_FSeek,
+  Sys_FClose: Sys_FClose,
+  Sys_FWrite: Sys_FWrite,
+  Sys_FFlush: Sys_FFlush,
+  Sys_FRead: Sys_FRead,
+  Sys_FOpen: Sys_FOpen,
+  Sys_Remove: Sys_Remove,
+  Sys_Rename: Sys_Rename,
+
 }
 
-var GL = {
-
-}
-
-
-init(Q3e, GL)
+init(Q3e)
 
 function init(env) {
   fetch('./quake3e_slim.wasm').then(function(response) {
@@ -231,7 +267,8 @@ function init(env) {
     Q3e['memory'] = new WebAssembly['Memory']( {'initial': 2048} )
     Q3e['paged'] = new Uint8Array( Q3e['memory'].buffer )
     Q3e['paged32'] = new Uint32Array( Q3e['memory'].buffer )
-   return WebAssembly.instantiate(bytes, { env: env, GL: GL, Math: Math })
+    Q3e['paged32f'] = new Float32Array( Q3e['memory'].buffer )
+    return WebAssembly.instantiate(bytes, { env: env, GL: GL, Math: Math, FS: FS, NET: NET })
   }).then(function(program) {
     // share the game with window for hackers
     Q3e['exports'] = program.instance.exports
@@ -340,4 +377,40 @@ function Sys_Error(fmt, args) {
   if(len > 0)
     console.log('Sys_Error: ', addressToString(Q3e.shared + Q3e.sharedCounter))
   throw new Error(addressToString(fmt))
+}
+
+function Sys_FOpen() {
+
+}
+
+function Sys_FTell() {
+
+}
+
+function Sys_FSeek() {
+
+}
+
+function Sys_FClose() {
+
+}
+
+function Sys_FWrite() {
+
+}
+
+function Sys_FFlush() {
+
+}
+
+function Sys_FRead() {
+
+}
+
+function Sys_Remove() {
+
+}
+
+function Sys_Rename() {
+
 }

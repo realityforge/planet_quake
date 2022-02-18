@@ -281,7 +281,7 @@ static const char *Cvar_Validate( cvar_t *var, const char *value, qboolean warn 
 	if ( var->validator == CV_INTEGER || var->validator == CV_FLOAT ) {
 		if ( !Q_isanumber( value ) ) {
 			if ( warn )
-				Com_Printf( "WARNING: cvar '%s' must be numeric", var->name );
+				Com_Printf( "WARNING: cvar '%s' must be numeric: \"%s\"", var->name, value );
 			limit = var->resetString;
 		} else {
 			if ( var->validator == CV_INTEGER ) {

@@ -720,14 +720,14 @@ qboolean NET_IsLocalAddress( const netadr_t *adr )
 #ifdef __WASM__
 #ifdef USE_MULTIVM_SERVER
 int NET_GetPacket( netadr_t *net_from, msg_t *net_message, const fd_set *fdr, int igvm )
-__attribute__((import_module("env"), import_name("NET_GetPacket")));
+__attribute__((import_module("NET"), import_name("NET_GetPacket")));
 #else
 int NET_GetPacket( netadr_t *net_from, msg_t *net_message, const fd_set *fdr )
-__attribute__((import_module("env"), import_name("NET_GetPacket")));
+__attribute__((import_module("NET"), import_name("NET_GetPacket")));
 #endif
 
 void Sys_SendPacket( int length, const void *data, const netadr_t *to )
-__attribute__((import_module("env"), import_name("Sys_SendPacket")));
+__attribute__((import_module("NET"), import_name("Sys_SendPacket")));
 #endif
 
 
@@ -1711,7 +1711,12 @@ static void NET_GetLocalAddress( void ) {
 #endif
 
 
-#ifndef __WASM__
+#ifdef __WASM__
+
+int NET_OpenIP(void)
+__attribute__((import_module("NET"), import_name("NET_OpenIP")));
+
+#else
 /*
 ====================
 NET_OpenIP

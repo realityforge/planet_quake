@@ -576,7 +576,7 @@
 #include <windows.h>
 #include <tchar.h>
 #define HAVE_MMAP 1
-#define HAVE_MORECORE 1
+#define HAVE_MORECORE 0
 #define LACKS_UNISTD_H
 #define LACKS_SYS_PARAM_H
 #define LACKS_SYS_MMAN_H
@@ -596,6 +596,18 @@
 #endif /* _WIN32_WCE */
 #endif /*MMAP_CLEARS */
 #endif  /* WIN32 */
+
+#if defined(DARWIN) || defined(_DARWIN)
+/* Mac OSX docs advise not to use sbrk; it seems better to use mmap */
+#ifndef HAVE_MORECORE
+#define HAVE_MORECORE 0
+#define HAVE_MMAP 1
+/* OSX allocators provide 16 byte alignment */
+#ifndef MALLOC_ALIGNMENT
+#define MALLOC_ALIGNMENT ((size_t)16U)
+#endif
+#endif  /* HAVE_MORECORE */
+#endif  /* DARWIN */
 
 #ifndef LACKS_SYS_TYPES_H
 #include <sys/types.h>  /* For size_t */
@@ -674,7 +686,7 @@ defined(__i386__) || defined(__x86_64__))) ||                    \
 #define HAVE_MREMAP 1
 #define _GNU_SOURCE /* Turns on mremap() definition */
 #else   /* linux */
-#define HAVE_MREMAP 1
+#define HAVE_MREMAP 0
 #endif  /* linux */
 #endif  /* HAVE_MREMAP */
 #ifndef MALLOC_FAILURE_ACTION
@@ -730,13 +742,13 @@ defined(__i386__) || defined(__x86_64__))) ||                    \
 #define USE_DEV_RANDOM 0
 #endif  /* USE_DEV_RANDOM */
 #ifndef NO_MALLINFO
-#define NO_MALLINFO 1
+#define NO_MALLINFO 0
 #endif  /* NO_MALLINFO */
 #ifndef MALLINFO_FIELD_TYPE
 #define MALLINFO_FIELD_TYPE size_t
 #endif  /* MALLINFO_FIELD_TYPE */
 #ifndef NO_MALLOC_STATS
-#define NO_MALLOC_STATS 1
+#define NO_MALLOC_STATS 0
 #endif  /* NO_MALLOC_STATS */
 #ifndef NO_SEGMENT_TRAVERSAL
 #define NO_SEGMENT_TRAVERSAL 0

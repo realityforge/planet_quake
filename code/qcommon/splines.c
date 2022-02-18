@@ -686,16 +686,14 @@ static const vec3_t *getInterpolatedPosition(long t, idInterpolatedPosition *pos
 static const vec3_t *getSplinePosition(long t, idSplineList *spline);
 
 static const vec3_t *getPosition(long t, idCameraPosition *pos) {
-	const vec3_t *result;
+	const vec3_t *result = NULL;
 	if(pos->type == CP_FIXED) {
 		result = &((idFixedPosition *)(pos))->pos;
 	} else if (pos->type == CP_INTERPOLATED) {
 		result = getInterpolatedPosition(t, (idInterpolatedPosition *)pos);
-	}
-	else if (pos->type == CP_SPLINE) {
+	} else if (pos->type == CP_SPLINE) {
 		result = getSplinePosition(t, ((idSplinePosition *)pos)->target);
-	}
-	else {
+	} else {
 		Com_Error(ERR_DROP, "Unknown camera position\n");
 	}
 	return result;

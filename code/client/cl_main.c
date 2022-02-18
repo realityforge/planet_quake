@@ -3862,7 +3862,7 @@ static void CL_CheckUserinfo( void ) {
 	shaderCallback
 	filesCallback
 */
-char *Sys_UpdateNeeded( int tableId, char *ready, char *downloadNeeded);
+void Sys_UpdateNeeded( int tableId, char *ready, char *downloadNeeded);
 void FS_UpdateFiles(const char *filename, const char* tempname);
 
 static int secondTimer = 0;
@@ -3895,6 +3895,12 @@ void FS_CheckLazyUpdates( void ) {
 					CL_Download( "lazydl", downloadNeeded, qfalse );
 				}
 			}
+#else
+#ifdef __WASM__
+			if(!clc.downloadTempName[0]) {
+				CL_Download( "lazydl", downloadNeeded, qfalse );
+			}
+#endif
 #endif
 		} else {
 			Sys_UpdateNeeded(j, ready, NULL);
@@ -6765,6 +6771,16 @@ static void CL_Download_f( void ) {
 		Com_Printf( "Usage: %s <mapname>\n", Cmd_Argv( 0 ) );
 		return;
 	}
+
+#ifdef __WASM__
+	// TODO: find out if web can cancel a download stream from JS, probably
+	//if ( !strcmp( Cmd_Argv(1), "-" ) )
+	//{
+	//	Com_DL_Cleanup( &download );
+	//	return;
+	//}
+	CL_Download( Cmd_Argv( 0 ), Cmd_Argv( 1 ), qfalse );
+#endif
 
 #ifdef USE_CURL
 	if ( !strcmp( Cmd_Argv(1), "-" ) )

@@ -4,9 +4,16 @@ cos
 srand
 pow
 acosf
+powf
 SDL_StopTextInput
 NET_GetPacket
 Sys_IsLANAddress
 Sys_SendPacket
 Sys_StringToAdr
 NET_OpenIP
+Sys_FTell
+Sys_FSeek
+Sys_FClose
+Sys_FWrite
+Sys_FFlush
+Sys_FRead

@@ -13,6 +13,18 @@
 #include "../qcommon/qcommon.h"
 #include "unzip.h"
 
+
+#ifdef __WASM__
+#define ftell Sys_FTell
+#define fseek Sys_FSeek
+#define fclose Sys_FClose
+#define fwrite Sys_FWrite
+#define fflush Sys_FFlush
+#define fread Sys_FRead
+#define rename Sys_Rename
+#define remove Sys_Remove
+#endif
+
 /* unzip.h -- IO for uncompress .zip files using zlib 
    Version 0.15 beta, Mar 19th, 1998,
 

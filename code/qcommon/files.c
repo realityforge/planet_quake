@@ -460,8 +460,20 @@ static void FS_CheckIdPaks( void );
 void FS_Reload( void );
 
 
+#ifdef __WASM__
+#define ftell Sys_FTell
+#define fseek Sys_FSeek
+#define fclose Sys_FClose
+#define fwrite Sys_FWrite
+#define fflush Sys_FFlush
+#define fread Sys_FRead
+#define rename Sys_Rename
+#define remove Sys_Remove
+#endif
+
 
 #ifdef USE_LAZY_LOAD
+
 #define PK3_HASH_SIZE 512
 #define FS_HashFileName Com_GenerateHashValue
 static void FS_AddGameDirectory( const char *path, const char *dir, int igvm );
@@ -794,15 +806,16 @@ void Sys_FileReady(const char *filename, const char* tempname) {
 	qboolean found = qfalse;
 
 	// skip leading slashes
-	while ( *filename == '/' || *filename == '\\' )
+	while ( *filename == '/' || *filename == '\\' ) {
 		filename++;
+	}
 
 	// mark the correct file as ready
 	//s = strchr( filename, '/' );
 	//if(s) {
 	//	Com_sprintf(localName, sizeof(localName), "%s/%s", FS_GetCurrentGameDir(), s + 1);
 	//} else {
-		Com_sprintf(localName, sizeof(localName), "%s/%s", FS_GetCurrentGameDir(), filename);
+	Com_sprintf(localName, sizeof(localName), "%s/%s", FS_GetCurrentGameDir(), filename);
 	//}
 	hash = FS_HashPK3( localName );
 //printf("downloaded: %s -> %s\n", localName, filename);
@@ -1074,8 +1087,13 @@ static FILE	*FS_FileForHandle( fileHandle_t f ) {
 void FS_ForceFlush( fileHandle_t f ) {
 	FILE *file;
 
+#ifdef __WASM__
+	file = FS_FileForHandle(f);
+	fflush(file); // always saves to IDB asynchronously
+#else
 	file = FS_FileForHandle(f);
 	setvbuf( file, NULL, _IONBF, 0 );
+#endif
 }
 
 

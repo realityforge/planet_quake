@@ -36,30 +36,14 @@ MUSL_LOBJ        := string/stpcpy.o  string/memset.o  string/memcpy.o    \
                     string/strstr.o  string/strrchr.o string/strnlen.o   \
                     string/strcspn.o string/strpbrk.o string/strdup.o    \
                     \
-                    internal/shgetc.o    internal/syscall_ret.o internal/intscan.o \
-                    internal/floatscan.o internal/procfdname.o internal/libc.o \
+                        internal/syscall_ret.o \
+                     internal/procfdname.o internal/libc.o \
                     \
                      \
-                    stdio/fwrite.o    stdio/sscanf.o    \
-                    stdio/vsscanf.o  stdio/vfscanf.o    \
-                    stdio/setvbuf.o   stdio/fread.o     \
-                    stdio/ftell.o    stdio/fflush.o    stdio/fopen.o     \
-                    stdio/fputs.o    stdio/stdout.o    stdio/stderr.o    \
-                    stdio/fseek.o    stdio/fclose.o    stdio/remove.o    \
-                    stdio/rename.o   stdio/pclose.o      \
-                    stdio/ofl.o      stdio/fgets.o     stdio/getc.o      \
-                    stdio/ofl_add.o   stdio/fputwc.o    \
-                    stdio/__lockfile.o    stdio/__fclose_ca.o      \
-                    stdio/__fdopen.o      stdio/__stdout_write.o   \
-                    stdio/__stdio_close.o stdio/__stdio_seek.o     \
-                    stdio/__fopen_rb_ca.o stdio/__fmodeflags.o     \
-                    stdio/__stdio_write.o stdio/__toread.o         \
-                    stdio/__stdio_read.o  stdio/__towrite.o        \
-                    stdio/__stdio_exit.o  stdio/__uflow.o          \
                     \
                     \
-                    stdlib/strtod.o \
-                    stdlib/qsort.o  stdlib/strtol.o \
+                     \
+                    stdlib/qsort.o  \
                     \
                     ctype/tolower.o ctype/isalnum.o  ctype/isspace.o \
                     ctype/isdigit.o ctype/iswdigit.o ctype/isupper.o \
@@ -72,7 +56,7 @@ MUSL_LOBJ        := string/stpcpy.o  string/memset.o  string/memcpy.o    \
                     math/__fpclassify.o math/__fpclassifyf.o math/__fpclassifyl.o \
                     math/frexpl.o       math/scalbn.o        math/copysignl.o \
 										math/scalbnl.o      math/fmodl.o         math/fabsl.o \
-                    math/powf.o         math/__math_oflowf.o math/__math_uflowf.o \
+                             math/__math_oflowf.o math/__math_uflowf.o \
                     math/__math_invalidf.o math/__math_xflowf.o \
                     \
                     unistd/getpid.o unistd/getcwd.o unistd/readlink.o \

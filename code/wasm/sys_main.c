@@ -148,72 +148,8 @@ void Sys_SendKeyEvents( void )
 }
 
 
-void *Sys_LoadDll( const char *name, dllSyscall_t *entryPoint, dllSyscall_t systemcalls )
-{
-	void		*libHandle;
-	dllEntry_t	dllEntry;
-	char		fname[MAX_OSPATH];
-	const char	*basepath;
-	const char	*homepath;
-	const char	*gamedir;
-	const char	*err = NULL;
-
-	assert( name ); // let's have some paranoia
-
-	snprintf( fname, sizeof( fname ), "%s" ARCH_STRING DLL_EXT, name );
-
-	// TODO: use fs_searchpaths from files.c
-	basepath = Cvar_VariableString( "fs_basepath" );
-	homepath = Cvar_VariableString( "fs_homepath" );
-	gamedir = Cvar_VariableString( "fs_game" );
-	if ( !*gamedir ) {
-		gamedir = Cvar_VariableString( "fs_basegame" );
-	}
-
-#ifdef DEBUG
-	libHandle = try_dlopen( Sys_Pwd(), gamedir, fname );
-#endif
-	libHandle = NULL;
-
-	if ( !libHandle && homepath && homepath[0] )
-		libHandle = try_dlopen( homepath, gamedir, fname );
-
-	if( !libHandle && basepath && basepath[0] )
-		libHandle = try_dlopen( basepath, gamedir, fname );
-
-	if ( !libHandle ) 
-	{
-		Com_Printf ( "Sys_LoadDll(%s) failed dlopen() completely!\n", name );
-		return NULL;
-	}
-
-	dllEntry = dlsym( libHandle, "dllEntry" );
-	*entryPoint = dlsym( libHandle, "vmMain" );
-
-	if ( !*entryPoint || !dllEntry )
-	{
-		err = dlerror();
-#ifndef NDEBUG // bk001206 - in debug abort on failure
-		Com_Error ( ERR_FATAL, "Sys_LoadDll(%s) failed dlsym(vmMain):\n\"%s\" !\n", name, err );
-#else
-		Com_Printf ( "Sys_LoadDll(%s) failed dlsym(vmMain):\n\"%s\" !\n", name, err );
-#endif
-		dlclose( libHandle );
-		err = dlerror();
-		if ( err != NULL ) 
-		{
-			Com_Printf( "Sys_LoadDll(%s) failed dlcose:\n\"%s\"\n", name, err );
-		}
-		return NULL;
-	}
-
-	Com_Printf( "Sys_LoadDll(%s) found **vmMain** at %p\n", name, *entryPoint );
-	dllEntry( systemcalls );
-	Com_Printf( "Sys_LoadDll(%s) succeeded!\n", name );
-
-	return libHandle;
-}
-
+#undef stdout
+#define stdout 0
 
 void Sys_PrintBinVersion( const char* name )
 {

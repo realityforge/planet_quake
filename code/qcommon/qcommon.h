@@ -324,7 +324,7 @@ void		NET_LeaveMulticast6( void );
 qboolean	NET_Sleep( int timeout );
 #else
 int NET_Sleep(int timeout)
-__attribute__((import_module("env"), import_name("NET_Sleep")));
+__attribute__((import_module("NET"), import_name("NET_Sleep")));
 #endif
 
 #define	MAX_PACKETLEN	1400	// max size of a network packet
@@ -1158,8 +1158,9 @@ void 		QDECL Com_Printf( const char *fmt, ... ) __attribute__ ((format (printf, 
 void 		QDECL Com_DPrintf( const char *fmt, ... ) __attribute__ ((format (printf, 1, 2)));
 #endif
 #ifndef __WASM__
-__attribute__ ((noreturn, format (printf, 2, 3)))
+__attribute__ ((noreturn))
 #endif
+__attribute__ ((format (printf, 2, 3)))
 void 		QDECL Com_Error( errorParm_t code, const char *fmt, ... );
 void 		Com_Quit_f( void );
 void		Com_GameRestart( int checksumFeed, qboolean clientRestart );
@@ -1512,8 +1513,9 @@ void	Sys_Sleep( int msec );
 char	*Sys_ConsoleInput( void );
 
 #ifndef __WASM__
-__attribute__ ((noreturn, format (printf, 1, 2)))
+__attribute__ ((noreturn))
 #endif
+__attribute__ ((format (printf, 1, 2)))
 void	QDECL Sys_Error( const char *error, ...);
 
 #ifndef __WASM__
@@ -1564,19 +1566,25 @@ void	Sys_DisplaySystemConsole( qboolean show );
 void	Sys_ShowConsole( int level, qboolean quitOnClose );
 void	Sys_SetErrorText( const char *text );
 #ifdef __WASM__
-__attribute__((import_module("env"), import_name("Sys_SendPacket")))
+__attribute__((import_module("NET"), import_name("Sys_SendPacket")))
 #endif
 void	Sys_SendPacket( int length, const void *data, const netadr_t *to );
 
+#ifdef __WASM__
+__attribute__((import_module("NET"), import_name("Sys_StringToAdr")))
+#endif
 qboolean	Sys_StringToAdr( const char *s, netadr_t *a, netadrtype_t family );
 //Does NOT parse port numbers, only base addresses.
 
+#ifdef __WASM__
+__attribute__((import_module("NET"), import_name("Sys_IsLANAddress")))
+#endif
 qboolean	Sys_IsLANAddress(const netadr_t *adr);
 void		Sys_ShowIP(void);
 
 void	Sys_Mkdir( const char *path );
 #ifdef __WASM__
-__attribute__((import_module("env"), import_name("Sys_ListFiles")))
+__attribute__((import_module("FS"), import_name("Sys_FOpen")))
 #endif
 FILE	*Sys_FOpen( const char *ospath, const char *mode );
 qboolean Sys_ResetReadOnlyAttribute( const char *ospath );
@@ -1587,7 +1595,7 @@ const char *Sys_DefaultHomePath( void );
 const char *Sys_SteamPath( void );
 
 #ifdef __WASM__
-__attribute__((import_module("env"), import_name("Sys_ListFiles")))
+__attribute__((import_module("FS"), import_name("Sys_ListFiles")))
 #endif
 char **Sys_ListFiles( const char *directory, const char *extension, const char *filter, int *numfiles, qboolean wantsubs );
 void Sys_FreeFileList( char **list );
@@ -1602,19 +1610,19 @@ qboolean Sys_LowPhysicalMemory( void );
 int Sys_MonkeyShouldBeSpanked( void );
 
 #ifdef __WASM__
-__attribute__((import_module("env"), import_name("Sys_ListFiles")))
+__attribute__((import_module("env"), import_name("Sys_LoadLibrary")))
 #endif
 void *Sys_LoadLibrary( const char *name );
 #ifdef __WASM__
-__attribute__((import_module("env"), import_name("Sys_ListFiles")))
+__attribute__((import_module("env"), import_name("Sys_LoadFunction")))
 #endif
 void *Sys_LoadFunction( void *handle, const char *name );
 #ifdef __WASM__
-__attribute__((import_module("env"), import_name("Sys_ListFiles")))
+__attribute__((import_module("env"), import_name("Sys_LoadFunctionErrors")))
 #endif
 int   Sys_LoadFunctionErrors( void );
 #ifdef __WASM__
-__attribute__((import_module("env"), import_name("Sys_ListFiles")))
+__attribute__((import_module("env"), import_name("Sys_UnloadLibrary")))
 #endif
 void  Sys_UnloadLibrary( void *handle );
 
