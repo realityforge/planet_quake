@@ -476,7 +476,7 @@ typedef struct downloadLazy_s {
 	char *loadingName; // this is the name of the shader to update
 	time_t lastRequested;
 	qboolean ready; // ready for updating
-	qboolean downloaded; // already processes
+	qboolean downloaded; // already processed
   struct downloadLazy_s *next;
 } downloadLazy_t;
 
@@ -567,7 +567,6 @@ static void Sys_FileNeeded(const char *filename) {
   if(filename[0]) {
     hash = FS_HashPK3( filename );
 
-printf("file needed! %s %s %i\n", filename, loading, hash);
     download = downloadTable[hash];
     while ( download )
     {
@@ -593,10 +592,11 @@ printf("file needed! %s %s %i\n", filename, loading, hash);
       download->next = downloadTable[hash];
 			download->ready = qfalse;
       downloadTable[hash] = download;
-			download->lastRequested = 0; // request immediately
-    } else {
-			download->lastRequested = Sys_Milliseconds(); // add 1500 millis to whatever requested it a second time
-
+			download->lastRequested = 0; // request immediately, updated after first request
+ printf("file needed! %s %s %i\n", filename, loading, hash);
+   } else {
+			// add 1500 millis to whatever requested it a second time
+			download->lastRequested = Sys_Milliseconds(); 
 		}
   }
 }
@@ -747,8 +747,7 @@ void MakeDirectoryBuffer(char *paths, int count, int length, const char *localna
 		curFile->name[strlen(s)] = '\0';
 		FS_ConvertFilename( curFile->name );
 		hash = FS_HashFileName( curFile->name, hashSize );
-		
-		//printf("adding %i, %s\n", hash, curFile->name);
+		//printf("adding %li, %s\n", hash, curFile->name);
 
 		// store the file position in the zip
 		// TODO: update this when Accept-Ranges is implemented
@@ -761,6 +760,8 @@ void MakeDirectoryBuffer(char *paths, int count, int length, const char *localna
 			|| Q_stristr(currentPath, "/vm"))
 		) {
 			// TODO: fix this, only works if directory listing allows slashes at the end?
+			// TODO: right thing to do would be test the content-type and duck out early 
+			//   on big files for anything that doesn't have a . dot in the name.
 			Sys_FileNeeded(va("%s/", localName));
 		}
 
@@ -796,6 +797,7 @@ void Sys_FileReady(const char *filename, const char* tempname) {
 		Com_sprintf(localName, sizeof(localName), "%s/%s", FS_GetCurrentGameDir(), filename);
 	//}
 	hash = FS_HashPK3( localName );
+//printf("downloaded: %s -> %s\n", localName, filename);
 
 	// mark the file as downloaded
 	for(int i = 0; i < 4; i++) {
@@ -803,15 +805,22 @@ void Sys_FileReady(const char *filename, const char* tempname) {
     while ( download )
     {
       if ( !Q_stricmp( download->downloadName, localName ) ) {
-				download->ready = qtrue;
-				strcpy(&download->loadingName[MAX_QPATH], tempname);
+				// file is ready for processing!
+				if(tempname) {
+					download->ready = qtrue;
+					strcpy(&download->loadingName[MAX_QPATH], tempname);
+				} else {
+					// download failed!
+					download->ready = qtrue;
+					download->downloaded = qtrue;
+				}
 				found = qtrue;
 				break;
 			} else {
 				download = download->next;
 			}
 		}
-		if(found) break;
+		//if(found) break;
 	}
 
 	if(!found) {
@@ -826,6 +835,7 @@ void FS_UpdateFiles(const char *filename, const char *tempname) {
 
 	// try to reload UI with current game if needed
 	if(Q_stristr(filename, "ui.qvm")) {
+    Cvar_Set("com_skipLoadUI", "0");
 		CL_StartHunkUsers();
 	}
 
@@ -837,7 +847,7 @@ void FS_UpdateFiles(const char *filename, const char *tempname) {
 		// TODO: try to restart UI VM
 		// TODO: check on networking, shaderlist, anything else we skipped, etc again
 		com_fullyInitialized = qtrue;
-		CL_StartHunkUsers();
+		//CL_StartHunkUsers();  // wait to start until index arrives
 	} else 
 	
 	// scan index files for HTTP directories and add links to q3cache.dat
@@ -871,9 +881,88 @@ void FS_UpdateFiles(const char *filename, const char *tempname) {
 		fclose(indexFile);
 		FS_HomeRemove( s );
 		// we should have a directory index by now to check for VMs and files we need
+    Cvar_Set("com_skipLoadUI", "0");
 		CL_StartHunkUsers();
 	}
 }
+
+
+fileInPack_t *FindFileInIndex(long hash, const char *filename, fileInPack_t* *hashTable) {
+	fileInPack_t	*pakFile;
+	if(hashTable[hash]) {
+		pakFile = hashTable[hash];
+		do {
+			//printf("comparing: %li,  %s != %s\n", hash, pakFile->name, filename);
+			if ( !FS_FilenameCompare( pakFile->name, filename ) ) {
+				return pakFile;
+			}
+			pakFile = pakFile->next;
+		} while ( pakFile != NULL );
+	}
+	return NULL;
+}
+
+
+void FS_CheckIndex(const char *filename) {
+	searchpath_t	*search;
+	char firstDirectory[MAX_QPATH];
+	char lastDirectory[MAX_QPATH];
+	//char localName[MAX_OSPATH];
+	long			hash;
+	const char *s;
+	qboolean isInIndex = qfalse;
+
+//printf("searching index for %s\n", filename);
+
+	for ( search = fs_searchpaths ; search ; search = search->next ) {
+		if(search->dir && search->dir->hashTable) {
+			// check the current index for the requested file
+			hash = FS_HashFileName(filename, search->dir->hashSize);
+			if(FindFileInIndex(hash, filename, search->dir->hashTable)) {
+				isInIndex = qtrue;
+			}
+
+			if(isInIndex) {
+				Sys_FileNeeded(va("%s/%s", FS_GetCurrentGameDir(), filename));
+				break;
+			}
+
+			// search the index again but for the first folder name, if it exists
+			//   then make the needed request for the parent directory and the file
+			if(!(s = strchr(filename, '/'))) {
+				continue;
+			}
+
+			firstDirectory[0] = '\0';
+			lastDirectory[0] = '\0';
+
+			Q_strncpyz(firstDirectory, filename, (s-filename)+1);
+			firstDirectory[(s-filename)] = '\0';
+			Q_strncpyz(lastDirectory, s+1, sizeof(lastDirectory));
+			lastDirectory[strlen(s+1)] = '\0';
+			s = strrchr(lastDirectory, '/');
+			if(s) {
+				lastDirectory[s-lastDirectory] = '\0';
+			} else {
+				lastDirectory[0] = '\0';
+			}
+
+			//localName[0] = '\0';
+			//Com_sprintf(localName, sizeof(localName), "%s/%s/", FS_GetCurrentGameDir(), firstDirectory);
+			hash = FS_HashFileName(firstDirectory, search->dir->hashSize);
+			if(FindFileInIndex(hash, firstDirectory, search->dir->hashTable)) {
+				Sys_FileNeeded(va("%s/%s", FS_GetCurrentGameDir(), filename));
+				Sys_FileNeeded(va("%s/%s/", FS_GetCurrentGameDir(), firstDirectory));
+				if(lastDirectory[0]) {
+					Sys_FileNeeded(va("%s/%s/", FS_GetCurrentGameDir(), lastDirectory));
+				}
+			}
+		}
+
+	}
+
+}
+
 
 #endif
 
@@ -2105,9 +2194,6 @@ int FS_FOpenFileRead( const char *filename, fileHandle_t *file, qboolean uniqueF
 	FILE			*temp;
 	int				length;
 	fileHandleData_t *f;
-#ifdef USE_LAZY_LOAD
-	qboolean isInIndex = qfalse;
-#endif
 
 #ifdef USE_ASYNCHRONOUS
   if ( !com_fullyInitialized || !fs_searchpaths )
@@ -2218,24 +2304,6 @@ int FS_FOpenFileRead( const char *filename, fileHandle_t *file, qboolean uniqueF
 
 			temp = Sys_FOpen( netpath, "rb" );
 			if ( temp == NULL ) {
-#ifdef USE_LAZY_LOAD
-				if(search->dir->hashTable) {
-					hash = fullHash & (search->dir->hashSize-1);
-					// TODO: check path of first directory and see if we can propagate 
-					//   on the server with more FS_FileNeeded(dir/dir/)
-					if(search->dir->hashTable[hash]) {
-						pakFile = search->dir->hashTable[hash];
-						do {
-							if ( !FS_FilenameCompare( pakFile->name, filename ) ) {
-								isInIndex = qtrue;
-								break;
-							}
-							pakFile = pakFile->next;
-						} while ( pakFile != NULL );
-					}
-				}
-
-#endif
 				continue;
 			}
 
@@ -2256,9 +2324,7 @@ int FS_FOpenFileRead( const char *filename, fileHandle_t *file, qboolean uniqueF
 		}
 	}
 #ifdef USE_LAZY_LOAD
-	if(isInIndex) {
-		Sys_FileNeeded(va("%s/%s", FS_GetCurrentGameDir(), filename));
-	}
+	FS_CheckIndex(filename);
 #endif
 
 #ifdef FS_MISSING

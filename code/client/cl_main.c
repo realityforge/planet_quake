@@ -4333,9 +4333,10 @@ void CL_StartHunkUsers( void ) {
 
 	if ( re.BeginRegistration && !cls.uiStarted
 #ifdef BUILD_GAME_STATIC
-    && !Cvar_VariableIntegerValue("skipLoadUI")
+    && !Cvar_VariableIntegerValue("com_skipLoadUI")
 #endif
 #ifdef USE_ASYNCHRONOUS
+    && !Cvar_VariableIntegerValue("com_skipLoadUI")
 		&& FS_Initialized()
 #endif
   ) {
@@ -4344,13 +4345,14 @@ void CL_StartHunkUsers( void ) {
 	}
 
 #ifdef USE_ASYNCHRONOUS
+
 	// init with console down like Quake 1!
 	if(!uivm && !cls.uiStarted && cls.state == CA_DISCONNECTED) {
-		Key_SetCatcher( Key_GetCatcher( ) | KEYCATCH_CONSOLE );
+		//Key_SetCatcher( Key_GetCatcher( ) | KEYCATCH_CONSOLE );
 	}
 
 	// not connecting?
-	if(com_earlyConnect[0] != '\0') {
+	if(cls.state == CA_DISCONNECTED && com_earlyConnect[0] != '\0') {
 		Cbuf_ExecuteText( EXEC_INSERT, va("connect %s\n", com_earlyConnect) );
 	} else {
 		Com_Printf( S_COLOR_RED "WARNING: Using asynchronous build without an early \\connect <address> command.\n");

@@ -828,6 +828,18 @@ qboolean Com_EarlyParseCmdLine( char *commandLine, char *con_title, int title_si
 			Q_strncpyz( rconPassword2, Cmd_Argv( 2 ), sizeof( rconPassword2 ) );
 			continue;
 		}
+
+#ifdef USE_ASYNCHRONOUS
+		com_skipLoadUI = qtrue; // always start with console, since it reports update errors
+    if( !strcmp(Cmd_Argv(0), "connect") ) {
+      com_consoleLines[i][0] = '\0';
+      Q_strncpyz( com_earlyConnect, Cmd_Argv( 1 ), sizeof( com_earlyConnect ) );
+			continue;
+    } else {
+      Com_Printf("WARNING: Using asynchronous build without an early \\connect <address> command.\n");
+    }
+#endif
+
 #ifndef BUILD_GAME_STATIC
     if( !strcmp(Cmd_Argv(0), "map")
       || !strcmp(Cmd_Argv(0), "devmap")
@@ -837,15 +849,7 @@ qboolean Com_EarlyParseCmdLine( char *commandLine, char *con_title, int title_si
       continue;
     }
 #endif
-#ifdef USE_ASYNCHRONOUS
-		//com_skipLoadUI = qtrue; // always start with console, since it reports update errors
-    if( !strcmp(Cmd_Argv(0), "connect") ) {
-      com_consoleLines[i][0] = '\0';
-      Q_strncpyz( com_earlyConnect, Cmd_Argv( 1 ), sizeof( com_earlyConnect ) );
-    } else {
-      Com_Printf("WARNING: Using asynchronous build without an early \\connect <address> command.\n");
-    }
-#endif
+
 	}
 
 	return (flags == 3) ? qtrue : qfalse ;
@@ -4270,8 +4274,13 @@ void Com_Init( char *commandLine ) {
 		}
 #endif    
   } else if (com_skipLoadUI) {
-    Cvar_Set("skipLoadUI", "1");
+    Cvar_Set("com_skipLoadUI", "1");
   }
+#ifdef USE_ASYNCHRONOUS
+	// always skip because async file-system triggers it to start after
+	//   index is recevied
+	Cvar_Set("com_skipLoadUI", "1"); 
+#endif
 
 #ifndef DEDICATED
 	CL_StartHunkUsers();

@@ -720,6 +720,9 @@ qboolean Com_DL_Perform( download_t *dl )
     		Com_Printf( S_COLOR_GREEN "%s downloaded\n", name );
         CL_AddReliableCommand( "donedl", qfalse ); // get new gamestate info from server
       } else {
+#ifdef USE_ASYNCHRONOUS
+				if(cls.state != CA_DISCONNECTED)
+#endif
         CL_NextDownload();
       }
 		} 
@@ -738,19 +741,22 @@ qboolean Com_DL_Perform( download_t *dl )
 		Com_Printf( S_COLOR_RED "Download Error: %s Code: %ld\n",
 			dl->func.easy_strerror( msg->data.result ), code );
 		strcpy( name, dl->TempName );
+#ifdef USE_ASYNCHRONOUS
+		Sys_FileReady(dl->Name, NULL);
+#endif
 		Com_DL_Cleanup( dl );
 		FS_Remove( name );
+#ifndef USE_ASYNCHRONOUS
 		if ( cls.state == CA_CONNECTED )
 		{
-#ifndef USE_ASYNCHRONOUS
 			// TODO: try again somewhere else?
       Com_Error(ERR_DROP, "Download Error: %s Code: %ld URL: %s",
   			qcurl_easy_strerror(msg->data.result),
   			code, clc.downloadURL);
-#endif
 		}
+#endif
 #ifdef USE_ASYNCHRONOUS
-		CL_NextDownload();
+		return qfalse; // was expecting ERR_DROP not to return
 #endif
 	}
 
