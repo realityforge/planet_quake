@@ -687,14 +687,14 @@ qboolean Com_DL_Perform( download_t *dl )
 				n = FS_GetZipChecksum( va("%s%c%s.pk3", dl->gameDir, PATH_SEP, dl->TempName) );
 				Com_sprintf( clc.downloadName, sizeof( clc.downloadName ), "%s/%s", dl->gameDir, dl->Name );
 				FS_SV_Rename( dl->TempName, clc.downloadName );
-				Sys_FileReady(dl->Name, clc.downloadName);
+				Sys_FileReady( dl->Name, clc.downloadName );
 			}
 		} else
 #endif
 		if ( !FS_SV_FileExists( name ) )
 		{
       // copy name again because it is checked in CL_NextDownload
-      Q_strncpyz(clc.downloadName, name, sizeof(clc.downloadName));
+      Q_strncpyz( clc.downloadName, name, sizeof(clc.downloadName) );
 			FS_SV_Rename( dl->TempName, name );
 		}
 		else
@@ -738,8 +738,11 @@ qboolean Com_DL_Perform( download_t *dl )
 	else
 	{
 		dl->func.easy_getinfo( msg->easy_handle, CURLINFO_RESPONSE_CODE, &code );
-		Com_Printf( S_COLOR_RED "Download Error: %s Code: %ld\n",
-			dl->func.easy_strerror( msg->data.result ), code );
+#ifndef USE_ASYNCHRONOUS
+		Com_Printf( S_COLOR_RED "Download Error: %s Code: %ld URL: %s/%s\n",
+			dl->func.easy_strerror( msg->data.result ), 
+			code, clc.downloadURL, dl->Name );
+#endif
 		strcpy( name, dl->TempName );
 #ifdef USE_ASYNCHRONOUS
 		Sys_FileReady(dl->Name, NULL);

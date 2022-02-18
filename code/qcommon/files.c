@@ -545,24 +545,32 @@ static void Sys_FileNeeded(const char *filename) {
 	while ( *filename == '/' || *filename == '\\' )
 		filename++;
 
-	// TODO: check index need to download
-  loading = Cvar_VariableString("r_loadingShader");
-	if(!loading[0]) {
-		loading = Cvar_VariableString("snd_loadingSound");
+	// check index need to download
+	if(filename[strlen(filename)-1] == '/') {
+		// path ends with slash, definitely use files table
+		downloadTable = filesCallback;
+		loading = filename;
+	} else {
+		loading = Cvar_VariableString("r_loadingShader");
 		if(!loading[0]) {
-			loading = Cvar_VariableString("r_loadingModel");
-			if(loading[0]) {
-				downloadTable = modelCallback;
+			loading = Cvar_VariableString("snd_loadingSound");
+			if(!loading[0]) {
+				loading = Cvar_VariableString("r_loadingModel");
+				if(loading[0]) {
+					downloadTable = modelCallback;
+				} else {
+					// special files for calling just below
+					downloadTable = filesCallback;
+					loading = filename;
+				}
 			} else {
-				downloadTable = filesCallback; // special files for calling just below
-				loading = filename;
+				downloadTable = soundCallback;
 			}
 		} else {
-      downloadTable = soundCallback;
+			downloadTable = shaderCallback;
 		}
-	} else {
-    downloadTable = shaderCallback;
 	}
+  
 
   if(filename[0]) {
     hash = FS_HashPK3( filename );
@@ -593,7 +601,7 @@ static void Sys_FileNeeded(const char *filename) {
 			download->ready = qfalse;
       downloadTable[hash] = download;
 			download->lastRequested = 0; // request immediately, updated after first request
- printf("file needed! %s %s %i\n", filename, loading, hash);
+//printf("file needed! %s %s %i\n", filename, loading, hash);
    } else {
 			// add 1500 millis to whatever requested it a second time
 			download->lastRequested = Sys_Milliseconds(); 
@@ -832,6 +840,8 @@ void Sys_FileReady(const char *filename, const char* tempname) {
 }
 
 void FS_UpdateFiles(const char *filename, const char *tempname) {
+
+//printf("updating files: %s\n", filename);
 
 	// try to reload UI with current game if needed
 	if(Q_stristr(filename, "ui.qvm")) {
