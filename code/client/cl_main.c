@@ -4509,10 +4509,17 @@ static void CL_InitRef( void ) {
 		Cvar_ForceReset( "cl_renderer" );
 		Com_sprintf( dllName, sizeof( dllName ), XSTRING(RENDERER_PREFIX) "_%s_" REND_ARCH_STRING DLL_EXT, cl_renderer->string );
 		rendererLib = FS_LoadLibrary( dllName );
-	if ( !rendererLib )
-	{
-		Com_Error( ERR_FATAL, "Failed to load renderer %s", dllName );
-	}
+		if ( !rendererLib )
+		{
+			// WASM not USE_ASYNCHRONOUS because we don't have permittion to execute a DLL outside of
+			//   the initial working directory and fs_basepath (fs_homepath is restricted in that way)
+#ifndef __WASM__
+			Com_Error( ERR_FATAL, "Failed to load renderer %s", dllName );
+#else
+			// just keep running frame and do nothing if it hasn't arrived yet
+			return;
+#endif
+		}
 	}
 
 	GetRefAPI = Sys_LoadFunction( rendererLib, "GetRefAPI" );

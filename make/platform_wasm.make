@@ -2,7 +2,7 @@ HAVE_VM_COMPILED := false
 BUILD_CLIENT     := 1
 BUILD_SERVER     := 0
 BUILD_STANDALONE := 1
-USE_RENDERER_DLOPEN := 1
+USE_RENDERER_DLOPEN := 0
 USE_SYSTEM_JPEG  := 0
 USE_SYSTEM_LIBC  := 0
 USE_ABS_MOUSE    := 1
@@ -23,10 +23,10 @@ BINEXT           := .wasm
 
 SHLIBEXT         := wasm
 SHLIBCFLAGS      := 
-SHLIBLDFLAGS     := --import-memory --error-limit=200 --export-dynamic \
-                    --no-entry --strip-all
-LDFLAGS          := --import-memory --error-limit=200 --export-dynamic \
-                    --no-entry --allow-undefined-file=code/wasm/wasm.syms \
+SHLIBLDFLAGS     := --import-memory --import-table --error-limit=200 --export-dynamic \
+                    --no-entry --allow-undefined-file=code/wasm/wasm.syms 
+LDFLAGS          := --import-memory --import-table --error-limit=200 --export-dynamic \
+                    --no-entry --strip-all --allow-undefined-file=code/wasm/wasm.syms
 
 CLIENT_LDFLAGS   := code/wasm/include/wasi/libclang_rt.builtins-wasm32.a
 

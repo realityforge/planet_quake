@@ -5,6 +5,7 @@ srand
 pow
 acosf
 powf
+sinf
 SDL_StopTextInput
 NET_GetPacket
 Sys_IsLANAddress
@@ -17,3 +18,4 @@ Sys_FClose
 Sys_FWrite
 Sys_FFlush
 Sys_FRead
+GL_GetProcAddress

@@ -200,8 +200,11 @@ float dvrYOffset = 0;
 static char gl_extensions[ 32768 ];
 
 #ifdef __WASM__
-#define GLE(ret, name, ...) ret APIENTRY q##name(__VA_ARGS__) \
-	__attribute__((import_module("GL"), import_name(#name)));
+#define GLE(ret, name, ...) ret ( APIENTRY * q##name )( __VA_ARGS__ ); \
+	__attribute__((import_module("GL"), import_name(#name))) \
+	__attribute__((used)) \
+	__attribute__((visibility("default"))) \
+	ret APIENTRY name##Real ( __VA_ARGS__ ) {}
 #else
 #define GLE( ret, name, ... ) ret ( APIENTRY * q##name )( __VA_ARGS__ );
 #endif
@@ -346,7 +349,6 @@ static void R_InitExtensions( void )
 
 	nonPowerOfTwoTextures = qfalse;
 
-#ifndef __WASM__
 	qglLockArraysEXT = NULL;
 	qglUnlockArraysEXT = NULL;
 
@@ -537,7 +539,6 @@ static void R_InitExtensions( void )
 			R_ResolveSymbols( fbo_opt_procs, ARRAY_LEN( fbo_opt_procs ) );
 		}
 	}
-#endif
 }
 
 

@@ -196,6 +196,7 @@ var Q3e = {
   atoi: function (i) { return parseInt(addressToString(i)) },
   atof: function (f) { return parseFloat(addressToString(f)) },
   strtof: function (f, n) { 
+    // TODO: convert this to some sort of template?
     let str = addressToString(f)
     let result = parseFloat(str)
     if(isNaN(result)) {
@@ -228,6 +229,99 @@ for(let j = 0; j < maths.length; j++) {
 }
 
 var GL = {
+  // in non-dll mode, this just returns the exported function returned from importing
+  GL_GetProcAddress: function (fn) {
+    // TODO: REND1.exports?
+    let realFunction = Q3e.exports[addressToString(fn) + 'Real']
+    if(!realFunction)
+      debugger
+    for(let i = 0; i < Q3e.table.length; i++) {
+      if(Q3e.table.get(i) == realFunction) {
+        return i
+      }
+    }
+    Q3e.table.set(Q3e.tableCount--, realFunction)
+    return Q3e.tableCount+1
+  },
+  glDisable: function () {},
+  glEnable: function () {},
+  glBindProgramARB: function () {},
+  glProgramLocalParameter4fARB: function () {},
+  glProgramLocalParameter4fvARB: function () {},
+  glPolygonOffset: function () {},
+  glTexCoordPointer: function () {},
+  glNormalPointer: function () {},
+  glVertexPointer: function () {},
+  glLockArraysEXT: function () {},
+  glUnlockArraysEXT: function () {},
+  glProgramStringARB: function () {},
+  glGetIntegerv: function () {},
+  glGetError: function () {},
+  glGetString: function () {},
+  glDeleteProgramsARB: function () {},
+  glGenProgramsARB: function () {},
+  glBindRenderbuffer: function () {},
+  glDeleteRenderbuffers: function () {},
+  glFramebufferTexture2D: function () {},
+  glDeleteTextures: function () {},
+  glDeleteFramebuffers: function () {},
+  glBindFramebuffer: function () {},
+  glBlitFramebuffer: function () {},
+  glViewport: function () {},
+  glScissor: function () {},
+  glMatrixMode: function () {},
+  glLoadMatrixf: function () {},
+  glLoadIdentity: function () {},
+  glColor4f: function () {},
+  glDrawArrays: function () {},
+  glColorPointer: function () {},
+  glDrawBuffer: function () {},
+  glClearColor: function () {},
+  glClear: function () {},
+  glColorMask: function () {},
+  glGenFramebuffers: function () {},
+  glGenRenderbuffers: function () {},
+  glRenderbufferStorageMultisample: function () {},
+  glFramebufferRenderbuffer: function () {},
+  glCheckFramebufferStatus: function () {},
+  glGenTextures: function () {},
+  glTexParameteri: function () {},
+  glTexImage2D: function () {},
+  glGetInternalformativ: function () {},
+  glBindTexture: function () {},
+  glActiveTextureARB: function () {},
+  glCullFace: function () {},
+  glTexEnvi: function () {},
+  glDepthFunc: function () {},
+  glBlendFunc: function () {},
+  glDepthMask: function () {},
+  glPolygonMode: function () {},
+  glAlphaFunc: function () {},
+  glEnableClientState: function () {},
+  glDisableClientState: function () {},
+  glClientActiveTextureARB: function () {},
+  glTexSubImage2D: function () {},
+  glFinish: function () {},
+  glDepthRange: function () {},
+  glPushMatrix: function () {},
+  glPopMatrix: function () {},
+  glReadPixels: function () {},
+  glClearDepth: function () {},
+  glShadeModel: function () {},
+  glDrawElements: function () {},
+  glGetBooleanv: function () {},
+  glLineWidth: function () {},
+  glStencilFunc: function () {},
+  glStencilOp: function () {},
+  glMultiTexCoord2fARB: function () {},
+  glGenBuffersARB: function () {},
+  glDeleteBuffersARB: function () {},
+  glBindBufferARB: function () {},
+  glBufferDataARB: function () {},
+  glRenderbufferStorage: function () {},
+  glGetRenderbufferParameteriv: function () {},
+  glIsFramebuffer: function () {},
+  glGetFramebufferAttachmentParameteriv: function () {},
 
 }
 
@@ -264,24 +358,37 @@ function init(env) {
   fetch('./quake3e_slim.wasm').then(function(response) {
     return response.arrayBuffer()
   }).then(function(bytes) {
-    Q3e['memory'] = new WebAssembly['Memory']( {'initial': 2048} )
+    Q3e['imports'] = env
+    Q3e['tableCount'] = 511
+    Q3e['table'] = Q3e['__indirect_function_table'] =
+      new WebAssembly.Table({ initial: 512, element: 'anyfunc' });
+    Q3e['memory'] = new WebAssembly.Memory( {
+      'initial': 2048,
+      //'shared': true
+    } )
     Q3e['paged'] = new Uint8Array( Q3e['memory'].buffer )
     Q3e['paged32'] = new Uint32Array( Q3e['memory'].buffer )
     Q3e['paged32f'] = new Float32Array( Q3e['memory'].buffer )
     return WebAssembly.instantiate(bytes, { env: env, GL: GL, Math: Math, FS: FS, NET: NET })
   }).then(function(program) {
     // share the game with window for hackers
+    Q3e['program'] = program
+    Q3e['instance'] = program.instance
     Q3e['exports'] = program.instance.exports
     let newMethods = Object.keys(Q3e['exports'])
     for(let i = 0; i < newMethods.length; i++) {
       window[newMethods[i]] = Q3e['exports'][newMethods[i]] //.apply(Q3e['exports'])
     }
     Object.assign(window, Q3e['exports'])
+
     // reserve some memory at the beginning for passing shit back and forth with JS
     //   not to use a complex HEAP, just loop around on bytes[b % 128] and if 
     //   something isn't cleared out, crash
-    Q3e['shared'] = malloc(1024 * 1024)
+    //Q3e['inputMemory'] = malloc(1024 * 1024) // store inputs in it's own space
+    Q3e['glAddresses'] = malloc(1024 * 4) // store function points between plugins
+    Q3e['shared'] = malloc(1024 * 1024) // store some strings and crap
     Q3e['sharedCounter'] = 0
+
     // Wow, look at all the unfuckery I don't have to do with startup options because
     //   I'm not using emscripten anymore.
     let startup = [

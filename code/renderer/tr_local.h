@@ -2070,8 +2070,8 @@ void R_BloomScreen( void );
 qboolean R_HaveExtension( const char *ext );
 
 #ifdef __WASM__
-#define GLE(ret, name, ...) ret APIENTRY q##name(__VA_ARGS__) \
-	__attribute__((import_module("GL"), import_name(#name)));
+#define GLE(ret, name, ...) extern ret ( APIENTRY * q##name )( __VA_ARGS__ );
+//	__attribute__((import_module("GL"), import_name(#name)));
 #else
 #define GLE( ret, name, ... ) extern ret ( APIENTRY * q##name )( __VA_ARGS__ );
 #endif

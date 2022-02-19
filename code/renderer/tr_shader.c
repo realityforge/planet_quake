@@ -3366,9 +3366,10 @@ shader_t *R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImag
 			//   missing shaders entirely and recreate when the images become available
 			if(!shader.stages[0]
 				//&& shader.stages[0]->bundle[0].isImplicit
-				|| shader.stages[0]->bundle[0].image[0] == NULL)
+				|| shader.stages[0]->bundle[0].image[0] == NULL) {
 				ri.Cvar_Set("r_loadingShader", "");
 				return tr.defaultShader;
+			}
 #endif
 		}
 		sh = FinishShader();

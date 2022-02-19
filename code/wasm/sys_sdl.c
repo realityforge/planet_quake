@@ -103,7 +103,8 @@ void SDL_GL_DeleteContext(void *context) {
   // delete context?  we don't currently do this because of lazy mode
 }
 
-void *GL_GetProcAddress( const char *name ) { return NULL; }
+__attribute__((import_module("GL"), import_name("GL_GetProcAddress")))
+void *GL_GetProcAddress( const char *name );
 
 __attribute__((import_module("env"), import_name("SDL_OpenAudioDevice")))
 int SDL_OpenAudioDevice(const char *device, int iscapture,
