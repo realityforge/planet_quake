@@ -59,18 +59,18 @@ function Sys_NET_MulticastLocal (net, length, data) {
 }
 
 function SDL_GetDesktopDisplayMode(display, mode) {
-  Q3e.paged32[(mode+1)>>2] = window.innerWidth;
-  Q3e.paged32[(mode+2)>>2] = window.innerHeight;
+  Q3e.paged32[(mode+1)>>2] = window.innerWidth
+  Q3e.paged32[(mode+2)>>2] = window.innerHeight
 }
 
 
 function SDL_GL_GetDrawableSize(display, width, height) {
-  Q3e.paged32[(width+0)>>2] = Q3e.canvas.width;
-  Q3e.paged32[(height+0)>>2] = Q3e.canvas.height;
+  Q3e.paged32[(width+0)>>2] = Q3e.canvas.width
+  Q3e.paged32[(height+0)>>2] = Q3e.canvas.height
 }
 
 function SDL_CreateWindow (title, x, y, w, h, flags) {
-  var win = malloc(8)
+  //var win = malloc(8)
   // TODO: multiple windows like a DVR?
   //   what kind of game needs two screens for one player to switch back and forth?
   /*
@@ -83,28 +83,29 @@ function SDL_CreateWindow (title, x, y, w, h, flags) {
     flags: flags,
   }
   */
-  Q3e.canvas = document.createElement("canvas");
-  Q3e.canvas.width = document.body.innerWidth;
-  Q3e.canvas.height = document.body.innerHeight;
+  Q3e.canvas = document.createElement('canvas')
+  Q3e.canvas.width = document.body.innerWidth
+  Q3e.canvas.height = document.body.innerHeight
+  document.getElementById('viewport-frame').appendChild(Q3e.canvas)
 
-  Q3e.paged32[win>>2] = 1
+  //Q3e.paged32[win>>2] = 1
   window.title = addressToString(title)
-  return win;
+  return 1 //win;
 }
 
 function SDL_GL_CreateContext(canvas) {
+  // TODO: keep track of multiple?
   let webGLContextAttributes = {
     failIfMajorPerformanceCaveat: true
   }
-  let ctx = (Q3e.majorVersion > 1)
-    ? Q3e.canvas.getContext("webgl2", webGLContextAttributes)
-    : (Q3e.canvas.getContext("webgl", webGLContextAttributes)
+  Q3e['webgl'] = (Q3e.majorVersion > 1)
+    ? Q3e.canvas.getContext('webgl2', webGLContextAttributes)
+    : (Q3e.canvas.getContext('webgl', webGLContextAttributes)
       || Q3e.canvas.getContext('experimental-webgl'))
-  if (!ctx) return 0
-  let handle = malloc(8);
-  // TODO: keep track of multiple?
-  Q3e.paged32[handle>>2] = 1
-  return handle
+  if (!Q3e['webgl']) return 0
+  //let handle = malloc(8);
+  //Q3e.paged32[handle>>2] = 1
+  return 1 // handle
 }
 
 function SDL_GL_SetAttribute(attr, value) {
@@ -138,8 +139,8 @@ function SDL_ShowCursor() {
   Q3e.canvas.exitPointerLock();
 }
 
-function CL_Download() {
-  debugger;
+function CL_Download(cmd, name, auto) {
+  fetch(addressToString(name))
 }
 
 function Sys_UnloadLibrary() {
@@ -158,7 +159,6 @@ var Q3e = {
   DebugBreak: function () { debugger; },
   longjmp: function (id, code) { throw new Error('longjmp', id, code) },
   setjmp: function (id) { try {  } catch (e) { } },
-  exportMappings: {},
   CL_Download: CL_Download,
   SDL_GetDesktopDisplayMode: SDL_GetDesktopDisplayMode,
   SDL_GL_SetAttribute: SDL_GL_SetAttribute,
@@ -229,6 +229,24 @@ for(let j = 0; j < maths.length; j++) {
 }
 
 var GL = {
+  textures: [],
+  colorChannels: [
+    // 0x1902 /* GL_DEPTH_COMPONENT */: 1,
+    // 0x1906 /* GL_ALPHA */: 1,
+    /* 0x1907 /* GL_RGB */  3,
+    /* 0x1908 /* GL_RGBA */  4,
+    // 0x1909 /* GL_LUMINANCE */: 1,
+    /* 0x190A /*GL_LUMINANCE_ALPHA*/  2,
+    /* 0x8C40 /*(GL_SRGB_EXT)*/  3,
+    /* 0x8C42 /*(GL_SRGB_ALPHA_EXT*/  4,
+// webgl2
+    // 0x1903 /* GL_RED */: 1,
+    /* 0x8227 /*GL_RG*/  2,
+    /* 0x8228 /*GL_RG_INTEGER*/  2,
+    // 0x8D94 /* GL_RED_INTEGER */: 1,
+    /* 0x8D98 /*GL_RGB_INTEGER*/  3,
+    /* 0x8D99 /*GL_RGBA_INTEGER*/  4
+  ],
   // in non-dll mode, this just returns the exported function returned from importing
   GL_GetProcAddress: function (fn) {
     // TODO: REND1.exports?
@@ -244,7 +262,7 @@ var GL = {
     return Q3e.tableCount+1
   },
   glDisable: function () {},
-  glEnable: function () { debugger; },
+  glEnable: function () {},
   glBindProgramARB: function () {},
   glProgramLocalParameter4fARB: function () {},
   glProgramLocalParameter4fvARB: function () {},
@@ -255,9 +273,45 @@ var GL = {
   glLockArraysEXT: function () {},
   glUnlockArraysEXT: function () {},
   glProgramStringARB: function () {},
-  glGetIntegerv: function () {},
+  glGetIntegerv: function (pname, param) {
+    switch (pname) {
+      case 0x8872 /* GL_MAX_TEXTURE_IMAGE_UNITS */: 
+        Q3e.paged32[(param) >> 2] = Q3e.webgl.MAX_TEXTURE_IMAGE_UNITS
+        break
+      case 0x0D33 /* GL_MAX_TEXTURE_SIZE */:
+        Q3e.paged32[(param) >> 2] = Q3e.webgl.MAX_TEXTURE_SIZE
+        break
+      case 0x8B4D /* GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS */:
+        Q3e.paged32[(param) >> 2] = Q3e.webgl.MAX_COMBINED_TEXTURE_IMAGE_UNITS
+        break
+      case 0x864B /* GL_PROGRAM_ERROR_POSITION_ARB */:
+        // TODO: make something up?
+        break
+      default:
+        debugger
+    }
+  },
   glGetError: function () {},
-  glGetString: function () { debugger; },
+  glGetString: function (id) {
+    switch(id) {
+      case 0x1F03 /* GL_EXTENSIONS */:
+        stringsToMemory(Q3e.shared + Q3e.sharedCounter, Q3e.webgl.getSupportedExtensions())
+        return Q3e.shared + Q3e.sharedCounter
+      case 0x1F00 /* GL_VENDOR */:
+      case 0x1F01 /* GL_RENDERER */:
+      case 0x9245 /* UNMASKED_VENDOR_WEBGL */:
+      case 0x9246 /* UNMASKED_RENDERER_WEBGL */:
+      case 0x1F02 /* GL_VERSION */:
+      case 0x8B8C /* GL_SHADING_LANGUAGE_VERSION */:
+        stringsToMemory(Q3e.shared + Q3e.sharedCounter, ['' + Q3e.webgl.getParameter(id)]);
+        return Q3e.shared + Q3e.sharedCounter + 1
+      case 0x8874 /* GL_PROGRAM_ERROR_STRING_ARB */ :
+        break
+      default:
+        return 0
+
+    }
+  },
   glDeleteProgramsARB: function () {},
   glGenProgramsARB: function () {},
   glBindRenderbuffer: function () {},
@@ -273,7 +327,9 @@ var GL = {
   glLoadMatrixf: function () {},
   glLoadIdentity: function () {},
   glColor4f: function () {},
-  glDrawArrays: function () {},
+  glDrawArrays: function () {
+    debugger
+  },
   glColorPointer: function () {},
   glDrawBuffer: function () {},
   glClearColor: function () {},
@@ -284,31 +340,52 @@ var GL = {
   glRenderbufferStorageMultisample: function () {},
   glFramebufferRenderbuffer: function () {},
   glCheckFramebufferStatus: function () {},
-  glGenTextures: function () {},
-  glTexParameteri: function () {},
-  glTexImage2D: function () {},
+  glGenTextures: function (n, textures) {
+    GL.textures.push(Q3e.webgl.createTexture())
+    Q3e.paged32[textures >> 2] = GL.textures.length
+  },
+  glTexParameteri: function (target, pname, param) { 
+    if(param == 0x2900) {
+      param = 0x812F /*GL_CLAMP_TO_EDGE*/
+    }
+    Q3e.webgl.texParameteri(target, pname, param) 
+  },
+  glTexImage2D: function (target, level, internalFormat, width, height, border, format, type, pixels) {
+    if(target != 0x0DE1) {
+      debugger
+    }
+    let computedSize = width * height * GL.colorChannels[format - 0x1902]
+    let imageView = Q3e.paged.subarray(pixels, pixels + computedSize)
+    Q3e.webgl.texImage2D(target, level, internalFormat, width, height, border, format, type, null) 
+  },
   glGetInternalformativ: function () {},
-  glBindTexture: function () {},
-  glActiveTextureARB: function () {},
-  glCullFace: function () {},
+  glBindTexture: function (target, id) { Q3e.webgl.bindTexture(target, GL.textures[id - 1]) },
+  glActiveTextureARB: function (unit) { Q3e.webgl.activeTexture(unit) },
+  glCullFace: function (side) { Q3e.webgl.cullFace(side) },
   glTexEnvi: function () {},
-  glDepthFunc: function () {},
+  glDepthFunc: function (depth) { Q3e.webgl.depthFunc(depth) },
   glBlendFunc: function () {},
-  glDepthMask: function () {},
+  glDepthMask: function (mask) { Q3e.webgl.depthMask(mask) },
   glPolygonMode: function () {},
   glAlphaFunc: function () {},
   glEnableClientState: function () {},
   glDisableClientState: function () {},
   glClientActiveTextureARB: function () {},
-  glTexSubImage2D: function () {},
-  glFinish: function () {},
-  glDepthRange: function () {},
+  glTexSubImage2D: function (a1, a2, a3, a4, a5, a6, a7) { 
+    Q3e.webgl.texSubImage2D(a1, a2, a3, a4, a5, a6, a7) 
+  },
+  glFinish: function () {
+    debugger
+  },
+  glDepthRange: function (range) { Q3e.webgl.depthRange(range) },
   glPushMatrix: function () {},
   glPopMatrix: function () {},
   glReadPixels: function () {},
-  glClearDepth: function () { debugger; },
+  glClearDepth: function () {},
   glShadeModel: function () {},
-  glDrawElements: function () {},
+  glDrawElements: function () {
+    debugger
+  },
   glGetBooleanv: function () {},
   glLineWidth: function () {},
   glStencilFunc: function () {},
@@ -405,6 +482,7 @@ function init(env) {
     setTimeout(function () {
       try {
         RunGame(startup.length, posArgInMemory)
+        setInterval(requestAnimationFrame.bind(null, Q3e.exports.Com_Frame), 1000 / 60);
       } catch (e) {
         console.log(e)
       }

@@ -4515,6 +4515,9 @@ void FS_Frame(int msecs);
 Com_Frame
 =================
 */
+#ifdef __WASM__
+Q_EXPORT
+#endif
 void Com_Frame( qboolean noDelay ) {
 
 #ifndef DEDICATED

@@ -597,6 +597,7 @@ static void InitOpenGL( void )
 
 		// OpenGL driver constants
 		qglGetIntegerv( GL_MAX_TEXTURE_SIZE, &max_texture_size );
+Com_Printf("max texture: %i\n", max_texture_size);
 		glConfig.maxTextureSize = max_texture_size;
 
 		// stubbed or broken drivers may have reported 0...
