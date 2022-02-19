@@ -244,7 +244,7 @@ var GL = {
     return Q3e.tableCount+1
   },
   glDisable: function () {},
-  glEnable: function () {},
+  glEnable: function () { debugger; },
   glBindProgramARB: function () {},
   glProgramLocalParameter4fARB: function () {},
   glProgramLocalParameter4fvARB: function () {},
@@ -257,7 +257,7 @@ var GL = {
   glProgramStringARB: function () {},
   glGetIntegerv: function () {},
   glGetError: function () {},
-  glGetString: function () {},
+  glGetString: function () { debugger; },
   glDeleteProgramsARB: function () {},
   glGenProgramsARB: function () {},
   glBindRenderbuffer: function () {},
@@ -306,7 +306,7 @@ var GL = {
   glPushMatrix: function () {},
   glPopMatrix: function () {},
   glReadPixels: function () {},
-  glClearDepth: function () {},
+  glClearDepth: function () { debugger; },
   glShadeModel: function () {},
   glDrawElements: function () {},
   glGetBooleanv: function () {},
@@ -352,6 +352,7 @@ var FS = {
 
 }
 
+window.Q3e = Q3e
 init(Q3e)
 
 function init(env) {
@@ -385,7 +386,7 @@ function init(env) {
     //   not to use a complex HEAP, just loop around on bytes[b % 128] and if 
     //   something isn't cleared out, crash
     //Q3e['inputMemory'] = malloc(1024 * 1024) // store inputs in it's own space
-    Q3e['glAddresses'] = malloc(1024 * 4) // store function points between plugins
+    Q3e['glProcAddresses'] = malloc(1024 * 4) // store function points between plugins
     Q3e['shared'] = malloc(1024 * 1024) // store some strings and crap
     Q3e['sharedCounter'] = 0
 

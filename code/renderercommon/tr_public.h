@@ -269,7 +269,6 @@ typedef struct {
 	qboolean (*VK_CreateSurface)( VkInstance instance, VkSurfaceKHR *pSurface );
 
   void	(*Cmd_SetDescription)( const char *name, char *description );
-	void  (*GLimp_UpdateMode)( glconfig_t *config );
 #ifdef USE_MULTIVM_CLIENT
 	int	  *worldMaps;
 #endif

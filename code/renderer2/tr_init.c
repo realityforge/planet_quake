@@ -2017,23 +2017,3 @@ refexport_t *GetRefAPI ( int apiVersion, refimport_t *rimp ) {
 	return &re;
 }
 
-
-#ifdef USE_VID_FAST
-/*
-=============
-RE_UpdateMode
-=============
-*/
-void RE_UpdateMode(glconfig_t *glconfigOut) {
-	R_IssuePendingRenderCommands();
-
-	glconfigOut = &glConfig;
-	ri.GLimp_UpdateMode( glconfigOut );
-
-	GL_SetDefaultState();
-
-	GL_CheckErrors();
-
-	*glconfigOut = glConfig;
-}
-#endif

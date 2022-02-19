@@ -4626,9 +4626,6 @@ static void CL_InitRef( void ) {
 #ifdef USE_LAZY_LOAD
 	rimp.FS_FOpenFileRead = FS_FOpenFileRead;
 #endif
-#ifdef USE_VID_FAST
-	rimp.GLimp_UpdateMode = GLimp_UpdateMode;
-#endif
 #ifdef USE_CURSOR_SPY
 	rimp.Spy_CursorPosition = Spy_CursorPosition;
 	rimp.Spy_InputText = Spy_InputText;

@@ -200,11 +200,13 @@ float dvrYOffset = 0;
 static char gl_extensions[ 32768 ];
 
 #ifdef __WASM__
-#define GLE(ret, name, ...) ret ( APIENTRY * q##name )( __VA_ARGS__ ); \
+#define GLE(ret, name, ...) \
 	__attribute__((import_module("GL"), import_name(#name))) \
 	__attribute__((used)) \
 	__attribute__((visibility("default"))) \
-	ret APIENTRY name##Real ( __VA_ARGS__ ) {}
+	ret APIENTRY name##Real ( __VA_ARGS__ ); \
+	ret ( APIENTRY * q##name )( __VA_ARGS__ );
+
 #else
 #define GLE( ret, name, ... ) ret ( APIENTRY * q##name )( __VA_ARGS__ );
 #endif
@@ -221,7 +223,7 @@ typedef struct {
 	const char *name;
 } sym_t;
 
-#define GLE( ret, name, ... ) { (void**)&q##name, XSTRING(name) },
+#define GLE( ret, name, ... ) { (void**)&name##Real, XSTRING(name) },
 static sym_t core_procs[] = { QGL_Core_PROCS };
 static sym_t ext_procs[] = { QGL_Ext_PROCS };
 static sym_t arb_procs[] = { QGL_ARB_PROGRAM_PROCS };
@@ -240,6 +242,17 @@ returns NULL on success or last failed symbol name otherwise
 */
 static const char *R_ResolveSymbols( sym_t *syms, int count )
 {
+#ifdef __WASM__
+#define GLE( ret, name, ... ) q##name = name##Real;
+	QGL_Core_PROCS;
+	QGL_Ext_PROCS;
+	QGL_ARB_PROGRAM_PROCS;
+	QGL_VBO_PROCS;
+	QGL_FBO_PROCS;
+	QGL_FBO_OPT_PROCS;
+#undef GLE
+
+#else
 	int i;
 	for ( i = 0; i < count; i++ )
 	{
@@ -249,6 +262,7 @@ static const char *R_ResolveSymbols( sym_t *syms, int count )
 			return syms[ i ].name;
 		}
 	}
+#endif
 	return NULL;
 }
 
@@ -325,6 +339,7 @@ static void R_InitExtensions( void )
 	{
 		ri.Error( ERR_FATAL, "OpenGL installation is broken. Please fix video drivers and/or restart your system" );
 	}
+
 
 	// get our config strings
 	Q_strncpyz( glConfig.vendor_string, (char *)qglGetString (GL_VENDOR), sizeof( glConfig.vendor_string ) );

@@ -2069,12 +2069,7 @@ void R_BloomScreen( void );
 
 qboolean R_HaveExtension( const char *ext );
 
-#ifdef __WASM__
-#define GLE(ret, name, ...) extern ret ( APIENTRY * q##name )( __VA_ARGS__ );
-//	__attribute__((import_module("GL"), import_name(#name)));
-#else
 #define GLE( ret, name, ... ) extern ret ( APIENTRY * q##name )( __VA_ARGS__ );
-#endif
 	QGL_Core_PROCS;
 	QGL_Ext_PROCS;
 	QGL_ARB_PROGRAM_PROCS;

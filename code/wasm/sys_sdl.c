@@ -110,8 +110,10 @@ __attribute__((import_module("env"), import_name("SDL_OpenAudioDevice")))
 int SDL_OpenAudioDevice(const char *device, int iscapture,
                     const SDL_AudioSpec * desired, SDL_AudioSpec * obtained,
                     int allowed_changes);
+
 __attribute__((import_module("env"), import_name("SDL_PauseAudioDevice")))
 void SDL_PauseAudioDevice(int dev, int pause_on);
+
 __attribute__((import_module("env"), import_name("SDL_CloseAudioDevice")))
 void SDL_CloseAudioDevice(int dev);
 
@@ -389,6 +391,7 @@ static int GLW_SetMode( int mode, const char *modeFS, qboolean fullscreen, qbool
     break;
   }
 
+
   if ( SDL_window )
   {
 #ifdef USE_ICON
@@ -496,16 +499,6 @@ static rserr_t GLimp_StartDriverAndSetMode( int mode, const char *modeFS, qboole
   }
 
   return RSERR_OK;
-}
-
-
-/*
-=============
-RE_UpdateMode
-=============
-*/
-void GLimp_UpdateMode( glconfig_t *config ) {
-  GLW_SetMode( r_mode->integer, r_modeFullscreen->string, r_fullscreen->integer, qtrue );
 }
 
 
