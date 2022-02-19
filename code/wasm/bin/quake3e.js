@@ -5,25 +5,38 @@ if(typeof global != 'undefined' && typeof global.window == 'undefined') {
 function addressToString(addr, length) {
   let newString = ''
   for(let i = 0; i < length || 1024; i++) {
-    if(Q3e['paged'][addr + i] == '0') {
+    if(Q3e.paged[addr + i] == '0') {
       break;
     }
-    newString += String.fromCharCode(Q3e['paged'][addr + i])
+    newString += String.fromCharCode(Q3e.paged[addr + i])
   }
   return newString
 }
 
-function stringsToMemory(addr, list, ) {
-  let posInSeries = addr + list.length // add list length so we can return addresses like char **
+function stringToAddress(str, addr) {
+  let start = Q3e.sharedMemory + Q3e.sharedCounter
+  if(addr) start = addr
+  for(let j = 0; j < str.length; j++) {
+    Q3e.paged[addr+j] = str.charCodeAt(j)
+  }
+  Q3e.paged[str.length] = 0
+  if(!addr) Q3e.sharedCounter += str.length + 1
+  return start
+}
+
+function stringsToMemory(list, length) {
+  // add list length so we can return addresses like char **
+  let start = Q3e.sharedMemory + Q3e.sharedCounter
+  let posInSeries = start + list.length 
   for (let i = 0; i < list.length; i++) {
     Q3e.paged32[(addr+i*4)>>2] = posInSeries // save the starting address in the list
-    for(let j = 0; j < list[i].length; j++) {
-      Q3e.paged[posInSeries+j] = list[i].charCodeAt(j)
-    }
-    Q3e.paged[posInSeries+list[i].length] = 0
+    stringToAddress(posInSeries, list[i])
     posInSeries += list[i].length + 1
   }
-  return posInSeries + list.length
+  let startingPosition = Q3e.sharedMemory + Q3e.sharedCounter
+  if(length) Q3e.paged32[length >> 2] = posInSeries - start
+  Q3e.sharedCounter = posInSeries - Q3e.sharedMemory
+  return startingPosition
 }
 
 function Sys_ListFiles (directory, ext, filter, numfiles, dironly) {
@@ -38,14 +51,14 @@ function Sys_ListFiles (directory, ext, filter, numfiles, dironly) {
    // TODO: match directory 
    return !ext || name.lastIndexOf(ext) === (name.length - ext.length)
   }, [])
-  /* let inMemory = */ stringsToMemory(Q3e.shared + Q3e.sharedCounter, matches)
+  let inMemory = stringsToMemory(matches)
   Q3e.paged32[(numfiles+0)>>2] = matches.length;
   // here's the thing, I know for a fact that all the callers copy this stuff
   //   so I don't need to increase my temporary storage because by the time it's
   //   overwritten the data won't be needed, should only keep shared storage around
   //   for events and stuff that might take more than 1 frame
   //Q3e.sharedCounter += inMemory
-  return Q3e.shared + Q3e.sharedCounter + matches.length // skip address-list because for loop is used with numfiles
+  return inMemory + matches.length // skip address-list because for-loop counts \0 with numfiles
 }
 
 function Sys_Offline() {
@@ -113,8 +126,7 @@ function SDL_GL_SetAttribute(attr, value) {
 }
 
 function SDL_GetError() {
-  stringsToMemory(Q3e.shared + Q3e.sharedCounter, ['Unknown WebGL error.'])
-  return Q3e.shared + Q3e.sharedCounter + 1
+  return stringToMemory('Unknown WebGL error.')
 }
 
 function SDL_SetWindowDisplayMode () { 
@@ -140,7 +152,18 @@ function SDL_ShowCursor() {
 }
 
 function CL_Download(cmd, name, auto) {
-  fetch(addressToString(name))
+  let localName = Cvar_VariableStringValue() + addressToString(name)
+  fetch(addressToString(localName)).then(function (response) {
+    if(localName.length <= 1 || localName[localName.length - 1] == '/') {
+      // don't store any index files, redownload every start
+    } else {
+      // async to filesystem
+
+    }
+
+    // save the file in memory for now
+    Sys_FileReady();
+  })
 }
 
 function Sys_UnloadLibrary() {
@@ -212,8 +235,7 @@ var Q3e = {
   asctime: function () {
     // Don't really care what time it is because this is what the engine does
     //   right above this call
-    stringsToMemory(Q3e.shared + Q3e.sharedCounter, [new Date().toLocaleString()])
-    return Q3e.shared + Q3e.sharedCounter + 1
+    return stringToMemory(new Date().toLocaleString())
   },
   Sys_Print: Sys_Print,
 
@@ -295,16 +317,14 @@ var GL = {
   glGetString: function (id) {
     switch(id) {
       case 0x1F03 /* GL_EXTENSIONS */:
-        stringsToMemory(Q3e.shared + Q3e.sharedCounter, Q3e.webgl.getSupportedExtensions())
-        return Q3e.shared + Q3e.sharedCounter
+        return stringToMemory(Q3e.webgl.getSupportedExtensions())
       case 0x1F00 /* GL_VENDOR */:
       case 0x1F01 /* GL_RENDERER */:
       case 0x9245 /* UNMASKED_VENDOR_WEBGL */:
       case 0x9246 /* UNMASKED_RENDERER_WEBGL */:
       case 0x1F02 /* GL_VERSION */:
       case 0x8B8C /* GL_SHADING_LANGUAGE_VERSION */:
-        stringsToMemory(Q3e.shared + Q3e.sharedCounter, ['' + Q3e.webgl.getParameter(id)]);
-        return Q3e.shared + Q3e.sharedCounter + 1
+        return stringToMemory('' + Q3e.webgl.getParameter(id))
       case 0x8874 /* GL_PROGRAM_ERROR_STRING_ARB */ :
         break
       default:
@@ -464,7 +484,7 @@ function init(env) {
     //   something isn't cleared out, crash
     //Q3e['inputMemory'] = malloc(1024 * 1024) // store inputs in it's own space
     Q3e['glProcAddresses'] = malloc(1024 * 4) // store function points between plugins
-    Q3e['shared'] = malloc(1024 * 1024) // store some strings and crap
+    Q3e['sharedMemory'] = malloc(1024 * 1024) // store some strings and crap
     Q3e['sharedCounter'] = 0
 
     // Wow, look at all the unfuckery I don't have to do with startup options because
@@ -474,14 +494,12 @@ function init(env) {
       '+set', 'fs_basepath', '/base',
       '+set', 'sv_pure', '0', // require for now, TODO: server side zips
     ];
-    let startupArgs = stringsToMemory(Q3e.shared + Q3e.sharedCounter, startup);
-    let posArgInMemory = Q3e.shared + Q3e.sharedCounter
-    // Whoops, startup args is expecting a char ** list
-    Q3e.sharedCounter += startupArgs // add total length of stringsToMemory
-    // start a brand new call frame
+
+    // start a brand new call frame, in-case error bubbles up
     setTimeout(function () {
       try {
-        RunGame(startup.length, posArgInMemory)
+        // Startup args is expecting a char **
+        RunGame(startup.length, stringsToMemory(startup))
         setInterval(requestAnimationFrame.bind(null, Q3e.exports.Com_Frame), 1000 / 60);
       } catch (e) {
         console.log(e)
