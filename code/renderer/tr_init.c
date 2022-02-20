@@ -223,7 +223,7 @@ typedef struct {
 	const char *name;
 } sym_t;
 
-#define GLE( ret, name, ... ) { (void**)&name##Real, XSTRING(name) },
+#define GLE( ret, name, ... ) { (void**)&q##name, XSTRING(name) },
 static sym_t core_procs[] = { QGL_Core_PROCS };
 static sym_t ext_procs[] = { QGL_Ext_PROCS };
 static sym_t arb_procs[] = { QGL_ARB_PROGRAM_PROCS };
@@ -597,7 +597,6 @@ static void InitOpenGL( void )
 
 		// OpenGL driver constants
 		qglGetIntegerv( GL_MAX_TEXTURE_SIZE, &max_texture_size );
-Com_Printf("max texture: %i\n", max_texture_size);
 		glConfig.maxTextureSize = max_texture_size;
 
 		// stubbed or broken drivers may have reported 0...

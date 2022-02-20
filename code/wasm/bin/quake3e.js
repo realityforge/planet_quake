@@ -4,7 +4,8 @@ if(typeof global != 'undefined' && typeof global.window == 'undefined') {
 
 function addressToString(addr, length) {
   let newString = ''
-  for(let i = 0; i < length || 1024; i++) {
+  if(!length) length = 1024
+  for(let i = 0; i < length; i++) {
     if(Q3e.paged[addr + i] == '0') {
       break;
     }
@@ -17,48 +18,60 @@ function stringToAddress(str, addr) {
   let start = Q3e.sharedMemory + Q3e.sharedCounter
   if(addr) start = addr
   for(let j = 0; j < str.length; j++) {
-    Q3e.paged[addr+j] = str.charCodeAt(j)
+    Q3e.paged[start+j] = str.charCodeAt(j)
   }
-  Q3e.paged[str.length] = 0
-  if(!addr) Q3e.sharedCounter += str.length + 1
+  Q3e.paged[start+str.length] = 0
+  if(!addr) {
+    Q3e.sharedCounter += str.length + 1
+    Q3e.sharedCounter += 4 - (Q3e.sharedCounter % 4)
+    if(Q3e.sharedCounter > 1024 * 512) {
+      Q3e.sharedCounter = 0
+    }
+  }
   return start
 }
 
+
+// here's the thing, I know for a fact that all the callers copy this stuff
+//   so I don't need to increase my temporary storage because by the time it's
+//   overwritten the data won't be needed, should only keep shared storage around
+//   for events and stuff that might take more than 1 frame
 function stringsToMemory(list, length) {
   // add list length so we can return addresses like char **
   let start = Q3e.sharedMemory + Q3e.sharedCounter
-  let posInSeries = start + list.length 
+  let posInSeries = start + list.length * 4
   for (let i = 0; i < list.length; i++) {
-    Q3e.paged32[(addr+i*4)>>2] = posInSeries // save the starting address in the list
-    stringToAddress(posInSeries, list[i])
+    Q3e.paged32[(start+i*4)>>2] = posInSeries // save the starting address in the list
+    stringToAddress(list[i], posInSeries)
     posInSeries += list[i].length + 1
   }
-  let startingPosition = Q3e.sharedMemory + Q3e.sharedCounter
   if(length) Q3e.paged32[length >> 2] = posInSeries - start
   Q3e.sharedCounter = posInSeries - Q3e.sharedMemory
-  return startingPosition
+  Q3e.sharedCounter += 4 - (Q3e.sharedCounter % 4)
+  if(Q3e.sharedCounter > 1024 * 512) {
+    Q3e.sharedCounter = 0
+  }
+  return start
 }
+
 
 function Sys_ListFiles (directory, ext, filter, numfiles, dironly) {
   let files = {
     'default.cfg': {
       mtime: 0,
       size: 1024,
-      
     }
   }
   let matches = Object.keys(files).reduce(function (list, name) {
-   // TODO: match directory 
-   return !ext || name.lastIndexOf(ext) === (name.length - ext.length)
+    // TODO: match directory 
+    if(!ext || name.lastIndexOf(ext) === (name.length - ext.length)) {
+      list.push(name)
+    }
+    return list 
   }, [])
-  let inMemory = stringsToMemory(matches)
-  Q3e.paged32[(numfiles+0)>>2] = matches.length;
-  // here's the thing, I know for a fact that all the callers copy this stuff
-  //   so I don't need to increase my temporary storage because by the time it's
-  //   overwritten the data won't be needed, should only keep shared storage around
-  //   for events and stuff that might take more than 1 frame
-  //Q3e.sharedCounter += inMemory
-  return inMemory + matches.length // skip address-list because for-loop counts \0 with numfiles
+  Q3e.paged32[(numfiles)>>2] = matches.length;
+  // skip address-list because for-loop counts \0 with numfiles
+  return stringsToMemory(matches) + matches.length
 }
 
 function Sys_Offline() {
@@ -126,7 +139,7 @@ function SDL_GL_SetAttribute(attr, value) {
 }
 
 function SDL_GetError() {
-  return stringToMemory('Unknown WebGL error.')
+  return stringToAddress('Unknown WebGL error.')
 }
 
 function SDL_SetWindowDisplayMode () { 
@@ -151,18 +164,116 @@ function SDL_ShowCursor() {
   Q3e.canvas.exitPointerLock();
 }
 
+var DB_STORE_NAME = 'FILE_DATA';
+
+function openDatabase() {
+  if(!FS.open || Date.now() - FS.openTime > 1000) {
+    FS.openTime = Date.now()
+    FS.open = indexedDB.open('/base', 22)
+    FS.promise = new Promise(function (resolve) {
+      FS.resolve = resolve
+    })
+  }
+  FS.open.onsuccess = function () {
+    FS.database = FS.open.result
+    //if(!Array.from(FS.database.objectStoreNames).includes(DB_STORE_NAME)) {
+    //  FS.database.createObjectStore(DB_STORE_NAME)
+    //}
+    FS.resolve()
+  }
+  FS.open.onupgradeneeded = function () {
+    let fileStore = FS.open.result.createObjectStore(DB_STORE_NAME)
+    if (!fileStore.indexNames.contains('timestamp')) {
+      fileStore.createIndex('timestamp', 'timestamp', { unique: false });
+    }
+  }
+  FS.open.onerror = function (error) {
+    console.error(error)
+  }
+}
+
+function writeStore(value, key) {
+  if(!FS.database) {
+    openDatabase()
+    new Promise(function (resolve2) {
+      let oldResolve = FS.resolve
+      FS.resolve = function () {
+        oldResolve()
+        writeStore(value, key)
+        resolve2()
+      }
+    })
+  }
+  var transaction = FS.database.transaction([DB_STORE_NAME], 'readwrite');
+  var objStore = transaction.objectStore(DB_STORE_NAME);
+  let storeValue = objStore.put(value, key)
+  storeValue.onsuccess = function () {}
+  transaction.oncomplete = function () {
+    FS.database.close()
+    FS.database = null
+    FS.open = null
+  }
+  storeValue.onerror = function (error) {
+    console.error(error, value, key)
+  }
+  transaction.commit()
+}
+
 function CL_Download(cmd, name, auto) {
-  let localName = Cvar_VariableStringValue() + addressToString(name)
-  fetch(addressToString(localName)).then(function (response) {
-    if(localName.length <= 1 || localName[localName.length - 1] == '/') {
-      // don't store any index files, redownload every start
+  if(!FS.database) {
+    openDatabase()
+  }
+
+  // TODO: make a utility for Cvar stuff?
+  let dlURL = addressToString(Cvar_VariableString(stringToAddress("cl_dlURL")))
+  let gamedir = addressToString(FS_GetCurrentGameDir())
+  let nameStr = addressToString(name)
+  let localName = nameStr
+  if(localName[0] == '/')
+    localName = localName.substring(1)
+  if(localName.startsWith(gamedir))
+    localName = localName.substring(gamedir.length)
+  if(localName[0] == '/')
+    localName = localName.substring(1)
+
+  fetch(dlURL + '/' + localName, {
+    mode: 'cors',
+    responseType: 'arraybuffer',
+    credentials: 'omit'
+  }).then(function (response) {
+    //let type = response.headers.get('Content-Type')
+    if (!response || !(response.status >= 200 && response.status < 300 || response.status === 304)) {
+      throw new Error('Couldn\'t load ' + response.url + '. Status: ' + (response || {}).statusCode)
+    }
+    return response.arrayBuffer()
+  }).then(function (responseData) {
+    // don't store any index files, redownload every start
+    if(nameStr[nameStr.length - 1] == '/') {
+      FS.virtual['/' + nameStr] = {
+        timestamp: new Date(),
+        mode: 16895,
+        contents: new Uint8Array(responseData)
+      }
     } else {
       // async to filesystem
-
+      // TODO: JSON.parse
+      FS.virtual['/' + nameStr] = {
+        timestamp: new Date(),
+        mode: 33206,
+        contents: new Uint8Array(responseData)
+      }
+      /*
+      let storeDirectory = objStore.put({
+        timestamp: new Date(),
+        mode: 16895
+      }, key)
+      */
+     // does it REALLY matter if it makes it? wont it just redownload?
+      writeStore(FS.virtual['/' + nameStr], '/' + nameStr)
     }
 
     // save the file in memory for now
-    Sys_FileReady();
+    //Sys_FileReady();
   })
 }
 
@@ -235,7 +346,7 @@ var Q3e = {
   asctime: function () {
     // Don't really care what time it is because this is what the engine does
     //   right above this call
-    return stringToMemory(new Date().toLocaleString())
+    return stringToAddress(new Date().toLocaleString())
   },
   Sys_Print: Sys_Print,
 
@@ -271,17 +382,7 @@ var GL = {
   ],
   // in non-dll mode, this just returns the exported function returned from importing
   GL_GetProcAddress: function (fn) {
-    // TODO: REND1.exports?
-    let realFunction = Q3e.exports[addressToString(fn) + 'Real']
-    if(!realFunction)
-      debugger
-    for(let i = 0; i < Q3e.table.length; i++) {
-      if(Q3e.table.get(i) == realFunction) {
-        return i
-      }
-    }
-    Q3e.table.set(Q3e.tableCount--, realFunction)
-    return Q3e.tableCount+1
+    // TODO: renderer1/renderer2
   },
   glDisable: function () {},
   glEnable: function () {},
@@ -317,14 +418,14 @@ var GL = {
   glGetString: function (id) {
     switch(id) {
       case 0x1F03 /* GL_EXTENSIONS */:
-        return stringToMemory(Q3e.webgl.getSupportedExtensions())
+        return stringToAddress(Q3e.webgl.getSupportedExtensions().join(' '))
       case 0x1F00 /* GL_VENDOR */:
       case 0x1F01 /* GL_RENDERER */:
       case 0x9245 /* UNMASKED_VENDOR_WEBGL */:
       case 0x9246 /* UNMASKED_RENDERER_WEBGL */:
       case 0x1F02 /* GL_VERSION */:
       case 0x8B8C /* GL_SHADING_LANGUAGE_VERSION */:
-        return stringToMemory('' + Q3e.webgl.getParameter(id))
+        return stringToAddress('' + Q3e.webgl.getParameter(id))
       case 0x8874 /* GL_PROGRAM_ERROR_STRING_ARB */ :
         break
       default:
@@ -436,6 +537,7 @@ var NET = {
 }
 
 var FS = {
+  virtual: {}, // temporarily store items as they go in and out of memory
   Sys_ListFiles: Sys_ListFiles,
   Sys_FTell: Sys_FTell,
   Sys_FSeek: Sys_FSeek,
@@ -446,7 +548,7 @@ var FS = {
   Sys_FOpen: Sys_FOpen,
   Sys_Remove: Sys_Remove,
   Sys_Rename: Sys_Rename,
-
+  Sys_FreeFileList: Sys_FreeFileList,
 }
 
 window.Q3e = Q3e
@@ -493,6 +595,9 @@ function init(env) {
       'quake3e_web',
       '+set', 'fs_basepath', '/base',
       '+set', 'sv_pure', '0', // require for now, TODO: server side zips
+      '+set', 'fs_basegame', 'multigame',
+      '+set', 'cl_dlURL', '"http://local.games:8080/multigame"',
+
     ];
 
     // start a brand new call frame, in-case error bubbles up
@@ -500,7 +605,7 @@ function init(env) {
       try {
         // Startup args is expecting a char **
         RunGame(startup.length, stringsToMemory(startup))
-        setInterval(requestAnimationFrame.bind(null, Q3e.exports.Com_Frame), 1000 / 60);
+        setInterval(requestAnimationFrame.bind(null, Q3e.exports.Sys_Frame), 1000 / 60);
       } catch (e) {
         console.log(e)
       }
@@ -510,25 +615,27 @@ function init(env) {
 }
 
 function Sys_Milliseconds() {
-  // javascript times are bigger, so start at zero
   if (!Q3e['timeBase']) {
-    Q3e['timeBase'] = Date.now();
+    // javascript times are bigger, so start at zero
+    //   pretend like we've been alive for at least a few seconds
+    //   I actually had to do this because files it checking times and this caused a delay
+    Q3e['timeBase'] = Date.now() - 5000;
   }
 
-  if (window.performance.now) {
-    return parseInt(window.performance.now(), 10);
-  } else if (window.performance.webkitNow) {
-    return parseInt(window.performance.webkitNow(), 10);
-  } else {
-    return Date.now() - SYS.timeBase();
-  }
+  //if (window.performance.now) {
+  //  return parseInt(window.performance.now(), 10);
+  //} else if (window.performance.webkitNow) {
+  //  return parseInt(window.performance.webkitNow(), 10);
+  //} else {
+  return Date.now() - Q3e.timeBase;
+  //}
 }
 
 function Sys_RandomBytes (string, len) {
 	if(typeof crypto != 'undefined') {
 		crypto.getRandomValues(Q3e.paged.subarray(string, string+len))
 	} else {
-		for(var i = 0; i < len; i++) {
+		for(let i = 0; i < len; i++) {
 			Q3e.paged[string] = Math.random() * 255
 		}
 	}
@@ -576,10 +683,14 @@ function Sys_Print(message) {
   console.log(addressToString(message))
 }
 
+function Sys_FreeFileList (list) {
+	// don't need to free, using rotating bullshit storage for this
+}
+
 function Sys_Error(fmt, args) {
-  let len = BG_sprintf(Q3e.shared + Q3e.sharedCounter, fmt, args)
+  let len = BG_sprintf(Q3e.sharedMemory + Q3e.sharedCounter, fmt, args)
   if(len > 0)
-    console.log('Sys_Error: ', addressToString(Q3e.shared + Q3e.sharedCounter))
+    console.log('Sys_Error: ', addressToString(Q3e.sharedMemory + Q3e.sharedCounter))
   throw new Error(addressToString(fmt))
 }
 

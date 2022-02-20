@@ -19,3 +19,5 @@ Sys_FWrite
 Sys_FFlush
 Sys_FRead
 GL_GetProcAddress
+Sys_FreeFileList
+

@@ -1598,6 +1598,10 @@ const char *Sys_SteamPath( void );
 __attribute__((import_module("FS"), import_name("Sys_ListFiles")))
 #endif
 char **Sys_ListFiles( const char *directory, const char *extension, const char *filter, int *numfiles, qboolean wantsubs );
+
+#ifdef __WASM__
+__attribute__((import_module("FS"), import_name("Sys_FreeFileList")))
+#endif
 void Sys_FreeFileList( char **list );
 
 qboolean Sys_GetFileStats( const char *filename, fileOffset_t *size, fileTime_t *mtime, fileTime_t *ctime );

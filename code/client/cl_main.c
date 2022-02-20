@@ -3889,19 +3889,19 @@ void FS_CheckLazyUpdates( void ) {
 		if(downloadNeeded[0] == '\0') {
 			Sys_UpdateNeeded(j, ready, downloadNeeded);
 			// check for files that need to be downloaded, runs on separate thread!?
-#ifdef USE_CURL
 			if(downloadNeeded[0] != '\0') {
+#ifdef USE_CURL
 				if(!Com_DL_InProgress( &download )) {
 					CL_Download( "lazydl", downloadNeeded, qfalse );
 				}
-			}
 #else
 #ifdef __WASM__
-			if(!clc.downloadTempName[0]) {
-				CL_Download( "lazydl", downloadNeeded, qfalse );
+				if(!clc.downloadTempName[0]) {
+					CL_Download( "lazydl", downloadNeeded, qfalse );
+				}
+#endif
+#endif
 			}
-#endif
-#endif
 		} else {
 			Sys_UpdateNeeded(j, ready, NULL);
 		}

@@ -161,19 +161,6 @@ function Sys_Mkfifo (path) {
 	return 0;
 }
 
-function Sys_FreeFileList (list) {
-	if (!list) {
-		return;
-	}
-
-	var ptr;
-	for (var i = 0; (ptr = HEAP32[(list+i*4)>>2]); i++) {
-		_Z_Free(ptr);
-	}
-
-	_Z_Free(list);
-}
-
 function Sys_Mkdir (directory) {
 	directory = UTF8ToString(directory);
 	try {

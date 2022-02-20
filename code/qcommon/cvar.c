@@ -117,6 +117,9 @@ static cvar_t *Cvar_FindVar( const char *var_name ) {
 Cvar_VariableValue
 ============
 */
+#ifdef __WASM__
+Q_EXPORT
+#endif
 float Cvar_VariableValue( const char *var_name ) {
 	cvar_t	*var;
 	
@@ -132,6 +135,9 @@ float Cvar_VariableValue( const char *var_name ) {
 Cvar_VariableIntegerValue
 ============
 */
+#ifdef __WASM__
+Q_EXPORT
+#endif
 int Cvar_VariableIntegerValue( const char *var_name ) {
 	cvar_t	*var;
 	
@@ -147,6 +153,9 @@ int Cvar_VariableIntegerValue( const char *var_name ) {
 Cvar_VariableString
 ============
 */
+#ifdef __WASM__
+Q_EXPORT
+#endif
 const char *Cvar_VariableString( const char *var_name ) {
 	cvar_t *var;
 	

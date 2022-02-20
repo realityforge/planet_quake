@@ -197,6 +197,9 @@ int Sys_ParseArgs( int argc, char* argv[] )
 Sys_Frame
 =================
 */
+#ifdef __WASM__
+Q_EXPORT
+#endif
 void Sys_Frame( void ) {
 	IN_Frame();
 	Com_Frame( CL_NoDelay() );
@@ -220,8 +223,9 @@ Q_EXPORT int RunGame( int argc, char* argv[] )
 		return 0;
 
 	// merge the command line, this is kinda silly
-	for ( len = 1, i = 1; i < argc; i++ )
+	for ( len = 1, i = 1; i < argc; i++ ) {
 		len += strlen( argv[i] ) + 1;
+	}
 
 	cmdline = malloc( len );
 	*cmdline = '\0';
@@ -264,21 +268,6 @@ qboolean Sys_GetFileStats( const char *filename, fileOffset_t *size, fileTime_t 
 		*mtime = *ctime = 0;
 		return qfalse;
 	}
-}
-
-
-void Sys_FreeFileList( char **list ) {
-	int		i;
-
-	if ( !list ) {
-		return;
-	}
-
-	for ( i = 0 ; list[i] ; i++ ) {
-		Z_Free( list[i] );
-	}
-
-	Z_Free( list );
 }
 
 void Sys_ShowConsole( int visLevel, qboolean quitOnClose ) { }

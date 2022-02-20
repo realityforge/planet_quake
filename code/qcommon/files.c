@@ -473,9 +473,14 @@ void FS_Reload( void );
 
 
 #ifdef USE_LAZY_LOAD
-
 #define PK3_HASH_SIZE 512
 #define FS_HashFileName Com_GenerateHashValue
+
+#ifdef __WASM__
+__attribute__((import_module("FS"), import_name("Sys_FreeFileList")))
+#endif
+void Sys_FreeFileList( char **list );
+
 static void FS_AddGameDirectory( const char *path, const char *dir, int igvm );
 static qboolean FS_BannedPakFile( const char *filename );
 static void FS_ConvertFilename( char *name );
@@ -523,11 +528,14 @@ void Sys_UpdateNeeded( int tableId, char *ready, char *downloadNeeded ) {
 				if(!downloadNeeded) {
 					// NULL when alread set but still looking for a ready file on a different table
 				} else
-				if(downloadNeeded[0] == '\0'
-					&& time - downloadTable[i]->lastRequested > 1500) {
-					downloadTable[i]->lastRequested = time;
-					// copy name in case it gets deleted somehow
-					strcpy(downloadNeeded, downloadTable[i]->downloadName);
+				if(downloadNeeded[0] == '\0') {
+					if(time - downloadTable[i]->lastRequested > 1500) {
+						downloadTable[i]->lastRequested = time;
+						// copy name in case it gets deleted somehow
+						strcpy(downloadNeeded, downloadTable[i]->downloadName);
+					} else {
+						//Com_Printf("delayed: %i\n", time - downloadTable[i]->lastRequested );
+					}
 				}
 				continue;
 			} else if (ready[0] != 0) {
@@ -613,10 +621,10 @@ static void Sys_FileNeeded(const char *filename) {
 			download->ready = qfalse;
       downloadTable[hash] = download;
 			download->lastRequested = 0; // request immediately, updated after first request
-//printf("file needed! %s %s %i\n", filename, loading, hash);
+Com_Printf("file needed! %s %s %i\n", filename, loading, hash);
    } else {
 			// add 1500 millis to whatever requested it a second time
-			download->lastRequested = Sys_Milliseconds(); 
+			//download->lastRequested = Sys_Milliseconds(); 
 		}
   }
 }
@@ -798,6 +806,9 @@ void MakeDirectoryBuffer(char *paths, int count, int length, const char *localna
 
 
 // TODO: move this to cl_main?
+#ifdef __WASM__
+Q_EXPORT
+#endif
 void Sys_FileReady(const char *filename, const char* tempname) {
   downloadLazy_t *download;
 	unsigned int hash;
@@ -6865,6 +6876,9 @@ void FS_VM_CloseFiles( handleOwner_t owner )
 }
 
 
+#ifdef __WASM__
+Q_EXPORT
+#endif
 const char *FS_GetCurrentGameDir( void )
 {
 	if ( fs_gamedirvar->string[0] )

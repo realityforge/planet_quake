@@ -176,10 +176,11 @@ void Sys_ListFilteredFiles( const char *basedir, const char *subdirs, const char
 
 // bk001129 - in 1.17 this used to be
 // char **Sys_ListFiles( const char *directory, const char *extension, int *numfiles, qboolean wantsubs )
-char **Sys_ListFiles( const char *directory, const char *extension, const char *filter, int *numfiles, qboolean dironly )
+char **Sys_ListFiles( const char *directory, const char *extension, const char *filter, int *numfiles, qboolean wantsubs )
 {
 	struct dirent *d;
 	DIR		*fdir;
+	qboolean dironly = wantsubs;
 	char		search[MAX_OSPATH*2+MAX_QPATH+1];
 	int			nfiles;
 	int			extLen;
@@ -288,7 +289,17 @@ Sys_FreeFileList
 =================
 */
 void Sys_FreeFileList( char **list ) {
-	// don't need to free, using rotating bullshit storage
+	int		i;
+
+	if ( !list ) {
+		return;
+	}
+
+	for ( i = 0 ; list[i] ; i++ ) {
+		Z_Free( list[i] );
+	}
+
+	Z_Free( list );
 }
 
 
