@@ -2024,11 +2024,9 @@ void IN_Frame( void )
 	}
 }
 
-extern void Sys_FocusInput( void );
 
 void IN_ShowKeyboard ( void ) {
 	SDL_StartTextInput();
-	Sys_FocusInput();
 }
 
 /*

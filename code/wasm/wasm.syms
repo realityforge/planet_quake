@@ -6,6 +6,7 @@ pow
 acosf
 powf
 sinf
+logf
 SDL_StopTextInput
 NET_GetPacket
 Sys_IsLANAddress

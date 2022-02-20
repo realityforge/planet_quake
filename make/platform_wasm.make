@@ -42,7 +42,6 @@ BASE_CFLAGS      += -Wall --target=wasm32 \
                     -DUSE_Q3KEY -DUSE_MD5 \
                     -DUSE_ABS_MOUSE -DUSE_LOCAL_DED \
                     -DUSE_LAZY_LOAD -DUSE_LAZY_MEMORY -DUSE_MASTER_LAN \
-                    -fvisibility=hidden \
                     -D_XOPEN_SOURCE=700 \
                     -D__WASM__ \
                     --no-standard-libraries \
@@ -50,10 +49,10 @@ BASE_CFLAGS      += -Wall --target=wasm32 \
                     -Ilibs/musl-1.2.2/include \
                     -Ilibs/musl-1.2.2/arch/generic \
 
-DEBUG_CFLAGS     := $(BASE_CFLAGS) \
+DEBUG_CFLAGS     := $(BASE_CFLAGS) -fvisibility=default \
                     -std=c11 -DDEBUG -D_DEBUG -frtti -fPIC -O0 -g -g3 -gdwarf -gfull
 
-RELEASE_CFLAGS   := $(BASE_CFLAGS) \
+RELEASE_CFLAGS   := $(BASE_CFLAGS) -fvisibility=hidden \
                     -std=c11 -DNDEBUG -O3 -Oz -flto -fPIC -Ofast
 
 export INCLUDE   := -Icode/wasm/include \

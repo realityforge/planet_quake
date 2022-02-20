@@ -155,6 +155,14 @@ function SDL_SetWindowGrab (window, grabbed) {
   }
 }
 
+function SDL_StartTextInput() {
+
+}
+
+function SDL_MinimizeWindow (window) {
+  window.fullscreen = false
+}
+
 function SDL_StopTextInput () {
   SDL.textInput = false;
 }
@@ -225,6 +233,7 @@ function CL_Download(cmd, name, auto) {
   }
 
   // TODO: make a utility for Cvar stuff?
+  let basePath = addressToString(Cvar_VariableString(stringToAddress("fs_basepath")))
   let dlURL = addressToString(Cvar_VariableString(stringToAddress("cl_dlURL")))
   let gamedir = addressToString(FS_GetCurrentGameDir())
   let nameStr = addressToString(name)
@@ -249,17 +258,11 @@ function CL_Download(cmd, name, auto) {
   }).then(function (responseData) {
     // don't store any index files, redownload every start
     if(nameStr[nameStr.length - 1] == '/') {
-      FS.virtual['/' + nameStr] = {
+      let tempName = gamedir + '/.' // yes this is where it always looks for temp files
+        + Math.round(Math.random() * 0xFFFFFFFF).toString(16) + '.tmp'
+      FS.virtual[tempName] = {
         timestamp: new Date(),
         mode: 16895,
-        contents: new Uint8Array(responseData)
-      }
-    } else {
-      // async to filesystem
-      // TODO: JSON.parse
-      FS.virtual['/' + nameStr] = {
-        timestamp: new Date(),
-        mode: 33206,
         contents: new Uint8Array(responseData)
       }
       /*
@@ -268,12 +271,22 @@ function CL_Download(cmd, name, auto) {
         mode: 16895
       }, key)
       */
-     // does it REALLY matter if it makes it? wont it just redownload?
-      writeStore(FS.virtual['/' + nameStr], '/' + nameStr)
+      Sys_FileReady(stringToAddress(localName), stringToAddress(tempName));
+    } else {
+      // TODO: JSON.parse
+      // save the file in memory for now
+      debugger
+      FS.virtual[nameStr] = {
+        timestamp: new Date(),
+        mode: 33206,
+        contents: new Uint8Array(responseData)
+      }
+      // async to filesystem
+      // does it REALLY matter if it makes it? wont it just redownload?
+      writeStore(FS.virtual[nameStr], basePath + '/' + nameStr)
+      Sys_FileReady(stringToAddress(localName), 0);
     }
 
-    // save the file in memory for now
-    //Sys_FileReady();
   })
 }
 
@@ -303,6 +316,8 @@ var Q3e = {
   SDL_GL_GetDrawableSize: SDL_GL_GetDrawableSize,
   SDL_WasInit: function (device) { return 1; },
   SDL_Init: function () {},
+  SDL_MinimizeWindow: SDL_MinimizeWindow,
+  SDL_StartTextInput: SDL_StartTextInput,
   SDL_OpenAudioDevice: function () {},
   SDL_PauseAudioDevice: function () {},
   SDL_CloseAudioDevice: function () {},
@@ -349,7 +364,6 @@ var Q3e = {
     return stringToAddress(new Date().toLocaleString())
   },
   Sys_Print: Sys_Print,
-
 
 }
 
@@ -537,6 +551,8 @@ var NET = {
 }
 
 var FS = {
+  pointers: [],
+  filePointer: 0,
   virtual: {}, // temporarily store items as they go in and out of memory
   Sys_ListFiles: Sys_ListFiles,
   Sys_FTell: Sys_FTell,
@@ -694,38 +710,51 @@ function Sys_Error(fmt, args) {
   throw new Error(addressToString(fmt))
 }
 
-function Sys_FOpen() {
-
+function Sys_FOpen(filename, mode) {
+  // now we don't have to do the indexing crap here because it's built into the engine already
+  let fileStr = addressToString(filename)
+  let localName = fileStr
+  if(localName.startsWith('/base'))
+    localName = localName.substring('/base'.length)
+  if(localName[0] == '/')
+    localName = localName.substring(1)
+  // TODO: check mode?
+  if(FS.virtual[localName]) {
+    FS.pointers[++FS.filePointer] = FS.virtual[localName]
+    return FS.filePointer // not zero
+  } else {
+    return 0 // POSIX
+  }
 }
 
 function Sys_FTell() {
-
+  debugger
 }
 
 function Sys_FSeek() {
-
+  debugger
 }
 
 function Sys_FClose() {
-
+  debugger
 }
 
 function Sys_FWrite() {
-
+  debugger
 }
 
 function Sys_FFlush() {
-
+  debugger
 }
 
 function Sys_FRead() {
-
+  debugger
 }
 
 function Sys_Remove() {
-
+  debugger
 }
 
 function Sys_Rename() {
-
+  debugger
 }

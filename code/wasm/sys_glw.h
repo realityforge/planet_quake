@@ -193,6 +193,7 @@ typedef struct SDL_AudioSpec
     void *userdata;             /**< Userdata passed to callback (ignored for NULL callbacks). */
 } SDL_AudioSpec;
 
+__attribute__((import_module("env"), import_name("SDL_MinimizeWindow")))
 extern void  SDL_MinimizeWindow( void *window );
 extern int   SDL_GetWindowDisplayIndex(void *window);
 extern void  SDL_GL_DeleteContext(void *ctx);
@@ -232,6 +233,7 @@ extern void  SDL_SetWindowGrab(void *window, qboolean grabbed);
 extern int   SDL_SetRelativeMouseMode(qboolean enabled);
 __attribute__((import_module("env"), import_name("SDL_GetWindowFlags")))
 extern uint32_t SDL_GetWindowFlags(void *window);
+__attribute__((import_module("env"), import_name("SDL_StartTextInput")))
 extern void  SDL_StartTextInput(void);
 extern void  SDL_StopTextInput(void);
 

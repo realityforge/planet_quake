@@ -829,7 +829,7 @@ void Sys_FileReady(const char *filename, const char* tempname) {
 	Com_sprintf(localName, sizeof(localName), "%s/%s", FS_GetCurrentGameDir(), filename);
 	//}
 	hash = FS_HashPK3( localName );
-//printf("downloaded: %s -> %s\n", localName, filename);
+Com_Printf("downloaded: %s -> %s\n", localName, filename);
 
 	// mark the file as downloaded
 	for(int i = 0; i < 4; i++) {
@@ -865,7 +865,7 @@ void Sys_FileReady(const char *filename, const char* tempname) {
 
 void FS_UpdateFiles(const char *filename, const char *tempname) {
 
-//printf("updating files: %s\n", filename);
+Com_Printf("updating files: %s -> %s\n", filename, tempname);
 
 	// try to reload UI with current game if needed
 	if(Q_stristr(filename, "ui.qvm")) {
@@ -6987,10 +6987,12 @@ void FS_PipeClose( fileHandle_t f )
 		return;
 
 	if ( fsh[f].handleFiles.file.o ) {
+#ifndef __WASM__
 #ifdef _WIN32
 		_pclose( fsh[f].handleFiles.file.o );
 #else
 		pclose( fsh[f].handleFiles.file.o );
+#endif
 #endif
 	}
 
