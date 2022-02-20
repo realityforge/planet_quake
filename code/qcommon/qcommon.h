@@ -56,6 +56,9 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 void DebugBreak( void )
 __attribute__((import_module("env"), import_name("DebugBreak")));
 
+void DebugError( void )
+__attribute__((import_module("env"), import_name("DebugError")));
+
 #endif
 
 

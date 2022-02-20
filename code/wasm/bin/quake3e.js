@@ -55,25 +55,6 @@ function stringsToMemory(list, length) {
 }
 
 
-function Sys_ListFiles (directory, ext, filter, numfiles, dironly) {
-  let files = {
-    'default.cfg': {
-      mtime: 0,
-      size: 1024,
-    }
-  }
-  let matches = Object.keys(files).reduce(function (list, name) {
-    // TODO: match directory 
-    if(!ext || name.lastIndexOf(ext) === (name.length - ext.length)) {
-      list.push(name)
-    }
-    return list 
-  }, [])
-  Q3e.paged32[(numfiles)>>2] = matches.length;
-  // skip address-list because for-loop counts \0 with numfiles
-  return stringsToMemory(matches) + matches.length
-}
-
 function Sys_Offline() {
 
 }
@@ -256,7 +237,8 @@ function CL_Download(cmd, name, auto) {
   }).then(function (response) {
     //let type = response.headers.get('Content-Type')
     if (!response || !(response.status >= 200 && response.status < 300 || response.status === 304)) {
-      throw new Error('Couldn\'t load ' + response.url + '. Status: ' + (response || {}).statusCode)
+      Sys_FileReady(stringToAddress(localName), null) // failed state, not to retry
+      //throw new Error('Couldn\'t load ' + response.url + '. Status: ' + (response || {}).statusCode)
     }
     return response.arrayBuffer()
   }).then(function (responseData) {
@@ -266,7 +248,7 @@ function CL_Download(cmd, name, auto) {
         + Math.round(Math.random() * 0xFFFFFFFF).toString(16) + '.tmp'
       FS.virtual[tempName] = {
         timestamp: new Date(),
-        mode: 16895,
+        mode: 33206,
         contents: new Uint8Array(responseData)
       }
       /*
@@ -279,7 +261,6 @@ function CL_Download(cmd, name, auto) {
     } else {
       // TODO: JSON.parse
       // save the file in memory for now
-      debugger
       FS.virtual[nameStr] = {
         timestamp: new Date(),
         mode: 33206,
@@ -288,7 +269,7 @@ function CL_Download(cmd, name, auto) {
       // async to filesystem
       // does it REALLY matter if it makes it? wont it just redownload?
       writeStore(FS.virtual[nameStr], '/base/' + nameStr)
-      Sys_FileReady(stringToAddress(localName), 0);
+      Sys_FileReady(stringToAddress(localName), stringToAddress(localName));
     }
 
   })
@@ -307,6 +288,7 @@ function Sys_LoadFunction() {
 }
 
 var Q3e = {
+  DebugError: function () { console.log(new Error('debug').stack) },
   DebugBreak: function () { debugger; },
   longjmp: function (id, code) { throw new Error('longjmp', id, code) },
   setjmp: function (id) { try {  } catch (e) { } },
@@ -568,7 +550,6 @@ var FS = {
   Sys_FOpen: Sys_FOpen,
   Sys_Remove: Sys_Remove,
   Sys_Rename: Sys_Rename,
-  Sys_FreeFileList: Sys_FreeFileList,
 }
 
 window.Q3e = Q3e
@@ -598,6 +579,9 @@ function init(env) {
     let newMethods = Object.keys(Q3e['exports'])
     for(let i = 0; i < newMethods.length; i++) {
       window[newMethods[i]] = Q3e['exports'][newMethods[i]] //.apply(Q3e['exports'])
+    }
+    if(typeof Q3e.exports['Z_Malloc'] == 'undefined') {
+      window.Z_Malloc = Q3e.exports['Z_MallocDebug']
     }
     Object.assign(window, Q3e['exports'])
 
@@ -704,10 +688,6 @@ function Sys_Print(message) {
   console.log(addressToString(message))
 }
 
-function Sys_FreeFileList (list) {
-	// don't need to free, using rotating bullshit storage for this
-}
-
 function Sys_Error(fmt, args) {
   let len = BG_sprintf(Q3e.sharedMemory + Q3e.sharedCounter, fmt, args)
   if(len > 0)
@@ -732,7 +712,8 @@ function Sys_FOpen(filename, mode) {
     FS.pointers[FS.filePointer] = [
       0, // seek/tell
       modeStr,
-      FS.virtual[localName]
+      FS.virtual[localName],
+      localName
     ]
     return FS.filePointer // not zero
   } else {
@@ -776,12 +757,12 @@ function Sys_FFlush() {
   debugger
 }
 
-function Sys_FRead(bufferAddress, size, byteSize, pointer) {
+function Sys_FRead(bufferAddress, byteSize, count, pointer) {
   if(typeof FS.pointers[pointer] == 'undefined') {
     throw new Error('File IO Error') // TODO: POSIX
   }
   let i = 0
-  for(; i < size; i++ ) {
+  for(; i < count * byteSize; i++ ) {
     if(FS.pointers[pointer][0] + i >= FS.pointers[pointer][2].contents.length) {
       break
     }
@@ -799,7 +780,7 @@ function Sys_Remove(file) {
   if(localName[0] == '/')
     localName = localName.substring(1)
   if(typeof FS.virtual[localName] != 'undefined') {
-    FS.virtual[localName] = void 0
+    delete FS.virtual[localName]
     // remove from IDB
     writeStore(false, localName)
   }
@@ -807,4 +788,30 @@ function Sys_Remove(file) {
 
 function Sys_Rename() {
   debugger
+}
+
+
+function Sys_ListFiles (directory, extension, filter, numfiles, wantsubs) {
+  let files = {
+    'default.cfg': {
+      mtime: 0,
+      size: 1024,
+    }
+  }
+  //let matches = []
+  // can't use utility because FS_* frees and moves stuff around
+  let matches = Object.keys(FS.virtual).filter(function (key) { 
+    return (!extension || key.endsWith(extension))
+      // TODO: match directory 
+      && (!wantsubs || FS.virtual[key].mode == 16895)
+  })
+  // return a copy!
+  let listInMemory = Z_Malloc( ( matches.length + 1 ) * 4 )
+  for(let i = 0; i < matches.length; i++) {
+    //matches.push(files[i])
+    Q3e.paged32[(listInMemory + i*4)>>2] = FS_CopyString(stringToAddress(matches[i]));
+  }
+  Q3e.paged32[numfiles >> 2] = matches.length
+  // skip address-list because for-loop counts \0 with numfiles
+  return listInMemory
 }

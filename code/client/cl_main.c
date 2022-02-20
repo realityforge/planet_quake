@@ -4299,6 +4299,7 @@ This is the only place that any of these functions are called from
 ============================
 */
 void CL_StartHunkUsers( void ) {
+	Com_Printf("start hunk users!\n");
 	if (!com_cl_running) {
 		return;
 	}
@@ -4313,6 +4314,8 @@ void CL_StartHunkUsers( void ) {
   const size_t size = backtrace( syms, ARRAY_LEN( syms ) );
   backtrace_symbols_fd( syms, size, STDERR_FILENO );
 #endif
+#else
+	DebugError();
 #endif
 
 	// fixup renderer -EC-

@@ -78,6 +78,27 @@ const char *Sys_SteamPath( void )
 }
 
 
+
+/*
+=================
+Sys_FreeFileList
+=================
+*/
+void Sys_FreeFileList( char **list ) {
+	int		i;
+
+	if ( !list ) {
+		return;
+	}
+
+	for ( i = 0 ; list[i] ; i++ ) {
+		Z_Free( list[i] );
+	}
+
+	Z_Free( list );
+}
+
+
 /*
 =================
 Sys_In_Restart_f

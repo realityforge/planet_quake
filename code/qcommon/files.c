@@ -822,14 +822,15 @@ void Sys_FileReady(const char *filename, const char* tempname) {
 	}
 
 	// mark the correct file as ready
-	//s = strchr( filename, '/' );
-	//if(s) {
-	//	Com_sprintf(localName, sizeof(localName), "%s/%s", FS_GetCurrentGameDir(), s + 1);
-	//} else {
-	Com_sprintf(localName, sizeof(localName), "%s/%s", FS_GetCurrentGameDir(), filename);
-	//}
+	if(!Q_stricmp(filename, "pk3cache.dat")) {
+		// special exception because this is the only file we download outside the gamedir
+		// TODO: make a special exception for updating the EXE from Github?
+		Com_sprintf(localName, sizeof(localName), "%s", filename);
+	} else {
+		Com_sprintf(localName, sizeof(localName), "%s/%s", FS_GetCurrentGameDir(), filename);
+	}
 	hash = FS_HashPK3( localName );
-Com_Printf("downloaded: %s -> %s\n", localName, filename);
+//Com_Printf("downloaded: %s -> %s\n", localName, filename);
 
 	// mark the file as downloaded
 	for(int i = 0; i < 4; i++) {
@@ -865,23 +866,23 @@ Com_Printf("downloaded: %s -> %s\n", localName, filename);
 
 void FS_UpdateFiles(const char *filename, const char *tempname) {
 
-Com_Printf("updating files: %s -> %s\n", filename, tempname);
+//Com_Printf("updating files: %s -> %s\n", filename, tempname);
 
 	// try to reload UI with current game if needed
-	if(Q_stristr(filename, "ui.qvm")) {
+	if(!Q_stricmp(tempname, "vm/ui.qvm")) {
     Cvar_Set("com_skipLoadUI", "0");
 		CL_StartHunkUsers();
 	}
 
 	// do some extra processing, restart UI if default.cfg is found
-	if(!Q_stricmp(filename, "default.cfg")) {
+	if(!Q_stricmp(tempname, "default.cfg")) {
 		// will restart automatically from NextDownload()
 		if(!fs_searchpaths)
 			FS_Restart(0);
 		// TODO: try to restart UI VM
 		// TODO: check on networking, shaderlist, anything else we skipped, etc again
 		com_fullyInitialized = qtrue;
-		//CL_StartHunkUsers();  // wait to start until index arrives
+		CL_StartHunkUsers();  // wait to start until index arrives
 	} else 
 	
 	// scan index files for HTTP directories and add links to q3cache.dat
@@ -4102,6 +4103,9 @@ static int FS_ReturnPath( const char *zname, char *zpath, int *depth ) {
 }
 
 
+#ifdef __WASM__
+Q_EXPORT
+#endif
 char *FS_CopyString( const char *in ) {
 	char *out;
 	//out = S_Malloc( strlen( in ) + 1 );
