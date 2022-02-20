@@ -231,7 +231,7 @@ static int GLW_SetMode( int mode, const char *modeFS, qboolean fullscreen, qbool
   }
 
   gw_active = qfalse;
-  gw_minimized = qtrue;
+  gw_minimized = qfalse;
 
   colorBits = r_colorbits->value;
 

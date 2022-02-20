@@ -45,9 +45,6 @@ MUSL_LOBJ        := string/stpcpy.o  string/memset.o  string/memcpy.o    \
                      \
                     stdlib/qsort.o  \
                     \
-                    ctype/tolower.o ctype/isalnum.o  ctype/isspace.o \
-                    ctype/isdigit.o ctype/iswdigit.o ctype/isupper.o \
-										ctype/isalpha.o \
                     \
                     errno/strerror.o errno/__errno_location.o \
                     \
@@ -59,19 +56,7 @@ MUSL_LOBJ        := string/stpcpy.o  string/memset.o  string/memcpy.o    \
                              math/__math_oflowf.o math/__math_uflowf.o \
                     math/__math_invalidf.o math/__math_xflowf.o \
                     \
-                    unistd/getpid.o unistd/getcwd.o unistd/readlink.o \
-                    unistd/read.o   unistd/write.o  unistd/close.o \
-                    unistd/lseek.o  unistd/pipe2.o  unistd/_exit.o \
-                    unistd/gethostname.o unistd/pipe.o \
                     \
-                    \
-                    time/ctime.o       time/time.o           time/localtime.o \
-                     time/gettimeofday.o   time/clock.o \
-                    time/localtime_r.o time/clock_gettime.o  time/__tz.o \
-                      time/__year_to_secs.o time/__map_file.o \
-                    time/__month_to_secs.o time/__secs_to_tm.o \
-                    \
-                    locale/c_locale.o locale/__lctrans.o locale/langinfo.o \
                     \
                     network/ntohs.o  network/htons.o \
                     \

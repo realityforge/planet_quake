@@ -25,16 +25,15 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "qcommon.h"
 #ifndef __WASM__
 #include <setjmp.h>
-#endif
 #ifndef _WIN32
-#ifndef __WASM__
 #include <netinet/in.h>
-#endif
 #include <sys/stat.h> // umask
 #include <sys/time.h>
 #else
 #include <winsock.h>
 #endif
+#endif
+
 
 #ifdef _DEBUG
 #ifndef _WIN32
@@ -1164,6 +1163,7 @@ int Com_FilterPath( const char *filter, const char *name )
 }
 
 
+#ifndef __WASM__
 /*
 ================
 Com_RealTime
@@ -1190,6 +1190,7 @@ int Com_RealTime(qtime_t *qtime) {
 	}
 	return t;
 }
+
 
 
 /*
@@ -1227,6 +1228,8 @@ int64_t Sys_Microseconds( void )
 	return (int64_t)curr.tv_sec * 1000000LL + (int64_t)curr.tv_usec;
 #endif
 }
+#endif
+
 
 
 /*
@@ -3621,8 +3624,10 @@ static void Com_WriteCDKey( const char *filename, const char *ikey ) {
 	fileHandle_t	f;
 	char			fbuffer[MAX_OSPATH];
 	char			key[17];
+#ifndef __WASM__
 #ifndef _WIN32
 	mode_t			savedumask;
+#endif
 #endif
 
 	Com_sprintf( fbuffer, sizeof(fbuffer), "%s/q3key", filename );
@@ -3633,8 +3638,10 @@ static void Com_WriteCDKey( const char *filename, const char *ikey ) {
 		return;
 	}
 
+#ifndef __WASM__
 #ifndef _WIN32
 	savedumask = umask(0077);
+#endif
 #endif
 	f = FS_SV_FOpenFileWrite( fbuffer );
 	if ( f == FS_INVALID_HANDLE ) {
@@ -3650,11 +3657,12 @@ static void Com_WriteCDKey( const char *filename, const char *ikey ) {
 
 	FS_FCloseFile( f );
 out:
+#ifndef __WASM__
 #ifndef _WIN32
 	umask(savedumask);
-#else
-	;
 #endif
+#endif
+	return;
 }
 #endif
 

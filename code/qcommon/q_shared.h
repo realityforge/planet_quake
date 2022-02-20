@@ -313,7 +313,9 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include <stdarg.h>
 #include <string.h>
 #include <stdlib.h>
+#ifndef __WASM__
 #include <time.h>
+#endif
 #include <ctype.h>
 #include <limits.h>
 
@@ -321,6 +323,13 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include <syscall_arch.h>
 #define a_crash Sys_Exit
 #define abort Sys_Exit
+
+// this only works because it's a single char?
+__attribute__((import_module("env"), import_name("tolower")))
+int tolower( int c );
+
+__attribute__((import_module("env"), import_name("Sys_Error")))
+void Sys_Error( const char *error, ... );
 
 __attribute__((import_module("env"), import_name("Sys_Error")))
 void Sys_Error( const char *error, ... );
@@ -1953,6 +1962,22 @@ typedef struct qtime_s {
 	int tm_yday;    /* days since January 1 - [0,365] */
 	int tm_isdst;   /* daylight savings time flag */
 } qtime_t;
+
+#ifdef __WASM__
+
+typedef qtime_t qtime_s;
+typedef long time_t;
+
+__attribute__((import_module("DATE"), import_name("ctime")))
+char *ctime(const time_t *timer);
+
+__attribute__((import_module("DATE"), import_name("localtime")))
+struct tm *localtime(const time_t * t);
+
+__attribute__((import_module("DATE"), import_name("time")))
+time_t time(time_t *t);
+
+#endif
 
 
 // server browser sources

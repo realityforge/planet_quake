@@ -1716,6 +1716,9 @@ static void NET_GetLocalAddress( void ) {
 int NET_OpenIP(void)
 __attribute__((import_module("NET"), import_name("NET_OpenIP")));
 
+int NET_Close(void)
+__attribute__((import_module("NET"), import_name("NET_Close")));
+
 #else
 /*
 ====================
@@ -1962,6 +1965,7 @@ static void NET_Config( qboolean enableNetworking ) {
 		networkingEnabled = enableNetworking;
 	}
 
+#ifndef __WASM__
 	if( stop ) {
 #ifdef USE_MULTIVM_SERVER
     for(int igvm = 0; igvm < MAX_NUM_PORTS; igvm++)
@@ -1990,6 +1994,9 @@ static void NET_Config( qboolean enableNetworking ) {
 		}
 		
 	}
+#else
+	NET_Close();
+#endif
 
 	if( start )
 	{

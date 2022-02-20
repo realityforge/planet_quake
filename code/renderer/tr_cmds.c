@@ -597,13 +597,14 @@ void RE_EndFrame( int *frontEndMsec, int *backEndMsec ) {
 #ifdef USE_MULTIVM_CLIENT
 	for(int i = 0; i < MAX_NUM_VMS; i++) {
 		rwi = i;
-//printf("cmds: %i -> %i\n", rwi, backEndData->commands.used);
+//ri.Printf(PRINT_ALL, "cmds: %i -> %i\n", rwi, backEndData->commands.used);
 		R_IssueRenderCommands();
 
 		R_InitNextFrame();
 	}
 	rwi = 0;
 #else
+//ri.Printf(PRINT_ALL, "cmds: %i\n", backEndData->commands.used);
 	R_IssueRenderCommands();
 
 	R_InitNextFrame();

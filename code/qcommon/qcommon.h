@@ -1194,6 +1194,9 @@ int			Com_Filter( const char *filter, const char *name );
 qboolean	Com_FilterExt( const char *filter, const char *name );
 qboolean	Com_HasPatterns( const char *str );
 int			Com_FilterPath( const char *filter, const char *name );
+#ifdef __WASM__
+__attribute__((import_module("DATE"), import_name("Com_RealTime")))
+#endif
 int			Com_RealTime(qtime_t *qtime);
 qboolean	Com_SafeMode( void );
 void		Com_RunAndTimeServerPacket( const netadr_t *evFrom, msg_t *buf );
@@ -1550,6 +1553,9 @@ void	Sys_SetAffinityMask( int mask );
 __attribute__((import_module("env"), import_name("Sys_Milliseconds")))
 #endif
 int		Sys_Milliseconds( void );
+#ifdef __WASM__
+__attribute__((import_module("env"), import_name("Sys_Milliseconds")))
+#endif
 int64_t	Sys_Microseconds( void );
 
 void	Sys_SnapVector( float *vector );

@@ -1651,7 +1651,6 @@ void RB_ExecuteRenderCommands( const void *data ) {
 
 	backEnd.pc.msec = ri.Milliseconds();
 
-Com_Printf("drawing \n");
 	while ( 1 ) {
 		data = PADP(data, sizeof(void *));
 

@@ -630,7 +630,7 @@ void Key_ParseBinding( int key, qboolean down, unsigned time )
 
 	while( 1 )
 	{
-		while ( isspace( *p ) )
+		while ( (*p) == ' ' || (unsigned)(*p)-'\t' < 5 )
 			p++;
 		end = strchr( p, ';' );
 		if ( end )

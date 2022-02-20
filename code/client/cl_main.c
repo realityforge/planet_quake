@@ -31,6 +31,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include <unistd.h>
 #endif
 #endif
+#include <sys/time.h>
 
 #ifdef USE_VID_FAST
 //#include "../ui/ui_shared.h"
@@ -4472,6 +4473,20 @@ static int CL_FS_ReadFile( const char *qpath, void **buffer ) {
 #endif
 
 
+#ifdef __WASM__
+int64_t CL_Microseconds( void ) {
+	struct timeval curr;
+	//gettimeofday( &curr, NULL );
+
+	//uint32_t *time = Sys_Microseconds()
+	int64_t result = (int64_t)curr.tv_sec * 1000000LL + (int64_t)curr.tv_usec; //(int64_t)time[0] * 1000000LL + (int64_t)time[1];
+	DebugBreak();
+	return result;
+}
+
+#endif
+
+
 /*
 ============
 CL_InitRef
@@ -4546,7 +4561,11 @@ static void CL_InitRef( void ) {
 	rimp.Printf = CL_RefPrintf;
 	rimp.Error = Com_Error;
 	rimp.Milliseconds = CL_ScaledMilliseconds;
+#ifdef __WASM__
 	rimp.Microseconds = Sys_Microseconds;
+#else
+	rimp.Microseconds = CL_Microseconds;
+#endif
 	rimp.Malloc = CL_RefMalloc;
 	rimp.FreeAll = CL_RefFreeAll;
 	rimp.Free = Z_Free;

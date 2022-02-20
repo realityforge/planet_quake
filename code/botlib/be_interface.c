@@ -104,16 +104,19 @@ void QDECL Com_DPrintf( const char *fmt, ... )
 //
 //===========================================================================
 
+#ifndef __WASM__
 //===========================================================================
 //
 // Parameter:				-
 // Returns:					-
 // Changes Globals:		-
 //===========================================================================
+// TODO botimport.MilliSeconds NO clock()!
 int Sys_MilliSeconds(void)
 {
 	return clock() * 1000 / CLOCKS_PER_SEC;
 } //end of the function Sys_MilliSeconds
+#endif
 
 #ifndef BUILD_SLIM_CLIENT
 //===========================================================================
