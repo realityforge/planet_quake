@@ -551,7 +551,7 @@ var NET = {
 }
 
 var FS = {
-  pointers: [],
+  pointers: {},
   filePointer: 0,
   virtual: {}, // temporarily store items as they go in and out of memory
   Sys_ListFiles: Sys_ListFiles,
@@ -610,6 +610,7 @@ function init(env) {
     let startup = [
       'quake3e_web',
       '+set', 'fs_basepath', '/base',
+      '+set', 'fs_homepath', '/home',
       '+set', 'sv_pure', '0', // require for now, TODO: server side zips
       '+set', 'fs_basegame', 'multigame',
       '+set', 'cl_dlURL', '"http://local.games:8080/multigame"',
@@ -713,30 +714,54 @@ function Sys_Error(fmt, args) {
 function Sys_FOpen(filename, mode) {
   // now we don't have to do the indexing crap here because it's built into the engine already
   let fileStr = addressToString(filename)
+  let modeStr = addressToString(mode)
   let localName = fileStr
-  if(localName.startsWith('/base'))
+  if(localName.startsWith('/base')
+    || localName.startsWith('/home'))
     localName = localName.substring('/base'.length)
   if(localName[0] == '/')
     localName = localName.substring(1)
   // TODO: check mode?
-  if(FS.virtual[localName]) {
-    FS.pointers[++FS.filePointer] = FS.virtual[localName]
+  if(typeof FS.virtual[localName] != 'undefined') {
+    // open the file successfully
+    FS.filePointer++
+    FS.pointers[FS.filePointer] = [
+      0, // seek/tell
+      modeStr,
+      FS.virtual[localName]
+    ]
     return FS.filePointer // not zero
   } else {
-    return 0 // POSIX
+    return null // POSIX
   }
 }
 
-function Sys_FTell() {
-  debugger
+function Sys_FTell(pointer) {
+  if(typeof FS.pointers[pointer] == 'undefined') {
+    throw new Error('File IO Error') // TODO: POSIX
+  }
+  return FS.pointers[pointer][0]
 }
 
-function Sys_FSeek() {
-  debugger
+function Sys_FSeek(pointer, position, mode) {
+  if(typeof FS.pointers[pointer] == 'undefined') {
+    throw new Error('File IO Error') // TODO: POSIX
+  }
+  if(mode == 0 /* SEEK_SET */) {
+    FS.pointers[pointer][0] = position
+  } else if (mode == 1 /* SEEK_CUR */) {
+    FS.pointers[pointer][0] += position
+  } else if (mode == 2 /* SEEK_END */) {
+    FS.pointers[pointer][0] = FS.pointers[pointer][2].contents.length + position
+  }
+  return FS.pointers[pointer][0]
 }
 
-function Sys_FClose() {
-  debugger
+function Sys_FClose(pointer) {
+  if(typeof FS.pointers[pointer] == 'undefined') {
+    throw new Error('File IO Error') // TODO: POSIX
+  }
+  FS.pointers[pointer] = void 0
 }
 
 function Sys_FWrite() {
@@ -747,7 +772,10 @@ function Sys_FFlush() {
   debugger
 }
 
-function Sys_FRead() {
+function Sys_FRead(bufferAddress, size, byteSize, pointer) {
+  if(typeof FS.pointers[pointer] == 'undefined') {
+    throw new Error('File IO Error') // TODO: POSIX
+  }
   debugger
 }
 
