@@ -96,7 +96,7 @@ function SDL_GL_GetDrawableSize(display, width, height) {
 }
 
 function SDL_CreateWindow (title, x, y, w, h, flags) {
-  //var win = malloc(8)
+  //let win = malloc(8)
   // TODO: multiple windows like a DVR?
   //   what kind of game needs two screens for one player to switch back and forth?
   /*
@@ -172,7 +172,7 @@ function SDL_ShowCursor() {
   Q3e.canvas.exitPointerLock();
 }
 
-var DB_STORE_NAME = 'FILE_DATA';
+const DB_STORE_NAME = 'FILE_DATA';
 
 function openDatabase() {
   if(!FS.open || Date.now() - FS.openTime > 1000) {
@@ -212,14 +212,19 @@ function writeStore(value, key) {
       }
     })
   }
-  var transaction = FS.database.transaction([DB_STORE_NAME], 'readwrite');
-  var objStore = transaction.objectStore(DB_STORE_NAME);
-  let storeValue = objStore.put(value, key)
+  let transaction = FS.database.transaction([DB_STORE_NAME], 'readwrite');
+  let objStore = transaction.objectStore(DB_STORE_NAME);
+  let storeValue  
+  if(value === false) {
+    storeValue = objStore.delete(key)
+  } else {
+    storeValue = objStore.put(value, key)
+  }
   storeValue.onsuccess = function () {}
   transaction.oncomplete = function () {
-    FS.database.close()
-    FS.database = null
-    FS.open = null
+    //FS.database.close()
+    //FS.database = null
+    //FS.open = null
   }
   storeValue.onerror = function (error) {
     console.error(error, value, key)
@@ -233,7 +238,6 @@ function CL_Download(cmd, name, auto) {
   }
 
   // TODO: make a utility for Cvar stuff?
-  let basePath = addressToString(Cvar_VariableString(stringToAddress("fs_basepath")))
   let dlURL = addressToString(Cvar_VariableString(stringToAddress("cl_dlURL")))
   let gamedir = addressToString(FS_GetCurrentGameDir())
   let nameStr = addressToString(name)
@@ -283,7 +287,7 @@ function CL_Download(cmd, name, auto) {
       }
       // async to filesystem
       // does it REALLY matter if it makes it? wont it just redownload?
-      writeStore(FS.virtual[nameStr], basePath + '/' + nameStr)
+      writeStore(FS.virtual[nameStr], '/base/' + nameStr)
       Sys_FileReady(stringToAddress(localName), 0);
     }
 
@@ -776,11 +780,29 @@ function Sys_FRead(bufferAddress, size, byteSize, pointer) {
   if(typeof FS.pointers[pointer] == 'undefined') {
     throw new Error('File IO Error') // TODO: POSIX
   }
-  debugger
+  let i = 0
+  for(; i < size; i++ ) {
+    if(FS.pointers[pointer][0] + i >= FS.pointers[pointer][2].contents.length) {
+      break
+    }
+    Q3e.paged[bufferAddress + i] = FS.pointers[pointer][2].contents[FS.pointers[pointer][0] + i]
+  }
+  return i
 }
 
-function Sys_Remove() {
-  debugger
+function Sys_Remove(file) {
+  let fileStr = addressToString(file)
+  let localName = fileStr
+  if(localName.startsWith('/base')
+    || localName.startsWith('/home'))
+    localName = localName.substring('/base'.length)
+  if(localName[0] == '/')
+    localName = localName.substring(1)
+  if(typeof FS.virtual[localName] != 'undefined') {
+    FS.virtual[localName] = void 0
+    // remove from IDB
+    writeStore(false, localName)
+  }
 }
 
 function Sys_Rename() {
