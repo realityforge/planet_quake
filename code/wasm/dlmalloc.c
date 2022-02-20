@@ -1,6 +1,9 @@
 
 /* XXX Emscripten XXX */
 #if __WASM__
+
+#include "../qcommon/q_shared.h"
+
 // When building for wasm we export `malloc` and `emscripten_builtin_malloc` as
 // weak alias of the internal `dlmalloc` which is static to this file.
 #define DLMALLOC_EXPORT static
@@ -562,6 +565,10 @@
 #define DLMALLOC_EXPORT extern __attribute__((visibility("default")))
 #endif
 
+#define LACKS_ERRNO_H
+#define LACKS_TIME_H
+#define LACKS_UNISTD_H
+
 #ifndef WIN32
 #ifdef _WIN32
 #define WIN32 1
@@ -573,8 +580,8 @@
 #endif  /* WIN32 */
 #ifdef WIN32
 #define WIN32_LEAN_AND_MEAN
-#include <windows.h>
-#include <tchar.h>
+//#include <windows.h>
+//#include <tchar.h>
 #define HAVE_MMAP 1
 #define HAVE_MORECORE 0
 #define LACKS_UNISTD_H
@@ -597,6 +604,20 @@
 #endif /*MMAP_CLEARS */
 #endif  /* WIN32 */
 
+#ifdef __GNUC__
+__attribute__((const))
+#endif
+static int __errno_storage = 0;
+
+int *__errno_location(void)
+{
+	return &__errno_storage;
+}
+
+#undef errno
+
+
+#if 0
 #if defined(DARWIN) || defined(_DARWIN)
 /* Mac OSX docs advise not to use sbrk; it seems better to use mmap */
 #ifndef HAVE_MORECORE
@@ -609,8 +630,10 @@
 #endif  /* HAVE_MORECORE */
 #endif  /* DARWIN */
 
+#endif
+
 #ifndef LACKS_SYS_TYPES_H
-#include <sys/types.h>  /* For size_t */
+//#include <sys/types.h>  /* For size_t */
 #endif  /* LACKS_SYS_TYPES_H */
 
 /* The maximum possible size_t value has all bits set */
@@ -690,7 +713,7 @@ defined(__i386__) || defined(__x86_64__))) ||                    \
 #endif  /* linux */
 #endif  /* HAVE_MREMAP */
 #ifndef MALLOC_FAILURE_ACTION
-#define MALLOC_FAILURE_ACTION  errno = ENOMEM;
+#define MALLOC_FAILURE_ACTION  (*__errno_location()) = ENOMEM;
 #endif  /* MALLOC_FAILURE_ACTION */
 #ifndef HAVE_MORECORE
 #if ONLY_MSPACES
@@ -742,13 +765,13 @@ defined(__i386__) || defined(__x86_64__))) ||                    \
 #define USE_DEV_RANDOM 0
 #endif  /* USE_DEV_RANDOM */
 #ifndef NO_MALLINFO
-#define NO_MALLINFO 0
+#define NO_MALLINFO 1
 #endif  /* NO_MALLINFO */
 #ifndef MALLINFO_FIELD_TYPE
 #define MALLINFO_FIELD_TYPE size_t
 #endif  /* MALLINFO_FIELD_TYPE */
 #ifndef NO_MALLOC_STATS
-#define NO_MALLOC_STATS 0
+#define NO_MALLOC_STATS 1
 #endif  /* NO_MALLOC_STATS */
 #ifndef NO_SEGMENT_TRAVERSAL
 #define NO_SEGMENT_TRAVERSAL 0
@@ -793,7 +816,7 @@ defined(__i386__) || defined(__x86_64__))) ||                    \
 /* #define HAVE_USR_INCLUDE_MALLOC_H */
 
 #ifdef HAVE_USR_INCLUDE_MALLOC_H
-#include "/usr/include/malloc.h"
+//#include "/usr/include/malloc.h"
 #else /* HAVE_USR_INCLUDE_MALLOC_H */
 #ifndef STRUCT_MALLINFO_DECLARED
 /* HP-UX (and others?) redefines mallinfo unless _STRUCT_MALLINFO is defined */
@@ -1315,7 +1338,7 @@ size_t bulk_free(void**, size_t n_elements) __attribute__((weak, alias("dlbulk_f
 #endif /* ONLY_MSPACES */
     
 #if MSPACES
-    
+        
     /*
      mspace is an opaque type representing an independent
      region of space that supports mspace_malloc, etc.
@@ -1394,13 +1417,14 @@ size_t bulk_free(void**, size_t n_elements) __attribute__((weak, alias("dlbulk_f
      spaces.
      */
     DLMALLOC_EXPORT void* mspace_realloc(mspace msp, void* mem, size_t newsize);
-    
+
     /*
      mspace_calloc behaves as calloc, but operates within
      the given space.
      */
     DLMALLOC_EXPORT void* mspace_calloc(mspace msp, size_t n_elements, size_t elem_size);
-    
+    ;
+
     /*
      mspace_memalign behaves as memalign, but operates within
      the given space.
@@ -1486,10 +1510,10 @@ size_t bulk_free(void**, size_t n_elements) __attribute__((weak, alias("dlbulk_f
 #pragma warning( disable : 4146 ) /* no "unsigned" warnings */
 #endif /* _MSC_VER */
 #if !NO_MALLOC_STATS
-#include <stdio.h>       /* for printing in malloc_stats */
+//#include <stdio.h>       /* for printing in malloc_stats */
 #endif /* NO_MALLOC_STATS */
 #ifndef LACKS_ERRNO_H
-#include <errno.h>       /* for MALLOC_FAILURE_ACTION */
+//#include <errno.h>       /* for MALLOC_FAILURE_ACTION */
 #endif /* LACKS_ERRNO_H */
 #ifdef DEBUG
 #if ABORT_ON_ASSERT_FAILURE
@@ -1504,17 +1528,19 @@ size_t bulk_free(void**, size_t n_elements) __attribute__((weak, alias("dlbulk_f
 #define DEBUG 0
 #endif /* DEBUG */
 #if !defined(WIN32) && !defined(LACKS_TIME_H)
-#include <time.h>        /* for magic initialization */
+//#include <time.h>        /* for magic initialization */
 #endif /* WIN32 */
+#ifndef __WASM__
 #ifndef LACKS_STDLIB_H
-#include <stdlib.h>      /* for abort() */
+//#include <stdlib.h>      /* for abort() */
 #endif /* LACKS_STDLIB_H */
+#endif
 #ifndef LACKS_STRING_H
-#include <string.h>      /* for memset etc */
+//#include <string.h>      /* for memset etc */
 #endif  /* LACKS_STRING_H */
 #if USE_BUILTIN_FFS
 #ifndef LACKS_STRINGS_H
-#include <strings.h>     /* for ffs */
+//#include <strings.h>     /* for ffs */
 #endif /* LACKS_STRINGS_H */
 #endif /* USE_BUILTIN_FFS */
 #if HAVE_MMAP
@@ -1522,18 +1548,18 @@ size_t bulk_free(void**, size_t n_elements) __attribute__((weak, alias("dlbulk_f
 /* On some versions of linux, mremap decl in mman.h needs __USE_GNU set */
 #if (defined(linux) && !defined(__USE_GNU))
 #define __USE_GNU 1
-#include <sys/mman.h>    /* for mmap */
+//#include <sys/mman.h>    /* for mmap */
 #undef __USE_GNU
 #else
-#include <sys/mman.h>    /* for mmap */
+//#include <sys/mman.h>    /* for mmap */
 #endif /* linux */
 #endif /* LACKS_SYS_MMAN_H */
 #ifndef LACKS_FCNTL_H
-#include <fcntl.h>
+//#include <fcntl.h>
 #endif /* LACKS_FCNTL_H */
 #endif /* HAVE_MMAP */
 #ifndef LACKS_UNISTD_H
-#include <unistd.h>     /* for sbrk, sysconf */
+//#include <unistd.h>     /* for sbrk, sysconf */
 #else /* LACKS_UNISTD_H */
 #if !defined(__FreeBSD__) && !defined(__OpenBSD__) && !defined(__NetBSD__)
 extern void*     sbrk(ptrdiff_t);
@@ -1547,12 +1573,12 @@ extern void*     sbrk(ptrdiff_t);
 #if USE_LOCKS
 #ifndef WIN32
 #if defined (__SVR4) && defined (__sun)  /* solaris */
-#include <thread.h>
+//#include <thread.h>
 #elif !defined(LACKS_SCHED_H)
-#include <sched.h>
+//#include <sched.h>
 #endif /* solaris or LACKS_SCHED_H */
 #if (defined(USE_RECURSIVE_LOCKS) && USE_RECURSIVE_LOCKS != 0) || !USE_SPIN_LOCKS
-#include <pthread.h>
+//#include <pthread.h>
 #endif /* USE_RECURSIVE_LOCKS ... */
 #elif defined(_MSC_VER)
 #ifndef _M_AMD64
@@ -2811,6 +2837,10 @@ static int has_segment_link(mstate m, msegmentptr ss) {
 #endif  /* POSTACTION */
 
 #endif /* USE_LOCKS */
+
+
+
+
 
 /*
  CORRUPTION_ERROR_ACTION is triggered upon detected bad addresses.

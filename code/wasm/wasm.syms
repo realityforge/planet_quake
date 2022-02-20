@@ -1,10 +1,11 @@
 Sys_RandomBytes
-sin
 cos
+cosf
 srand
 pow
 acosf
 powf
+sin
 sinf
 logf
 SDL_StopTextInput
@@ -21,4 +22,10 @@ Sys_FFlush
 Sys_FRead
 GL_GetProcAddress
 Sys_FreeFileList
-
+strncpy
+memcpy
+memset
+strcmp
+strcat
+strchr
+memmove

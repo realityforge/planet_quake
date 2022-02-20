@@ -95,13 +95,11 @@ static qboolean	winsockInitialized = qfalse;
 #	include <netdb.h>
 #	include <netinet/in.h>
 #	include <arpa/inet.h>
-#endif
 #	include <net/if.h>
 #	include <sys/ioctl.h>
 #	include <sys/types.h>
 #	include <sys/time.h>
 #	include <unistd.h>
-#ifndef __WASM__
 #	if !defined(__sun) && !defined(__sgi)
 #		include <ifaddrs.h>
 #	endif
@@ -214,7 +212,9 @@ static SOCKET	ip_sockets[MAX_NUM_PORTS] = {
   INVALID_SOCKET, INVALID_SOCKET
 };
 #else
+#ifndef __WASM__
 static SOCKET	ip_socket = INVALID_SOCKET;
+#endif
 #endif
 #ifdef __WASM__
 // maybe on desktop we have the luxury of maintaining separate connections
@@ -273,6 +273,7 @@ NET_ErrorString
 ====================
 */
 static char *NET_ErrorString( void ) {
+#ifndef __WASM__
 #ifdef _WIN32
 	//FIXME: replace with FormatMessage?
 	switch( socketError ) {
@@ -324,6 +325,7 @@ static char *NET_ErrorString( void ) {
 	}
 #else
 	return strerror(socketError);
+#endif
 #endif
 }
 

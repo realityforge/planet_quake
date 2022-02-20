@@ -1,8 +1,10 @@
 #ifdef BUILD_HUFFMAN
+#ifndef __WASM__
 #include <stdint.h>
 #include <stdio.h>
 #include <stdarg.h>
 #include <string.h>
+#endif
 
 #if (defined _MSC_VER)
 #define Q_EXPORT __declspec(dllexport)

@@ -29,9 +29,11 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  *
  *****************************************************************************/
 
+#ifndef __WASM__
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#endif
 
 #include "../qcommon/q_shared.h"
 #include "../qcommon/qcommon.h"

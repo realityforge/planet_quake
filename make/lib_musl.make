@@ -27,7 +27,7 @@ endif
 #                malloc/lite_malloc.o malloc/free.o malloc/calloc.o malloc/realloc.o \
 
 
-MUSL_LOBJ        := string/stpcpy.o  string/memset.o  string/memcpy.o    \
+MUSL_LOBJ        := string/memset.o  string/memcpy.o    \
                     string/memmove.o string/memcmp.o  string/memchr.o    \
                     string/memrchr.o string/strncpy.o string/strcmp.o    \
                     string/strcat.o  string/strchr.o  string/strncmp.o   \
@@ -36,47 +36,12 @@ MUSL_LOBJ        := string/stpcpy.o  string/memset.o  string/memcpy.o    \
                     string/strstr.o  string/strrchr.o string/strnlen.o   \
                     string/strcspn.o string/strpbrk.o string/strdup.o    \
                     \
-                        internal/syscall_ret.o \
-                     internal/procfdname.o internal/libc.o \
-                    \
-                     \
-                    \
-                    \
-                     \
                     stdlib/qsort.o  \
                     \
+                    errno/__errno_location.o \
                     \
-                    errno/strerror.o errno/__errno_location.o \
-                    \
-                    \
-                    math/__signbit.o    math/__signbitf.o    math/__signbitl.o \
-                    math/__fpclassify.o math/__fpclassifyf.o math/__fpclassifyl.o \
-                    math/frexpl.o       math/scalbn.o        math/copysignl.o \
-										math/scalbnl.o      math/fmodl.o         math/fabsl.o \
-                             math/__math_oflowf.o math/__math_uflowf.o \
-                    math/__math_invalidf.o math/__math_xflowf.o \
-                    \
-                    \
-                    \
-                    network/ntohs.o  network/htons.o \
-                    \
-                    select/select.o select/poll.o \
-                    \
-                    stat/umask.o stat/mkdir.o stat/stat.o stat/fstatat.o \
-                    \
-                    dirent/readdir.o dirent/closedir.o dirent/opendir.o \
-                    \
-                    misc/dirname.o misc/ioctl.o misc/uname.o \
-                    \
-                    mman/munmap.o mman/mmap.o \
-                    \
-                    env/getenv.o env/__environ.o \
-                    \
-                    fcntl/fcntl.o fcntl/open.o \
-                    \
-                    thread/__lock.o       thread/pthread_sigmask.o \
-                    thread/__syscall_cp.o thread/pthread_setcancelstate.o \
-                    thread/pthread_cleanup_push.o thread/clone.o \
+                    network/ntohs.o  network/htons.o
+
 
 
 MUSL_OBJ         += $(addprefix $(B)/musl/,$(MUSL_LOBJ))
@@ -107,8 +72,7 @@ MUSL_CFLAGS      := -Ofast --target=wasm32 -fvisibility=hidden \
 
 #RELEASE_CFLAGS   := $(BASE_CFLAGS) \
                     -std=c11 -DNDEBUG -O3 -Oz -flto -fPIC
-MUSL_INCLUDE     := -Icode/wasm/include \
-										-Ilibs/musl-1.2.2/arch/generic \
+MUSL_INCLUDE     := -Ilibs/musl-1.2.2/arch/generic \
                     -Ilibs/musl-1.2.2/src/include \
                     -Ilibs/musl-1.2.2/src/internal
 

@@ -22,16 +22,16 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 // cl_main.c  -- client main loop
 
 #include "client.h"
+#ifndef  __WASM__
 #include <limits.h>
 #ifdef _DEBUG
 #ifndef _WIN32
-#ifndef  __WASM__
 #include <execinfo.h>
-#endif
 #include <unistd.h>
 #endif
-#endif
 #include <sys/time.h>
+#endif
+#endif
 
 #ifdef USE_VID_FAST
 //#include "../ui/ui_shared.h"
@@ -4300,7 +4300,6 @@ This is the only place that any of these functions are called from
 ============================
 */
 void CL_StartHunkUsers( void ) {
-	Com_Printf("start hunk users!\n");
 	if (!com_cl_running) {
 		return;
 	}

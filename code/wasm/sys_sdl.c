@@ -106,15 +106,15 @@ void SDL_GL_DeleteContext(void *context) {
 __attribute__((import_module("GL"), import_name("GL_GetProcAddress")))
 void *GL_GetProcAddress( const char *name );
 
-__attribute__((import_module("env"), import_name("SDL_OpenAudioDevice")))
+__attribute__((import_module("SDL"), import_name("SDL_OpenAudioDevice")))
 int SDL_OpenAudioDevice(const char *device, int iscapture,
                     const SDL_AudioSpec * desired, SDL_AudioSpec * obtained,
                     int allowed_changes);
 
-__attribute__((import_module("env"), import_name("SDL_PauseAudioDevice")))
+__attribute__((import_module("SDL"), import_name("SDL_PauseAudioDevice")))
 void SDL_PauseAudioDevice(int dev, int pause_on);
 
-__attribute__((import_module("env"), import_name("SDL_CloseAudioDevice")))
+__attribute__((import_module("SDL"), import_name("SDL_CloseAudioDevice")))
 void SDL_CloseAudioDevice(int dev);
 
 /*

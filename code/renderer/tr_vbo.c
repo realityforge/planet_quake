@@ -799,7 +799,6 @@ void R_BuildWorldVBO( msurface_t *surf, int surfCount )
 	int numStaticIndexes = 0;
 	int numStaticVertexes = 0;
 
-ri.Printf("skipping: %i\n", ( !qglBindBufferARB || !r_vbo->integer ))	;
 	if ( !qglBindBufferARB || !r_vbo->integer )
 		return;
 

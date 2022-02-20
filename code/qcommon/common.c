@@ -35,15 +35,15 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #endif
 
 
+#ifndef  __WASM__
 #ifdef _DEBUG
 #ifndef _WIN32
-#ifndef  __WASM__
 #include <execinfo.h>
-#endif
 #include <unistd.h>
 #endif
 #include <stdio.h>
 #include <stdlib.h>
+#endif
 #endif
 
 #include "../client/keys.h"

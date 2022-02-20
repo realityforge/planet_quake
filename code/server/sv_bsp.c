@@ -2,18 +2,16 @@
 
 #ifdef USE_MEMORY_MAPS
 
+#ifndef  __WASM__
 #ifdef _DEBUG
 #ifndef _WIN32
-#ifndef  __WASM__
 #include <execinfo.h>
-#endif
 #include <unistd.h>
 #endif
 #include <stdio.h>
 #include <stdlib.h>
 #endif
 
-#ifndef __WASM__
 #include <setjmp.h>
 #endif
 

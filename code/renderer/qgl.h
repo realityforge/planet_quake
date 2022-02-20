@@ -38,7 +38,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include <windows.h>
 #include <GL/gl.h>
 #elif defined(__WASM__)
-#include <GL/gl.h>
+#include "../wasm/gl.h"
 #undef GL_RGBA8
 #define GL_RGBA8 GL_RGBA
 #undef GL_RGB8

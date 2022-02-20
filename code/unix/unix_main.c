@@ -74,8 +74,6 @@ pthread_t thread;
 #include "../client/client.h"
 #endif
 
-unsigned sys_frame_time;
-
 qboolean stdin_active = qfalse;
 int      stdin_flags = 0;
 

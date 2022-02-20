@@ -54,10 +54,10 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #ifdef __WASM__
 
 void DebugBreak( void )
-__attribute__((import_module("env"), import_name("DebugBreak")));
+__attribute__((import_module("SYS"), import_name("DebugBreak")));
 
 void DebugError( void )
-__attribute__((import_module("env"), import_name("DebugError")));
+__attribute__((import_module("SYS"), import_name("DebugError")));
 
 #endif
 
@@ -1533,7 +1533,7 @@ void	Sys_Quit (void);
 void JS_Field_CharEvent( field_t *edit, int ch );
 #endif
 #ifdef __WASM__
-__attribute__((import_module("env"), import_name("Sys_GetClipboardData")))
+__attribute__((import_module("SYS"), import_name("Sys_GetClipboardData")))
 #endif
 char	*Sys_GetClipboardData( void );	// note that this isn't journaled...
 void	Sys_SetClipboardBitmap( const byte *bitmap, int length );
@@ -1550,11 +1550,11 @@ void	Sys_SetAffinityMask( int mask );
 // Sys_Milliseconds should only be used for profiling purposes,
 // any game related timing information should come from event timestamps
 #ifdef __WASM__
-__attribute__((import_module("env"), import_name("Sys_Milliseconds")))
+__attribute__((import_module("SYS"), import_name("Sys_Milliseconds")))
 #endif
 int		Sys_Milliseconds( void );
 #ifdef __WASM__
-__attribute__((import_module("env"), import_name("Sys_Milliseconds")))
+__attribute__((import_module("SYS"), import_name("Sys_Milliseconds")))
 #endif
 int64_t	Sys_Microseconds( void );
 
@@ -1564,7 +1564,7 @@ qboolean Sys_RandomBytes( byte *string, int len );
 
 #ifdef USE_ASYNCHRONOUS
 #ifdef __WASM__
-__attribute__((import_module("env"), import_name("Sys_Offline")))
+__attribute__((import_module("NET"), import_name("Sys_Offline")))
 #endif
 void Sys_Offline( void );
 #endif
@@ -1591,7 +1591,11 @@ __attribute__((import_module("NET"), import_name("Sys_IsLANAddress")))
 qboolean	Sys_IsLANAddress(const netadr_t *adr);
 void		Sys_ShowIP(void);
 
+#ifdef __WASM__
+__attribute__((import_module("FS"), import_name("Sys_Mkdir")))
+#endif
 void	Sys_Mkdir( const char *path );
+
 #ifdef __WASM__
 __attribute__((import_module("FS"), import_name("Sys_FOpen")))
 #endif
@@ -1612,7 +1616,9 @@ char **Sys_ListFiles( const char *directory, const char *extension, const char *
 __attribute__((import_module("FS"), import_name("Sys_FreeFileList")))
 #endif
 void Sys_FreeFileList( char **list );
-
+#ifdef __WASM__
+__attribute__((import_module("FS"), import_name("Sys_GetFileStats")))
+#endif
 qboolean Sys_GetFileStats( const char *filename, fileOffset_t *size, fileTime_t *mtime, fileTime_t *ctime );
 
 void Sys_BeginProfiling( void );
@@ -1623,19 +1629,19 @@ qboolean Sys_LowPhysicalMemory( void );
 int Sys_MonkeyShouldBeSpanked( void );
 
 #ifdef __WASM__
-__attribute__((import_module("env"), import_name("Sys_LoadLibrary")))
+__attribute__((import_module("SYS"), import_name("Sys_LoadLibrary")))
 #endif
 void *Sys_LoadLibrary( const char *name );
 #ifdef __WASM__
-__attribute__((import_module("env"), import_name("Sys_LoadFunction")))
+__attribute__((import_module("SYS"), import_name("Sys_LoadFunction")))
 #endif
 void *Sys_LoadFunction( void *handle, const char *name );
 #ifdef __WASM__
-__attribute__((import_module("env"), import_name("Sys_LoadFunctionErrors")))
+__attribute__((import_module("SYS"), import_name("Sys_LoadFunctionErrors")))
 #endif
 int   Sys_LoadFunctionErrors( void );
 #ifdef __WASM__
-__attribute__((import_module("env"), import_name("Sys_UnloadLibrary")))
+__attribute__((import_module("SYS"), import_name("Sys_UnloadLibrary")))
 #endif
 void  Sys_UnloadLibrary( void *handle );
 

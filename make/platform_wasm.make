@@ -28,26 +28,24 @@ SHLIBLDFLAGS     := --import-memory --import-table --error-limit=200 --export-dy
 LDFLAGS          := --import-memory --import-table --error-limit=200 --export-dynamic \
                     --no-entry --strip-all --allow-undefined-file=code/wasm/wasm.syms
 
-CLIENT_LDFLAGS   := code/wasm/include/wasi/libclang_rt.builtins-wasm32.a
+CLIENT_LDFLAGS   := 
 
 BASE_CFLAGS      += -Wall --target=wasm32 \
                     -Wimplicit -fstrict-aliasing \
-                    -Wno-bitwise-op-parentheses \
-                    -Wno-shift-op-parentheses \
-                    -Wno-unused-but-set-variable \
-                    -Wno-unused-function \
-                    -Wno-incompatible-library-redeclaration \
-                    -DGL_GLEXT_PROTOTYPES=1 -DGL_ARB_ES2_compatibility=1 \
+                    -DGL_GLEXT_PROTOTYPES=1 \
+                    -DGL_ARB_ES2_compatibility=1 \
                     -DGL_EXT_direct_state_access=1 \
-                    -DUSE_Q3KEY -DUSE_MD5 \
-                    -DUSE_ABS_MOUSE -DUSE_LOCAL_DED \
-                    -DUSE_LAZY_LOAD -DUSE_LAZY_MEMORY -DUSE_MASTER_LAN \
-                    -D_XOPEN_SOURCE=700 \
+                    -DUSE_Q3KEY \
+                    -DUSE_MD5 \
+                    -DUSE_ABS_MOUSE \
+                    -DUSE_LOCAL_DED \
+                    -DUSE_LAZY_LOAD \
+                    -DUSE_LAZY_MEMORY \
+                    -DUSE_MASTER_LAN \
                     -D__WASM__ \
                     --no-standard-libraries \
-                    -Icode/wasm/include \
-                    -Ilibs/musl-1.2.2/include \
-                    -Ilibs/musl-1.2.2/arch/generic \
+                    -Icode/wasm/include 
+
 
 DEBUG_CFLAGS     := $(BASE_CFLAGS) -fvisibility=default \
                     -std=c11 -DDEBUG -D_DEBUG -frtti -fPIC -O0 -g -g3 -gdwarf -gfull
@@ -55,9 +53,8 @@ DEBUG_CFLAGS     := $(BASE_CFLAGS) -fvisibility=default \
 RELEASE_CFLAGS   := $(BASE_CFLAGS) -fvisibility=hidden \
                     -std=c11 -DNDEBUG -O3 -Oz -flto -fPIC -Ofast
 
-export INCLUDE   := -Icode/wasm/include \
-                    -Ilibs/musl-1.2.2/include \
-                    -Ilibs/musl-1.2.2/arch/generic
+export INCLUDE   := -Icode/wasm/include 
+
 
 ifdef B
 pre-build:

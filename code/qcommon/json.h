@@ -86,7 +86,9 @@ int JSON_ValueGetInt(const char *json, const char *jsonEnd);
 #endif
 
 #ifdef JSON_IMPLEMENTATION
+#ifndef __WASM__
 #include <stdio.h>
+#endif
 
 // --------------------------------------------------------------------------
 //   Internal Functions

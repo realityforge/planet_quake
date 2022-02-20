@@ -19,9 +19,6 @@ along with Quake III Arena source code; if not, write to the Free Software
 Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 ===========================================================================
 */
-#include <stdio.h>
-#include <sys/stat.h>
-
 #include "../qcommon/q_shared.h"
 #include "../qcommon/qcommon.h"
 
@@ -35,11 +32,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define Q_EXPORT __attribute__((visibility("default")))
 #endif
 
-unsigned sys_frame_time;
-
-qboolean stdin_active = qfalse;
-int      stdin_flags = 0;
-
 extern void IN_Shutdown( void );
 extern void IN_Init( void );
 extern void IN_Frame( void );
@@ -49,33 +41,17 @@ extern void IN_Frame( void );
 // General routines
 // =======================================================================
 
-// bk001207 
-#define MEM_THRESHOLD 96*1024*1024
+// some things are easier to leave here instead of in javscript?
 
-/*
-==================
-Sys_LowPhysicalMemory()
-==================
-*/
-qboolean Sys_LowPhysicalMemory( void )
-{
-	//MEMORYSTATUS stat;
-	//GlobalMemoryStatus (&stat);
-	//return (stat.dwTotalPhys <= MEM_THRESHOLD) ? qtrue : qfalse;
-	return qfalse; // bk001207 - FIXME
-}
-
-
-void Sys_BeginProfiling( void )
-{
-
-}
-
-const char *Sys_SteamPath( void )
-{
-	static char steamPath[ MAX_OSPATH ];
-  return steamPath;
-}
+qboolean Sys_LowPhysicalMemory( void ) { return qfalse; }
+void Sys_BeginProfiling( void ) { }
+const char *Sys_SteamPath( void ) { return ""; }
+void Sys_SendKeyEvents( void ) { } // moved to push in sys_in.js
+void Sys_ShowConsole( int visLevel, qboolean quitOnClose ) { }
+char *Sys_ConsoleInput( void ) { return NULL; }
+const char *Sys_DefaultBasePath( void ) { return "/base"; }
+qboolean Sys_ResetReadOnlyAttribute( const char *ospath ) { return qfalse; }
+const char *Sys_DefaultHomePath( void ) { return "/base/home"; }
 
 
 
@@ -122,19 +98,19 @@ void Sys_In_Restart_f( void )
 // =============================================================
 
 
-__attribute__((import_module("env"), import_name("Sys_Exit")))
+__attribute__((import_module("SYS"), import_name("Sys_Exit")))
 void Sys_Exit( int code );
 
-__attribute__((import_module("env"), import_name("dlopen")))
+__attribute__((import_module("SYS"), import_name("dlopen")))
 void *try_dlopen( const char* base, const char* gamedir, const char* fname );
 
-__attribute__((import_module("env"), import_name("dlerror")))
+__attribute__((import_module("SYS"), import_name("dlerror")))
 char *dlerror( void );
 
-__attribute__((import_module("env"), import_name("dlsym")))
+__attribute__((import_module("SYS"), import_name("dlsym")))
 void *dlsym( void *handle, char *symbol );
 
-__attribute__((import_module("env"), import_name("dlclose")))
+__attribute__((import_module("SYS"), import_name("dlclose")))
 void *dlclose( void *handle );
 
 const char *Sys_Pwd( void ) { return "/base"; }
@@ -158,15 +134,8 @@ void Sys_Init( void )
 #endif
 
 	Cvar_Set( "arch", OS_STRING " " ARCH_STRING );
-
-	//IN_Init();   // rcg08312005 moved into glimp.
 }
 
-
-void Sys_SendKeyEvents( void )
-{
-
-}
 
 
 #undef stdout
@@ -276,34 +245,7 @@ Q_EXPORT int RunGame( int argc, char* argv[] )
 }
 
 
-qboolean Sys_GetFileStats( const char *filename, fileOffset_t *size, fileTime_t *mtime, fileTime_t *ctime ) {
-	struct stat s;
-
-	if ( stat( filename, &s ) == 0 ) {
-		*size = (fileOffset_t)s.st_size;
-		*mtime = (fileTime_t)s.st_mtime;
-		*ctime = (fileTime_t)s.st_ctime;
-		return qtrue;
-	} else {
-		*size = 0;
-		*mtime = *ctime = 0;
-		return qfalse;
-	}
-}
-
-void Sys_ShowConsole( int visLevel, qboolean quitOnClose ) { }
-
-char *Sys_ConsoleInput( void ) { return NULL; }
-
-void Sys_Mkdir( const char *path ) { mkdir( path, 0750 ); }
-
-const char *Sys_DefaultBasePath( void ) { return "/base"; }
-
-qboolean Sys_ResetReadOnlyAttribute( const char *ospath ) { return qfalse; }
-
-const char *Sys_DefaultHomePath( void ) { return "/base/home"; }
-
-
+/*
 #define VA_ARGS(numargs, pointer) \
 intptr_t	args[numargs]; \
 va_list	ap; \
@@ -311,21 +253,5 @@ va_start( ap, pointer ); \
 for (int i = 0; i < ARRAY_LEN( args ); i++ ) \
   args[ i ] = va_arg( ap, intptr_t ); \
 va_end( ap );
+*/
 
-
-
-
-int emscripten_resize_heap(size_t size) {
-#ifdef __EMSCRIPTEN_MEMORY_GROWTH__
-  size_t old_size = __builtin_wasm_memory_size(0) * WASM_PAGE_SIZE;
-  assert(old_size < size);
-  ssize_t diff = (size - old_size + WASM_PAGE_SIZE - 1) / WASM_PAGE_SIZE;
-  size_t result = __builtin_wasm_memory_grow(0, diff);
-  if (result != (size_t)-1) {
-    // Success, update JS (see https://github.com/WebAssembly/WASI/issues/82)
-    emscripten_notify_memory_growth(0);
-    return 1;
-  }
-#endif
-  return 0;
-}

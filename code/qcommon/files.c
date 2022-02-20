@@ -459,19 +459,6 @@ static void FS_CheckIdPaks( void );
 #endif
 void FS_Reload( void );
 
-
-#ifdef __WASM__
-#define ftell Sys_FTell
-#define fseek Sys_FSeek
-#define fclose Sys_FClose
-#define fwrite Sys_FWrite
-#define fflush Sys_FFlush
-#define fread Sys_FRead
-#define rename Sys_Rename
-#define remove Sys_Remove
-#endif
-
-
 #ifdef USE_LAZY_LOAD
 #define PK3_HASH_SIZE 512
 #define FS_HashFileName Com_GenerateHashValue
