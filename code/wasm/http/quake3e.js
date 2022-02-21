@@ -130,7 +130,7 @@ function startProgram(program) {
             console.log(e)
           }
         })
-      }, 1000 / 60);
+      }, 1000 / 20);
     } catch (e) {
       console.log(e)
     }
@@ -158,7 +158,6 @@ function instantiateWasm(bytes) {
     Object.assign(Q3e.env, Object.values(libraries)[i])
   }
 
-  Q3e['tableCount'] = 511
   Q3e['table'] = Q3e['__indirect_function_table'] =
     new WebAssembly.Table({ initial: 512, element: 'anyfunc' });
   Q3e['memory'] = new WebAssembly.Memory( {
