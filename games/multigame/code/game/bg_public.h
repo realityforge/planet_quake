@@ -129,11 +129,11 @@ typedef enum {
 	PM_SPECTATOR,	// still run into walls
 	PM_DEAD,		// no acceleration or turning, but free falling
 	PM_FREEZE,		// stuck in place with no control
+	PM_INTERMISSION,	// no movement or status bar
+	PM_SPINTERMISSION,	// no movement or status bar
 #if defined(USE_GAME_FREEZETAG) || defined(USE_REFEREE_CMDS)
   PM_FROZEN,
 #endif
-	PM_INTERMISSION,	// no movement or status bar
-	PM_SPINTERMISSION	// no movement or status bar
 } pmtype_t;
 
 typedef enum {

@@ -841,6 +841,7 @@ int MSG_PlayerStateToEntityStateXMask( const playerState_t *ps, const entityStat
 	if ( s->pos.trTime != ps->commandTime ) // CPMA
 		mask |= SM_TRTIME;
 
+/*
 	if ( ps->pm_type == PM_INTERMISSION || ps->pm_type == PM_SPECTATOR ) {
 		if ( s->eType != ET_INVISIBLE ) {
 			//Com_DPrintf( S_COLOR_YELLOW "E#0.1\n" );
@@ -857,6 +858,7 @@ int MSG_PlayerStateToEntityStateXMask( const playerState_t *ps, const entityStat
 			mask |= SM_BASE;
 		}
 	}
+*/
 
 	// !CPMA: SM_TRTYPE
 	if ( s->pos.trType != TR_INTERPOLATE ) {
@@ -908,16 +910,22 @@ int MSG_PlayerStateToEntityStateXMask( const playerState_t *ps, const entityStat
 	}
 
 	// EFLAGS
+#ifdef DEBUG
+#define	EF_DEAD				0x00000001		// don't draw a foe marker over players with EF_DEAD
+#define	STAT_HEALTH		0x00000000
+
 	tmp = ps->eFlags;
 	if ( ps->stats[STAT_HEALTH] <= 0 ) {
 		tmp |= EF_DEAD;
 	} else {
 		tmp &= ~EF_DEAD;
 	}
+	// safety check
 	if ( s->eFlags != tmp ) {
 		Com_Printf( S_COLOR_YELLOW "E#8: s->eFlags %i != %i health=%i\n", s->eFlags, tmp, ps->stats[ STAT_HEALTH ] );
 		mask |= SM_EFLAGS;
 	}
+#endif
 
 	if ( s->loopSound != ps->loopSound || s->generic1 != ps->generic1 ) {
 		//Com_DPrintf( S_COLOR_YELLOW "E#9\n" );
@@ -954,6 +962,7 @@ void MSG_PlayerStateToEntityState( playerState_t *ps, entityState_t *s, qboolean
 
 	if ( sm & SM_BASE ) 
 	{
+/*
 		if ( ps->pm_type == PM_INTERMISSION || ps->pm_type == PM_SPECTATOR ) {
 			s->eType = ET_INVISIBLE;
 		} else if ( ps->stats[STAT_HEALTH] <= GIB_HEALTH ) {
@@ -961,6 +970,7 @@ void MSG_PlayerStateToEntityState( playerState_t *ps, entityState_t *s, qboolean
 		} else {
 			s->eType = ET_PLAYER;
 		}
+*/
 
 		//s->pos.trType = TR_INTERPOLATE; // -> now set by SM_TRTYPE
 		s->apos.trType = TR_INTERPOLATE;

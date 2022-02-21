@@ -280,6 +280,7 @@ static qboolean CL_GetSnapshot( int snapshotNumber, snapshot_t *snapshot ) {
 		snapshot->ps = clSnap->clps[ cv ].ps;
 		entMask = clSnap->clps[ cv ].entMask;
 		if(cv != clc.clientNum) {
+#define PMF_FOLLOW			4096	// spectate following another player
 			snapshot->ps.pm_flags |= PMF_FOLLOW;
 		}
 
@@ -319,6 +320,13 @@ static qboolean CL_GetSnapshot( int snapshotNumber, snapshot_t *snapshot ) {
 #endif // USE_MV
 
 #ifdef USE_LAZY_LOAD
+//PM_NORMAL,		// can accelerate and turn
+//	PM_NOCLIP,		// noclip movement
+#define PM_SPECTATOR 2	// still run into walls
+#define PM_DEAD 3		// no acceleration or turning, but free falling
+//	PM_FREEZE,		// stuck in place with no control
+#define PM_INTERMISSION 5	// no movement or status bar
+#define PM_SPINTERMISSION	 6 // no movement or status bar
   if(clSnap->ps.pm_type == PM_SPECTATOR
     || clSnap->ps.pm_type == PM_SPINTERMISSION
     || clSnap->ps.pm_type == PM_INTERMISSION

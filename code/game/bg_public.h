@@ -131,9 +131,6 @@ typedef enum {
 	PM_SPECTATOR,	// still run into walls
 	PM_DEAD,		// no acceleration or turning, but free falling
 	PM_FREEZE,		// stuck in place with no control
-#if defined(USE_GAME_FREEZETAG) || defined(USE_REFEREE_CMDS)
-  PM_FROZEN,
-#endif
 	PM_INTERMISSION,	// no movement or status bar
 	PM_SPINTERMISSION	// no movement or status bar
 } pmtype_t;
@@ -290,11 +287,7 @@ typedef enum {
 	PW_AMMOREGEN,
 	PW_INVULNERABILITY,
 
-#if defined(USE_GAME_FREEZETAG) || defined(USE_REFEREE_CMDS)
-  PW_FROZEN,
-#endif
-
-  PW_NUM_POWERUPS
+	PW_NUM_POWERUPS
 
 } powerup_t;
 
@@ -382,20 +375,9 @@ typedef enum {
 
 	EV_ITEM_PICKUP,			// normal item pickups are predictable
 	EV_GLOBAL_ITEM_PICKUP,	// powerup / team sounds are broadcast to everyone
-#ifdef USE_ITEM_TIMERS
-  EV_ITEM_TIMER,
-#endif
 
 	EV_NOAMMO,
 	EV_CHANGE_WEAPON,
-/*
-  TODO: make a weapon mod with infinite classes using an event counter,
-  EV_WEAPON_RESET
-  EV_WEAPON_COUNT
-  EV_CLASS_RESET
-  EV_CLASS_COUNT
-  
-*/
 	EV_FIRE_WEAPON,
 
 	EV_USE_ITEM0,
@@ -448,9 +430,6 @@ typedef enum {
 
 	EV_GIB_PLAYER,			// gib a previously living player
 	EV_SCOREPLUM,			// score plum
-#ifdef USE_DAMAGE_PLUMS
-  EV_DAMAGEPLUM,			// damage plum
-#endif
 
 //#ifdef MISSIONPACK
 	EV_PROXIMITY_MINE_STICK,
@@ -471,9 +450,8 @@ typedef enum {
 	EV_TAUNT_FOLLOWME,
 	EV_TAUNT_GETFLAG,
 	EV_TAUNT_GUARDBASE,
-	EV_TAUNT_PATROL,
+	EV_TAUNT_PATROL
 
-	EV_MAX
 } entity_event_t;
 
 
@@ -574,11 +552,6 @@ typedef enum {
 
 	TEAM_NUM_TEAMS
 } team_t;
-
-typedef enum {
-	TAG_NONE = 0,
-	TAG_DONTSPAWN,
-} tag_t;
 
 // Time between location updates
 #define TEAM_LOCATION_UPDATE_TIME		1000
@@ -726,7 +699,7 @@ typedef enum {
 void	BG_EvaluateTrajectory( const trajectory_t *tr, int atTime, vec3_t result );
 void	BG_EvaluateTrajectoryDelta( const trajectory_t *tr, int atTime, vec3_t result );
 
-void	BG_AddPredictableEventToPlayerstate( int newEvent, int eventParm, playerState_t *ps, int entityNum );
+void	BG_AddPredictableEventToPlayerstate( int newEvent, int eventParm, playerState_t *ps );
 
 void	BG_TouchJumpPad( playerState_t *ps, entityState_t *jumppad );
 

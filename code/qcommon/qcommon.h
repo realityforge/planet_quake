@@ -1554,7 +1554,7 @@ __attribute__((import_module("SYS"), import_name("Sys_Milliseconds")))
 #endif
 int		Sys_Milliseconds( void );
 #ifdef __WASM__
-__attribute__((import_module("SYS"), import_name("Sys_Milliseconds")))
+__attribute__((import_module("SYS"), import_name("Sys_Microseconds")))
 #endif
 int64_t	Sys_Microseconds( void );
 

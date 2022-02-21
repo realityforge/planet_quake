@@ -336,6 +336,7 @@ jobs:
 
     - name: Build
       run: |
+        pwd
         mkdir bin
         make -f make/build_client.make clean ${{ matrix.rule }}      RENDERER_DEFAULT=vulkan USE_SDL=1 CNAME=quake3e-vulkan NO_MAKE_LOCAL=1
         make -f make/build_client.make clean ${{ matrix.rule }}      USE_VULKAN_API=0 USE_SDL=1 NO_MAKE_LOCAL=1
@@ -376,8 +377,13 @@ jobs:
       - name: Download Artifacts
         uses: actions/download-artifact@v2
 
+      - uses: actions/checkout@v2
+
       - name: Create binary archives
         run: |
+          pwd
+          ls -lah
+          ls -lah /
           7z a -r quake3e-linux-x86.zip      ./linux-x86/*
           7z a -r quake3e-linux-x86_64.zip   ./linux-x86_64/*
           7z a -r quake3e-windows-mingw-x86.zip    ./windows-mingw-x86/*

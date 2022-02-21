@@ -29,7 +29,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "keys.h"
 #include "snd_public.h"
 #include "../cgame/cg_public.h"
-//#include "../game/bg_public.h"
+#include "../game/bg_public.h"
 
 #ifdef USE_PRINT_CONSOLE
 #undef Com_Printf

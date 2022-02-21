@@ -25,11 +25,11 @@ TARGET_Q3CPP   = q3cpp
 TARGET_LBURG   = lburg
 
 ifdef B
-Q3ASM          = $(B)/$(Q3LCC_WORKDIR)/$(TARGET_Q3ASM)
-Q3LCC          = $(B)/$(Q3LCC_WORKDIR)/$(TARGET_Q3LCC)
-Q3RCC          = $(B)/$(Q3LCC_WORKDIR)/$(TARGET_Q3RCC)
-Q3CPP          = $(B)/$(Q3LCC_WORKDIR)/$(TARGET_Q3CPP)
-LBURG          = $(B)/$(Q3LCC_WORKDIR)/lburg/$(TARGET_LBURG)
+Q3ASM          = $(BR)/$(Q3LCC_WORKDIR)/$(TARGET_Q3ASM)
+Q3LCC          = $(BR)/$(Q3LCC_WORKDIR)/$(TARGET_Q3LCC)
+Q3RCC          = $(BR)/$(Q3LCC_WORKDIR)/$(TARGET_Q3RCC)
+Q3CPP          = $(BR)/$(Q3LCC_WORKDIR)/$(TARGET_Q3CPP)
+LBURG          = $(BR)/$(Q3LCC_WORKDIR)/lburg/$(TARGET_LBURG)
 endif
 
 TOOLS_CFLAGS  := $(BASE_CFLAGS) \
@@ -54,19 +54,6 @@ endef
 
 
 ifdef NOT_INCLUDED_Q3LCC
-debug:
-	$(echo_cmd) "MAKE Q3LCC"
-	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) WORKDIRS="$(Q3LCC_WORKDIRS)" mkdirs
-	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) pre-build
-	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) -j 8 \
-	  WORKDIRS="$(Q3LCC_WORKDIRS)" \
-	  CFLAGS="$(CFLAGS) $(DEBUG_CFLAGS)" \
-	  LDFLAGS="$(LDFLAGS) $(DEBUG_LDFLAGS)" \
-	  $(BD)/$(Q3LCC_WORKDIR)/$(TARGET_Q3ASM) \
-	  $(BD)/$(Q3LCC_WORKDIR)/$(TARGET_Q3LCC) \
-	  $(BD)/$(Q3LCC_WORKDIR)/$(TARGET_Q3RCC) \
-	  $(BD)/$(Q3LCC_WORKDIR)/$(TARGET_Q3CPP) \
-	  $(BD)/$(Q3LCC_WORKDIR)/lburg/$(TARGET_LBURG)
 
 release:
 	$(echo_cmd) "MAKE Q3LCC"
@@ -100,58 +87,58 @@ CLEANS        += $(Q3LCC_WORKDIRS) \
                  $(Q3LCC_WORKDIR)/$(TARGET_LBURG)
 endif
 
-Q3ASMOBJ       = $(B)/tools/asm/q3asm.o \
-                 $(B)/tools/asm/q3vm.o \
-                 $(B)/tools/asm/cmdlib.o
+Q3ASMOBJ       = $(BR)/tools/asm/q3asm.o \
+                 $(BR)/tools/asm/q3vm.o \
+                 $(BR)/tools/asm/cmdlib.o
 
-Q3LCCOBJ       = $(B)/tools/etc/lcc.o \
-                 $(B)/tools/etc/bytecode.o
+Q3LCCOBJ       = $(BR)/tools/etc/lcc.o \
+                 $(BR)/tools/etc/bytecode.o
 
-Q3CPPOBJ       = $(B)/tools/cpp/cpp.o \
-                 $(B)/tools/cpp/lex.o \
-                 $(B)/tools/cpp/nlist.o \
-                 $(B)/tools/cpp/tokens.o \
-                 $(B)/tools/cpp/macro.o \
-                 $(B)/tools/cpp/eval.o \
-                 $(B)/tools/cpp/include.o \
-                 $(B)/tools/cpp/hideset.o \
-                 $(B)/tools/cpp/getopt.o \
-                 $(B)/tools/cpp/unix.o
+Q3CPPOBJ       = $(BR)/tools/cpp/cpp.o \
+                 $(BR)/tools/cpp/lex.o \
+                 $(BR)/tools/cpp/nlist.o \
+                 $(BR)/tools/cpp/tokens.o \
+                 $(BR)/tools/cpp/macro.o \
+                 $(BR)/tools/cpp/eval.o \
+                 $(BR)/tools/cpp/include.o \
+                 $(BR)/tools/cpp/hideset.o \
+                 $(BR)/tools/cpp/getopt.o \
+                 $(BR)/tools/cpp/unix.o
 
-Q3RCCOBJ       = $(B)/tools/rcc/alloc.o \
-                 $(B)/tools/rcc/bind.o \
-                 $(B)/tools/rcc/bytecode.o \
-                 $(B)/tools/rcc/dag.o \
-                 $(B)/tools/rcc/dagcheck.o \
-                 $(B)/tools/rcc/decl.o \
-                 $(B)/tools/rcc/enode.o \
-                 $(B)/tools/rcc/error.o \
-                 $(B)/tools/rcc/event.o \
-                 $(B)/tools/rcc/expr.o \
-                 $(B)/tools/rcc/gen.o \
-                 $(B)/tools/rcc/init.o \
-                 $(B)/tools/rcc/inits.o \
-                 $(B)/tools/rcc/input.o \
-                 $(B)/tools/rcc/lex.o \
-                 $(B)/tools/rcc/list.o \
-                 $(B)/tools/rcc/main.o \
-                 $(B)/tools/rcc/null.o \
-                 $(B)/tools/rcc/output.o \
-                 $(B)/tools/rcc/prof.o \
-                 $(B)/tools/rcc/profio.o \
-                 $(B)/tools/rcc/simp.o \
-                 $(B)/tools/rcc/stmt.o \
-                 $(B)/tools/rcc/string.o \
-                 $(B)/tools/rcc/sym.o \
-                 $(B)/tools/rcc/symbolic.o \
-                 $(B)/tools/rcc/trace.o \
-                 $(B)/tools/rcc/tree.o \
-                 $(B)/tools/rcc/types.o
+Q3RCCOBJ       = $(BR)/tools/rcc/alloc.o \
+                 $(BR)/tools/rcc/bind.o \
+                 $(BR)/tools/rcc/bytecode.o \
+                 $(BR)/tools/rcc/dag.o \
+                 $(BR)/tools/rcc/dagcheck.o \
+                 $(BR)/tools/rcc/decl.o \
+                 $(BR)/tools/rcc/enode.o \
+                 $(BR)/tools/rcc/error.o \
+                 $(BR)/tools/rcc/event.o \
+                 $(BR)/tools/rcc/expr.o \
+                 $(BR)/tools/rcc/gen.o \
+                 $(BR)/tools/rcc/init.o \
+                 $(BR)/tools/rcc/inits.o \
+                 $(BR)/tools/rcc/input.o \
+                 $(BR)/tools/rcc/lex.o \
+                 $(BR)/tools/rcc/list.o \
+                 $(BR)/tools/rcc/main.o \
+                 $(BR)/tools/rcc/null.o \
+                 $(BR)/tools/rcc/output.o \
+                 $(BR)/tools/rcc/prof.o \
+                 $(BR)/tools/rcc/profio.o \
+                 $(BR)/tools/rcc/simp.o \
+                 $(BR)/tools/rcc/stmt.o \
+                 $(BR)/tools/rcc/string.o \
+                 $(BR)/tools/rcc/sym.o \
+                 $(BR)/tools/rcc/symbolic.o \
+                 $(BR)/tools/rcc/trace.o \
+                 $(BR)/tools/rcc/tree.o \
+                 $(BR)/tools/rcc/types.o
 
-LBURGOBJ       = $(B)/tools/lburg/lburg.o \
-                 $(B)/tools/lburg/gram.o
+LBURGOBJ       = $(BR)/tools/lburg/lburg.o \
+                 $(BR)/tools/lburg/gram.o
 
-DAGCHECK_C     = $(B)/tools/rcc/dagcheck.c
+DAGCHECK_C     = $(BR)/tools/rcc/dagcheck.c
 
 ifdef B
 
@@ -161,29 +148,29 @@ ifdef B
 %.c: %.y
 	$(DO_YACC)
 
-$(B)/$(Q3LCC_WORKDIR)/lburg/%.o: $(LBURGDIR)/%.c
+$(BR)/$(Q3LCC_WORKDIR)/lburg/%.o: $(LBURGDIR)/%.c
 	$(DO_TOOLS_CC)
 
 $(DAGCHECK_C): $(LBURG) $(Q3LCCDIR)/src/dagcheck.md
 	$(echo_cmd) "LBURG $(Q3LCCDIR)/src/dagcheck.md"
 	$(Q)$(LBURG) $(Q3LCCDIR)/src/dagcheck.md $@
 
-$(B)/$(Q3LCC_WORKDIR)/rcc/dagcheck.o: $(DAGCHECK_C)
+$(BR)/$(Q3LCC_WORKDIR)/rcc/dagcheck.o: $(DAGCHECK_C)
 	$(DO_TOOLS_CC)
 
-$(B)/$(Q3LCC_WORKDIR)/rcc/%.o: $(Q3LCCDIR)/src/%.c
+$(BR)/$(Q3LCC_WORKDIR)/rcc/%.o: $(Q3LCCDIR)/src/%.c
 	$(DO_TOOLS_CC)
 
-$(B)/$(Q3LCC_WORKDIR)/rcc/%.o: $(Q3LCCDIR)/etc/%.c
+$(BR)/$(Q3LCC_WORKDIR)/rcc/%.o: $(Q3LCCDIR)/etc/%.c
 	$(DO_TOOLS_CC)
 
-$(B)/$(Q3LCC_WORKDIR)/cpp/%.o: $(Q3CPPDIR)/%.c
+$(BR)/$(Q3LCC_WORKDIR)/cpp/%.o: $(Q3CPPDIR)/%.c
 	$(DO_TOOLS_CC)
 
-$(B)/$(Q3LCC_WORKDIR)/asm/%.o: $(Q3ASMDIR)/%.c
+$(BR)/$(Q3LCC_WORKDIR)/asm/%.o: $(Q3ASMDIR)/%.c
 	$(DO_TOOLS_CC)
   
-$(B)/$(Q3LCC_WORKDIR)/etc/%.o: $(Q3LCCDIR)/etc/%.c
+$(BR)/$(Q3LCC_WORKDIR)/etc/%.o: $(Q3LCCDIR)/etc/%.c
 	$(DO_TOOLS_CC)
 
 

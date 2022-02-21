@@ -53,7 +53,7 @@ function SDL_GL_CreateContext(canvas) {
   */
 
   Q3e.webgl.viewport(0, 0, Q3e.canvas.width, Q3e.canvas.height);
-  if (!Q3e['webgl']) return 0
+  if (!Q3e.webgl) return 0
   //let handle = malloc(8);
   //Q3e.paged32[handle>>2] = 1
   return 1 // handle

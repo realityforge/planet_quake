@@ -4564,9 +4564,9 @@ static void CL_InitRef( void ) {
 	rimp.Error = Com_Error;
 	rimp.Milliseconds = CL_ScaledMilliseconds;
 #ifdef __WASM__
-	rimp.Microseconds = Sys_Microseconds;
-#else
 	rimp.Microseconds = CL_Microseconds;
+#else
+	rimp.Microseconds = Sys_Microseconds;
 #endif
 	rimp.Malloc = CL_RefMalloc;
 	rimp.FreeAll = CL_RefFreeAll;

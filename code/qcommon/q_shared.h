@@ -155,7 +155,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define MV_PROTOCOL_VERSION MV_MULTIWORLD_VERSION
 #define USE_LAZY_MEMORY 1
 #define USE_ENGINE_TELE 1
-#define USE_LAZY_LOAD
+#define USE_LAZY_LOAD 1
 #endif
 
 
@@ -296,7 +296,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
   you will have to add your own version for support in the VM.
 
  **********************************************************************/
-
 
 #ifdef Q3_VM
 
@@ -993,6 +992,7 @@ MATHLIB
 
 ==============================================================
 */
+
 
 typedef float vec_t;
 typedef vec_t vec2_t[2];
@@ -1793,19 +1793,6 @@ typedef struct {
 } gameState_t;
 
 //=========================================================
-
-typedef enum {
-	PM_NORMAL,		// can accelerate and turn
-	PM_NOCLIP,		// noclip movement
-	PM_SPECTATOR,	// still run into walls
-	PM_DEAD,		// no acceleration or turning, but free falling
-	PM_FREEZE,		// stuck in place with no control
-#if defined(USE_GAME_FREEZETAG) || defined(USE_REFEREE_CMDS)
-  PM_FROZEN,
-#endif
-	PM_INTERMISSION,	// no movement or status bar
-	PM_SPINTERMISSION	// no movement or status bar
-} pmtype_t;
 
 // bit field limits
 #define	MAX_STATS				16

@@ -30,7 +30,8 @@ MOD_CFLAGS    += -DUSE_GAME_FREEZETAG
 endif
 
 ifndef Q3LCC
-include make/lib_q3lcc.make
+Q3ASM          = $(BR)/tools/q3asm
+Q3LCC          = $(BR)/tools/q3lcc
 endif
 
 
@@ -95,6 +96,7 @@ ifneq ($(BUILD_CLIENT),1)
 ifneq ($(BUILD_GAME_QVM),0)
 debug:
 	$(echo_cmd) "MAKE $(MOD)"
+	@$(MAKE) -f make/lib_q3lcc.make release 
 	@$(MAKE) -f $(MKFILE) makegamedirs B=$(BD) 
 	@$(MAKE) -f $(MKFILE)  -j 8 \
 		$(BD)/$(MOD)/cgame$(SHLIBNAME) \
@@ -108,6 +110,7 @@ debug:
 
 release:
 	$(echo_cmd) "MAKE $(MOD)"
+	@$(MAKE) -f make/lib_q3lcc.make release 
 	@$(MAKE) -f $(MKFILE) makegamedirs B=$(BR) 
 	@$(MAKE) -f $(MKFILE)  -j 8 \
 	  $(BR)/$(MOD)/cgame$(SHLIBNAME) \
