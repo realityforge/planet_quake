@@ -2336,6 +2336,7 @@ static void Com_InitSmallZoneMemory( void ) {
 }
 
 
+
 /*
 =================
 Com_InitZoneMemory
@@ -2352,7 +2353,7 @@ static void Com_InitZoneMemory( void ) {
 	// configure the memory manager.
 
 	// allocate the random block zone
-	cv = Cvar_Get( "com_zoneMegs", XSTRING( DEF_COMZONEMEGS ), CVAR_LATCH | CVAR_ARCHIVE );
+	cv = Cvar_Get( "com_zoneMegs", "12", CVAR_LATCH | CVAR_ARCHIVE );
 	Cvar_CheckRange( cv, "1", NULL, CV_INTEGER );
 #ifndef USE_MULTI_SEGMENT
 	if ( cv->integer < DEF_COMZONEMEGS )

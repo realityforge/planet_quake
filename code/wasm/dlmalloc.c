@@ -565,10 +565,6 @@
 #define DLMALLOC_EXPORT extern __attribute__((visibility("default")))
 #endif
 
-#define LACKS_ERRNO_H
-#define LACKS_TIME_H
-#define LACKS_UNISTD_H
-
 #ifndef WIN32
 #ifdef _WIN32
 #define WIN32 1
@@ -765,13 +761,13 @@ defined(__i386__) || defined(__x86_64__))) ||                    \
 #define USE_DEV_RANDOM 0
 #endif  /* USE_DEV_RANDOM */
 #ifndef NO_MALLINFO
-#define NO_MALLINFO 1
+#define NO_MALLINFO 0
 #endif  /* NO_MALLINFO */
 #ifndef MALLINFO_FIELD_TYPE
 #define MALLINFO_FIELD_TYPE size_t
 #endif  /* MALLINFO_FIELD_TYPE */
 #ifndef NO_MALLOC_STATS
-#define NO_MALLOC_STATS 1
+#define NO_MALLOC_STATS 0
 #endif  /* NO_MALLOC_STATS */
 #ifndef NO_SEGMENT_TRAVERSAL
 #define NO_SEGMENT_TRAVERSAL 0

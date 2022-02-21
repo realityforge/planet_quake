@@ -465,13 +465,13 @@ size_t Sys_Rename(const char *, const char *);
 __attribute__((import_module("MATH"), import_name("ntohs")))
 uint16_t ntohs(uint16_t n);
 
+int ED_vsprintf( char *str, const char *format, va_list ap );
 int Q_sscanf( const char *buffer, const char *fmt, ... ) ;
 #define vsnprintf(x, y, z, ...) ED_vsprintf(x, z, __VA_ARGS__)
 #define vsprintf(x, y, ...) ED_vsprintf(x, y, __VA_ARGS__)
-#define snprintf(x, y, ...) Com_sprintf(x, __VA_ARGS__)
-#define sprintf(x, ...) Com_sprintf(x, 1024,  __VA_ARGS__)
+#define snprintf(x, y, z, ...) Com_sprintf(x, y, z, __VA_ARGS__)
+#define sprintf(x, ...) Com_sprintf(x, 1024, __VA_ARGS__)
 #define sscanf Q_sscanf
-int ED_vsprintf( char *str, const char *format, va_list ap );
 #define Q_vsnprintf vsnprintf
 
 int assert_fail(const char *exprStr, const char *file, int line, const char *func)
@@ -614,7 +614,6 @@ float FloatSwap( const float *f );
 
 //=============================================================
 
-#ifndef __WASM__
 #ifdef Q3_VM
 	typedef int intptr_t;
 #else
@@ -639,7 +638,6 @@ float FloatSwap( const float *f );
 	#else
 		#define Q_vsnprintf vsnprintf
 	#endif
-#endif
 #endif
 
 
@@ -970,16 +968,14 @@ void Snd_Memset (void* dest, const int val, const size_t count);
 
 #else // __WASM__
 
+#define Com_Memset memset
+#define Com_Memcpy memcpy
+#define Snd_Memset Com_Memset
+
 __attribute__((import_module("STD"), import_name("memset")))
 void *memset (void *, int, size_t);
-__attribute__((import_module("STD"), import_name("memset")))
-void *Com_Memset (void *, int, size_t);
-__attribute__((import_module("STD"), import_name("memset")))
-void *Snd_Memset (void *, int, size_t);
 __attribute__((import_module("STD"), import_name("memcpy")))
 void *memcpy (void *, const void *, size_t);
-__attribute__((import_module("STD"), import_name("memcpy")))
-void *Com_Memcpy (void *, const void *, size_t);
 
 
 #endif

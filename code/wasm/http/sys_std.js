@@ -95,7 +95,10 @@ typedef struct qtime_s {
 
 var STD = {
   assert: console.assert, // TODO: convert to variadic fmt for help messages
-  memset: function (addr, val, count) { debugger },
+  memset: function (addr, val, count) {
+    Q3e.paged.fill(val, addr, addr + count)
+    return addr
+  },
   longjmp: function (id, code) { throw new Error('longjmp', id, code) },
   setjmp: function (id) { try {  } catch (e) { } },
   fprintf: function (f, err, args) {
@@ -118,18 +121,60 @@ var STD = {
       return result
     }
   },
-  strlen: function (addr) { Q3e.paged.subarray(addr).indexOf(0) },
-  memcpy: function (dest, source) {},
+  strlen: function (addr) { return Q3e.paged.subarray(addr).indexOf(0) },
+  memcpy: function (dest, source, length) {
+    Q3e.paged.copyWithin(dest, source, source + length)
+  },
   strncpy: function () { debugger },
-  strcmp: function () { debugger },
-  strcat: function () { debugger },
+  strcmp: function (str1, str2) {
+    let i = 0
+    while(i < 1024) {
+      if(Q3e.paged[str1 + i] == Q3e.paged[str2 + i] == 0)
+        return 0
+      else if(Q3e.paged[str1 + i] < Q3e.paged[str2 + i])
+        return -1
+      else 
+        return 1
+      i++
+    }
+    return 0
+  },
+  strcat: function (dest, source) { 
+    let length = Q3e.paged.subarray(source).indexOf(0) + 1
+    let start = Q3e.paged.subarray(dest).indexOf(0)
+    Q3e.paged.copyWithin(dest + start, source, source + length )
+    return dest
+  },
   strchr: function () { debugger },
   memmove: function () { debugger },
-  strrchr: function () { debugger },
-  strcpy: function () { debugger },
+  strrchr: function (str, ch) {
+    let length = Q3e.paged.subarray(str).indexOf(0)
+    let pos = Uint8Array.from(Q3e.paged.subarray(str, str + length))
+      .reverse().indexOf(ch)
+    return pos == -1 ? null : str + length - pos
+  },
+  strcpy: function (dest, source) {
+    let length = Q3e.paged.subarray(source).indexOf(0) + 1
+    Q3e.paged.copyWithin(dest, source, source + length)
+    return dest
+  },
   strncmp: function () { debugger },
   strpbrk: function () { debugger },
-  strstr: function () { debugger },
+  strstr: function (haystack, needle) {
+    let i = 0
+    let offset = 0
+    while(i < 1024) {
+      if(Q3e.paged[haystack + i] == Q3e.paged[needle]) {
+        offset = i
+      } else if (Q3e.paged[haystack + i] == Q3e.paged[needle + (i - offset)]) {
+        // matches
+      } else {
+        offset = 0
+      }
+      i++
+    }
+    return offset == 0 ? null : haystack + offset
+  },
   memcmp: function () { debugger },
   qsort: function () { debugger },
   strncat: function () { debugger },

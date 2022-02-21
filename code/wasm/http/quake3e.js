@@ -47,9 +47,9 @@ function Sys_Milliseconds() {
 
 function Sys_RandomBytes (string, len) {
 	if(typeof crypto != 'undefined') {
-		crypto.getRandomValues(Q3e.paged.subarray(string, string+len))
+		crypto.getRandomValues(Q3e.paged.subarray(string, string+(len / 4)))
 	} else {
-		for(let i = 0; i < len; i++) {
+		for(let i = 0; i < (len / 4); i++) {
 			Q3e.paged[string] = Math.random() * 255
 		}
 	}

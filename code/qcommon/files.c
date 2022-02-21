@@ -1338,6 +1338,8 @@ qboolean FS_AllowedExtension( const char *fileName, qboolean allowPk3s, const ch
 	const char *e;
 	int i, n;
 
+Com_Printf("goddamnit %s\n", fileName);
+
 	e = strrchr( fileName, '.' );
 
 	// check for unix '.so.[0-9]' pattern

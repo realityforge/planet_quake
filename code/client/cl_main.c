@@ -4823,6 +4823,8 @@ static void CL_GenerateQKey(void)
 		Com_Printf( "QKEY building random string\n" );
 		Com_RandomBytes( buff, sizeof(buff) );
 
+Com_Printf("random bytes: %s\n", buff);
+
 		f = FS_SV_FOpenFileWrite( QKEY_FILE );
 		if( !f ) {
 			Com_Printf( "QKEY could not open %s for write\n",
