@@ -3954,15 +3954,21 @@ void CL_Frame( int msec, int realMsec ) {
 	}
 #endif
 
-#ifdef USE_ASYNCHRONOUS
+
+#if defined(USE_LAZY_LOAD) || defined(USE_ASYNCHRONOUS)
+	FS_CheckLazyUpdates();
+	/*
   if(!com_cl_running || !com_cl_running->integer) {
     CL_SendCmd();
     CL_CheckForResend();
+		FS_CheckLazyUpdates();
     cls.frametime = msec;
   	cls.realtime += msec;
     return;
   }
+	*/
 #endif
+
 
 	if ( !com_cl_running->integer ) {
 		return;
@@ -4009,9 +4015,6 @@ void CL_Frame( int msec, int realMsec ) {
 #endif
 #endif
 
-#if defined(USE_LAZY_LOAD) || defined(USE_ASYNCHRONOUS)
-	FS_CheckLazyUpdates();
-#endif
 
 #ifdef USE_CURL
 	if ( clc.downloadCURLM ) {
@@ -4823,8 +4826,6 @@ static void CL_GenerateQKey(void)
 		Com_Printf( "QKEY building random string\n" );
 		Com_RandomBytes( buff, sizeof(buff) );
 
-Com_Printf("random bytes: %s\n", buff);
-
 		f = FS_SV_FOpenFileWrite( QKEY_FILE );
 		if( !f ) {
 			Com_Printf( "QKEY could not open %s for write\n",
@@ -5623,6 +5624,7 @@ void CL_Init( void ) {
 #endif
 
 	Cvar_Set( "cl_running", "1" );
+
 #ifdef USE_MD5
 	CL_GenerateQKey();
 #endif

@@ -830,7 +830,7 @@ qboolean Com_EarlyParseCmdLine( char *commandLine, char *con_title, int title_si
 
 #ifdef USE_ASYNCHRONOUS
 		com_skipLoadUI = qtrue; // always start with console, since it reports update errors
-    if( !strcmp(Cmd_Argv(0), "connect") ) {
+    if( !Q_stricmp(Cmd_Argv(0), "connect") ) {
       com_consoleLines[i][0] = '\0';
       Q_strncpyz( com_earlyConnect, Cmd_Argv( 1 ), sizeof( com_earlyConnect ) );
 			continue;
@@ -840,10 +840,10 @@ qboolean Com_EarlyParseCmdLine( char *commandLine, char *con_title, int title_si
 #endif
 
 #ifndef BUILD_GAME_STATIC
-    if( !strcmp(Cmd_Argv(0), "map")
-      || !strcmp(Cmd_Argv(0), "devmap")
-      || !strcmp(Cmd_Argv(0), "spmap")
-      || !strcmp(Cmd_Argv(0), "spdevmap") ) {
+    if( !Q_stricmp(Cmd_Argv(0), "map")
+      || !Q_stricmp(Cmd_Argv(0), "devmap")
+      || !Q_stricmp(Cmd_Argv(0), "spmap")
+      || !Q_stricmp(Cmd_Argv(0), "spdevmap") ) {
       com_skipLoadUI = qtrue;
       continue;
     }

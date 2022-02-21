@@ -698,7 +698,7 @@ cvar_t *Cvar_Set2( const char *var_name, const char *value, qboolean force ) {
 			return Cvar_Get( var_name, value, CVAR_USER_CREATED );
 		else
 			return Cvar_Get (var_name, value, 0);
-		}
+	}
 
 #ifndef DEDICATED
 #ifdef USE_CVAR_UNCHEAT

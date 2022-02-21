@@ -38,6 +38,7 @@ function writeStore(value, key) {
         resolve2()
       }
     })
+    return
   }
   let transaction = FS.database.transaction([DB_STORE_NAME], 'readwrite');
   let objStore = transaction.objectStore(DB_STORE_NAME);
@@ -61,7 +62,18 @@ function writeStore(value, key) {
 
 
 function Sys_Mkdir(filename) {
-  debugger
+  let nameStr = addressToString(filename)
+  if(!FS.database) {
+    openDatabase()
+  }
+  FS.virtual[nameStr] = {
+    timestamp: new Date(),
+    mode: 16895,
+  }
+  // async to filesystem
+  // does it REALLY matter if it makes it? wont it just redownload?
+  writeStore(FS.virtual[nameStr], nameStr)
+
 }
 
 function Sys_GetFileStats( filename, size, mtime, ctime ) {

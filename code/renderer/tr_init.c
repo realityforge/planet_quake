@@ -1524,8 +1524,11 @@ static void R_Register( void )
 
 	r_subdivisions = ri.Cvar_Get( "r_subdivisions", "4", CVAR_ARCHIVE_ND | CVAR_LATCH );
 
+	// TODO:
+	// Adds an additional textured stage on top of all tris in the fog 
+	//r_fogShader = ri.Cvar_Get("r_fogShader", "", CVAR_ARCHIVE_ND );
 	r_fogColor = ri.Cvar_Get("r_fogColor", "0x00000000", CVAR_ARCHIVE_ND );
-	r_fogDepth = ri.Cvar_Get("r_fogDepth", "10000", CVAR_ARCHIVE_ND );
+	r_fogDepth = ri.Cvar_Get("r_fogDepth", "", CVAR_ARCHIVE_ND );
 
 	r_maxpolys = ri.Cvar_Get( "r_maxpolys", va("%i", MAX_POLYS ), CVAR_LATCH);
 	r_maxpolyverts = ri.Cvar_Get( "r_maxpolyverts", va("%i", MAX_POLYVERTS), CVAR_LATCH);

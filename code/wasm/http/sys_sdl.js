@@ -28,7 +28,6 @@ function SDL_CreateWindow (title, x, y, w, h, flags) {
   Q3e.canvas.width = document.body.innerWidth
   Q3e.canvas.height = document.body.innerHeight
   document.getElementById('viewport-frame').appendChild(Q3e.canvas)
-
   //Q3e.paged32[win>>2] = 1
   window.title = addressToString(title)
   return 1 //win;
@@ -39,14 +38,14 @@ function SDL_GL_CreateContext(canvas) {
   let webGLContextAttributes = {
     failIfMajorPerformanceCaveat: true
   }
-  Q3e['webgl'] = Q3e.canvas.getContext('webgl', webGLContextAttributes)
-  /*
+
   // TODO: fallback
   Q3e['webgl'] = (Q3e.majorVersion > 1)
     ? Q3e.canvas.getContext('webgl2', webGLContextAttributes)
     : (Q3e.canvas.getContext('webgl', webGLContextAttributes)
       || Q3e.canvas.getContext('experimental-webgl'))
-  */
+
+  Q3e.webgl.viewport(0, 0, Q3e.canvas.width, Q3e.canvas.height);
   GLImmediate = new $GLImmediate()
   if (!Q3e['webgl']) return 0
   //let handle = malloc(8);

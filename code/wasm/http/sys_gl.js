@@ -122,9 +122,32 @@ var GLEmulation = {
   glProgramLocalParameter4fARB: function () {},
   glProgramLocalParameter4fvARB: function () {},
   glPolygonOffset: function () {},
-  glTexCoordPointer: function () {},
-  glNormalPointer: function () {},
-  glVertexPointer: function () {},
+  glTexCoordPointer: function (size, type, stride, pointer) {
+    GLImmediate.setClientAttribute(GLImmediate.TEXTURE0 + GLImmediate.clientActiveTexture, size, type, stride, pointer);
+    if (Q3e.webgl.currentArrayBufferBinding) {
+      var loc = GLImmediate.TEXTURE0 + GLImmediate.clientActiveTexture;
+      Q3e.webgl.vertexAttribPointer(loc, size, type, false, stride, pointer);
+    }
+  },
+  glNormalPointer: function (type, stride, pointer) {
+    GLImmediate.setClientAttribute(GLImmediate.NORMAL, 3, type, stride, pointer);
+    if (Q3e.webgl.currentArrayBufferBinding) {
+      Q3e.webgl.vertexAttribPointer(GLImmediate.NORMAL, 3, type, true, stride, pointer);
+    }
+  },
+  glVertexPointer: function (size, type, stride, pointer) {
+    GLImmediate.setClientAttribute(GLImmediate.VERTEX, size, type, stride, pointer);
+    if (Q3e.webgl.currentArrayBufferBinding) {
+      Q3e.webgl.vertexAttribPointer(GLImmediate.VERTEX, size, type, false, stride, pointer);
+    }
+  },
+  glColorPointer: function (size, type, stride, pointer) {
+    GLImmediate.setClientAttribute(GLImmediate.COLOR, size, type, stride, pointer);
+    if (Q3e.webgl.currentArrayBufferBinding) {
+      Q3e.webgl.vertexAttribPointer(GLImmediate.COLOR, size, type, true, stride, pointer);
+    }
+  },
+
   glLockArraysEXT: function () {},
   glUnlockArraysEXT: function () {},
   glProgramStringARB: function () {},
@@ -183,11 +206,8 @@ var GLEmulation = {
   glDrawArrays: function () {
     debugger
   },
-  glColorPointer: function () {},
-  glDrawBuffer: function () { 
-  
-  },
-  glClearColor: function () {},
+  glDrawBuffer: function () { /* do nothing */ },
+  glClearColor: function () { debugger },
   glClear: function () {},
   glColorMask: function () {},
   glGenFramebuffers: function () { debugger },
@@ -244,8 +264,72 @@ var GLEmulation = {
   glDepthMask: function (mask) { Q3e.webgl.depthMask(mask) },
   glPolygonMode: function () {},
   glAlphaFunc: function () {},
-  glEnableClientState: function () {},
-  glDisableClientState: function () {},
+
+  getAttributeFromCapability: function(cap) {
+    var attrib = null;
+    switch (cap) {
+      case 0xDE1: // GL_TEXTURE_2D - XXX not according to spec, and not in desktop GL, but works in some GLES1.x apparently, so support it
+        // Fall through:
+      case 0x8078: // GL_TEXTURE_COORD_ARRAY
+        attrib = GLImmediate.TEXTURE0 + GLImmediate.clientActiveTexture; break;
+      case 0x8074: // GL_VERTEX_ARRAY
+        attrib = GLImmediate.VERTEX; break;
+      case 0x8075: // GL_NORMAL_ARRAY
+        attrib = GLImmediate.NORMAL; break;
+      case 0x8076: // GL_COLOR_ARRAY
+        attrib = GLImmediate.COLOR; break;
+    }
+    return attrib;
+  },
+
+  enabledClientAttribIndices: [],
+  disableVertexAttribArray: function disableVertexAttribArray(index) {
+    if (GLEmulation.enabledClientAttribIndices[index]) {
+      GLEmulation.enabledClientAttribIndices[index] = false;
+      Q3e.webgl.disableVertexAttribArray(index);
+    }
+  },
+  enableVertexAttribArray: function enableVertexAttribArray(index) {
+    if (!GLEmulation.enabledClientAttribIndices[index]) {
+      GLEmulation.enabledClientAttribIndices[index] = true;
+      Q3e.webgl.enableVertexAttribArray(index);
+    }
+  },
+
+  glEnableClientState: function (cap) { 
+    var attrib = GLEmulation.getAttributeFromCapability(cap);
+    if (attrib === null) {
+      return;
+    }
+    if (!GLImmediate.enabledClientAttributes[attrib]) {
+      GLImmediate.enabledClientAttributes[attrib] = true;
+      GLImmediate.totalEnabledClientAttributes++;
+      GLImmediate.currentRenderer = null; // Will need to change current renderer, since the set of active vertex pointers changed.
+//#if GL_FFP_ONLY
+      // In GL_FFP_ONLY mode, attributes are bound to the same index in each FFP emulation shader, so we can immediately apply the change here.
+      GLEmulation.enableVertexAttribArray(attrib);
+//#endif
+      if (GLEmulation.currentVao) GLEmulation.currentVao.enabledClientStates[cap] = 1;
+      GLImmediate.modifiedClientAttributes = true;
+    }
+  },
+  glDisableClientState: function(cap) {
+    var attrib = GLEmulation.getAttributeFromCapability(cap);
+    if (attrib === null) {
+      return;
+    }
+    if (GLImmediate.enabledClientAttributes[attrib]) {
+      GLImmediate.enabledClientAttributes[attrib] = false;
+      GLImmediate.totalEnabledClientAttributes--;
+      GLImmediate.currentRenderer = null; // Will need to change current renderer, since the set of active vertex pointers changed.
+  //#if GL_FFP_ONLY
+      // In GL_FFP_ONLY mode, attributes are bound to the same index in each FFP emulation shader, so we can immediately apply the change here.
+  //    GL.disableVertexAttribArray(attrib);
+  //#endif
+      if (GLEmulation.currentVao) delete GLEmulation.currentVao.enabledClientStates[cap];
+      GLImmediate.modifiedClientAttributes = true;
+    }
+  },
   glClientActiveTextureARB: function () {},
   glTexSubImage2D: function (a1, a2, a3, a4, a5, a6, a7) { 
     Q3e.webgl.texSubImage2D(a1, a2, a3, a4, a5, a6, a7) 
@@ -264,18 +348,55 @@ var GLEmulation = {
     return 32 - Math.clz32(i === 0 ? 0 : i - 1)
   },
   tempIndexBuffers: [],
+
+  getTempVertexBuffer: function getTempVertexBuffer(sizeBytes) {
+    var idx = GLEmulation.log2ceilLookup(sizeBytes);
+    var ringbuffer = Q3e.webgl.tempVertexBuffers1[idx];
+    var nextFreeBufferIndex = Q3e.webgl.tempVertexBufferCounters1[idx];
+    Q3e.webgl.tempVertexBufferCounters1[idx] = (Q3e.webgl.tempVertexBufferCounters1[idx]+1) & (GLEmulation.numTempVertexBuffersPerSize-1);
+    var vbo = ringbuffer[nextFreeBufferIndex];
+    if (vbo) {
+      return vbo;
+    }
+    var prevVBO = Q3e.webgl.getParameter(0x8894 /*GL_ARRAY_BUFFER_BINDING*/);
+    ringbuffer[nextFreeBufferIndex] = Q3e.webgl.createBuffer();
+    Q3e.webgl.bindBuffer(0x8892 /*GL_ARRAY_BUFFER*/, ringbuffer[nextFreeBufferIndex]);
+    Q3e.webgl.bufferData(0x8892 /*GL_ARRAY_BUFFER*/, 1 << idx, 0x88E8 /*GL_DYNAMIC_DRAW*/);
+    Q3e.webgl.bindBuffer(0x8892 /*GL_ARRAY_BUFFER*/, prevVBO);
+    return ringbuffer[nextFreeBufferIndex];
+  },
+
   getTempIndexBuffer: function getTempIndexBuffer(sizeBytes) {
     var idx = GLEmulation.log2ceilLookup(sizeBytes)
-    var ibo = GLEmulation.tempIndexBuffers[idx]
+    var ibo = Q3e.webgl.tempIndexBuffers[idx]
     if (ibo) {
       return ibo;
     }
     var prevIBO = Q3e.webgl.getParameter(0x8895 /*ELEMENT_ARRAY_BUFFER_BINDING*/)
-    GLEmulation.tempIndexBuffers[idx] = Q3e.webgl.createBuffer()
-    Q3e.webgl.bindBuffer(0x8893 /*GL_ELEMENT_ARRAY_BUFFER*/, GLEmulation.tempIndexBuffers[idx])
+    Q3e.webgl.tempIndexBuffers[idx] = Q3e.webgl.createBuffer()
+    Q3e.webgl.bindBuffer(0x8893 /*GL_ELEMENT_ARRAY_BUFFER*/, Q3e.webgl.tempIndexBuffers[idx])
     Q3e.webgl.bufferData(0x8893 /*GL_ELEMENT_ARRAY_BUFFER*/, 1 << idx, 0x88E8 /*GL_DYNAMIC_DRAW*/);
     Q3e.webgl.bindBuffer(0x8893 /*GL_ELEMENT_ARRAY_BUFFER*/, prevIBO)
-    return GLEmulation.tempIndexBuffers[idx];
+    return Q3e.webgl.tempIndexBuffers[idx];
+  },
+
+  // Returns a random integer from 0 to range - 1.
+  randomInt: function randomInt(range) {
+    return Math.floor(Math.random() * range);
+  },
+  
+  // Fill the buffer with the values that define a rectangle.
+  setRectangle: function (gl, x, y, width, height) {
+    var x1 = x;
+    var x2 = x + width;
+    var y1 = y;
+    var y2 = y + height;
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+       x1, y1,
+       x2, y1,
+       x1, y2,
+       x2, y2,
+    ]), gl.STATIC_DRAW);
   },
 
   glDrawElements: function (mode, count, type, indices, start, end) {
@@ -286,6 +407,11 @@ var GLEmulation = {
     //Q3e.webgl.bindBuffer(Q3e.webgl.ELEMENT_ARRAY_BUFFER, indexBuffer)
     //Q3e.webgl.bufferSubData(Q3e.webgl.ELEMENT_ARRAY_BUFFER, start, vertexData)
     //Q3e.webgl.drawElements(mode, count, Q3e.webgl.UNSIGNED_SHORT, indices)
+    if (GLImmediate.totalEnabledClientAttributes == 0 && mode <= 6 && Q3e.webgl.currentElementArrayBufferBinding) {
+      Q3e.webgl.drawElements(mode, count, type, indices);
+      return;
+    }
+
     GLImmediate.prepareClientAttributes(count, false);
     GLImmediate.mode = mode;
     if (!Q3e.webgl.currentArrayBufferBinding) {
@@ -295,6 +421,100 @@ var GLEmulation = {
     }
     GLImmediate.flush(count, 0, indices);
     GLImmediate.mode = -1;
+
+/*
+
+    // setup GLSL program
+    var program = webglUtils.createProgramFromScripts(gl, ["vertex-shader-2d", "fragment-shader-2d"]);
+  
+    // look up where the vertex data needs to go.
+    var positionAttributeLocation = gl.getAttribLocation(program, "a_position");
+  
+    // look up uniform locations
+    var resolutionUniformLocation = gl.getUniformLocation(program, "u_resolution");
+    var colorUniformLocation = gl.getUniformLocation(program, "u_color");
+  
+    // Create a buffer to put three 2d clip space points in
+    var positionBuffer = gl.createBuffer();
+  
+    // Bind it to ARRAY_BUFFER (think of it as ARRAY_BUFFER = positionBuffer)
+    gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+  
+    //webglUtils.resizeCanvasToDisplaySize(gl.canvas);
+  
+    // Tell WebGL how to convert from clip space to pixels
+    gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+  
+    // Clear the canvas
+    gl.clearColor(0, 0, 0, 0);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+  
+    // Tell it to use our program (pair of shaders)
+    gl.useProgram(program);
+  
+    // Bind the position buffer.
+    gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+  
+    // create the buffer
+    const indexBuffer = gl.createBuffer();
+  
+    // make this buffer the current 'ELEMENT_ARRAY_BUFFER'
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+  
+    // Fill the current element array buffer with data
+    const indices = [
+      0, 1, 2,   // first triangle
+      2, 1, 3,   // second triangle
+    ];
+    gl.bufferData(
+        gl.ELEMENT_ARRAY_BUFFER,
+        new Uint16Array(indices),
+        gl.STATIC_DRAW
+    );
+  
+    // code above this line is initialization code
+    // --------------------------------
+    // code below this line is rendering code
+  
+    // Turn on the attribute
+    gl.enableVertexAttribArray(positionAttributeLocation);
+  
+    // Tell the attribute how to get data out of positionBuffer (ARRAY_BUFFER)
+    var size = 2;          // 2 components per iteration
+    var type = gl.FLOAT;   // the data is 32bit floats
+    var normalize = false; // don't normalize the data
+    var stride = 0;        // 0 = move forward size * sizeof(type) each iteration to get the next position
+    var offset = 0;        // start at the beginning of the buffer
+    gl.vertexAttribPointer(
+        positionAttributeLocation, size, type, normalize, stride, offset);
+  
+    // bind the buffer containing the indices
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+  
+    // set the resolution
+    gl.uniform2f(resolutionUniformLocation, gl.canvas.width, gl.canvas.height);
+  
+    // draw 50 random rectangles in random colors
+    for (var ii = 0; ii < 50; ++ii) {
+      // Setup a random rectangle
+      // This will write to positionBuffer because
+      // its the last thing we bound on the ARRAY_BUFFER
+      // bind point
+      setRectangle(
+          gl, randomInt(300), randomInt(300), randomInt(300), randomInt(300));
+  
+      // Set a random color.
+      gl.uniform4f(colorUniformLocation, Math.random(), Math.random(), Math.random(), 1);
+  
+      // Draw the rectangle.
+      var primitiveType = gl.TRIANGLES;
+      var offset = 0;
+      var count = 6;
+      var indexType = gl.UNSIGNED_SHORT;
+      gl.drawElements(primitiveType, count, indexType, offset);
+    }
+
+    */
 
     //if(mode <= 6 && Q3e.webgl.currentElementArrayBufferBinding) {
     //  Q3e.webgl.drawElements(mode, count, type, indices);
@@ -2093,6 +2313,7 @@ Object.assign($GLImmediate.prototype, {
 
 
 //#if GL_FFP_ONLY
+/*
         if (!Q3e.webgl.currentArrayBufferBinding) {
           Q3e.webgl.vertexAttribPointer(GLImmediate.VERTEX, posAttr.size, posAttr.type, false, GLImmediate.stride, posAttr.offset);
           if (this.hasNormal) {
@@ -2100,8 +2321,8 @@ Object.assign($GLImmediate.prototype, {
             Q3e.webgl.vertexAttribPointer(GLImmediate.NORMAL, normalAttr.size, normalAttr.type, true, GLImmediate.stride, normalAttr.offset);
           }
         }
-/*
-#else
+*/
+
         Q3e.webgl.vertexAttribPointer(this.positionLocation, posAttr.size, posAttr.type, false, GLImmediate.stride, posAttr.offset);
         Q3e.webgl.enableVertexAttribArray(this.positionLocation);
         if (this.hasNormal) {
@@ -2109,11 +2330,11 @@ Object.assign($GLImmediate.prototype, {
           Q3e.webgl.vertexAttribPointer(this.normalLocation, normalAttr.size, normalAttr.type, true, GLImmediate.stride, normalAttr.offset);
           Q3e.webgl.enableVertexAttribArray(this.normalLocation);
         }
-#endif
-*/
+
         if (this.hasTextures) {
           for (var i = 0; i < GLImmediate.MAX_TEXTURES; i++) {
 //#if GL_FFP_ONLY
+/*
             if (!Q3e.webgl.currentArrayBufferBinding) {
               var attribLoc = GLImmediate.TEXTURE0+i;
               var texAttr = clientAttributes[attribLoc];
@@ -2124,8 +2345,7 @@ Object.assign($GLImmediate.prototype, {
                 Q3e.webgl.vertexAttrib4f(attribLoc, 0, 0, 0, 1);
               }
             }
-/*
-#else
+*/
             var attribLoc = this.texCoordLocations[i];
             if (attribLoc === undefined || attribLoc < 0) continue;
             var texAttr = clientAttributes[GLImmediate.TEXTURE0+i];
@@ -2138,8 +2358,7 @@ Object.assign($GLImmediate.prototype, {
               Q3e.webgl.vertexAttrib4f(attribLoc, 0, 0, 0, 1);
               Q3e.webgl.disableVertexAttribArray(attribLoc);
             }
-#endif
-*/
+
             var t = 2/*t*/+i;
             if (this.textureMatrixLocations[i] && this.textureMatrixVersion[t] != GLImmediate.matrixVersion[t]) { // XXX might we need this even without the condition we are currently in?
               this.textureMatrixVersion[t] = GLImmediate.matrixVersion[t];
@@ -2150,24 +2369,18 @@ Object.assign($GLImmediate.prototype, {
         if (GLImmediate.enabledClientAttributes[GLImmediate.COLOR]) {
           var colorAttr = clientAttributes[GLImmediate.COLOR];
 //#if GL_FFP_ONLY
+/*
           if (!Q3e.webgl.currentArrayBufferBinding) {
             Q3e.webgl.vertexAttribPointer(GLImmediate.COLOR, colorAttr.size, colorAttr.type, true, GLImmediate.stride, colorAttr.offset);
           }
-/*
-#else
+*/
           Q3e.webgl.vertexAttribPointer(this.colorLocation, colorAttr.size, colorAttr.type, true, GLImmediate.stride, colorAttr.offset);
           Q3e.webgl.enableVertexAttribArray(this.colorLocation);
-#endif
-*/
         }
-/*
-#if !GL_FFP_ONLY
         else if (this.hasColor) {
           Q3e.webgl.disableVertexAttribArray(this.colorLocation);
           Q3e.webgl.vertexAttrib4fv(this.colorLocation, GLImmediate.clientColor);
         }
-#endif
-*/
         if (this.hasFog) {
           if (this.fogColorLocation) Q3e.webgl.uniform4fv(this.fogColorLocation, GLEmulation.fogColor);
           if (this.fogEndLocation) Q3e.webgl.uniform1f(this.fogEndLocation, GLEmulation.fogEnd);
@@ -2204,8 +2417,7 @@ Object.assign($GLImmediate.prototype, {
       },
 
       cleanup: function cleanup() {
-/*
-#if !GL_FFP_ONLY
+
         Q3e.webgl.disableVertexAttribArray(this.positionLocation);
         if (this.hasTextures) {
           for (var i = 0; i < GLImmediate.MAX_TEXTURES; i++) {
@@ -2234,9 +2446,8 @@ Object.assign($GLImmediate.prototype, {
         GLImmediate.lastRenderer = null;
         GLImmediate.lastProgram = null;
 #endif
-        GLImmediate.matricesModified = true;
-#endif
 */
+        GLImmediate.matricesModified = true;
       }
     };
     ret.init();
@@ -2354,7 +2565,7 @@ Object.assign($GLImmediate.prototype, {
       // We are in cases (1) or (3): slow path, shuffle the data around into a single interleaved vertex buffer.
       // The immediate-mode glBegin()/glEnd() vertex submission gets automatically generated in appropriate layout,
       // so never need to come down this path if that was used.
-      if (!GLImmediate.restrideBuffer) GLImmediate.restrideBuffer = _malloc(GLEmulation.MAX_TEMP_BUFFER_SIZE);
+      if (!GLImmediate.restrideBuffer) GLImmediate.restrideBuffer = malloc(GLEmulation.MAX_TEMP_BUFFER_SIZE);
       var start = GLImmediate.restrideBuffer;
       bytes = 0;
       // calculate restrided offsets and total size
@@ -2431,7 +2642,7 @@ Object.assign($GLImmediate.prototype, {
         // If no element array buffer is bound, then indices is a literal pointer to clientside data
         var indexBuffer = GLEmulation.getTempIndexBuffer(numProvidedIndexes << 1);
         Q3e.webgl.bindBuffer(Q3e.webgl.ELEMENT_ARRAY_BUFFER, indexBuffer);
-        Q3e.webgl.bufferSubData(Q3e.webgl.ELEMENT_ARRAY_BUFFER, 0, Q3e.paged16.subarray(ptr, ptr + (numProvidedIndexes << 1)));
+        Q3e.webgl.bufferSubData(Q3e.webgl.ELEMENT_ARRAY_BUFFER, 0, Uint16Array.from(Q3e.paged16.subarray(ptr >> 1, (ptr + numProvidedIndexes) >> 1)));
         ptr = 0;
         emulatedElementArrayBuffer = true;
       }
@@ -2460,13 +2671,7 @@ Object.assign($GLImmediate.prototype, {
       Q3e.webgl.bindBuffer(Q3e.webgl.ELEMENT_ARRAY_BUFFER, GLEmulation.buffers[Q3e.webgl.currentElementArrayBufferBinding] || null);
     }
 
-/*
-#if !GL_UNSAFE_OPTS
-#if !GL_FFP_ONLY
     renderer.cleanup();
-#endif
-#endif
-*/
   }
 })
 

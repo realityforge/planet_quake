@@ -129,9 +129,9 @@ var STD = {
   strcmp: function (str1, str2) {
     let i = 0
     while(i < 1024) {
-      if(Q3e.paged[str1 + i] == Q3e.paged[str2 + i] == 0)
-        return 0
-      else if(Q3e.paged[str1 + i] < Q3e.paged[str2 + i])
+      if(Q3e.paged[str1 + i] == Q3e.paged[str2 + i] == 0) {
+        // are equal, keep checking
+      } else if(Q3e.paged[str1 + i] < Q3e.paged[str2 + i])
         return -1
       else 
         return 1
@@ -145,7 +145,11 @@ var STD = {
     Q3e.paged.copyWithin(dest + start, source, source + length )
     return dest
   },
-  strchr: function () { debugger },
+  strchr: function (str, ch) {
+    let length = Q3e.paged.subarray(str).indexOf(0)
+    let pos = Q3e.paged.subarray(str, str + length).indexOf(ch)
+    return pos == -1 ? null : str + pos
+  },
   memmove: function () { debugger },
   strrchr: function (str, ch) {
     let length = Q3e.paged.subarray(str).indexOf(0)

@@ -505,6 +505,7 @@ void Sys_UpdateNeeded( int tableId, char *ready, char *downloadNeeded ) {
 	if(downloadNeeded) {
 		downloadNeeded[0] = 0;
 	}
+
 	// TODO: loop over readyFiles instead?
 	for(int i = 0; i < PK3_HASH_SIZE; i++) {
     if(downloadTable[i] != NULL) {
@@ -608,7 +609,7 @@ static void Sys_FileNeeded(const char *filename) {
 			download->ready = qfalse;
       downloadTable[hash] = download;
 			download->lastRequested = 0; // request immediately, updated after first request
-Com_Printf("file needed! %s %s %i\n", filename, loading, hash);
+//Com_Printf("file needed! %s %s %i\n", filename, loading, hash);
    } else {
 			// add 1500 millis to whatever requested it a second time
 			//download->lastRequested = Sys_Milliseconds(); 
@@ -1337,8 +1338,6 @@ qboolean FS_AllowedExtension( const char *fileName, qboolean allowPk3s, const ch
   };
 	const char *e;
 	int i, n;
-
-Com_Printf("goddamnit %s\n", fileName);
 
 	e = strrchr( fileName, '.' );
 
