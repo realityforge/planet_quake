@@ -113,7 +113,7 @@ static bot_character_t *BotReferenceHandle( int handle, int refmod )
 		{
 			ch->refcnt += refmod;
 			if ( ch->refcnt == 0 )
-				ch->reftime = botimport.Sys_Milliseconds();
+				ch->reftime = Sys_MilliSeconds();
 		}
 	}
 
@@ -218,7 +218,7 @@ static int BotReleaseUnreferencedHandle( void )
 	int handle, now, t, r;
 
 	r = t = 0;
-	now = botimport.Sys_Milliseconds();
+	now = Sys_MilliSeconds();
 	for ( handle = 1; handle < MAX_HANDLES; handle++ )
 	{
 		ch = botcharacters[ handle ];

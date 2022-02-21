@@ -319,6 +319,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #ifdef __WASM__
 //#include "../wasm/wasi/api.h"
 //#include "../wasm/wasi/wasi-helpers.h"
+#define fopen Sys_FOpen
 #define INT_MIN  (-1-0x7fffffff)
 #define INT_MAX  0x7fffffff
 #define UINT_MAX 0xffffffffU

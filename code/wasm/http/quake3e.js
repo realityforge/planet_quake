@@ -67,6 +67,10 @@ function Sys_Error(fmt, args) {
   throw new Error(addressToString(fmt))
 }
 
+function Sys_SetStatus() {
+  // TODO: something like  window.title = , then setTimeout( window.title = 'Q3e' again)
+}
+
 var SYS = {
   DebugError: function () { console.log(new Error('debug').stack) },
   DebugBreak: function () { debugger; },
@@ -80,7 +84,8 @@ var SYS = {
   Sys_LoadFunction: Sys_LoadFunction,
   popen: function popen() {},
   Sys_Print: Sys_Print,
-
+  Sys_SetStatus: Sys_SetStatus,
+  
 }
 
 function startProgram(program) {
@@ -159,7 +164,7 @@ function instantiateWasm(bytes) {
   }
 
   Q3e['table'] = Q3e['__indirect_function_table'] =
-    new WebAssembly.Table({ initial: 512, element: 'anyfunc' });
+    new WebAssembly.Table({ initial: 1024, element: 'anyfunc' });
   Q3e['memory'] = new WebAssembly.Memory( {
     'initial': 2048,
     //'shared': true
@@ -173,9 +178,22 @@ function instantiateWasm(bytes) {
 
 
 function init() {
-  fetch('./quake3e_slim.wasm').then(function(response) {
+
+  // TODO: bootstrap download function so it saves binary to disk
+  fetch('./quake3e_mv.wasm').then(function(response) {
+    if(response.status == 404) {
+      return fetch('./quake3e_slim.wasm').then(function(response) {
+        if(response.status == 404) {
+          return fetch('./quake3e.wasm')
+            .then(function(response2) { return response2.arrayBuffer() })
+        }
+        return response.arrayBuffer()
+      })
+    }
     return response.arrayBuffer()
-  }).then(instantiateWasm)
+  })
+    .then(instantiateWasm)
+    // TODO: change when hot reloading works
     .then(startProgram);
 }
 

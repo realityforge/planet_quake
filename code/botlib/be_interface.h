@@ -52,6 +52,11 @@ extern botlib_globals_t botlibglobals;
 extern botlib_import_t botimport;
 extern int botDeveloper;					//true if developer is on
 
+#ifdef I_LIKE_STUPID_CODE
 //
 int Sys_MilliSeconds(void);
+#else
+
+#define Sys_MilliSeconds botimport.Milliseconds
+#endif
 

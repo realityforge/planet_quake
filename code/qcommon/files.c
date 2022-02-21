@@ -609,7 +609,7 @@ static void Sys_FileNeeded(const char *filename) {
 			download->ready = qfalse;
       downloadTable[hash] = download;
 			download->lastRequested = 0; // request immediately, updated after first request
-//Com_Printf("file needed! %s %s %i\n", filename, loading, hash);
+Com_Printf("file needed! %s %s %i\n", filename, loading, hash);
    } else {
 			// add 1500 millis to whatever requested it a second time
 			//download->lastRequested = Sys_Milliseconds(); 

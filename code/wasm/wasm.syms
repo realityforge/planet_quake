@@ -8,6 +8,7 @@ powf
 sin
 sinf
 logf
+Sys_Milliseconds
 SDL_StopTextInput
 NET_GetPacket
 Sys_IsLANAddress
@@ -22,6 +23,7 @@ Sys_FFlush
 Sys_FRead
 GL_GetProcAddress
 Sys_FreeFileList
+Sys_SetStatus
 strncpy
 memcpy
 memset

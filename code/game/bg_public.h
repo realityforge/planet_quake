@@ -545,6 +545,11 @@ typedef struct animation_s {
 
 
 typedef enum {
+	TAG_NONE = 0,
+	TAG_DONTSPAWN,
+} tag_t;
+
+typedef enum {
 	TEAM_FREE,
 	TEAM_RED,
 	TEAM_BLUE,

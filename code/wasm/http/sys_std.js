@@ -155,7 +155,7 @@ var STD = {
     let length = Q3e.paged.subarray(str).indexOf(0)
     let pos = Uint8Array.from(Q3e.paged.subarray(str, str + length))
       .reverse().indexOf(ch)
-    return pos == -1 ? null : str + length - pos
+    return pos == -1 ? null : str + length - pos - 1
   },
   strcpy: function (dest, source) {
     let length = Q3e.paged.subarray(source).indexOf(0) + 1

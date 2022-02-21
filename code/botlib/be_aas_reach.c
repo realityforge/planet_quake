@@ -42,8 +42,11 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "be_aas_funcs.h"
 #include "be_aas_def.h"
 
+#ifdef I_LIKE_STUPID_CODE
 extern int Sys_MilliSeconds(void);
-
+#else
+#define Sys_MilliSeconds botimport.Milliseconds
+#endif
 
 extern botlib_import_t botimport;
 

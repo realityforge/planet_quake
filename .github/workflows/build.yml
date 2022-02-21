@@ -40,7 +40,7 @@ jobs:
             prefix: mingw-w64-x86_64
 
           - config: Release
-            rule: release
+            rule: install
 
     defaults:
       run:
@@ -49,7 +49,7 @@ jobs:
     steps:
     - uses: msys2/setup-msys2@v2
       with:
-        install: ${{ matrix.prefix }}-binutils ${{ matrix.prefix }}-make ${{ matrix.prefix }}-${{ matrix.cc }} ${{ matrix.prefix }}-glib2 ${{ matrix.prefix }}-libjpeg
+        install: ${{ matrix.prefix }}-binutils ${{ matrix.prefix }}-make ${{ matrix.prefix }}-${{ matrix.cc }}
         msystem: ${{ matrix.msystem }}
         path-type: minimal
         release: false
@@ -88,7 +88,7 @@ jobs:
         fi
 
     - uses: actions/upload-artifact@v2
-      if: matrix.config == 'Release'
+      if: matrix.cc == 'gcc' && matrix.config == 'Release'
       with:
         name: windows-mingw-${{ matrix.arch }}
         path: bin
@@ -163,7 +163,7 @@ jobs:
         config: [Release]
         include:
           - config: Release
-            rule: release
+            rule: install
           - arch: x86
             use_sdl: USE_SDL=0
           - arch: x86_64
@@ -223,7 +223,7 @@ jobs:
         fi
 
     - uses: actions/upload-artifact@v2
-      if: matrix.config == 'Release'
+      if: matrix.cc == 'gcc' && matrix.config == 'Release'
       with:
         name: linux-${{ matrix.arch }}
         path: bin
@@ -247,10 +247,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-      if: false
 
     - name: Install tools
-      if: false
       run: |
         mkdir libs/linux
         sudo apt-get -qq update
@@ -259,15 +257,13 @@ jobs:
         tar -xf wasi-sdk-14.0-linux.tar.gz -C libs/linux/
 
     - name: Build
-      if: false
       run: |
         mkdir bin
-        make -f make/build_client.make clean ${{ matrix.rule }}  ARCH=${{ matrix.arch }}    ${{ matrix.use_sdl }} USE_VULKAN_API=0 CNAME=quake3e PLATFORM=js NO_MAKE_LOCAL=1
+        make -f make/build_client.make clean ${{ matrix.rule }}  ARCH=${{ matrix.arch }}    ${{ matrix.use_sdl }} USE_VULKAN_API=0 CNAME=quake3e PLATFORM=js NO_MAKE_LOCAL=1 USE_ASYNCHRONOUS=1 USE_LAZY_LOAD=1 PLATFORM=js 
         cp build/release-js-js/quake3e_js.wasm bin/
 
     - uses: actions/upload-artifact@v2
-      if: false
-      #if: matrix.config == 'Release'
+      if: matrix.config == 'Release'
       with:
         name: js-${{ matrix.arch }}
         path: bin
@@ -285,7 +281,7 @@ jobs:
         config: [Release]
         include:
           - config: Release
-            rule: release
+            rule: install
 
     steps:
     - uses: actions/checkout@v2
@@ -308,7 +304,7 @@ jobs:
 
     - uses: actions/upload-artifact@v2
       if: false
-      #if: matrix.config == 'Release'
+      #if: matrix.cc == 'gcc' && matrix.config == 'Release'
       with:
         name: linux-${{ matrix.arch }}
         path: bin
@@ -326,7 +322,7 @@ jobs:
         config: [Release]
         include:
           - config: Release
-            rule: release
+            rule: install
 
     steps:
     - name: Install tools
@@ -362,7 +358,7 @@ jobs:
         cp build/release-darwin-x86_64/multigame/uix86_64.dylib bin/
 
     - uses: actions/upload-artifact@v2
-      if: matrix.config == 'Release'
+      if: matrix.cc == 'clang' && matrix.config == 'Release'
       with:
         name: macos-${{ matrix.arch }}
         path: bin
@@ -397,7 +393,7 @@ jobs:
 #         7z a -r quake3e-linux-armv7.zip    ./linux-armv7/*
 
       - name: Create latest build
-        uses: marvinpinto/action-automatic-releases@latest
+        uses: ec-/action-automatic-releases@test
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           automatic_release_tag: "latest"

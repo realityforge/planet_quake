@@ -244,27 +244,18 @@ GLEmulation = {
       buildShaderProgram()
     }
 
+    if(typeof GLEmulation.positionBuffer == 'undefined') {
+      var positionBuffer = Q3e.webgl.createBuffer();
+      Q3e.webgl.bindBuffer(Q3e.webgl.ARRAY_BUFFER, positionBuffer);
+      Q3e.webgl.useProgram(GLEmulation.shaderProgram);
+    }
     // look up where the vertex data needs to go.
     var positionAttributeLocation = Q3e.webgl.getAttribLocation(GLEmulation.shaderProgram, "a_position");
   
     // look up uniform locations
     var resolutionUniformLocation = Q3e.webgl.getUniformLocation(GLEmulation.shaderProgram, "u_resolution");
     var colorUniformLocation = Q3e.webgl.getUniformLocation(GLEmulation.shaderProgram, "u_BaseColor");
-  
-    // Create a buffer to put three 2d clip space points in
-    var positionBuffer = Q3e.webgl.createBuffer();
-  
-    // Bind it to ARRAY_BUFFER (think of it as ARRAY_BUFFER = positionBuffer)
-    Q3e.webgl.bindBuffer(Q3e.webgl.ARRAY_BUFFER, positionBuffer);
-  
-    //webglUtils.resizeCanvasToDisplaySize(Q3e.webgl.canvas);
-  
-    // Tell it to use our program (pair of shaders)
-    Q3e.webgl.useProgram(GLEmulation.shaderProgram);
-  
-    // Bind the position buffer.
-    //Q3e.webgl.bindBuffer(Q3e.webgl.ARRAY_BUFFER, positionBuffer);
-  
+
     // create the buffer
     const indexBuffer = Q3e.webgl.createBuffer();
   
@@ -290,15 +281,8 @@ GLEmulation = {
   
     // Turn on the attribute
     Q3e.webgl.enableVertexAttribArray(positionAttributeLocation);
-  
-    // Tell the attribute how to get data out of positionBuffer (ARRAY_BUFFER)
-    var size = 2;          // 2 components per iteration
-    var type = Q3e.webgl.FLOAT;   // the data is 32bit floats
-    var normalize = false; // don't normalize the data
-    var stride = 0;        // 0 = move forward size * sizeof(type) each iteration to get the next position
-    var offset = 0;        // start at the beginning of the buffer
     Q3e.webgl.vertexAttribPointer(
-        positionAttributeLocation, size, type, normalize, stride, offset);
+        positionAttributeLocation, 2, Q3e.webgl.FLOAT, false, 0, 0);
   
     // bind the buffer containing the indices
     //Q3e.webgl.bindBuffer(Q3e.webgl.ELEMENT_ARRAY_BUFFER, indexBuffer);
