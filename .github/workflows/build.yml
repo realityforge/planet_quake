@@ -40,7 +40,7 @@ jobs:
             prefix: mingw-w64-x86_64
 
           - config: Release
-            rule: install
+            rule: release
 
     defaults:
       run:
@@ -163,7 +163,7 @@ jobs:
         config: [Release]
         include:
           - config: Release
-            rule: install
+            rule: release
           - arch: x86
             use_sdl: USE_SDL=0
           - arch: x86_64
@@ -281,7 +281,7 @@ jobs:
         config: [Release]
         include:
           - config: Release
-            rule: install
+            rule: release
 
     steps:
     - uses: actions/checkout@v2
@@ -322,7 +322,7 @@ jobs:
         config: [Release]
         include:
           - config: Release
-            rule: install
+            rule: release
 
     steps:
     - name: Install tools
