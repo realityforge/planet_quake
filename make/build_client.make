@@ -312,7 +312,7 @@ ifeq ($(PLATFORM),js)
 $(B)/$(TARGET_CLIENT): $(Q3OBJ)
 	$(echo_cmd) "LD $@"
 	$(Q)$(LD) -o $@ $(Q3OBJ) $(CLIENT_LDFLAGS) $(LDFLAGS)
-	$(Q)wasm-opt -Os --no-validation -o $@ $@
+	$(Q)$(OPT) -Os --no-validation -o $@ $@
 
 else
 $(B)/$(TARGET_CLIENT): $(Q3OBJ)

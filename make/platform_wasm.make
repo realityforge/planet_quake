@@ -16,6 +16,7 @@ USE_IPV6         := 0
 
 include make/configure.make
 
+OPT              := libs/$(COMPILE_PLATFORM)/wasi-sdk-14.0/bin/wasm-opt
 LD               := libs/$(COMPILE_PLATFORM)/wasi-sdk-14.0/bin/wasm-ld
 CC               := libs/$(COMPILE_PLATFORM)/wasi-sdk-14.0/bin/clang
 CXX              := libs/$(COMPILE_PLATFORM)/wasi-sdk-14.0/bin/clang++

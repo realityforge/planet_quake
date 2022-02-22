@@ -30,15 +30,6 @@ GLEmulation = {
   glNormalPointer: function (type, stride, pointer) {
     //debugger
   },
-  glVertexPointer: function (size, type, stride, pointer) {
-    //Q3e.webgl.enableVertexAttribArray(GLEmulation.attribPointers.attr_Position);
-    //Q3e.webgl.vertexAttribPointer(
-    //  GLEmulation.attribPointers.attr_Position, size, type, false, stride, 
-    //  Q3e.paged.subarray(pointer, pointer + size));
-    Q3e.webgl.vertexAttribPointer(
-      GLEmulation.attribPointers.attr_Position, 2, Q3e.webgl.FLOAT, false, 0, 0);
-
-  },
   glColorPointer: function (size, type, stride, pointer) {
     //debugger
   },
@@ -84,7 +75,6 @@ GLEmulation = {
     }
   },
   glDeleteProgramsARB: function () {},
-  glGenProgramsARB: function () {},
   glBindRenderbuffer: function () { debugger },
   glDeleteRenderbuffers: function () {},
   glFramebufferTexture2D: function () {},
@@ -281,6 +271,16 @@ GLEmulation = {
   // --------------------------------
   // code below this line is rendering code
 
+  glVertexPointer: function (size, type, stride, pointer) {
+    //Q3e.webgl.vertexAttribPointer(
+    //  GLEmulation.attribPointers.attr_Position, size, type, false, stride, 
+    //  Q3e.paged.subarray(pointer, pointer + size));
+    Q3e.vertextPointStride = stride
+    Q3e.webgl.vertexAttribPointer(
+      GLEmulation.attribPointers.attr_Position, 2, Q3e.webgl.FLOAT, false, 0, 0);
+
+  },
+
   glDrawElements: function (mode, count, type, indices2, start, end) {
 
     // Turn on the attribute
@@ -314,7 +314,7 @@ GLEmulation = {
 
   },
   glGetBooleanv: function () {},
-  glLineWidth: function () {},
+  glLineWidth: function () { debugger },
   glStencilFunc: function () {},
   glStencilOp: function () {},
   glMultiTexCoord2fARB: function () {},
@@ -381,6 +381,16 @@ GLEmulation = {
   glGetRenderbufferParameteriv: function () {},
   glIsFramebuffer: function () {},
   glGetFramebufferAttachmentParameteriv: function () {},
+
+  programPointers: [],
+  numProgramPointers: 0,
+  glGenProgramsARB: function (size, programs) {
+    for(let i = 0; i < size; i++) {
+      GLEmulation.programPointers[++GLEmulation.numProgramPointers] = 
+        Q3e.webgl.createProgram()
+      Q3e.paged32[(programs >> 2) + i] = GLEmulation.numProgramPointers
+    }
+  },
 
 }
 
