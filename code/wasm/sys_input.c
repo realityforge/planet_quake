@@ -1369,78 +1369,6 @@ static keyNum_t IN_TranslateSDLToQ3Key( SDL_Keysym *keysym, qboolean down )
 #define SDL_TRUE  qtrue
 #define SDL_FALSE qfalse
 
-/*
-===============
-IN_ActivateMouse
-===============
-*/
-static void IN_ActivateMouse( qboolean isFullscreen )
-{
-	if ( !mouseAvailable || !SDL_WasInit( SDL_INIT_VIDEO ) )
-		return;
-
-	if ( !mouseActive )
-	{
-		SDL_SetRelativeMouseMode( in_mouse->integer == 1 ? SDL_TRUE : SDL_FALSE );
-		SDL_SetWindowGrab( SDL_window, SDL_TRUE );
-	}
-
-	// in_nograb makes no sense in fullscreen mode
-	if ( !isFullscreen )
-	{
-		if ( in_nograb->modified || !mouseActive )
-		{
-			if ( in_nograb->integer ) {
-				SDL_SetRelativeMouseMode( SDL_FALSE );
-				SDL_SetWindowGrab( SDL_window, SDL_FALSE );
-			} else {
-				SDL_SetRelativeMouseMode( in_mouse->integer == 1 ? SDL_TRUE : SDL_FALSE );
-				SDL_SetWindowGrab( SDL_window, SDL_TRUE );
-			}
-
-			in_nograb->modified = qfalse;
-		}
-	}
-
-	mouseActive = qtrue;
-}
-
-
-void IN_GrabMouse(void) {
-	if(in_mouse) {
-		Com_Printf( "IN_GrabMouse: grabbing mouse\n" );
-		SDL_SetRelativeMouseMode( in_mouse->integer == 1 ? SDL_TRUE : SDL_FALSE );
-		SDL_SetWindowGrab( SDL_window, SDL_TRUE );
-	}
-}
-
-
-/*
-===============
-IN_DeactivateMouse
-===============
-*/
-static void IN_DeactivateMouse( qboolean isFullscreen )
-{
-	if ( !SDL_WasInit( SDL_INIT_VIDEO ) )
-		return;
-
-	// Always show the cursor when the mouse is disabled,
-	// but not when fullscreen
-	if ( !isFullscreen )
-		SDL_ShowCursor( SDL_TRUE );
-
-	if ( !mouseAvailable )
-		return;
-
-	if ( mouseActive )
-	{
-		SDL_SetWindowGrab( SDL_window, SDL_FALSE );
-		SDL_SetRelativeMouseMode( SDL_FALSE );
-
-		mouseActive = qfalse;
-	}
-}
 
 /**
  *  \brief Keyboard button event structure (event.key.*)
@@ -1494,92 +1422,6 @@ void IN_PushKeyUp(SDL_KeyboardEvent e)
   lastKeyDown = 0;
 }
 
-#define SDL_TEXTINPUTEVENT_TEXT_SIZE (32)
-/**
- *  \brief Keyboard text input event structure (event.text.*)
- */
-typedef struct SDL_TextInputEvent
-{
-    int32_t type;                              /**< ::SDL_TEXTINPUT */
-    int32_t timestamp;                         /**< In milliseconds, populated using SDL_GetTicks() */
-    int32_t windowID;                          /**< The window with keyboard focus, if any */
-    char text[SDL_TEXTINPUTEVENT_TEXT_SIZE];  /**< The input text */
-} SDL_TextInputEvent;
-
-void IN_PushTextEntry(SDL_TextInputEvent e) {
-	if( lastKeyDown != K_CONSOLE )
-	{
-		char *c = e.text;
-
-		// Quick and dirty UTF-8 to UTF-32 conversion
-		while ( *c )
-		{
-			int utf32 = 0;
-
-			if( ( *c & 0x80 ) == 0 )
-				utf32 = *c++;
-			else if( ( *c & 0xE0 ) == 0xC0 ) // 110x xxxx
-			{
-				utf32 |= ( *c++ & 0x1F ) << 6;
-				utf32 |= ( *c++ & 0x3F );
-			}
-			else if( ( *c & 0xF0 ) == 0xE0 ) // 1110 xxxx
-			{
-				utf32 |= ( *c++ & 0x0F ) << 12;
-				utf32 |= ( *c++ & 0x3F ) << 6;
-				utf32 |= ( *c++ & 0x3F );
-			}
-			else if( ( *c & 0xF8 ) == 0xF0 ) // 1111 0xxx
-			{
-				utf32 |= ( *c++ & 0x07 ) << 18;
-				utf32 |= ( *c++ & 0x3F ) << 12;
-				utf32 |= ( *c++ & 0x3F ) << 6;
-				utf32 |= ( *c++ & 0x3F );
-			}
-			else
-			{
-				Com_DPrintf( "Unrecognised UTF-8 lead byte: 0x%x\n", (unsigned int)*c );
-				c++;
-			}
-
-			if( utf32 != 0 )
-			{
-				if ( IN_IsConsoleKey( 0, utf32 ) )
-				{
-					Com_QueueEvent( in_eventTime, SE_KEY, K_CONSOLE, qtrue, 0, NULL );
-					Com_QueueEvent( in_eventTime, SE_KEY, K_CONSOLE, qfalse, 0, NULL );
-				}
-				else
-					Com_QueueEvent( in_eventTime, SE_CHAR, utf32, 0, 0, NULL );
-			}
-		}
-	}
-}
-
-/**
- *  \brief Mouse motion event structure (event.motion.*)
- */
-typedef struct SDL_MouseMotionEvent
-{
-    uint32_t type;        /**< ::SDL_MOUSEMOTION */
-    uint32_t timestamp;   /**< In milliseconds, populated using SDL_GetTicks() */
-    uint32_t windowID;    /**< The window with mouse focus, if any */
-    uint32_t which;       /**< The mouse instance id, or SDL_TOUCH_MOUSEID */
-    uint32_t state;       /**< The current button state */
-    int x;           /**< X coordinate, relative to window */
-    int y;           /**< Y coordinate, relative to window */
-    int xrel;        /**< The relative motion in the X direction */
-    int yrel;        /**< The relative motion in the Y direction */
-} SDL_MouseMotionEvent;
-
-void IN_PushMouseMove(SDL_MouseMotionEvent e) {
-	if( mouseActive && !in_joystick->integer )
-	{
-		if( !e.xrel && !e.yrel )
-			return;
-		Com_QueueEvent( in_eventTime, SE_MOUSE, e.xrel, e.yrel, 0, NULL );
-	}
-}
 
 /**
  *  \brief Mouse button event structure (event.button.*)
@@ -1782,7 +1624,6 @@ typedef struct SDL_TouchFingerEvent
 void IN_PushTouchFinger(SDL_TouchFingerEvent e)
 {
 	if(e.type == SDL_FINGERMOTION) {
-		//Com_QueueEvent( in_eventTime, SE_MOUSE_ABS, fingerMinusGap, e.tfinger.y * 480, 0, NULL );
 		float ratio = (float)cls.glconfig.vidWidth / (float)cls.glconfig.vidHeight;
 		touchhats[e.fingerId][0] = (e.x * ratio) * 50;
 		touchhats[e.fingerId][1] = e.y * 50;
@@ -1798,83 +1639,6 @@ void IN_PushTouchFinger(SDL_TouchFingerEvent e)
 		Com_QueueEvent( in_eventTime+1, SE_FINGER_UP, K_MOUSE1, e.fingerId, 0, NULL );
 		touchhats[e.fingerId][0] = 0;
 		touchhats[e.fingerId][1] = 0;
-	}
-}
-
-/**
- *  \brief Window state change event data (event.window.*)
- */
-typedef struct SDL_WindowEvent
-{
-    uint32_t type;        /**< ::SDL_WINDOWEVENT */
-    uint32_t timestamp;   /**< In milliseconds, populated using SDL_GetTicks() */
-    uint32_t windowID;    /**< The associated window */
-    byte event;        /**< ::SDL_WindowEventID */
-    byte padding1;
-    byte padding2;
-    byte padding3;
-    int data1;       /**< event dependent data */
-    int data2;       /**< event dependent data */
-} SDL_WindowEvent;
-
-/**
- *  \brief Event subtype for window events
- */
-typedef enum
-{
-    SDL_WINDOWEVENT_NONE,           /**< Never used */
-    SDL_WINDOWEVENT_SHOWN,          /**< Window has been shown */
-    SDL_WINDOWEVENT_HIDDEN,         /**< Window has been hidden */
-    SDL_WINDOWEVENT_EXPOSED,        /**< Window has been exposed and should be
-                                         redrawn */
-    SDL_WINDOWEVENT_MOVED,          /**< Window has been moved to data1, data2
-                                     */
-    SDL_WINDOWEVENT_RESIZED,        /**< Window has been resized to data1xdata2 */
-    SDL_WINDOWEVENT_SIZE_CHANGED,   /**< The window size has changed, either as
-                                         a result of an API call or through the
-                                         system or user changing the window size. */
-    SDL_WINDOWEVENT_MINIMIZED,      /**< Window has been minimized */
-    SDL_WINDOWEVENT_MAXIMIZED,      /**< Window has been maximized */
-    SDL_WINDOWEVENT_RESTORED,       /**< Window has been restored to normal size
-                                         and position */
-    SDL_WINDOWEVENT_ENTER,          /**< Window has gained mouse focus */
-    SDL_WINDOWEVENT_LEAVE,          /**< Window has lost mouse focus */
-    SDL_WINDOWEVENT_FOCUS_GAINED,   /**< Window has gained keyboard focus */
-    SDL_WINDOWEVENT_FOCUS_LOST,     /**< Window has lost keyboard focus */
-    SDL_WINDOWEVENT_CLOSE,          /**< The window manager requests that the window be closed */
-    SDL_WINDOWEVENT_TAKE_FOCUS,     /**< Window is being offered a focus (should SetWindowInputFocus() on itself or a subwindow, or ignore) */
-    SDL_WINDOWEVENT_HIT_TEST        /**< Window had a hit test that wasn't SDL_HITTEST_NORMAL. */
-} SDL_WindowEventID;
-
-void IN_PushWindowEvent(SDL_WindowEvent e)
-{
-	switch( e.event )
-	{
-		case SDL_WINDOWEVENT_MOVED:
-			if ( gw_active && !glw_state.isFullscreen ) {
-				Cvar_SetIntegerValue( "vid_xpos", e.data1 );
-				Cvar_SetIntegerValue( "vid_ypos", e.data2 );
-			}
-			break;
-		case SDL_WINDOWEVENT_MINIMIZED:	
-			re.SyncRender();
-			gw_active = qfalse;
-			gw_minimized = qtrue;
-			break;
-		case SDL_WINDOWEVENT_RESTORED:
-		case SDL_WINDOWEVENT_MAXIMIZED:		
-			gw_active = qtrue;
-			gw_minimized = qfalse;
-			break;
-		case SDL_WINDOWEVENT_FOCUS_LOST:
-			Key_ClearStates();
-			gw_active = qfalse;
-			break;
-		case SDL_WINDOWEVENT_FOCUS_GAINED:
-			Key_ClearStates();
-			gw_active = qtrue;
-			gw_minimized = qfalse;
-			break;
 	}
 }
 
@@ -1911,12 +1675,6 @@ void IN_PushEvent(int type, int *event)
   if(type == (int)&IN_PushKeyUp) {
     IN_PushKeyUp(*(SDL_KeyboardEvent *)event);
   }
-	if(type == (int)&IN_PushTextEntry) {
-    IN_PushTextEntry(*(SDL_TextInputEvent *)event);
-  }
-	if(type == (int)&IN_PushMouseMove) {
-		IN_PushMouseMove(*(SDL_MouseMotionEvent *)event);
-	}
 	if(type == (int)&IN_PushMouseButton) {
 		IN_PushMouseButton(*(SDL_MouseButtonEvent *)event);
 	}
@@ -1925,9 +1683,6 @@ void IN_PushEvent(int type, int *event)
 	}
 	if(type == (int)&IN_PushTouchFinger) {
 		IN_PushTouchFinger(*(SDL_TouchFingerEvent *)event);
-	}
-	if(type == (int)&IN_PushWindowEvent) {
-		IN_PushWindowEvent(*(SDL_WindowEvent *)event);
 	}
 	if(type == (int)&IN_PushDropEvent) {
 		IN_PushDropEvent(*(SDL_DropEvent *)event);
@@ -1938,12 +1693,9 @@ void IN_PushInit(int *inputInterface)
 {
   inputInterface[0] = (int)&IN_PushKeyDown;
   inputInterface[1] = (int)&IN_PushKeyUp;
-	inputInterface[2] = (int)&IN_PushTextEntry;
-	inputInterface[3] = (int)&IN_PushMouseMove;
 	inputInterface[4] = (int)&IN_PushMouseButton;
 	inputInterface[5] = (int)&IN_PushMouseWheel;
 	inputInterface[6] = (int)&IN_PushTouchFinger;
-	inputInterface[7] = (int)&IN_PushWindowEvent;
 	inputInterface[8] = (int)&IN_PushDropEvent;
 }
 
@@ -1953,61 +1705,10 @@ void IN_PushInit(int *inputInterface)
 IN_Frame
 ===============
 */
-qboolean clickChanged = qfalse;
-qboolean focusChanged = qfalse;
-void IN_Frame( void )
-{
-	qboolean loading;
-	qboolean fullscreen;
-	int i;
-
-#ifdef USE_JOYSTICK
-	IN_JoyMove();
-#endif
-
-	// If not DISCONNECTED (main menu) or ACTIVE (in game), we're loading
-	loading = ( cls.state != CA_DISCONNECTED && cls.state != CA_ACTIVE );
-
-	fullscreen = glw_state.isFullscreen;
-
-	if ( !fullscreen && ( Key_GetCatcher() & KEYCATCH_CONSOLE ) )
-	{
-		// Console is down in windowed mode
-		IN_DeactivateMouse( fullscreen );
-	}
-	else if( !fullscreen && loading )
-	{
-		// Loading in windowed mode
-		IN_DeactivateMouse( fullscreen );
-	}
-	//else if ( !( SDL_GetWindowFlags( SDL_window ) & SDL_WINDOW_INPUT_FOCUS ) )
-	//{
-		// Window not got focus
-	//	IN_DeactivateMouse( fullscreen );
-	//}
-	else
-		IN_ActivateMouse( fullscreen );
-
-	if(focusChanged != gw_active) {
-		focusChanged = gw_active;
-		if(gw_active == qtrue) {
-			cls.firstClick = qtrue;
-		}
-	}
-
-	if(clickChanged != cls.firstClick) {
-		clickChanged = cls.firstClick;
-		if(cls.firstClick == qfalse) {
-			gw_active = qtrue;
-			gw_minimized = qfalse;
-			S_Init();
-			cls.soundRegistered = qtrue;
-			S_BeginRegistration();
-			IN_GrabMouse();
-		}
-	}
-
-	for(i = 1; i < 4; i++) {
+//void IN_Frame( void )
+//{
+  // TODO
+	//for(i = 1; i < 4; i++) {
 		/*
 		if(i == 2 && !(Key_GetCatcher( ) & KEYCATCH_UI)) {
 			if(touchhats[i][0] != 0 || touchhats[i][1] != 0) {
@@ -2016,13 +1717,13 @@ void IN_Frame( void )
 		}
 		*/
 		// TODO: make config options for this?
-		if(i == 2 && !(Key_GetCatcher( ) & KEYCATCH_UI)) {
-			if(touchhats[i][0] != 0 || touchhats[i][1] != 0) {
-				Com_QueueEvent( in_eventTime, SE_MOUSE, touchhats[i][0], 0, 0, NULL );
-			}
-		}
-	}
-}
+		//if(i == 2 && !(Key_GetCatcher( ) & KEYCATCH_UI)) {
+		//	if(touchhats[i][0] != 0 || touchhats[i][1] != 0) {
+		//		Com_QueueEvent( in_eventTime, SE_MOUSE, touchhats[i][0], 0, 0, NULL );
+		//	}
+		//}
+	//}
+//}
 
 
 void IN_ShowKeyboard ( void ) {
@@ -2036,12 +1737,6 @@ IN_Init
 */
 void IN_Init( void )
 {
-	if ( !SDL_WasInit( SDL_INIT_VIDEO ) )
-	{
-		Com_Error( ERR_FATAL, "IN_Init called before SDL_Init( SDL_INIT_VIDEO )" );
-		return;
-	}
-
 	Com_DPrintf( "\n------- Input Initialization -------\n" );
 
 	in_keyboardDebug = Cvar_Get( "in_keyboardDebug", "0", CVAR_ARCHIVE );
@@ -2080,47 +1775,6 @@ void IN_Init( void )
 
 	mouseAvailable = ( in_mouse->value != 0 ) ? qtrue : qfalse;
 
-	IN_DeactivateMouse( glw_state.isFullscreen );
-
-#ifdef USE_JOYSTICK
-	IN_InitJoystick( );
-#endif
-
 	Com_DPrintf( "------------------------------------\n" );
 }
 
-
-/*
-===============
-IN_Shutdown
-===============
-*/
-void IN_Shutdown( void )
-{
-	SDL_StopTextInput();
-
-	IN_DeactivateMouse( glw_state.isFullscreen );
-
-	mouseAvailable = qfalse;
-
-#ifdef USE_JOYSTICK
-	IN_ShutdownJoystick();
-#endif
-
-	Cmd_RemoveCommand( "minimize" );
-	Cmd_RemoveCommand( "in_restart" );
-}
-
-
-/*
-===============
-IN_Restart
-===============
-*/
-void IN_Restart( void )
-{
-#ifdef USE_JOYSTICK
-	IN_ShutdownJoystick();
-#endif
-	IN_Init();
-}

@@ -1488,20 +1488,18 @@ typedef enum {
 	SE_FINGER_UP,
 	SE_CHAR,	// evValue is an ascii char
 	SE_MOUSE,	// evValue and evValue2 are relative signed x / y moves
-	SE_MOUSE_ABS,
 	SE_JOYSTICK_AXIS,	// evValue is an axis number and evValue2 is the current state (-127 to 127)
 	SE_CONSOLE,	// evPtr is a char*
-	SE_MAX,
+#ifdef USE_ABS_MOUSE
+	SE_MOUSE_ABS,
+#endif
 #ifdef USE_DRAGDROP
   SE_DROPBEGIN,
   SE_DROPCOMPLETE,
   SE_DROPFILE,
   SE_DROPTEXT,
 #endif
-#ifdef USE_ASYNCHRONOUS
-  SE_ASYNC,
-  SE_ASYNCP,
-#endif
+	SE_MAX
 } sysEventType_t;
 
 typedef struct {

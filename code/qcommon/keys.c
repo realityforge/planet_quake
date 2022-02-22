@@ -35,6 +35,9 @@ typedef struct {
 } keyname_t;
 
 // names not in this list can either be lowercase ascii, or '0xnn' hex sequences
+#ifdef __WASM__
+Q_EXPORT
+#endif
 static const keyname_t keynames[] =
 {
 	{"a", K_A},
@@ -239,6 +242,8 @@ static const keyname_t keynames[] =
 	{"PAD0_LEFTTRIGGER", K_PAD0_LEFTTRIGGER },
 	{"PAD0_RIGHTTRIGGER", K_PAD0_RIGHTTRIGGER },
 
+	{"CONSOLE", K_CONSOLE},
+
 	{NULL,0}
 };
 
@@ -331,6 +336,9 @@ Returns a string (either a single ascii char, a K_* name, or a 0x11 hex string) 
 given keynum.
 ===================
 */
+#ifdef __WASM__
+Q_EXPORT
+#endif
 const char *Key_KeynumToString( int keynum ) {
 	const keyname_t *kn;
 	static char tinystr[5];

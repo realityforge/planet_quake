@@ -24,6 +24,8 @@ Sys_FRead
 GL_GetProcAddress
 Sys_FreeFileList
 Sys_SetStatus
+GLimp_Shutdown
+GLimp_StartDriverAndSetMode
 strncpy
 memcpy
 memset

@@ -196,8 +196,14 @@ char com_earlyConnect[MAX_OSPATH];
 #endif
 
 // renderer window states
+#ifdef __WASM__
+Q_EXPORT
+#endif
 qboolean	gw_minimized = qfalse; // this will be always true for dedicated servers
 #ifndef DEDICATED
+#ifdef __WASM__
+Q_EXPORT
+#endif
 qboolean	gw_active = qtrue;
 #endif
 
@@ -2900,6 +2906,9 @@ Ptr should either be null, or point to a block of data that can
 be freed by the game later.
 ================
 */
+#ifdef __WASM__
+Q_EXPORT
+#endif
 void Sys_QueEvent( int evTime, sysEventType_t evType, int value, int value2, int ptrLength, void *ptr ) {
 	sysEvent_t	*ev;
 
@@ -3248,22 +3257,6 @@ int Com_EventLoop( void ) {
 			Cbuf_AddText( (char *)ev.evPtr );
 			Cbuf_AddText( "\n" );
 			break;
-#ifdef USE_ASYNCHRONOUS
-    case SE_ASYNC:
-      {
-        void (*func)(void) = (void (*)(void))(intptr_t)ev.evPtr;
-        func();
-        ev.evPtr = NULL; // function pointer, no free
-        break;
-      }
-    case SE_ASYNCP:
-      {
-        void (*func)(int p) = (void (*)(int))(intptr_t)ev.evPtr;
-        func(ev.evValue);
-        ev.evPtr = NULL; // function pointer, no free
-        break;
-      }
-#endif
 		default:
 			Com_Error( ERR_FATAL, "Com_EventLoop: bad event type %i", ev.evType );
   		break;

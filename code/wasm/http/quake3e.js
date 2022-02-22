@@ -163,7 +163,7 @@ function instantiateWasm(bytes) {
     FS: FS,
     NET: NET,
     DATE: DATE,
-    SDL: SDL,
+    INPUT: INPUT,
     STD: STD,
   }
   // assign everything to env because this bullshit don't work

@@ -193,47 +193,25 @@ typedef struct SDL_AudioSpec
     void *userdata;             /**< Userdata passed to callback (ignored for NULL callbacks). */
 } SDL_AudioSpec;
 
-__attribute__((import_module("SDL"), import_name("SDL_MinimizeWindow")))
-extern void  SDL_MinimizeWindow( void *window );
-extern int   SDL_GetWindowDisplayIndex(void *window);
-extern void  SDL_GL_DeleteContext(void *ctx);
-__attribute__((import_module("SDL"), import_name("SDL_GL_SetAttribute")))
-extern char *SDL_GL_SetAttribute( SDL_GLattr, int );
-__attribute__((import_module("SDL"), import_name("SDL_GetError")))
-extern char *SDL_GetError( void );
-__attribute__((import_module("SDL"), import_name("SDL_GetDesktopDisplayMode")))
-extern int   SDL_GetDesktopDisplayMode(int displayIndex, SDL_DisplayMode *mode);
-__attribute__((import_module("SDL"), import_name("SDL_CreateWindow")))
-extern void *SDL_CreateWindow(const char *title,
-                              int x, int y, int w,
-                              int h, uint32_t flags);
-__attribute__((import_module("SDL"), import_name("SDL_SetWindowDisplayMode")))
-extern int   SDL_SetWindowDisplayMode(void *window, const SDL_DisplayMode *mode);
-__attribute__((import_module("SDL"), import_name("SDL_GetDesktopDisplayMode")))
-extern int   SDL_GetWindowDisplayMode(void *window, SDL_DisplayMode *mode);
-__attribute__((import_module("SDL"), import_name("SDL_GL_CreateContext")))
-extern void *SDL_GL_CreateContext(void *window);
-extern void  SDL_DestroyWindow(void *window);
+
 extern int   GL_SetSwapInterval(int interval);
-__attribute__((import_module("SDL"), import_name("SDL_GL_GetDrawableSize")))
-extern void  SDL_GL_GetDrawableSize(void *window, int *w, int *h);
-extern void  SDL_WarpMouseInWindow(void *window, int x, int y);
+
 extern const char *SDL_GetCurrentVideoDriver(void);
 extern int   SDL_GL_SetSwapInterval(int interval);
-__attribute__((import_module("SDL"), import_name("SDL_WasInit")))
+__attribute__((import_module("INPUT"), import_name("SDL_WasInit")))
 extern uint32_t SDL_WasInit(uint32_t flags);
-__attribute__((import_module("SDL"), import_name("SDL_Init")))
+__attribute__((import_module("INPUT"), import_name("SDL_Init")))
 extern int   SDL_Init(uint32_t flags);
 extern void  SDL_GL_SwapWindow(void *window);
 extern void *Sys_LoadLibrary(const char *f);
-__attribute__((import_module("SDL"), import_name("SDL_ShowCursor")))
+__attribute__((import_module("INPUT"), import_name("SDL_ShowCursor")))
 extern int   SDL_ShowCursor(int toggle);
-__attribute__((import_module("SDL"), import_name("SDL_SetWindowGrab")))
+__attribute__((import_module("INPUT"), import_name("SDL_SetWindowGrab")))
 extern void  SDL_SetWindowGrab(void *window, qboolean grabbed);
 extern int   SDL_SetRelativeMouseMode(qboolean enabled);
-__attribute__((import_module("SDL"), import_name("SDL_GetWindowFlags")))
+__attribute__((import_module("INPUT"), import_name("SDL_GetWindowFlags")))
 extern uint32_t SDL_GetWindowFlags(void *window);
-__attribute__((import_module("SDL"), import_name("SDL_StartTextInput")))
+__attribute__((import_module("INPUT"), import_name("SDL_StartTextInput")))
 extern void  SDL_StartTextInput(void);
 extern void  SDL_StopTextInput(void);
 

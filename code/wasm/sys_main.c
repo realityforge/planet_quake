@@ -75,22 +75,6 @@ void Sys_FreeFileList( char **list ) {
 }
 
 
-/*
-=================
-Sys_In_Restart_f
-
-Restart the input subsystem
-=================
-*/
-#ifndef DEDICATED
-void Sys_In_Restart_f( void )
-{
-	IN_Shutdown();
-	IN_Init();
-}
-#endif
-
-
 // =============================================================
 // tty console routines
 // NOTE: if the user is editing a line when something gets printed to the early console then it won't look good
@@ -129,8 +113,9 @@ void Sys_Init( void )
 {
 
 #ifndef DEDICATED
-	Cmd_AddCommand( "in_restart", Sys_In_Restart_f );
-	Cmd_SetDescription( "in_restart", "Restart all the input drivers, dinput, joystick, etc\nUsage: in_restart" );
+	// TODO: 
+	//Cmd_AddCommand( "in_restart", Sys_In_Restart_f );
+	//Cmd_SetDescription( "in_restart", "Restart all the input drivers, dinput, joystick, etc\nUsage: in_restart" );
 #endif
 
 	Cvar_Set( "arch", OS_STRING " " ARCH_STRING );
@@ -191,7 +176,6 @@ Sys_Frame
 Q_EXPORT
 #endif
 void Sys_Frame( void ) {
-	IN_Frame();
 	Com_Frame( CL_NoDelay() );
 }
 

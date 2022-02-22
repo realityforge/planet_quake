@@ -151,36 +151,6 @@ function InputPushTextEvent (evt) {
   }
   _IN_PushEvent(SYSI.inputInterface[2], event)
 }
-
-function InputPushMouseEvent (evt) {
-  var event = SYSI.inputHeap
-  if (evt.type != 'mousemove') {
-    SYSI.cancelBackspace = false
-    var down = evt.type == 'mousedown'
-    HEAP32[((event+0)>>2)]=down ? 0x401 : 0x402
-    HEAP32[((event+4)>>2)]=_Sys_Milliseconds() // timestamp
-    HEAP32[((event+8)>>2)]=0 // windowid
-    HEAP32[((event+12)>>2)]=0 // mouseid
-    HEAP32[((event+16)>>2)]=((down ? 1 : 0) << 8) + (evt.button+1) // DOM buttons are 0-2, SDL 1-3
-    HEAP32[((event+20)>>2)]=evt.pageX
-    HEAP32[((event+24)>>2)]=evt.pageY
-  } else {
-    HEAP32[((event+0)>>2)]=0x400
-    HEAP32[((event+4)>>2)]=_Sys_Milliseconds()
-    HEAP32[((event+8)>>2)]=0
-    HEAP32[((event+12)>>2)]=0
-    HEAP32[((event+16)>>2)]=SDL.buttonState
-    HEAP32[((event+20)>>2)]=evt.pageX
-    HEAP32[((event+24)>>2)]=evt.pageY
-    HEAP32[((event+28)>>2)]=Browser.getMovementX(evt)
-    HEAP32[((event+32)>>2)]=Browser.getMovementY(evt)
-  }
-  if (evt.type == 'mousemove')
-    _IN_PushEvent(SYSI.inputInterface[3], event)
-  else
-    _IN_PushEvent(SYSI.inputInterface[4], event)
-}
-
 function InputPushWheelEvent (evt) {
   var event = SYSI.inputHeap
   HEAP32[((event+0)>>2)]=0x403;
@@ -289,23 +259,6 @@ function InputPushMovedEvent (evt) {
   }
 }
 
-function InputPushFocusEvent (evt) {
-  var event = SYSI.inputHeap
-  HEAP32[((event+0)>>2)]=0x200;
-  HEAP32[((event+4)>>2)]=_Sys_Milliseconds(); // timestamp
-  HEAP32[((event+8)>>2)]=0; // windowid
-  if (document.visibilityState === 'visible'
-    & (typeof evt.visible === 'undefined' || evt.visible !== false)) {
-    HEAP32[((event+12)>>2)]=0x00C; // event id
-  } else {
-    HEAP32[((event+12)>>2)]=0x00D; // event id
-  }
-  // padding?
-  HEAP32[((event+16)>>2)]=0;
-  HEAP32[((event+20)>>2)]=0;
-  _IN_PushEvent(SYSI.inputInterface[7], event)
-}
-
 function InputPushDropEvent (filename) {
   var event = SYSI.inputHeap
   HEAP32[((event+4)>>2)]=_Sys_Milliseconds(); // timestamp
@@ -327,106 +280,6 @@ function InputPushDropEvent (filename) {
     HEAP32[((event+8)>>2)]=SYSF.pathname; // filename
     _IN_PushEvent(SYSI.inputInterface[8], event)
   }
-}
-
-function InputInit () {
-  // TODO: clear JSEvents.eventHandlers
-  _IN_PushInit(SYSI.inputHeap)
-  SYSI.inputInterface = []
-  for(var ei = 0; ei < 20; ei++) {
-    SYSI.inputInterface[ei] = getValue(SYSI.inputHeap + 4 * ei, 'i32', true)
-  }
-  window.addEventListener('keydown', SYSI.InputPushKeyEvent, false)
-  window.addEventListener('keyup', SYSI.InputPushKeyEvent, false)
-  window.addEventListener('keypress', SYSI.InputPushTextEvent, false)
-  window.addEventListener('mouseout', SYSI.InputPushMovedEvent, false)
-
-  SYSI.canvas.addEventListener('mousemove', SYSI.InputPushMouseEvent, false)
-  SYSI.canvas.addEventListener('mousedown', SYSI.InputPushMouseEvent, false)
-  SYSI.canvas.addEventListener('mouseup', SYSI.InputPushMouseEvent, false)
-  
-  document.addEventListener('mousewheel', SYSI.InputPushWheelEvent, {capture: false, passive: true})
-  document.addEventListener('visibilitychange', SYSI.InputPushFocusEvent, false)
-  document.addEventListener('drop', SYSI.dropHandler, false)
-  document.addEventListener('dragenter', SYSI.dragEnterHandler, false)
-  document.addEventListener('dragover', SYSI.dragOverHandler, false)
-  //document.addEventListener('pointerlockchange', SYSI.InputPushFocusEvent, false);
-  /*
-  let nipple handle touch events
-  SYSI.canvas.addEventListener('touchstart', SYSI.InputPushTouchEvent, false)
-  SYSI.canvas.addEventListener('touchend', SYSI.InputPushTouchEvent, false)
-  SYSI.canvas.addEventListener('touchmove', SYSI.InputPushTouchEvent, false)
-  SYSI.canvas.addEventListener('touchcancel', SYSI.InputPushTouchEvent, false)
-  */
-}
-
-function InitNippleJoysticks () {
-  document.body.classList.add('joysticks')
-  if(SYSI.joysticks.length > 0) {
-    for(var i = 0; i < SYSI.joysticks.length; i++) {
-      SYSI.joysticks[i].destroy()
-    }
-  }
-  SYSI.joysticks[0] = nipplejs.create({
-    zone: document.getElementById('left-joystick'),
-    multitouch: false,
-    mode: 'semi',
-    size: 100,
-    catchDistance: 50,
-    maxNumberOfNipples: 1,
-    position: {bottom: '50px', left: '50px'},
-  })
-  SYSI.joysticks[1] = nipplejs.create({
-    zone: document.getElementById('right-joystick'),
-    multitouch: false,
-    mode: 'semi',
-    size: 100,
-    catchDistance: 50,
-    maxNumberOfNipples: 1,
-    position: {bottom: '50px', right: '50px'},
-  })
-  SYSI.joysticks[2] = nipplejs.create({
-    dataOnly: true,
-    zone: document.body,
-    multitouch: false,
-    mode: 'dynamic',
-    size: 2,
-    catchDistance: 2,
-    maxNumberOfNipples: 1,
-  })
-  SYSI.joysticks[0].on('start end move', SYSI.InputPushTouchEvent.bind(null, SYSI.joysticks[0], 1))
-  SYSI.joysticks[1].on('start end move', SYSI.InputPushTouchEvent.bind(null, SYSI.joysticks[1], 2))
-  SYSI.joysticks[2].on('start end move', SYSI.InputPushTouchEvent.bind(null, SYSI.joysticks[2], 3))
-}
-
-function updateVideoCmd () {
-  if(!SYSI.canvas) return
-  var oldHeight = SYSI.canvas.getAttribute('height')
-  var oldWidth = SYSI.canvas.getAttribute('width')
-  // only update size if the canvas changes by more than 0.1
-  if(!((SYSI.canvas.clientWidth / SYSI.canvas.clientHeight) - (oldWidth / oldHeight) > 0.1
-    || (SYSI.canvas.clientWidth / SYSI.canvas.clientHeight) - (oldWidth / oldHeight) < -0.1))
-    return
-  SYSI.canvas.setAttribute('width', canvas.clientWidth)
-  SYSI.canvas.setAttribute('height', canvas.clientHeight)
-  var update = 'set r_fullscreen %fs; set r_mode -1;'
-    + ' set r_customWidth %w; set r_customHeight %h;'
-    + ' set cg_gunX %i; cg_gunZ %i; vid_restart;'
-    .replace('%fs', window.fullscreen ? '1' : '0')
-    .replace('%w', SYSI.canvas.clientWidth)
-    .replace('%h', SYSI.canvas.clientHeight)
-    .replace('%i', (SYSI.canvas.clientWidth / SYSI.canvas.clientHeight) < 0.8
-      ? -5 : 0)
-
-  _Cbuf_AddText(allocate(intArrayFromString(update), ALLOC_STACK))
-}
-
-function resizeViewport () {
-  // ignore if the canvas hasn't yet initialized
-  if(!SYSI.canvas) return
-
-  if (SYSI.resizeDelay) clearTimeout(SYSI.resizeDelay)
-  SYSI.resizeDelay = setTimeout(SYSI.updateVideoCmd, 100);
 }
 
 function dropHandler (ev) {
@@ -488,57 +341,6 @@ function dragEnterHandler (ev) {
 
 function dragOverHandler (ev) {
   ev.preventDefault();
-}
-
-function Sys_GLimpInit (initFlags) {
-  var in_joystick = SYSC.Cvar_VariableIntegerValue('in_joystick')
-  var developer = SYSC.Cvar_VariableIntegerValue('developer')
-  SDL.startTime = Date.now();
-  SDL.initFlags = initFlags;
-
-  if(!SYSI.inputHeap)
-    SYSI.inputHeap = allocate(new Int32Array(60>>2), ALLOC_NORMAL)
-
-	var viewport = document.getElementById('viewport-frame')
-	// create a canvas element at this point if one doesnt' already exist
-	if (!SYSI.canvas) {
-		SYSI.canvas = document.createElement('canvas')
-		SYSI.canvas.id = 'canvas'
-		SYSI.canvas.width = viewport.offsetWidth
-		SYSI.canvas.height = viewport.offsetHeight
-		viewport.appendChild(SYSI.canvas)
-	}
-  window.addEventListener('beforeunload', function (e) {
-    _S_DisableSounds();
-    if(SYSI.cancelBackspace) {
-      e.preventDefault();
-      e.returnValue = 'Do you really want to quit?';
-      return e.returnValue
-    } else {
-      delete e.returnValue
-    }
-  })
-  window.addEventListener('resize', SYSI.resizeViewport)
-
-  if(in_joystick) {
-    SYSI.InitNippleJoysticks()
-  }
-  SYSI.InputInit()
-  
-  if(!developer) return
-  
-  function throwOnGLError(err, funcName, args) {
-    //console.error(WebGLDebugUtils.glEnumToString(err) + " was caused by call to: " + funcName)
-  }
-  function logGLCall(functionName, args) {   
-    console.log("gl." + functionName + "(" + 
-        WebGLDebugUtils.glFunctionArgsToString(functionName, args) + ")") 
-  }
-  //GLctx = WebGLDebugUtils.makeDebugContext(GLctx, throwOnGLError /*, logGLCall */)
-
-}
-
-function Sys_GLimpSafeInit () {
 }
 
 function Sys_GetClipboardData () {

@@ -150,7 +150,9 @@ var STD = {
     let pos = Q3e.paged.subarray(str, str + length).indexOf(ch)
     return pos == -1 ? null : str + pos
   },
-  memmove: function () { debugger },
+  memmove: function (dest, source, length) {
+    Q3e.paged.copyWithin(dest, source, source + length)
+  },
   strrchr: function (str, ch) {
     let length = Q3e.paged.subarray(str).indexOf(0)
     let pos = Uint8Array.from(Q3e.paged.subarray(str, str + length))
