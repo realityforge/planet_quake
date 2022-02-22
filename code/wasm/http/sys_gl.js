@@ -14,16 +14,6 @@ GLEmulation = {
   glProgramLocalParameter4fARB: function () {},
   glProgramLocalParameter4fvARB: function () {},
   glPolygonOffset: function () {},
-  glTexCoordPointer: function (size, type, stride, pointer) {
-    //debugger
-  },
-  glNormalPointer: function (type, stride, pointer) {
-    //debugger
-  },
-  glColorPointer: function (size, type, stride, pointer) {
-    //debugger
-  },
-
   glLockArraysEXT: function () {},
   glUnlockArraysEXT: function () {},
   glGetIntegerv: function (pname, param) {
@@ -194,6 +184,7 @@ GLEmulation = {
   glEnableClientState: function (cap) { 
     if(cap == /* GL_VERTEX_ARRAY */	0x8074) {
       // setup GLSL program
+      Q3e.webgl.enableVertexAttribArray(GLEmulation.attribPointers.attr_Position);
       if(typeof GLEmulation.positionBuffer == 'undefined') {
         GLEmulation.positionBuffer = Q3e.webgl.createBuffer()
         Q3e.webgl.bindBuffer(Q3e.webgl.ARRAY_BUFFER, GLEmulation.positionBuffer)
@@ -203,6 +194,8 @@ GLEmulation = {
         // set the resolution
         Q3e.webgl.uniform2f(GLEmulation.uniforms.u_resolution, Q3e.canvas.width, Q3e.canvas.height);
       }
+    } else {
+      //debugger
     }
   },
   glDisableClientState: function(cap) {
@@ -254,23 +247,33 @@ GLEmulation = {
   // code above this line is initialization code
   // --------------------------------
   // code below this line is rendering code
-  vertextStride: 0,
-  vertextSize: 2,
+  glTexCoordPointer: function (size, type, stride, pointer) {
+    //debugger
+  },
+  glNormalPointer: function (type, stride, pointer) {
+    //debugger
+  },
+  glColorPointer: function (size, type, stride, pointer) {
+    //debugger
+  },
+
+
+  vertexStride: 0,
+  vertexSize: 2,
   vertexPointer: null,
   glVertexPointer: function (size, type, stride, pointer) {
     //Q3e.webgl.vertexAttribPointer(
     //  GLEmulation.attribPointers.attr_Position, size, type, false, stride, 
     //  Q3e.paged.subarray(pointer, pointer + size));
-    GLEmulation.vertextStride = stride
-    GLEmulation.vertextSize = size
+    GLEmulation.vertexStride = stride
+    GLEmulation.vertexSize = size
     GLEmulation.vertexPointer = pointer
+
+    // wtf... can't buffer the data here because we need to know the count from the index call
+    //   when drawelements or drawarrays is called
   },
 
   glDrawElements: function (mode, count, type, indices, start, end) {
-
-    Q3e.webgl.enableVertexAttribArray(GLEmulation.attribPointers.attr_Position);
-    Q3e.webgl.vertexAttribPointer(
-      GLEmulation.attribPointers.attr_Position, GLEmulation.vertextSize, Q3e.webgl.FLOAT, false, GLEmulation.vertextStride, 0);
 
     if(typeof GLEmulation.indexBuffers[1] == 'undefined') {
       GLEmulation.indexBuffers[1] = Q3e.webgl.createBuffer()
@@ -283,26 +286,27 @@ GLEmulation = {
         (indices >> 2) + count), // end
       Q3e.webgl.STATIC_DRAW)
 
+
+    Q3e.webgl.vertexAttribPointer(
+      GLEmulation.attribPointers.attr_Position, GLEmulation.vertexSize, Q3e.webgl.FLOAT, false, GLEmulation.vertexStride, 0);
     Q3e.webgl.bindBuffer(Q3e.webgl.ARRAY_BUFFER, GLEmulation.positionBuffer)
     Q3e.webgl.bufferData(
       Q3e.webgl.ARRAY_BUFFER,
       Q3e.paged32f.subarray(
         GLEmulation.vertexPointer >> 2,  // start
         (GLEmulation.vertexPointer >> 2) // end
-          + (count * (GLEmulation.vertextSize + GLEmulation.vertextStride))),
+          + (count * (GLEmulation.vertexSize + GLEmulation.vertexStride))),
       Q3e.webgl.STATIC_DRAW)
 
-    /*
-    GLEmulation.setRectangle(
-      GLEmulation.randomInt(300), GLEmulation.randomInt(300), 
-      GLEmulation.randomInt(300), GLEmulation.randomInt(300));
-    */
-
     // Set a random color.
-    Q3e.webgl.uniform4f(GLEmulation.uniforms.u_BaseColor, 
-      Math.random(), Math.random(), Math.random(), 1);
+    //Q3e.webgl.uniform4f(GLEmulation.uniforms.u_BaseColor, 
+    //  Math.random(), Math.random(), Math.random(), 1);
     if(mode != Q3e.webgl.TRIANGLES) {
       debugger
+    }
+    if(!Q3e.initialized) {
+      Q3e.initialized = true
+      document.body.className += ' done-loading '
     }
 
     Q3e.webgl.drawElements(
@@ -342,7 +346,6 @@ GLEmulation = {
     let indexIndex = GLEmulation.log2ceilLookup(MAX_TEMP_BUFFER_SIZE)
     let quadIndexes = new Uint16Array(MAX_TEMP_BUFFER_SIZE)
 
-    
     let i = 0, v = 0;
     while (1) {
       quadIndexes[i++] = v;
@@ -439,6 +442,7 @@ GLEmulation = {
 
       GLEmulation.attribPointers = {
         attr_Position: Q3e.webgl.getAttribLocation(program, "attr_Position"),
+        attr_TexCoord0: Q3e.webgl.getAttribLocation(program, "attr_TexCoord0"),
       }
 
       GLEmulation.uniforms = {
@@ -491,7 +495,7 @@ const SHADERS = [
     vec2 zeroToOne = position / u_resolution;
     vec2 zeroToTwo = zeroToOne * 2.0;
     vec2 clipSpace = zeroToTwo - 1.0;
-    gl_Position = vec4(zeroToOne.x, zeroToOne.y, 0, 1);
+    gl_Position = vec4(clipSpace.x, -clipSpace.y, 0, 1);
 
   }`,
   `

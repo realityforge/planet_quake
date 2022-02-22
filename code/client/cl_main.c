@@ -4357,7 +4357,9 @@ void CL_StartHunkUsers( void ) {
 	}
 
 #ifdef USE_ASYNCHRONOUS
-
+	if(!com_earlyConnect[0]) {
+		Sys_SetStatus("Loading UI...");
+	}
 	// init with console down like Quake 1!
 	if(!uivm && !cls.uiStarted && cls.state == CA_DISCONNECTED) {
 		//Key_SetCatcher( Key_GetCatcher( ) | KEYCATCH_CONSOLE );

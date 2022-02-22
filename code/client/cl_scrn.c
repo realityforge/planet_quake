@@ -862,6 +862,12 @@ void SCR_DrawScreenField( stereoFrame_t stereoFrame ) {
 		uiFullscreen = (uivm && VM_Call( uivm, 0, UI_IS_FULLSCREEN ));
 	}
 
+#ifdef __WASM__
+	// TODO: fade black background in from full alpha black on web
+	//   so the spinning logos slowly disappear
+	// TODO: fade between white and black when transitioning to light/dark mode
+#endif
+
 	// wide aspect ratio screens need to have the sides cleared
 	// unless they are displaying game renderings
 	if ( uiFullscreen || cls.state <= CA_LOADING 

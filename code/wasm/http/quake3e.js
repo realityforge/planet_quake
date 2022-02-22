@@ -67,8 +67,17 @@ function Sys_Error(fmt, args) {
   throw new Error(addressToString(fmt))
 }
 
-function Sys_SetStatus() {
+function Sys_SetStatus(status) {
   // TODO: something like  window.title = , then setTimeout( window.title = 'Q3e' again)
+  let desc = addressToString(status)
+  let description = document.querySelector('#loading-progress .description')
+  let div = document.createElement('div')
+  // TODO: use BG_sprintf like above?
+  div.innerHTML = desc.replace('%s', addressToString(arguments[1]))
+  if(description.children.length == 0
+    || div.innerText.toLowerCase() != description
+      .children[description.children.length-1].innerText.toLowerCase())
+    description.appendChild(div)
 }
 
 var SYS = {

@@ -106,6 +106,8 @@
 				width: 24em;
 				background: transparent;
 				z-index: 9999;
+				transition: opacity 1s ease-in-out;
+				opacity: 1.0;
 			}
 			
 			#loading-progress .description {
@@ -151,6 +153,12 @@
 				perspective: 1000px;
 			}
 			
+			.done-loading #flipper,
+			.done-loading #loading-progress {
+				/* opacity: 0.0; */
+				z-index: 0;
+			}
+
 			/* flip the pane when hovered */
 			#flipper {
 				animation: rotatequake 1s infinite ease-in-out;
@@ -162,6 +170,8 @@
 				top:0;
 				left:0;
 				z-index: 0;
+				transition: opacity 1s ease-in-out;
+				opacity: 1.0;
 			}
 
 			.front, .back {

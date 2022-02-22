@@ -231,6 +231,8 @@ Q_EXPORT int RunGame( int argc, char* argv[] )
 	// get the initial time base
 	Sys_Milliseconds();
 
+	Sys_SetStatus("Starting up...\n");
+
 	Com_Init( cmdline );
 	NET_Init();
 
