@@ -173,6 +173,7 @@ function instantiateWasm(bytes) {
   Q3e['paged16'] = new Uint16Array( Q3e['memory'].buffer )
   Q3e['paged32'] = new Uint32Array( Q3e['memory'].buffer )
   Q3e['paged32f'] = new Float32Array( Q3e['memory'].buffer )
+  Q3e['paged64f'] = new Float64Array( Q3e['memory'].buffer )
   return WebAssembly.instantiate(bytes, Q3e)
 }
 
