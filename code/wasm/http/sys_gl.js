@@ -1,7 +1,7 @@
 
 var GLEmulation
 
-
+const MAX_TEMP_BUFFER_SIZE = 4096
 
 GLEmulation = {
   textures: [],
@@ -11,17 +11,36 @@ GLEmulation = {
   },
   glDisable: function () {},
   glEnable: function () {},
-  glBindProgramARB: function () { },
+  glBindProgramARB: function (kind, pointer) {
+    // setup default program
+    if(typeof GLEmulation.shaderProgram == 'undefined') {
+      buildShaderProgram()
+    }
+    
+    if(pointer != 0) {
+      debugger
+    }
+  },
   glProgramLocalParameter4fARB: function () {},
   glProgramLocalParameter4fvARB: function () {},
   glPolygonOffset: function () {},
   glTexCoordPointer: function (size, type, stride, pointer) {
+    //debugger
   },
   glNormalPointer: function (type, stride, pointer) {
+    //debugger
   },
   glVertexPointer: function (size, type, stride, pointer) {
+    //Q3e.webgl.enableVertexAttribArray(GLEmulation.attribPointers.attr_Position);
+    //Q3e.webgl.vertexAttribPointer(
+    //  GLEmulation.attribPointers.attr_Position, size, type, false, stride, 
+    //  Q3e.paged.subarray(pointer, pointer + size));
+    Q3e.webgl.vertexAttribPointer(
+      GLEmulation.attribPointers.attr_Position, 2, Q3e.webgl.FLOAT, false, 0, 0);
+
   },
   glColorPointer: function (size, type, stride, pointer) {
+    //debugger
   },
 
   glLockArraysEXT: function () {},
@@ -80,7 +99,9 @@ GLEmulation = {
   glMatrixMode: function () {},
   glLoadMatrixf: function () {},
   glLoadIdentity: function () {},
-  glColor4f: function () {},
+  glColor4f: function (r, g, b, a) {
+    Q3e.webgl.colorMask(r, g, b, a)
+  },
   glDrawArrays: function (mode, start, end) {
     //Q3e.webgl.drawArrays(mode, start, end);
   },
@@ -192,10 +213,28 @@ GLEmulation = {
   },
 
   glEnableClientState: function (cap) { 
-    
+    if(cap == /* GL_VERTEX_ARRAY */	0x8074) {
+      // setup GLSL program
+      if(typeof GLEmulation.positionBuffer == 'undefined') {
+        GLEmulation.positionBuffer = Q3e.webgl.createBuffer()
+        Q3e.webgl.bindBuffer(Q3e.webgl.ARRAY_BUFFER, GLEmulation.positionBuffer)
+        Q3e.webgl.useProgram(GLEmulation.shaderProgram)
+        // must have initial for 2D drawing?
+        GLEmulation.glBufferDataARB(Q3e.webgl.ELEMENT_ARRAY_BUFFER, 6, 0, Q3e.webgl.STATIC_DRAW)
+        Q3e.webgl.bindBuffer(Q3e.webgl.ARRAY_BUFFER, GLEmulation.positionBuffer)
+        // set the resolution
+        Q3e.webgl.uniform2f(GLEmulation.uniforms.u_resolution, Q3e.canvas.width, Q3e.canvas.height);
+      }
+
+      let indexIndex = GLEmulation.log2ceilLookup(MAX_TEMP_BUFFER_SIZE)
+      Q3e.webgl.bindBuffer(Q3e.webgl.ELEMENT_ARRAY_BUFFER, GLEmulation.indexBuffers[indexIndex]);
+      Q3e.webgl.enableVertexAttribArray(GLEmulation.attribPointers.attr_Position);
+    }
   },
   glDisableClientState: function(cap) {
-    
+    if(cap == /* GL_VERTEX_ARRAY */	0x8074) {
+      Q3e.webgl.bindBuffer(Q3e.webgl.ELEMENT_ARRAY_BUFFER, null);
+    }
   },
   glClientActiveTextureARB: function () {},
   glTexSubImage2D: function (a1, a2, a3, a4, a5, a6, a7) { 
@@ -238,83 +277,40 @@ GLEmulation = {
     ]), Q3e.webgl.STATIC_DRAW);
   },
 
+  // code above this line is initialization code
+  // --------------------------------
+  // code below this line is rendering code
+
   glDrawElements: function (mode, count, type, indices2, start, end) {
-    // setup GLSL program
-    if(typeof GLEmulation.shaderProgram == 'undefined') {
-      buildShaderProgram()
-    }
 
-    if(typeof GLEmulation.positionBuffer == 'undefined') {
-      var positionBuffer = Q3e.webgl.createBuffer();
-      Q3e.webgl.bindBuffer(Q3e.webgl.ARRAY_BUFFER, positionBuffer);
-      Q3e.webgl.useProgram(GLEmulation.shaderProgram);
-    }
-    // look up where the vertex data needs to go.
-    var positionAttributeLocation = Q3e.webgl.getAttribLocation(GLEmulation.shaderProgram, "a_position");
-  
-    // look up uniform locations
-    var resolutionUniformLocation = Q3e.webgl.getUniformLocation(GLEmulation.shaderProgram, "u_resolution");
-    var colorUniformLocation = Q3e.webgl.getUniformLocation(GLEmulation.shaderProgram, "u_BaseColor");
-
-    // create the buffer
-    const indexBuffer = Q3e.webgl.createBuffer();
-  
-    // make this buffer the current 'ELEMENT_ARRAY_BUFFER'
-    Q3e.webgl.bindBuffer(Q3e.webgl.ELEMENT_ARRAY_BUFFER, indexBuffer);
-  
-    // Fill the current element array buffer with data
-    const indices = [
-      0, 1, 2,   // first triangle
-      2, 1, 3,   // second triangle
-    ];
-    Q3e.webgl.bufferData(
-      Q3e.webgl.ELEMENT_ARRAY_BUFFER,
-    //  null
-      //Uint16Array.from(Q3e.paged32.subarray(indices2 >> 2, (indices2 >> 2) + count)),
-      new Uint16Array(indices),
-      Q3e.webgl.STATIC_DRAW
-    );
-  
-    // code above this line is initialization code
-    // --------------------------------
-    // code below this line is rendering code
-  
     // Turn on the attribute
-    Q3e.webgl.enableVertexAttribArray(positionAttributeLocation);
-    Q3e.webgl.vertexAttribPointer(
-        positionAttributeLocation, 2, Q3e.webgl.FLOAT, false, 0, 0);
-  
-    // bind the buffer containing the indices
-    //Q3e.webgl.bindBuffer(Q3e.webgl.ELEMENT_ARRAY_BUFFER, indexBuffer);
-  
-    // set the resolution
-    Q3e.webgl.uniform2f(resolutionUniformLocation, Q3e.canvas.width, Q3e.canvas.height);
-  
-    // draw 50 random rectangles in random colors
-    for (var ii = 0; ii < count / 3; ++ii) {
-      // Setup a random rectangle
-      // This will write to positionBuffer because
-      // its the last thing we bound on the ARRAY_BUFFER
-      // bind point
-      GLEmulation.setRectangle(
-        GLEmulation.randomInt(300), GLEmulation.randomInt(300), GLEmulation.randomInt(300), GLEmulation.randomInt(300));
-  
-      // Set a random color.
-      Q3e.webgl.uniform4f(colorUniformLocation, Math.random(), Math.random(), Math.random(), 1);
-  
-      // Draw the rectangle.
-      var primitiveType = Q3e.webgl.TRIANGLES;
-      var offset = 0;
-      var count = 6;
-      var indexType = Q3e.webgl.UNSIGNED_SHORT;
-      Q3e.webgl.drawElements(primitiveType, count, indexType, 0);
+    //Q3e.webgl.enableVertexAttribArray(GLEmulation.attribPointers.attr_Position);
+    //Q3e.webgl.vertexAttribPointer(
+    //  GLEmulation.attribPointers.attr_Position, 2, Q3e.webgl.FLOAT, false, 0, 0);
+
+
+
+       /*
+   Q3e.webgl.bufferData(
+      Q3e.webgl.ARRAY_BUFFER, 
+      new Float32Array(Q3e.paged32.subarray(indices2 >> 2, (indices2 >> 2) + count)), 
+      Q3e.webgl.STATIC_DRAW);
+      */
+
+      
+    GLEmulation.setRectangle(
+      GLEmulation.randomInt(300), GLEmulation.randomInt(300), 
+      GLEmulation.randomInt(300), GLEmulation.randomInt(300));
+    
+
+    // Set a random color.
+    Q3e.webgl.uniform4f(GLEmulation.uniforms.u_BaseColor, Math.random(), Math.random(), Math.random(), 1);
+    if(mode != Q3e.webgl.TRIANGLES) {
+      debugger
     }
+    Q3e.webgl.drawElements(Q3e.webgl.TRIANGLES, 6, Q3e.webgl.UNSIGNED_SHORT, 0)
+    //Q3e.webgl.drawElements(Q3e.webgl.TRIANGLES, count, Q3e.webgl.UNSIGNED_SHORT, 0);
 
-
-
-//Q3e.webgl.bufferData(Q3e.webgl.ARRAY_BUFFER, Uint16Array.from(Q3e.paged32.subarray(indices2 >> 2, (indices2 >> 2) + count)), Q3e.webgl.STATIC_DRAW);
-//Q3e.webgl.uniform4f(colorUniformLocation, Math.random(), Math.random(), Math.random(), 1);
-//Q3e.webgl.drawElements(Q3e.webgl.TRIANGLES, count, Q3e.webgl.UNSIGNED_SHORT, 0);
 
   },
   glGetBooleanv: function () {},
@@ -333,7 +329,54 @@ GLEmulation = {
     }
 
   },
-  glBufferDataARB: function () { debugger },
+  numIndexBuffers: 0,
+  indexBuffers: {},
+  glBufferDataARB: function (type, count) {
+
+    if(type != Q3e.webgl.ELEMENT_ARRAY_BUFFER)
+      throw new Error('Don\'t know what to do!')
+
+    if(count == 0) {
+      count = MAX_TEMP_BUFFER_SIZE
+    }
+    let numIndexes = MAX_TEMP_BUFFER_SIZE
+    let indexIndex = GLEmulation.log2ceilLookup(MAX_TEMP_BUFFER_SIZE)
+    let quadIndexes = new Uint16Array(MAX_TEMP_BUFFER_SIZE)
+
+    GLEmulation.indexBuffers[indexIndex] = Q3e.webgl.createBuffer()
+    Q3e.webgl.bindBuffer(Q3e.webgl.ELEMENT_ARRAY_BUFFER, GLEmulation.indexBuffers[indexIndex])
+    
+    let i = 0, v = 0;
+    while (1) {
+      quadIndexes[i++] = v;
+      if (i >= numIndexes) break;
+      quadIndexes[i++] = v+1;
+      if (i >= numIndexes) break;
+      quadIndexes[i++] = v+2;
+      if (i >= numIndexes) break;
+      quadIndexes[i++] = v+2;
+      if (i >= numIndexes) break;
+      quadIndexes[i++] = v+1;
+      if (i >= numIndexes) break;
+      quadIndexes[i++] = v+3;
+      if (i >= numIndexes) break;
+      v += 4;
+    }
+
+    Q3e.webgl.bufferData(
+      Q3e.webgl.ELEMENT_ARRAY_BUFFER,
+      quadIndexes,
+      //new Uint16Array([
+      //  0, 1, 2,   // first triangle
+      //  2, 1, 3,   // second triangle
+      //]),
+      Q3e.webgl.STATIC_DRAW
+    )
+
+    Q3e.webgl.bindBuffer(Q3e.webgl.ELEMENT_ARRAY_BUFFER, null)
+
+    return numIndexes
+  },
   glRenderbufferStorage: function () {},
   glGetRenderbufferParameteriv: function () {},
   glIsFramebuffer: function () {},
@@ -349,8 +392,7 @@ function buildShaderProgram() {
   Q3e.webgl.shaderSource(vertexShader, `
   precision mediump float;
 
-  attribute vec2 a_position;
-  //attribute vec3 attr_Position;
+  attribute vec2 attr_Position;
   attribute vec3 attr_Normal;
   attribute vec4 attr_Color;
   attribute vec4 attr_TexCoord0;
@@ -366,27 +408,27 @@ function buildShaderProgram() {
   varying vec4   var_Color;
 
   void main() {
+    vec2 position = attr_Position;
+    var_Color = vec4(1) * attr_Color + u_BaseColor;
 
     /*
-    vec3 position  = attr_Position;
     vec3 normal    = attr_Normal;
     gl_Position = u_ModelViewProjectionMatrix * vec4(position, 1.0);
     vec2 tex = attr_TexCoord0.st;
     var_DiffuseTex = tex;
-    var_Color = u_VertColor * attr_Color + u_BaseColor;
     */
 
-    vec2 zeroToOne = a_position / u_resolution;
+    vec2 zeroToOne = position / u_resolution;
     vec2 zeroToTwo = zeroToOne * 2.0;
     vec2 clipSpace = zeroToTwo - 1.0;
-    gl_Position = vec4(clipSpace, 0, 1);
+    gl_Position = vec4(clipSpace.x, clipSpace.y, 0, 1);
 
   }`);
   Q3e.webgl.compileShader(vertexShader);
   if (!Q3e.webgl.getShaderParameter(vertexShader, Q3e.webgl.COMPILE_STATUS)) {
-    console.log('Error compiling fragment shader:');
     console.log(Q3e.webgl.getShaderInfoLog(vertexShader));
-    return
+    throw new Error('Error compiling vertex shader:', Q3e.webgl.getShaderInfoLog(vertexShader));
+
   } else {
     Q3e.webgl.attachShader(program, vertexShader);
   }
@@ -405,9 +447,9 @@ function buildShaderProgram() {
   }`);
   Q3e.webgl.compileShader(fragmentShader);
   if (!Q3e.webgl.getShaderParameter(fragmentShader, Q3e.webgl.COMPILE_STATUS)) {
-    console.log('Error compiling fragment shader:');
-    console.log(Q3e.webgl.getShaderInfoLog(fragmentShader));
-    return
+    console.log(Q3e.webgl.getShaderInfoLog(vertexShader));
+    throw new Error('Error compiling fragment shader:', Q3e.webgl.getShaderInfoLog(vertexShader));
+
   } else {
     Q3e.webgl.attachShader(program, fragmentShader);
   }
@@ -422,6 +464,16 @@ function buildShaderProgram() {
   if (!Q3e.webgl.getProgramParameter(program, Q3e.webgl.LINK_STATUS)) {
     console.log("Error linking shader program:");
     console.log(Q3e.webgl.getProgramInfoLog(program));
+  }
+
+  GLEmulation.attribPointers = {
+    attr_Position: Q3e.webgl.getAttribLocation(program, "attr_Position"),
+  }
+
+  GLEmulation.uniforms = {
+    u_resolution: Q3e.webgl.getUniformLocation(program, "u_resolution"),
+    u_BaseColor: Q3e.webgl.getUniformLocation(program, "u_BaseColor"),
+
   }
 
   GLEmulation.shaderProgram = program

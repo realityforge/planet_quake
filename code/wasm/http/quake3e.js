@@ -135,7 +135,7 @@ function startProgram(program) {
             console.log(e)
           }
         })
-      }, 1000 / 20);
+      }, 1000 / 80);
     } catch (e) {
       console.log(e)
     }
