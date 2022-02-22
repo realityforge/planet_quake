@@ -263,7 +263,7 @@ jobs:
       run: |
         mkdir bin
         make -f make/build_client.make clean ${{ matrix.rule }}  ARCH=${{ matrix.arch }}    ${{ matrix.use_sdl }} USE_VULKAN_API=0 CNAME=quake3e PLATFORM=js NO_MAKE_LOCAL=1 USE_ASYNCHRONOUS=1 USE_LAZY_LOAD=1 PLATFORM=js 
-        cp build/release-js-js/quake3e_js.wasm bin/
+        cp build/release-js-js/quake3e.wasm bin/
 
     - uses: actions/upload-artifact@v2
       if: matrix.config == 'Release'
