@@ -87,15 +87,12 @@ GLEmulation = {
   glRenderbufferStorageMultisample: function () {},
   glFramebufferRenderbuffer: function () {},
   glCheckFramebufferStatus: function () {},
-  glGenTextures: function (n, textures) {
-    //GLEmulation.textures.push(Q3e.webgl.createTexture())
-    Q3e.paged32[textures >> 2] = GLEmulation.textures.length
-  },
   glTexParameteri: function (target, pname, param) { 
     if(param == 0x2900) {
       param = 0x812F /*GL_CLAMP_TO_EDGE*/
     }
-    //Q3e.webgl.texParameteri(target, pname, param) 
+    //GL_TEXTURE_MIN_FILTER			0x2801
+    Q3e.webgl.texParameteri(target, pname, param) 
   },
   colorChannels: [
     /* 0x1902 /* GL_DEPTH_COMPONENT */  1,
@@ -114,6 +111,16 @@ GLEmulation = {
     /* 0x8D98 /*GL_RGB_INTEGER*/        3,
     /* 0x8D99 /*GL_RGBA_INTEGER*/       4
   ],
+  glGenTextures: function (n, textures) {
+    GLEmulation.textures.push(Q3e.webgl.createTexture())
+    Q3e.paged32[textures >> 2] = GLEmulation.textures.length
+  },
+  glBindTexture: function (target, id) { 
+    // TODO: target, bloom has 2 textures above and here 
+    //   so it would be id + target
+    GLEmulation.currentTexture = id
+    Q3e.webgl.bindTexture(Q3e.webgl.TEXTURE_2D, GLEmulation.textures[id - 1]) 
+  },
   glTexImage2D: function (target, level, internalFormat, width, height, border, format, type, pixels) {
     if(target != 0x0DE1) {
       debugger
@@ -138,15 +145,12 @@ GLEmulation = {
       internalFormat = 0x88F0 /*GL_DEPTH24_STENCIL8*/;
     }
 
-    let computedSize = width * height * GLEmulation.colorChannels[format - 0x1902]
-    //let imageView = Q3e.paged.subarray(pixels, pixels + computedSize)
-    console.log('format:', internalFormat, format, type)
-    Q3e.webgl.texImage2D(target, level, internalFormat, width, height, border, format, type, null) 
+    let computedSize = width * height * (GLEmulation.colorChannels[format - 0x1902] + 1)
+    let imageView = Q3e.paged.subarray(pixels, pixels + computedSize)
+    Q3e.webgl.texImage2D(Q3e.webgl.TEXTURE_2D, level, internalFormat, width, height, border, format, type, imageView)
+    // gl.generateMipmap(gl.TEXTURE_2D);
   },
   glGetInternalformativ: function () {},
-  glBindTexture: function (target, id) { 
-    //Q3e.webgl.bindTexture(target, GLEmulation.textures[id - 1]) 
-  },
   glActiveTextureARB: function (unit) { 
     //Q3e.webgl.activeTexture(unit) 
   },
