@@ -94,6 +94,13 @@ const char *WtoA( const LPWSTR s )
 #endif
 
 
+#ifdef USE_ASYNCHRONOUS
+void Sys_Offline( void )
+{
+  // TODO: read q3cache and download all files
+}
+#endif
+
 /*
 ================
 Sys_DefaultHomePath

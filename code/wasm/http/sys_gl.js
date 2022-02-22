@@ -214,7 +214,14 @@ GLEmulation = {
         Q3e.webgl.bindBuffer(Q3e.webgl.ARRAY_BUFFER, GLEmulation.texcoordBuffer)
         Q3e.webgl.enableVertexAttribArray(GLEmulation.attribPointers.attr_TexCoord0);
         Q3e.webgl.useProgram(GLEmulation.programPointers[0])
-    }
+    } else if (cap == /* GL_COLOR_ARRAY */ 0x8076) {
+      if(typeof GLEmulation.colorBuffer == 'undefined') {
+        GLEmulation.colorBuffer = Q3e.webgl.createBuffer()
+      }
+      Q3e.webgl.bindBuffer(Q3e.webgl.ARRAY_BUFFER, GLEmulation.colorBuffer)
+      Q3e.webgl.enableVertexAttribArray(GLEmulation.attribPointers.attr_Color);
+      Q3e.webgl.useProgram(GLEmulation.programPointers[0])
+  }
   },
   glDisableClientState: function(cap) {
     if(cap == /* GL_VERTEX_ARRAY */	0x8074) {
@@ -253,7 +260,7 @@ GLEmulation = {
   // --------------------------------
   // code below this line is rendering code
   texcoordStride: 0,
-  texcoordSize: 2,
+  texcoordSize: 6,
   texcoordPointer: null,
   glTexCoordPointer: function (size, type, stride, pointer) {
     GLEmulation.texcoordStride = stride
@@ -263,8 +270,13 @@ GLEmulation = {
   glNormalPointer: function (type, stride, pointer) {
     //debugger
   },
+  colorStride: 0,
+  colorSize: 4,
+  colorPointer: null,
   glColorPointer: function (size, type, stride, pointer) {
-    //debugger
+    GLEmulation.colorStride = stride
+    GLEmulation.colorSize = size
+    GLEmulation.colorPointer = pointer
   },
 
   vertexStride: 0,
@@ -293,7 +305,18 @@ GLEmulation = {
         (indices >> 2) + count), // end
       Q3e.webgl.STATIC_DRAW)
 
-    Q3e.webgl.bindBuffer(Q3e.webgl.ARRAY_BUFFER, GLEmulation.texcoordBuffer)
+    Q3e.webgl.bindBuffer(Q3e.webgl.ARRAY_BUFFER, GLEmulation.colorBuffer)
+    Q3e.webgl.bufferData(
+      Q3e.webgl.ARRAY_BUFFER,
+      Q3e.paged32f.subarray(
+        GLEmulation.colorPointer >> 2,  // start
+        (GLEmulation.colorPointer >> 2) // end
+          + (count * (GLEmulation.colorSize + GLEmulation.colorStride))),
+      Q3e.webgl.STATIC_DRAW)
+    Q3e.webgl.vertexAttribPointer(
+      GLEmulation.attribPointers.attr_Color, GLEmulation.colorSize, Q3e.webgl.FLOAT, false, GLEmulation.colorStride, 0);
+  
+    Q3e.webgl.bindBuffer(Q3e.webgl.ARRAY_BUFFER, GLEmulation.colorBuffer)
     Q3e.webgl.bufferData(
       Q3e.webgl.ARRAY_BUFFER,
       Q3e.paged32f.subarray(
@@ -318,7 +341,7 @@ GLEmulation = {
   
     // Set a random color.
     Q3e.webgl.uniform4f(GLEmulation.uniforms.u_BaseColor, 
-      Math.random(), Math.random(), Math.random(), 1);
+      1, 1, 1, 1);
     if(mode != Q3e.webgl.TRIANGLES) {
       debugger
     }
@@ -500,12 +523,12 @@ const SHADERS = [
   void main() {
     vec2 position = vec2(attr_Position.x, attr_Position.y);
     vec2 tex = attr_TexCoord0.st;
-    //var_Color = vec4(1) * attr_Color + u_BaseColor;
-    var_Color = u_BaseColor;
+    //var_Color = u_VertColor * attr_Color + u_BaseColor;
+    var_Color = attr_Color + u_BaseColor;
     var_DiffuseTex = tex;
 
     /*
-    vec3 normal    = attr_Normal;
+    //vec3 normal    = attr_Normal;
     gl_Position = u_ModelViewProjectionMatrix * vec4(position, 1.0);
     vec2 tex = attr_TexCoord0.st;
     */
