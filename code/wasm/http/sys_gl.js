@@ -11,16 +11,6 @@ GLEmulation = {
   },
   glDisable: function () {},
   glEnable: function () {},
-  glBindProgramARB: function (kind, pointer) {
-    // setup default program
-    if(typeof GLEmulation.shaderProgram == 'undefined') {
-      buildShaderProgram()
-    }
-    
-    if(pointer != 0) {
-      debugger
-    }
-  },
   glProgramLocalParameter4fARB: function () {},
   glProgramLocalParameter4fvARB: function () {},
   glPolygonOffset: function () {},
@@ -36,7 +26,6 @@ GLEmulation = {
 
   glLockArraysEXT: function () {},
   glUnlockArraysEXT: function () {},
-  glProgramStringARB: function () {},
   glGetIntegerv: function (pname, param) {
     switch (pname) {
       case 0x8872 /* GL_MAX_TEXTURE_IMAGE_UNITS */: 
@@ -49,7 +38,7 @@ GLEmulation = {
         Q3e.paged32[(param) >> 2] = Q3e.webgl.MAX_COMBINED_TEXTURE_IMAGE_UNITS
         break
       case 0x864B /* GL_PROGRAM_ERROR_POSITION_ARB */:
-        // TODO: make something up?
+        // TODO: copy from renderer2 requirements
         break
       default:
         debugger
@@ -208,7 +197,7 @@ GLEmulation = {
       if(typeof GLEmulation.positionBuffer == 'undefined') {
         GLEmulation.positionBuffer = Q3e.webgl.createBuffer()
         Q3e.webgl.bindBuffer(Q3e.webgl.ARRAY_BUFFER, GLEmulation.positionBuffer)
-        Q3e.webgl.useProgram(GLEmulation.shaderProgram)
+        Q3e.webgl.useProgram(GLEmulation.programPointers[0])
         // must have initial for 2D drawing?
         GLEmulation.glBufferDataARB(Q3e.webgl.ELEMENT_ARRAY_BUFFER, 6, 0, Q3e.webgl.STATIC_DRAW)
         Q3e.webgl.bindBuffer(Q3e.webgl.ARRAY_BUFFER, GLEmulation.positionBuffer)
@@ -288,8 +277,6 @@ GLEmulation = {
     //Q3e.webgl.vertexAttribPointer(
     //  GLEmulation.attribPointers.attr_Position, 2, Q3e.webgl.FLOAT, false, 0, 0);
 
-
-
        /*
    Q3e.webgl.bufferData(
       Q3e.webgl.ARRAY_BUFFER, 
@@ -314,7 +301,7 @@ GLEmulation = {
 
   },
   glGetBooleanv: function () {},
-  glLineWidth: function () { debugger },
+  glLineWidth: function () { },
   glStencilFunc: function () {},
   glStencilOp: function () {},
   glMultiTexCoord2fARB: function () {},
@@ -382,9 +369,74 @@ GLEmulation = {
   glIsFramebuffer: function () {},
   glGetFramebufferAttachmentParameteriv: function () {},
 
+
+  /* --------------  ARB */
+  // replace ARB with realy glsl shaders?
+
   programPointers: [],
   numProgramPointers: 0,
+  currentProgram: 0,
+  glProgramStringARB: function (kind, encoding, length, text) {
+    if(GLEmulation.currentProgram < 2) {
+      let newShader
+      if(kind == 0x8620 /* GL_VERTEX_PROGRAM_ARB */) {
+        newShader = Q3e.webgl.createShader(Q3e.webgl.VERTEX_SHADER);
+      } else {
+        newShader = Q3e.webgl.createShader(Q3e.webgl.FRAGMENT_SHADER);
+      }
+      Q3e.webgl.shaderSource(newShader, SHADERS[GLEmulation.currentProgram]);
+      Q3e.webgl.compileShader(newShader);
+      if (!Q3e.webgl.getShaderParameter(newShader, Q3e.webgl.COMPILE_STATUS)) {
+        console.log(Q3e.webgl.getShaderInfoLog(newShader));
+        throw new Error(`Error compiling ${kind == 0x8620?'vertex':'fragment'} shader:`, Q3e.webgl.getShaderInfoLog(newShader));
+
+      } else {
+        Q3e.webgl.attachShader(GLEmulation.programPointers[0], newShader);
+      }
+
+    }
+  },
+
+  glBindProgramARB: function (kind, pointer) {
+    GLEmulation.currentProgram = pointer
+
+    if(pointer > 1 
+      && typeof GLEmulation.programPointers[pointer] != 'undefined') {
+      //GLEmulation.currentProgram = 1
+    }
+
+  },
+
   glGenProgramsARB: function (size, programs) {
+    if(GLEmulation.numProgramPointers == 0) {
+      let program = GLEmulation.programPointers[0] = Q3e.webgl.createProgram()
+      GLEmulation.glBindProgramARB(0x8620 /* GL_VERTEX_PROGRAM_ARB */, 0)
+      GLEmulation.glProgramStringARB(0x8620)
+      GLEmulation.glBindProgramARB(0x8804 /* GL_FRAGMENT_PROGRAM_ARB */, 1)
+      GLEmulation.glProgramStringARB(0x8804)
+
+      //Q3e.webgl.bindAttribLocation(program, Q3e.webgl.ATTR_INDEX_POSITION, 'attr_Position')
+      //Q3e.webgl.bindAttribLocation(program, Q3e.webgl.ATTR_INDEX_TEXCOORD, 'attr_TexCoord0')
+      Q3e.webgl.bindAttribLocation(program, Q3e.webgl.ATTR_INDEX_NORMAL, 'attr_Normal')
+      Q3e.webgl.bindAttribLocation(program, Q3e.webgl.ATTR_INDEX_COLOR, 'attr_Color')
+
+      Q3e.webgl.linkProgram(program)
+
+      // TODO: move this to bind program?
+      if(GLEmulation.currentProgram > 1) {
+        Q3e.webgl.useProgram(GLEmulation.programPointers[0])
+      }
+
+      GLEmulation.attribPointers = {
+        attr_Position: Q3e.webgl.getAttribLocation(program, "attr_Position"),
+      }
+
+      GLEmulation.uniforms = {
+        u_resolution: Q3e.webgl.getUniformLocation(program, "u_resolution"),
+        u_BaseColor: Q3e.webgl.getUniformLocation(program, "u_BaseColor"),
+      }
+
+    }
     for(let i = 0; i < size; i++) {
       GLEmulation.programPointers[++GLEmulation.numProgramPointers] = 
         Q3e.webgl.createProgram()
@@ -395,11 +447,8 @@ GLEmulation = {
 }
 
 
-function buildShaderProgram() {
-  let program = Q3e.webgl.createProgram();
-
-  let vertexShader = Q3e.webgl.createShader(Q3e.webgl.VERTEX_SHADER);
-  Q3e.webgl.shaderSource(vertexShader, `
+const SHADERS = [
+  `
   precision mediump float;
 
   attribute vec2 attr_Position;
@@ -433,18 +482,8 @@ function buildShaderProgram() {
     vec2 clipSpace = zeroToTwo - 1.0;
     gl_Position = vec4(clipSpace.x, clipSpace.y, 0, 1);
 
-  }`);
-  Q3e.webgl.compileShader(vertexShader);
-  if (!Q3e.webgl.getShaderParameter(vertexShader, Q3e.webgl.COMPILE_STATUS)) {
-    console.log(Q3e.webgl.getShaderInfoLog(vertexShader));
-    throw new Error('Error compiling vertex shader:', Q3e.webgl.getShaderInfoLog(vertexShader));
-
-  } else {
-    Q3e.webgl.attachShader(program, vertexShader);
-  }
-
-  let fragmentShader = Q3e.webgl.createShader(Q3e.webgl.FRAGMENT_SHADER);
-  Q3e.webgl.shaderSource(fragmentShader, `
+  }`,
+  `
   precision mediump float;
   varying vec4      var_Color;
 
@@ -454,41 +493,7 @@ function buildShaderProgram() {
     //gl_FragColor = var_Color;
     gl_FragColor = vec4(1, 0, 0.5, 1); 
 
-  }`);
-  Q3e.webgl.compileShader(fragmentShader);
-  if (!Q3e.webgl.getShaderParameter(fragmentShader, Q3e.webgl.COMPILE_STATUS)) {
-    console.log(Q3e.webgl.getShaderInfoLog(vertexShader));
-    throw new Error('Error compiling fragment shader:', Q3e.webgl.getShaderInfoLog(vertexShader));
+  }`,
 
-  } else {
-    Q3e.webgl.attachShader(program, fragmentShader);
-  }
-
-  //Q3e.webgl.bindAttribLocation(program, Q3e.webgl.ATTR_INDEX_POSITION, 'attr_Position')
-  //Q3e.webgl.bindAttribLocation(program, Q3e.webgl.ATTR_INDEX_TEXCOORD, 'attr_TexCoord0')
-  Q3e.webgl.bindAttribLocation(program, Q3e.webgl.ATTR_INDEX_NORMAL, 'attr_Normal')
-  Q3e.webgl.bindAttribLocation(program, Q3e.webgl.ATTR_INDEX_COLOR, 'attr_Color')
-
-  Q3e.webgl.linkProgram(program)
-
-  if (!Q3e.webgl.getProgramParameter(program, Q3e.webgl.LINK_STATUS)) {
-    console.log("Error linking shader program:");
-    console.log(Q3e.webgl.getProgramInfoLog(program));
-  }
-
-  GLEmulation.attribPointers = {
-    attr_Position: Q3e.webgl.getAttribLocation(program, "attr_Position"),
-  }
-
-  GLEmulation.uniforms = {
-    u_resolution: Q3e.webgl.getUniformLocation(program, "u_resolution"),
-    u_BaseColor: Q3e.webgl.getUniformLocation(program, "u_BaseColor"),
-
-  }
-
-  GLEmulation.shaderProgram = program
-  return program;
-}
-
-
+]
 
