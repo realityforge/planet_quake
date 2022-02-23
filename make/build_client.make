@@ -112,8 +112,7 @@ endif
 SYSTEM           := 
 
 ifeq ($(PLATFORM),js)
-SYSTEM           += sys_sdl.o sys_main.o sys_input.o \
-										dlmalloc.o sbrk.o 
+SYSTEM           += sys_main.o 	dlmalloc.o sbrk.o
 endif
 
 ifneq ($(PLATFORM),js)

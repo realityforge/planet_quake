@@ -721,15 +721,12 @@ qboolean NET_IsLocalAddress( const netadr_t *adr )
 
 #ifdef __WASM__
 #ifdef USE_MULTIVM_SERVER
-int NET_GetPacket( netadr_t *net_from, msg_t *net_message, const fd_set *fdr, int igvm )
-__attribute__((import_module("NET"), import_name("NET_GetPacket")));
+int NET_GetPacket( netadr_t *net_from, msg_t *net_message, const fd_set *fdr, int igvm );
 #else
-int NET_GetPacket( netadr_t *net_from, msg_t *net_message, const fd_set *fdr )
-__attribute__((import_module("NET"), import_name("NET_GetPacket")));
+int NET_GetPacket( netadr_t *net_from, msg_t *net_message, const fd_set *fdr );
 #endif
 
-void Sys_SendPacket( int length, const void *data, const netadr_t *to )
-__attribute__((import_module("NET"), import_name("Sys_SendPacket")));
+void Sys_SendPacket( int length, const void *data, const netadr_t *to );
 #endif
 
 
@@ -1715,11 +1712,9 @@ static void NET_GetLocalAddress( void ) {
 
 #ifdef __WASM__
 
-int NET_OpenIP(void)
-__attribute__((import_module("NET"), import_name("NET_OpenIP")));
+int NET_OpenIP(void);
 
-int NET_Close(void)
-__attribute__((import_module("NET"), import_name("NET_Close")));
+int NET_Close(void);
 
 #else
 /*

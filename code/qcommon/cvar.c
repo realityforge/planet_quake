@@ -843,6 +843,9 @@ cvar_t *Cvar_Set2( const char *var_name, const char *value, qboolean force ) {
 Cvar_Set
 ============
 */
+#ifdef __WASM__
+Q_EXPORT
+#endif
 void Cvar_Set( const char *var_name, const char *value) {
 	Cvar_Set2 (var_name, value, qtrue);
 }
@@ -897,6 +900,9 @@ void Cvar_SetLatched( const char *var_name, const char *value) {
 Cvar_SetValue
 ============
 */
+#ifdef __WASM__
+Q_EXPORT
+#endif
 void Cvar_SetValue( const char *var_name, float value) {
 	char	val[32];
 
@@ -914,6 +920,9 @@ void Cvar_SetValue( const char *var_name, float value) {
 Cvar_SetIntegerValue
 ============
 */
+#ifdef __WASM__
+Q_EXPORT
+#endif
 void Cvar_SetIntegerValue( const char *var_name, int value ) {
 	char	val[32];
 

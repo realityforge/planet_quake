@@ -1085,6 +1085,7 @@ void UI_Init( void ) {
 
 	uis.activemenu = NULL;
 	uis.menusp     = 0;
+	uis.startTime = uis.realtime;
 }
 
 
@@ -1208,6 +1209,8 @@ UI_Refresh
 */
 void UI_Refresh( int realtime )
 {
+	int amount;
+	vec4_t color;
 	uis.frametime = realtime - uis.realtime;
 	uis.realtime  = realtime;
 
@@ -1223,6 +1226,18 @@ void UI_Refresh( int realtime )
 	{
 		if (uis.activemenu->fullscreen)
 		{
+
+/*
+			amount = uis.realtime - uis.startTime;
+			if(!uis.startTime || amount < 1500) {
+				color[0] = color[1] = color[2] = 0;
+				color[3] = amount / 1000.0;
+				trap_R_SetColor(color);
+			} else {
+				//trap_R_ClearScene();
+			}
+*/
+
 			// draw the background
 			trap_R_DrawStretchPic( 0, 0, uis.glconfig.vidWidth, uis.glconfig.vidHeight, 0, 0, 1, 1, uis.menuBackNoLogoShader );
 			if ( uis.activemenu->showlogo ) {

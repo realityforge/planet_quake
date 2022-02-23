@@ -822,6 +822,7 @@ typedef struct {
 	int effectsColor;
 
 	qboolean inGameLoad;
+	int startTime;
 
 }	uiInfo_t;
 

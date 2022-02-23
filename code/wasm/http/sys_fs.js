@@ -102,7 +102,7 @@ function Sys_FOpen(filename, mode) {
     ]
     return FS.filePointer // not zero
   } else {
-    return null // POSIX
+    return 0 // POSIX
   }
 }
 

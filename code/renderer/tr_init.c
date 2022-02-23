@@ -201,10 +201,9 @@ static char gl_extensions[ 32768 ];
 
 #ifdef __WASM__
 #define GLE(ret, name, ...) \
-	__attribute__((import_module("GL"), import_name(#name))) \
 	__attribute__((used)) \
 	__attribute__((visibility("default"))) \
-	ret APIENTRY name##Real ( __VA_ARGS__ ); \
+	ret APIENTRY name ( __VA_ARGS__ ); \
 	ret ( APIENTRY * q##name )( __VA_ARGS__ );
 
 #else
@@ -243,7 +242,7 @@ returns NULL on success or last failed symbol name otherwise
 static const char *R_ResolveSymbols( sym_t *syms, int count )
 {
 #ifdef __WASM__
-#define GLE( ret, name, ... ) q##name = name##Real;
+#define GLE( ret, name, ... ) q##name = name;
 	QGL_Core_PROCS;
 	QGL_Ext_PROCS;
 	QGL_ARB_PROGRAM_PROCS;

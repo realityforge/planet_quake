@@ -380,11 +380,6 @@ static void S_Base_BeginRegistration( void ) {
 static void S_memoryLoad( sfx_t *sfx ) {
 
 	// load the sound file
-#ifdef __WASM__
-	if(cls.firstClick) {
-		sfx->inMemory = qfalse;
-	} else
-#endif
 	if (!S_LoadSound ( sfx ) ) {
 #ifndef USE_LAZY_LOAD
 		Com_DPrintf( S_COLOR_YELLOW "WARNING: couldn't load sound: %s\n", sfx->soundName );
@@ -1561,12 +1556,6 @@ qboolean S_Base_Init( soundInterface_t *si ) {
 	s_device = Cvar_Get( "s_device", "default", CVAR_ARCHIVE_ND | CVAR_LATCH );
 #endif
 
-#ifdef __WASM__
-	r = qfalse;
-	if(cls.firstClick) {
-		S_Base_StopAllSounds();
-	} else
-#endif
 	r = SNDDMA_Init();
 
 	if ( r ) {

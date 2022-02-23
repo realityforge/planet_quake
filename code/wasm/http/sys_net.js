@@ -50,6 +50,14 @@ function Sys_NET_MulticastLocal (net, length, data) {
     'net', net, Uint8Array.from(Q3e.paged.slice(data, data+length))])
 }
 
+var controller
+var signal
+if(AbortController) {
+  controller = new AbortController()
+  signal = controller.signal;
+}
+
+
 function CL_Download(cmd, name, auto) {
   if(!FS.database) {
     openDatabase()
@@ -67,18 +75,36 @@ function CL_Download(cmd, name, auto) {
   if(localName[0] == '/')
     localName = localName.substring(1)
 
+  try {
   fetch(dlURL + '/' + localName, {
     mode: 'cors',
     responseType: 'arraybuffer',
-    credentials: 'omit'
-  }).then(function (response) {
+    credentials: 'omit',
+    signal: controller ? signal : null
+  })
+  .catch(function (error) {
+    return
+  })
+  .then(function (response) {
     //let type = response.headers.get('Content-Type')
     if (!response || !(response.status >= 200 && response.status < 300 || response.status === 304)) {
       Sys_FileReady(stringToAddress(localName), null) // failed state, not to retry
       //throw new Error('Couldn\'t load ' + response.url + '. Status: ' + (response || {}).statusCode)
+      response.body.getReader().cancel()
+      //if(controller)
+        //controller.abort()
+      return
     }
     return response.arrayBuffer()
-  }).then(function (responseData) {
+  })
+  .catch(function (error) {
+    return
+  })
+  .then(function (responseData) {
+    if(!responseData) {
+      // already responded with null data
+      return
+    }
     // don't store any index files, redownload every start
     if(nameStr[nameStr.length - 1] == '/') {
       let tempName = gamedir + '/.' // yes this is where it always looks for temp files
@@ -98,6 +124,10 @@ function CL_Download(cmd, name, auto) {
     } else {
       // TODO: JSON.parse
       // save the file in memory for now
+      debugger
+      if(!nameStr.includes(gamedir)) {
+        throw new Error('something wrong')
+      }
       FS.virtual[nameStr] = {
         timestamp: new Date(),
         mode: 33206,
@@ -106,10 +136,13 @@ function CL_Download(cmd, name, auto) {
       // async to filesystem
       // does it REALLY matter if it makes it? wont it just redownload?
       writeStore(FS.virtual[nameStr], '/base/' + nameStr)
-      Sys_FileReady(stringToAddress(localName), stringToAddress(localName));
+      Sys_FileReady(stringToAddress(localName), stringToAddress(nameStr));
     }
 
   })
+  } catch (e) {
+    
+  }
 }
 
 var NET = {

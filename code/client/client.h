@@ -436,9 +436,11 @@ typedef struct {
 	// when the server clears the hunk, all of these must be restarted
 	qboolean	rendererStarted;
 	qboolean	soundStarted;
-	qboolean  firstClick;
 	qboolean	soundRegistered;
 	qboolean	uiStarted;
+#ifdef __WASM__
+	int uiStartTime;
+#endif
 	qboolean	rmlStarted;
 	qboolean	cgameStarted;
 
@@ -826,11 +828,8 @@ void	GLimp_EndFrame( void );
 
 void	GLimp_InitGamma( glconfig_t *config );
 void	GLimp_SetGamma( unsigned char red[256], unsigned char green[256], unsigned char blue[256] );
-void IN_ShowKeyboard (void);
 
-#ifdef __WASM__
-__attribute__((import_module("GL"), import_name("GL_GetProcAddress")))
-#endif
+
 void	*GL_GetProcAddress( const char *name );
 
 // Vulkan

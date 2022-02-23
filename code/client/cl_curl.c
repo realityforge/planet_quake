@@ -510,7 +510,11 @@ qboolean Com_DL_Begin( download_t *dl, const char *localName, const char *remote
 		}
 	}
 
+#ifdef USE_ASYNCHRONOUS
+	Com_DPrintf( "URL: %s\n", dl->URL );
+#else
 	Com_Printf( "URL: %s\n", dl->URL );
+#endif
   Com_DPrintf("***** Com_DL_Begin *****\n"
     "Localname: %s\n"
     "RemoteURL: %s\n"

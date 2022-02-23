@@ -64,24 +64,35 @@ GLEmulation = {
   glViewport: function (x, y, w, h) {
     Q3e.webgl.viewport(x, y, w, h);
   },
-  glScissor: function () {},
-  glMatrixMode: function () {},
+  glScissor: function (x, y, w, h) {
+    Q3e.webgl.scissor(x, y, w, h)
+  },
+  glMatrixMode: function (mode) {
+    //Q3e.webgl.matrixMode(mode)
+  },
   glLoadMatrixf: function () {},
   glLoadIdentity: function () {},
+  //currentColor: [1, 1, 1, 1],
+  currentColor: [0, 0, 0, 1],
+  vertexColor: [1,1,1,1],
   glColor4f: function (r, g, b, a) {
-    Q3e.webgl.colorMask(r, g, b, a)
+    GLEmulation.currentColor = [r, g, b, a]
+    //Q3e.webgl.colorMask(r, g, b, a)
   },
   glDrawArrays: function (mode, start, end) {
-    //Q3e.webgl.drawArrays(mode, start, end);
+    Q3e.webgl.drawArrays(mode, start, end);
   },
   glDrawBuffer: function () { /* do nothing */ },
   glClearColor: function (r, g, b, a) {
-    Q3e.webgl.clearColor(r, g, b, a);
+    GLEmulation.currentColor = [0, 0, 0, 1]
+    //Q3e.webgl.clearColor(r, g, b, a);
   },
   glClear: function (bits) {
     Q3e.webgl.clear(bits);
   },
-  glColorMask: function () {},
+  glColorMask: function (r, g, b, a) { 
+    //Q3e.webgl.colorMask(r, g, b, a) 
+  },
   glGenFramebuffers: function () { debugger },
   glGenRenderbuffers: function () {},
   glRenderbufferStorageMultisample: function () {},
@@ -121,6 +132,11 @@ GLEmulation = {
     GLEmulation.currentTexture = id
     Q3e.webgl.bindTexture(Q3e.webgl.TEXTURE_2D, GLEmulation.textures[id - 1]) 
   },
+  glTexSubImage2D: function (target, level, xoffset, yoffset, width, height, format, type, pixels) { 
+    debugger
+    let imageView = Q3e.paged.subarray(pixels, pixels + computedSize)
+    Q3e.webgl.texSubImage2D(Q3e.webgl.TEXTURE_2D, level, xoffset, yoffset, width, height, format, type, imageView) 
+  },
   glTexImage2D: function (target, level, internalFormat, width, height, border, format, type, pixels) {
     if(target != 0x0DE1) {
       debugger
@@ -152,21 +168,25 @@ GLEmulation = {
   },
   glGetInternalformativ: function () {},
   glActiveTextureARB: function (unit) { 
-    //Q3e.webgl.activeTexture(unit) 
+    Q3e.webgl.activeTexture(unit) 
   },
   glCullFace: function (side) { 
-    //Q3e.webgl.cullFace(side) 
+    Q3e.webgl.cullFace(side) 
   },
   glTexEnvi: function () {},
   glDepthFunc: function (depth) { 
-    //Q3e.webgl.depthFunc(depth) 
+    Q3e.webgl.depthFunc(depth) 
   },
   glBlendFunc: function () {},
   glDepthMask: function (mask) { 
-    //Q3e.webgl.depthMask(mask) 
+    Q3e.webgl.depthMask(mask) 
   },
-  glPolygonMode: function () {},
-  glAlphaFunc: function () {},
+  glPolygonMode: function (face, mode) {
+    //Q3e.webgl.polygonOffset(face, mode) 
+  },
+  glAlphaFunc: function (func, ref) {
+    Q3e.webgl.alphaFunc(func, ref) 
+  },
 
   getAttributeFromCapability: function(cap) {
     var attrib = null;
@@ -230,21 +250,20 @@ GLEmulation = {
     }
   },
   glClientActiveTextureARB: function () {},
-  glTexSubImage2D: function (a1, a2, a3, a4, a5, a6, a7) { 
-    //Q3e.webgl.texSubImage2D(a1, a2, a3, a4, a5, a6, a7) 
-  },
   glFinish: function () {
     debugger
   },
   glDepthRange: function (range) { 
     // TODO: will this file always load after the context? How to reload if its in a var?
     //WebGL2RenderingContext.glDepthRange.bind(Q3e.webgl)
-    //Q3e.webgl.depthRange(range) 
+    Q3e.webgl.depthRange(range) 
   },
   glPushMatrix: function () {},
   glPopMatrix: function () {},
   glReadPixels: function () {},
-  glClearDepth: function () {},
+  glClearDepth: function (d) {
+    Q3e.webgl.clearDepth(d)
+  },
   glShadeModel: function () {},
 
   log2ceilLookup: function(i) {
@@ -260,12 +279,14 @@ GLEmulation = {
   // --------------------------------
   // code below this line is rendering code
   texcoordStride: 0,
-  texcoordSize: 6,
+  texcoordSize: 2,
   texcoordPointer: null,
+  texcoordType: 0x1406, /* GL_FLOAT */
   glTexCoordPointer: function (size, type, stride, pointer) {
     GLEmulation.texcoordStride = stride
     GLEmulation.texcoordSize = size
     GLEmulation.texcoordPointer = pointer
+    GLEmulation.texcoordType = type
   },
   glNormalPointer: function (type, stride, pointer) {
     //debugger
@@ -273,19 +294,23 @@ GLEmulation = {
   colorStride: 0,
   colorSize: 4,
   colorPointer: null,
+  colorType: 0x1406, /* GL_FLOAT */
   glColorPointer: function (size, type, stride, pointer) {
     GLEmulation.colorStride = stride
     GLEmulation.colorSize = size
     GLEmulation.colorPointer = pointer
+    GLEmulation.colorType = type
   },
 
   vertexStride: 0,
   vertexSize: 2,
   vertexPointer: null,
+  vertexType: 0x1406, /* GL_FLOAT */
   glVertexPointer: function (size, type, stride, pointer) {
     GLEmulation.vertexStride = stride
     GLEmulation.vertexSize = size
     GLEmulation.vertexPointer = pointer
+    GLEmulation.vertexType = type
 
     // wtf... can't buffer the data here because we need to know the count from the index call
     //   when drawelements or drawarrays is called
@@ -314,9 +339,9 @@ GLEmulation = {
           + (count * (GLEmulation.colorSize + GLEmulation.colorStride))),
       Q3e.webgl.STATIC_DRAW)
     Q3e.webgl.vertexAttribPointer(
-      GLEmulation.attribPointers.attr_Color, GLEmulation.colorSize, Q3e.webgl.FLOAT, false, GLEmulation.colorStride, 0);
+      GLEmulation.attribPointers.attr_Color, GLEmulation.colorSize, GLEmulation.colorType, false, GLEmulation.colorStride, 0);
   
-    Q3e.webgl.bindBuffer(Q3e.webgl.ARRAY_BUFFER, GLEmulation.colorBuffer)
+    Q3e.webgl.bindBuffer(Q3e.webgl.ARRAY_BUFFER, GLEmulation.texcoordBuffer)
     Q3e.webgl.bufferData(
       Q3e.webgl.ARRAY_BUFFER,
       Q3e.paged32f.subarray(
@@ -325,7 +350,7 @@ GLEmulation = {
           + (count * (GLEmulation.texcoordSize + GLEmulation.texcoordStride))),
       Q3e.webgl.STATIC_DRAW)
     Q3e.webgl.vertexAttribPointer(
-      GLEmulation.attribPointers.attr_TexCoord0, GLEmulation.texcoordSize, Q3e.webgl.FLOAT, false, GLEmulation.texcoordStride, 0);
+      GLEmulation.attribPointers.attr_TexCoord0, GLEmulation.texcoordSize, GLEmulation.texcoordType, false, GLEmulation.texcoordStride, 0);
   
     Q3e.webgl.bindBuffer(Q3e.webgl.ARRAY_BUFFER, GLEmulation.positionBuffer)
     Q3e.webgl.bufferData(
@@ -336,18 +361,18 @@ GLEmulation = {
           + (count * (GLEmulation.vertexSize + GLEmulation.vertexStride))),
       Q3e.webgl.STATIC_DRAW)
     Q3e.webgl.vertexAttribPointer(
-      GLEmulation.attribPointers.attr_Position, GLEmulation.vertexSize, Q3e.webgl.FLOAT, false, GLEmulation.vertexStride, 0);
+      GLEmulation.attribPointers.attr_Position, GLEmulation.vertexSize, GLEmulation.vertexType, false, GLEmulation.vertexStride, 0);
 
-  
-    // Set a random color.
+    Q3e.webgl.vertexAttrib4fv(GLEmulation.attribPointers.attr_Color, GLEmulation.vertexColor);
+    Q3e.webgl.uniform1i(GLEmulation.uniforms.u_DiffuseMap, 0);
+    Q3e.webgl.uniform1i(GLEmulation.uniforms.u_AlphaTest, 1);
+    //Q3e.webgl.uniform4f(GLEmulation.uniforms.u_BaseColor, 
+    //  Math.random(), Math.random(), Math.random(), 1);
     Q3e.webgl.uniform4f(GLEmulation.uniforms.u_BaseColor, 
-      1, 1, 1, 1);
+      GLEmulation.currentColor[0], GLEmulation.currentColor[1], GLEmulation.currentColor[2], GLEmulation.currentColor[3]);
+
     if(mode != Q3e.webgl.TRIANGLES) {
       debugger
-    }
-    if(!Q3e.initialized) {
-      Q3e.initialized = true
-      document.body.className += ' done-loading '
     }
 
     Q3e.webgl.drawElements(
@@ -358,10 +383,12 @@ GLEmulation = {
 
   },
   glGetBooleanv: function () {},
-  glLineWidth: function () { },
+  glLineWidth: function (w) { Q3e.webgl.lineWidth(w) },
   glStencilFunc: function () {},
   glStencilOp: function () {},
-  glMultiTexCoord2fARB: function () {},
+  glMultiTexCoord2fARB: function () {
+    debugger
+  },
   glGenBuffersARB: function () { debugger },
   glDeleteBuffersARB: function () {},
   glBindBufferARB: function (target, buffer) { 
@@ -483,11 +510,15 @@ GLEmulation = {
       GLEmulation.attribPointers = {
         attr_Position: Q3e.webgl.getAttribLocation(program, "attr_Position"),
         attr_TexCoord0: Q3e.webgl.getAttribLocation(program, "attr_TexCoord0"),
+        attr_Color: Q3e.webgl.getAttribLocation(program, "attr_Color"),
       }
 
       GLEmulation.uniforms = {
         u_resolution: Q3e.webgl.getUniformLocation(program, "u_resolution"),
+        u_VertColor: Q3e.webgl.getUniformLocation(program, "u_VertColor"),
         u_BaseColor: Q3e.webgl.getUniformLocation(program, "u_BaseColor"),
+        u_DiffuseMap: Q3e.webgl.getUniformLocation(program, "u_DiffuseMap"),
+        u_AlphaTest: Q3e.webgl.getUniformLocation(program, "u_AlphaTest"),
       }
 
     }
@@ -505,7 +536,7 @@ const SHADERS = [
   `
   precision mediump float;
 
-  attribute vec3 attr_Position;
+  attribute vec4 attr_Position;
   attribute vec3 attr_Normal;
   attribute vec4 attr_Color;
   attribute vec4 attr_TexCoord0;
@@ -521,16 +552,18 @@ const SHADERS = [
   varying vec4   var_Color;
 
   void main() {
+    //vec4 ecPosition = u_modelView * a_position
+    //gl_Position = u_projection * ecPosition
+    //v_color = a_color
     vec2 position = vec2(attr_Position.x, attr_Position.y);
-    vec2 tex = attr_TexCoord0.st;
+    var_Color = attr_Color;
+    //var_Color = attr_Color;
     //var_Color = u_VertColor * attr_Color + u_BaseColor;
-    var_Color = attr_Color + u_BaseColor;
-    var_DiffuseTex = tex;
+    var_DiffuseTex = attr_TexCoord0.st;
 
     /*
     //vec3 normal    = attr_Normal;
     gl_Position = u_ModelViewProjectionMatrix * vec4(position, 1.0);
-    vec2 tex = attr_TexCoord0.st;
     */
 
     vec2 zeroToOne = position / u_resolution;
@@ -550,9 +583,27 @@ const SHADERS = [
   {
     vec4 color  = texture2D(u_DiffuseMap, var_DiffuseTex);
 
-    gl_FragColor.rgb = color.rgb * var_Color.rgb;
-    gl_FragColor.a = 1.0;
-    //gl_FragColor = vec4(1, 0, 0.5, 1); 
+    float alpha = color.a;
+    if (u_AlphaTest == 1)
+    {
+      if (alpha == 0.0)
+        discard;
+    }
+    else if (u_AlphaTest == 2)
+    {
+      if (alpha >= 0.5)
+        discard;
+    }
+    else if (u_AlphaTest == 3)
+    {
+      if (alpha < 0.5)
+        discard;
+    }
+
+    //gl_FragColor.rgb = color.rgb * var_Color.rgb;
+    gl_FragColor = color;
+    //gl_FragColor = color;
+    //gl_FragColor.a = alpha;
   }`,
 
 ]

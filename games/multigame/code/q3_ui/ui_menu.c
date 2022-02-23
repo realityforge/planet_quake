@@ -143,6 +143,7 @@ static void Main_MenuDraw( void ) {
 	float			adjust;
 	float			x, y, w, h;
 	vec4_t			color = {0.5, 0, 0, 1};
+	//int amount;
 
 	// setup the refdef
 

@@ -39,6 +39,8 @@ typedef struct _TargaHeader {
 	unsigned char	pixel_size, attributes;
 } TargaHeader;
 
+void DebugBreak( void );
+
 void R_LoadTGA ( const char *name, byte **pic, int *width, int *height)
 {
 	unsigned	columns, rows, numPixels;

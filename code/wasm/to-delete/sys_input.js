@@ -151,6 +151,19 @@ function InputPushTextEvent (evt) {
   }
   _IN_PushEvent(SYSI.inputInterface[2], event)
 }
+
+function InputPushMouseEvent (evt) {
+  var event = SYSI.inputHeap
+  if (evt.type != 'mousemove') {
+    //HEAP32[((event+16)>>2)]=((down ? 1 : 0) << 8) + (evt.button+1) 
+    //HEAP32[((event+20)>>2)]=evt.pageX
+    //HEAP32[((event+24)>>2)]=evt.pageY
+  } else {
+		Com_QueueEvent( Sys_Milliseconds(), SE_MOUSE, 
+      Browser.getMovementX(evt), Browser.getMovementY(evt), 0, NULL );
+  }
+}
+
 function InputPushWheelEvent (evt) {
   var event = SYSI.inputHeap
   HEAP32[((event+0)>>2)]=0x403;

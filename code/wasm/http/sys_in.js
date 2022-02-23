@@ -40,14 +40,10 @@ function GLimp_StartDriverAndSetMode(mode, modeFS, fullscreen, fallback) {
   //Q3e.paged32[handle>>2] = 1
 
   // set the window to do the grabbing, when ungrabbing this doesn't really matter
-  if(false) {
+  if(!INPUT.firstClick) {
     Q3e.canvas.requestPointerLock();
   } else {
-    if (Q3e.canvas.exitPointerLock) {
-      Q3e.canvas.exitPointerLock()
-    } else if (Q3e.canvas.webkitPointerLock) {
-      Q3e.canvas.webkitExitPointerLock()
-    }
+    SDL_ShowCursor()
   }
 
   if(Cvar_VariableIntegerValue(stringToAddress('in_joystick'))) {
@@ -100,6 +96,11 @@ const	SE_DROPTEXT = 13
 //} sysEventType_t;
 
 
+const KEYCATCH_CONSOLE = 0x0001
+const KEYCATCH_UI      =  0x0002
+const KEYCATCH_MESSAGE =  0x0004
+const KEYCATCH_CGAME   =  0x0008
+
 function InputPushFocusEvent (evt) {
   if (document.visibilityState === 'visible'
     & (typeof evt.visible === 'undefined' || evt.visible !== false)) {
@@ -115,6 +116,7 @@ function InputPushFocusEvent (evt) {
 
 function InputPushMovedEvent (evt) {
   if (evt.toElement === null && evt.relatedTarget === null) {
+    INPUT.firstClick = false
     //if outside the window...
     //if(!SYSI.interval)
     //SYSI.interval = setInterval(function () {
@@ -123,7 +125,11 @@ function InputPushMovedEvent (evt) {
     return
   }
 
-  if(gw_active && !glw_state.isFullscreen) {
+  let notFullscreen = !document.isFullScreen
+    && !document.webkitIsFullScreen
+    && !document.mozIsFullScreen
+
+  if(gw_active && notFullscreen) {
     Cvar_SetIntegerValue( 
       stringToAddress('vid_xpos'), 
       stringToAddress('' + (window.screenX || window.screenLeft)) );
@@ -133,18 +139,100 @@ function InputPushMovedEvent (evt) {
   }
 }
 
+function captureClipBoard () {
+  // this is the same method I used on StudySauce
+  var text = document.createElement('TEXTAREA')
+  text.style.opacity = 0
+  text.style.height = '1px'
+  text.style.width = '1px'
+  text.style.display = 'block'
+  text.style.zIndex = 1000
+  text.style.position = 'absolute'
+  document.body.appendChild(text)
+  text.focus()
+  setTimeout(function () {
+    INPUT.paste = text.value
+    Module.viewport.focus()
+    if(INPUT.field) {
+      INPUT.paste.split('').forEach(function (k) {
+        Field_CharEvent(INPUT.field, k.charCodeAt(0))
+      })
+      INPUT.paste = ''
+      INPUT.field = 0
+      text.remove()
+    }
+  }, 100)
+}
+
+function checkPasteEvent (evt) {
+  // mac support
+  if(evt.key == 'Meta') INPUT.superKey = evt.type == 'keydown'
+  if(INPUT.superKey && (evt.key == 'v' || evt.key == 'V')) {
+    if(INPUT.superKey && (evt.type == 'keypress' || evt.type == 'keydown')) {
+      captureClipBoard()
+    }
+  }
+}
+
+function InputPushKeyEvent(evt) {
+  if(evt.keyCode === 8) {
+    INPUT.cancelBackspace = true;
+    setTimeout(function () { INPUT.cancelBackspace = false }, 100)
+  }
+  if(evt.keyCode === 27) {
+    INPUT.cancelBackspace = true;
+    INPUT.InputPushFocusEvent({visible: false})
+  }
+
+  checkPasteEvent(evt)
+  
+  if(evt.type == 'keydown') {
+    if ( evt.repeat && Key_GetCatcher() == 0 )
+      return
+
+    if ( evt.keyCode == 13 /* ENTER */ && evt.altKey ) {
+      let notFullscreen = !document.isFullScreen
+      && !document.webkitIsFullScreen
+      && !document.mozIsFullScreen
+      Cvar_SetIntegerValue( stringToAddress('r_fullscreen'), notFullscreen ? 1 : 0 );
+      Cbuf_AddText( stringToAddress('vid_restart\n') );
+      return
+    }
+
+    if ( evt.keyCode == 8 /* BAKCSPACE */ )
+      Sys_QueEvent( Sys_Milliseconds(), SE_CHAR, 8, 0, 0, null );
+
+    if ( evt.charCode ) {
+      Sys_QueEvent( Sys_Milliseconds(), SE_KEY, evt.charCode, true, 0, null );
+
+      if( kevt.ctrlKey && key >= 'a' && evt.charCode <= 'z' )
+        Sys_QueEvent( Sys_Milliseconds(), SE_CHAR, evt.charCode-'a'+1, 0, 0, null );
+    }
+  } else if (evt.type == 'keyup') {
+    Sys_QueEvent( Sys_Milliseconds(), SE_KEY, evt.charCode, false, 0, null );
+  }
+
+}
+
 function InputPushTextEvent (evt) {
   if(!INPUT.consoleKeys) {
     INPUT.consoleKeys = addressToString(Cvar_VariableString(stringToAddress('cl_consoleKeys')))
   }
   // quick and dirty utf conversion?
-  var text = stringToAddress(String.fromCharCode(evt.charCode))
   if ( INPUT.consoleKeys.includes(evt.key) )
   {
-    Sys_QueEvent( Sys_Milliseconds(), SE_KEY, INPUT.keystrings['CONSOLE'], true, 0, null );
-    Sys_QueEvent( Sys_Milliseconds(), SE_KEY, INPUT.keystrings['CONSOLE'], false, 0, null );
+    Sys_QueEvent( Sys_Milliseconds(), SE_KEY, INPUT.keystrings['CONSOLE'], true, 0, null )
+    Sys_QueEvent( Sys_Milliseconds(), SE_KEY, INPUT.keystrings['CONSOLE'], false, 0, null )
+    setTimeout(function () {
+      if(Key_GetCatcher() & KEYCATCH_CONSOLE) {
+        SDL_ShowCursor()
+      } else {
+        if(!INPUT.firstClick)
+          Q3e.canvas.requestPointerLock();      
+      }
+    }, 100)
   } else {
-    Sys_QueEvent( Sys_Milliseconds(), SE_CHAR, text, 0, 0, null );
+    Sys_QueEvent( Sys_Milliseconds(), SE_CHAR, evt.charCode, 0, 0, null )
   }
 
 }
@@ -163,11 +251,33 @@ function getMovementY(event) {
          0;
 }
 
+function InputPushWheelEvent(evt) {
+	if( evt.deltaY > 0 ) {
+		Sys_QueEvent( Sys_Milliseconds(), SE_KEY, INPUT.keystrings['MWHEELUP'], true, 0, null );
+		Sys_QueEvent( Sys_Milliseconds(), SE_KEY, INPUT.keystrings['MWHEELUP'], false, 0, null );
+	} else if( evt.deltaY < 0 ) {
+		Sys_QueEvent( Sys_Milliseconds(), SE_KEY, INPUT.keystrings['MWHEELDOWN'], true, 0, null );
+		Sys_QueEvent( Sys_Milliseconds(), SE_KEY, INPUT.keystrings['MWHEELDOWN'], false, 0, null );
+	}
+}
+
+
 function InputPushMouseEvent (evt) {
   if (evt.type != 'mousemove') {
-    //HEAP32[((event+16)>>2)]=((down ? 1 : 0) << 8) + (evt.button+1) 
-    //HEAP32[((event+20)>>2)]=evt.pageX
-    //HEAP32[((event+24)>>2)]=evt.pageY
+    let down = evt.type == 'mousedown'
+    // TODO: fix this maybe?
+    //if(!mouseActive || in_joystick->integer) {
+    //  return;
+    //}
+    if(down) {
+      // TODO: start sound, capture mouse
+      if(INPUT.firstClick && !(Key_GetCatcher() & KEYCATCH_CONSOLE)) {
+        Q3e.canvas.requestPointerLock();
+        INPUT.firstClick = false
+      }
+    }
+    Sys_QueEvent( Sys_Milliseconds(), SE_KEY, 
+      evt.button, down, 0, null );
   } else {
 		Sys_QueEvent( Sys_Milliseconds(), SE_MOUSE, 
       getMovementX(evt), getMovementY(evt), 0, null );
@@ -180,17 +290,17 @@ function InputInit () {
     if(name.length == 0) continue
     INPUT.keystrings[name] = i
   }
-  //window.addEventListener('keydown', SYSI.InputPushKeyEvent, false)
-  //window.addEventListener('keyup', SYSI.InputPushKeyEvent, false)
+  window.addEventListener('keydown', InputPushKeyEvent, false)
+  window.addEventListener('keyup', InputPushKeyEvent, false)
   window.addEventListener('keypress', InputPushTextEvent, false)
   window.addEventListener('mouseout', InputPushMovedEvent, false)
-  //window.addEventListener('resize', resizeViewport, false)
+  window.addEventListener('resize', resizeViewport, false)
 
   Q3e.canvas.addEventListener('mousemove', InputPushMouseEvent, false)
-  //SYSI.canvas.addEventListener('mousedown', SYSI.InputPushMouseEvent, false)
-  //SYSI.canvas.addEventListener('mouseup', SYSI.InputPushMouseEvent, false)
+  Q3e.canvas.addEventListener('mousedown', InputPushMouseEvent, false)
+  Q3e.canvas.addEventListener('mouseup', InputPushMouseEvent, false)
   
-  //document.addEventListener('mousewheel', SYSI.InputPushWheelEvent, {capture: false, passive: true})
+  document.addEventListener('mousewheel', InputPushWheelEvent, {capture: false, passive: true})
   document.addEventListener('visibilitychange', InputPushFocusEvent, false)
   //document.addEventListener('drop', SYSI.dropHandler, false)
   //document.addEventListener('dragenter', SYSI.dragEnterHandler, false)
@@ -262,10 +372,12 @@ function SDL_StopTextInput () {
 
 function SDL_ShowCursor() {
   // TODO: some safety stuff?
-  if(Q3e.canvas.exitPointerLock)
-    Q3e.canvas.exitPointerLock()
-  else if (Q3e.canvas.webkitPointerLock)
-    Q3e.canvas.webkitExitPointerLock()
+  if(document.exitPointerLock)
+  document.exitPointerLock()
+  else if (document.webkitExitPointerLock)
+  document.webkitExitPointerLock()
+  else if (document.mozExitPointerLock)
+  document.mozExitPointerLock()
 }
 
 function GLimp_Shutdown() {
@@ -295,7 +407,7 @@ function GLimp_Shutdown() {
 
 var INPUT = {
   keystrings: {},
-
+  firstClick: true,
   GLimp_Shutdown: GLimp_Shutdown,
   GLimp_StartDriverAndSetMode:GLimp_StartDriverAndSetMode,
   SDL_WasInit: function (device) { return 1; },

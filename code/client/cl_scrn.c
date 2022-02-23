@@ -862,12 +862,6 @@ void SCR_DrawScreenField( stereoFrame_t stereoFrame ) {
 		uiFullscreen = (uivm && VM_Call( uivm, 0, UI_IS_FULLSCREEN ));
 	}
 
-#ifdef __WASM__
-	// TODO: fade black background in from full alpha black on web
-	//   so the spinning logos slowly disappear
-	// TODO: fade between white and black when transitioning to light/dark mode
-#endif
-
 	// wide aspect ratio screens need to have the sides cleared
 	// unless they are displaying game renderings
 	if ( uiFullscreen || cls.state <= CA_LOADING 
@@ -876,7 +870,17 @@ void SCR_DrawScreenField( stereoFrame_t stereoFrame ) {
 #endif
   ) {
 		if ( cls.glconfig.vidWidth * 480 > cls.glconfig.vidHeight * 640 ) {
+#if 0 // def __WASM__
+			// TODO: fade black background in from full alpha black on web
+			//   so the spinning logos slowly disappear
+			// TODO: fade between white and black when transitioning to light/dark mode
+			int amount = Sys_Milliseconds() - cls.uiStartTime;
+			if(cls.uiStartTime && amount < 1000) {
+				re.SetColor((vec4_t){0.0f, 0.0f, 0.0f, amount / 1000.0f});
+			} else
+#endif
 			re.SetColor( g_color_table[ ColorIndex( COLOR_BLACK ) ] );
+
 			re.DrawStretchPic( 0, 0, cls.glconfig.vidWidth, cls.glconfig.vidHeight, 0, 0, 0, 0, cls.whiteShader );
 			re.SetColor( NULL );
 		}

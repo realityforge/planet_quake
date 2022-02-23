@@ -1414,9 +1414,6 @@ void CL_ShutdownAll( void ) {
 
 	cls.rendererStarted = qfalse;
 	cls.soundRegistered = qfalse;
-#ifdef __WASM__
-	cls.firstClick = qtrue;
-#endif
 
 	SCR_Done();
 }
@@ -2635,7 +2632,6 @@ static void CL_Snd_Restart_f( void )
 	// sound will be reinitialized by vid_restart
 	S_Init();
 	cls.soundStarted = qtrue;
-	cls.firstClick = qtrue;
 	cls.soundRegistered = qtrue;
 	S_BeginRegistration();
 	//CL_Vid_Restart();
@@ -2844,8 +2840,6 @@ static void CL_DownloadsComplete( void ) {
 #ifndef __WASM__
 	cls.soundRegistered = qtrue;
 	S_BeginRegistration();
-#else
-	cls.firstClick = qtrue;
 #endif
 #else
 	CL_FlushMemory();
@@ -3913,6 +3907,7 @@ void FS_CheckLazyUpdates( void ) {
 			//	break; 
 			continue;
 		}
+			Com_Printf("goddamnit! %s\n", ready);
 		if(j == 0) {
 			if(cls.rendererStarted)
 				re.UpdateModel(ready);
@@ -4334,7 +4329,6 @@ void CL_StartHunkUsers( void ) {
 
 	if ( !cls.soundStarted ) {
 		cls.soundStarted = qtrue;
-		cls.firstClick = qtrue;
 		S_Init();
 	}
 
@@ -5467,8 +5461,8 @@ void CL_Init( void ) {
 	//	Cvar_Set("cl_lazyLoad", "1");
 #endif
 
-#ifdef __WASM__
-	cl_dlURL = Cvar_Get( "cl_dlURL", "http://quake.games/assets", CVAR_ARCHIVE_ND );
+#ifdef USE_ASYNCHRONOUS
+	cl_dlURL = Cvar_Get( "cl_dlURL", "http://local.games:8080/multigame", CVAR_ARCHIVE_ND );
 #else
 	cl_dlURL = Cvar_Get( "cl_dlURL", "http://ws.q3df.org/maps/download/%1", CVAR_ARCHIVE_ND );
 #endif

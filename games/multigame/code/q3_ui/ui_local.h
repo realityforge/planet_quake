@@ -552,6 +552,7 @@ typedef struct {
 	qboolean			demoversion;
 	qboolean			firstdraw;
 	int					lastVideoCheck;
+	int startTime;
 } uiStatic_t;
 
 extern void			UI_Init( void );

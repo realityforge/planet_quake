@@ -99,6 +99,9 @@ Cbuf_AddText
 Adds command text at the end of the buffer, does NOT add a final \n
 ============
 */
+#ifdef __WASM__
+Q_EXPORT
+#endif
 void Cbuf_AddText( const char *text ) {
 	int l;
 

@@ -67,7 +67,6 @@ static const char *netsrcString[2] = {
 };
 
 #ifdef __WASM__
-__attribute__((import_module("NET"), import_name("Sys_NET_MulticastLocal")))
 void Sys_NET_MulticastLocal( int sock, int length, const int *data );
 #endif
 

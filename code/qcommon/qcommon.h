@@ -53,11 +53,9 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #ifdef __WASM__
 
-void DebugBreak( void )
-__attribute__((import_module("SYS"), import_name("DebugBreak")));
+void DebugBreak( void );
 
-void DebugError( void )
-__attribute__((import_module("SYS"), import_name("DebugError")));
+void DebugError( void );
 
 #endif
 
@@ -326,8 +324,7 @@ void		NET_LeaveMulticast6( void );
 #ifndef __WASM__
 qboolean	NET_Sleep( int timeout );
 #else
-int NET_Sleep(int timeout)
-__attribute__((import_module("NET"), import_name("NET_Sleep")));
+int NET_Sleep(int timeout);
 #endif
 
 #define	MAX_PACKETLEN	1400	// max size of a network packet
@@ -1194,9 +1191,7 @@ int			Com_Filter( const char *filter, const char *name );
 qboolean	Com_FilterExt( const char *filter, const char *name );
 qboolean	Com_HasPatterns( const char *str );
 int			Com_FilterPath( const char *filter, const char *name );
-#ifdef __WASM__
-__attribute__((import_module("DATE"), import_name("Com_RealTime")))
-#endif
+
 int			Com_RealTime(qtime_t *qtime);
 qboolean	Com_SafeMode( void );
 void		Com_RunAndTimeServerPacket( const netadr_t *evFrom, msg_t *buf );
@@ -1530,9 +1525,7 @@ void	Sys_Quit (void);
 #ifdef __WASM__
 void JS_Field_CharEvent( field_t *edit, int ch );
 #endif
-#ifdef __WASM__
-__attribute__((import_module("SYS"), import_name("Sys_GetClipboardData")))
-#endif
+
 char	*Sys_GetClipboardData( void );	// note that this isn't journaled...
 void	Sys_SetClipboardBitmap( const byte *bitmap, int length );
 
@@ -1547,13 +1540,9 @@ void	Sys_SetAffinityMask( int mask );
 
 // Sys_Milliseconds should only be used for profiling purposes,
 // any game related timing information should come from event timestamps
-#ifdef __WASM__
-__attribute__((import_module("SYS"), import_name("Sys_Milliseconds")))
-#endif
+
 int		Sys_Milliseconds( void );
-#ifdef __WASM__
-__attribute__((import_module("SYS"), import_name("Sys_Microseconds")))
-#endif
+
 int64_t	Sys_Microseconds( void );
 
 void	Sys_SnapVector( float *vector );
@@ -1561,9 +1550,7 @@ void	Sys_SnapVector( float *vector );
 qboolean Sys_RandomBytes( byte *string, int len );
 
 #ifdef USE_ASYNCHRONOUS
-#ifdef __WASM__
-__attribute__((import_module("NET"), import_name("Sys_Offline")))
-#endif
+
 void Sys_Offline( void );
 #endif
 
@@ -1572,31 +1559,21 @@ void	Sys_DisplaySystemConsole( qboolean show );
 
 void	Sys_ShowConsole( int level, qboolean quitOnClose );
 void	Sys_SetErrorText( const char *text );
-#ifdef __WASM__
-__attribute__((import_module("NET"), import_name("Sys_SendPacket")))
-#endif
+
 void	Sys_SendPacket( int length, const void *data, const netadr_t *to );
 
-#ifdef __WASM__
-__attribute__((import_module("NET"), import_name("Sys_StringToAdr")))
-#endif
+
 qboolean	Sys_StringToAdr( const char *s, netadr_t *a, netadrtype_t family );
 //Does NOT parse port numbers, only base addresses.
 
-#ifdef __WASM__
-__attribute__((import_module("NET"), import_name("Sys_IsLANAddress")))
-#endif
+
 qboolean	Sys_IsLANAddress(const netadr_t *adr);
 void		Sys_ShowIP(void);
 
-#ifdef __WASM__
-__attribute__((import_module("FS"), import_name("Sys_Mkdir")))
-#endif
+
 void	Sys_Mkdir( const char *path );
 
-#ifdef __WASM__
-__attribute__((import_module("FS"), import_name("Sys_FOpen")))
-#endif
+
 FILE	*Sys_FOpen( const char *ospath, const char *mode );
 qboolean Sys_ResetReadOnlyAttribute( const char *ospath );
 
@@ -1605,18 +1582,12 @@ const char *Sys_DefaultBasePath( void );
 const char *Sys_DefaultHomePath( void );
 const char *Sys_SteamPath( void );
 
-#ifdef __WASM__
-__attribute__((import_module("FS"), import_name("Sys_ListFiles")))
-#endif
+
 char **Sys_ListFiles( const char *directory, const char *extension, const char *filter, int *numfiles, qboolean wantsubs );
 
-#ifdef __WASM__
-__attribute__((import_module("FS"), import_name("Sys_FreeFileList")))
-#endif
+
 void Sys_FreeFileList( char **list );
-#ifdef __WASM__
-__attribute__((import_module("FS"), import_name("Sys_GetFileStats")))
-#endif
+
 qboolean Sys_GetFileStats( const char *filename, fileOffset_t *size, fileTime_t *mtime, fileTime_t *ctime );
 
 void Sys_BeginProfiling( void );
@@ -1626,21 +1597,13 @@ qboolean Sys_LowPhysicalMemory( void );
 
 int Sys_MonkeyShouldBeSpanked( void );
 
-#ifdef __WASM__
-__attribute__((import_module("SYS"), import_name("Sys_LoadLibrary")))
-#endif
+
 void *Sys_LoadLibrary( const char *name );
-#ifdef __WASM__
-__attribute__((import_module("SYS"), import_name("Sys_LoadFunction")))
-#endif
+
 void *Sys_LoadFunction( void *handle, const char *name );
-#ifdef __WASM__
-__attribute__((import_module("SYS"), import_name("Sys_LoadFunctionErrors")))
-#endif
+
 int   Sys_LoadFunctionErrors( void );
-#ifdef __WASM__
-__attribute__((import_module("SYS"), import_name("Sys_UnloadLibrary")))
-#endif
+
 void  Sys_UnloadLibrary( void *handle );
 
 // adaptive huffman functions

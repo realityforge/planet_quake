@@ -1364,6 +1364,14 @@ void CL_InitUI( qboolean loadNew ) {
 		VM_Call( uivm, 1, UI_INIT, (cls.state >= CA_AUTHORIZING && cls.state < CA_ACTIVE) );
 	}
 
+#ifdef __WASM__
+	// fancy fade in
+	cls.uiStartTime = Sys_Milliseconds();
+	// TODO: convert this to a menu event that can update the URL
+	//   maybe using a Cvar->modified callback?
+	Sys_SetStatus("Main menu...");
+#endif
+
 #ifdef BUILD_GAME_STATIC
   Cvar_SetKnownDescriptions(VM_UI, VMR_BASEQ3A);
 #else

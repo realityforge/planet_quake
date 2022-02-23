@@ -463,9 +463,7 @@ void FS_Reload( void );
 #define PK3_HASH_SIZE 512
 #define FS_HashFileName Com_GenerateHashValue
 
-#ifdef __WASM__
-__attribute__((import_module("FS"), import_name("Sys_FreeFileList")))
-#endif
+
 void Sys_FreeFileList( char **list );
 
 static void FS_AddGameDirectory( const char *path, const char *dir, int igvm );
@@ -778,7 +776,7 @@ void MakeDirectoryBuffer(char *paths, int count, int length, const char *localna
 			// TODO: fix this, only works if directory listing allows slashes at the end?
 			// TODO: right thing to do would be test the content-type and duck out early 
 			//   on big files for anything that doesn't have a . dot in the name.
-			Sys_FileNeeded(va("%s/", localName));
+			//Sys_FileNeeded(va("%s/", localName));
 		}
 
 		// update hash table
@@ -818,7 +816,6 @@ void Sys_FileReady(const char *filename, const char* tempname) {
 		Com_sprintf(localName, sizeof(localName), "%s/%s", FS_GetCurrentGameDir(), filename);
 	}
 	hash = FS_HashPK3( localName );
-//Com_Printf("downloaded: %s -> %s\n", localName, filename);
 
 	// mark the file as downloaded
 	for(int i = 0; i < 4; i++) {
@@ -828,11 +825,12 @@ void Sys_FileReady(const char *filename, const char* tempname) {
       if ( !Q_stricmp( download->downloadName, localName ) ) {
 				// file is ready for processing!
 				if(tempname) {
+Com_Printf("downloaded: %s -> %s, %s\n", localName, filename, tempname);
 					download->ready = qtrue;
 					strcpy(&download->loadingName[MAX_QPATH], tempname);
 				} else {
 					// download failed!
-					download->ready = qtrue;
+					download->ready = qfalse;
 					download->downloaded = qtrue;
 				}
 				found = qtrue;
@@ -857,13 +855,13 @@ void FS_UpdateFiles(const char *filename, const char *tempname) {
 //Com_Printf("updating files: %s -> %s\n", filename, tempname);
 
 	// try to reload UI with current game if needed
-	if(!Q_stricmp(tempname, "vm/ui.qvm")) {
+	if(!Q_stristr(tempname, "vm/ui.qvm")) {
     Cvar_Set("com_skipLoadUI", "0");
 		CL_StartHunkUsers();
 	}
 
 	// do some extra processing, restart UI if default.cfg is found
-	if(!Q_stricmp(tempname, "default.cfg")) {
+	if(!Q_stristr(tempname, "default.cfg")) {
 		// will restart automatically from NextDownload()
 		if(!fs_searchpaths)
 			FS_Restart(0);
@@ -6589,6 +6587,8 @@ void FS_Restart( int checksumFeed ) {
 	// snoop on directory index
 	if(!Cvar_VariableIntegerValue("sv_pure")) {
 		Sys_FileNeeded(va("%s/", FS_GetCurrentGameDir()));
+		Sys_FileNeeded(va("%s/vm/", FS_GetCurrentGameDir()));
+		Sys_FileNeeded(va("%s/maps/", FS_GetCurrentGameDir()));
 	}
 	if(!FS_Initialized()) {
 		return;

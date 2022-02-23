@@ -5123,6 +5123,7 @@ void _UI_Init( qboolean inGameLoad ) {
 	AssetCache();
 
 	start = trap_Milliseconds();
+	uiInfo.startTime = start;
 
   uiInfo.teamCount = 0;
   uiInfo.characterCount = 0;

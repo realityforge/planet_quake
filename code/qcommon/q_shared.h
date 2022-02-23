@@ -371,55 +371,30 @@ void *calloc (size_t, size_t);
 void free (void *);
 
 typedef int (*cmpfun)(const void *, const void *);
-__attribute__((import_module("STD"), import_name("qsort")))
 void qsort(void *base, size_t nel, size_t width, cmpfun cmp);
-__attribute__((import_module("STD"), import_name("strlen")))
 size_t strlen (const char *);
-__attribute__((import_module("STD"), import_name("memmove")))
 void *memmove (void *, const void *, size_t);
-__attribute__((import_module("STD"), import_name("memcmp")))
 int memcmp (const void *, const void *, size_t);
-__attribute__((import_module("STD"), import_name("memchr")))
 void *memchr (const void *, int, size_t);
-__attribute__((import_module("STD"), import_name("strcpy")))
 char *strcpy (char *, const char *);
-__attribute__((import_module("STD"), import_name("strncpy")))
 char *strncpy (char *, const char *, size_t);
-__attribute__((import_module("STD"), import_name("strcat")))
 char *strcat (char *, const char *);
-__attribute__((import_module("STD"), import_name("strncat")))
 char *strncat (char *, const char *, size_t);
-__attribute__((import_module("STD"), import_name("strcmp")))
 int strcmp (const char *, const char *);
-__attribute__((import_module("STD"), import_name("strncmp")))
 int strncmp (const char *, const char *, size_t);
-__attribute__((import_module("STD"), import_name("strchr")))
 char *strchr (const char *, int);
-__attribute__((import_module("STD"), import_name("strrchr")))
 char *strrchr (const char *, int);
-__attribute__((import_module("STD"), import_name("strpbrk")))
 char *strpbrk (const char *, const char *);
-__attribute__((import_module("STD"), import_name("strstr")))
 char *strstr (const char *, const char *);
 
 // this only works because it's a single char?
-__attribute__((import_module("STD"), import_name("tolower")))
 int tolower( int c );
-
-__attribute__((import_module("SYS"), import_name("Sys_Error")))
 void Sys_Error( const char *error, ... );
-
-__attribute__((import_module("SYS"), import_name("Sys_Error")))
 void Sys_Error( const char *error, ... );
 
 typedef void*jmp_buf;
-__attribute__((import_module("STD"), import_name("longjmp")))
 void longjmp( void *buf, int ret );
-
-__attribute__((import_module("STD"), import_name("setjmp")))
 int setjmp( void *buf );
-
-__attribute__((import_module("NET"), import_name("CL_Download")))
 int CL_Download( const char *cmd, const char *pakname, int autoDownload );
 
 
@@ -433,36 +408,14 @@ int CL_Download( const char *cmd, const char *pakname, int autoDownload );
 #define rename Sys_Rename
 #define remove Sys_Remove
 #endif
-
-
-
-__attribute__((import_module("FS"), import_name("Sys_FTell")))
 long Sys_FTell(FILE *f);
-
-__attribute__((import_module("FS"), import_name("Sys_FSeek")))
 int Sys_FSeek(FILE *f, long off, int whence);
-
-__attribute__((import_module("FS"), import_name("Sys_FClose")))
 int Sys_FClose(FILE *f);
-
-__attribute__((import_module("FS"), import_name("Sys_FWrite")))
 size_t Sys_FWrite(const void *restrict src, size_t size, size_t nmemb, FILE *restrict f);
-
-__attribute__((import_module("FS"), import_name("Sys_FFlush")))
 int Sys_FFlush(FILE *f);
-
-__attribute__((import_module("FS"), import_name("Sys_FRead")))
 size_t Sys_FRead(void *restrict destv, size_t size, size_t nmemb, FILE *restrict f);
-
-__attribute__((import_module("FS"), import_name("Sys_Remove")))
 size_t Sys_Remove(const char *);
-
-__attribute__((import_module("FS"), import_name("Sys_Rename")))
 size_t Sys_Rename(const char *, const char *);
-
-
-
-__attribute__((import_module("MATH"), import_name("ntohs")))
 uint16_t ntohs(uint16_t n);
 
 int ED_vsprintf( char *str, const char *format, va_list ap );
@@ -474,45 +427,32 @@ int Q_sscanf( const char *buffer, const char *fmt, ... ) ;
 #define sscanf Q_sscanf
 #define Q_vsnprintf vsnprintf
 
-int assert_fail(const char *exprStr, const char *file, int line, const char *func)
-__attribute__((import_module("STD"), import_name("assert")));
+int assert_fail(const char *exprStr, const char *file, int line, const char *func);
 
 #define assert(expr) (!(expr)?assert_fail(#expr, __FILE__, __LINE__, __func__):0)
 
-int fprintf(FILE *f, const char *fmt, ...)
-__attribute__((import_module("STD"), import_name("fprintf")));
+int fprintf(FILE *f, const char *fmt, ...);
 
-int atoi(const char *)
-__attribute__((import_module("STD"), import_name("atoi")));
+int atoi(const char *);
 
-double strtod(const char *, char **)
-__attribute__((import_module("STD"), import_name("strtof")));
+double strtod(const char *, char **);
 
-float strtof(const char *, char **)
-__attribute__((import_module("STD"), import_name("strtof")));
+float strtof(const char *, char **);
 
-double atof(const char *)
-__attribute__((import_module("STD"), import_name("atof")));
+double atof(const char *);
 
-long atol(const char *)
-__attribute__((import_module("STD"), import_name("atoi")));
-FILE *popen(const char *cmd, const char *mode)
-__attribute__((import_module("SYS"), import_name("popen")));
-FILE *popen(const char *cmd, const char *mode)
-__attribute__((import_module("SYS"), import_name("popen")));
+long atol(const char *);
+FILE *popen(const char *cmd, const char *mode);
+FILE *popen(const char *cmd, const char *mode);
 
-void Sys_SockaddrToString(char *dest, int destlen, const void *input)
-__attribute__((import_module("NET"), import_name("Sys_SockaddrToString")));
+void Sys_SockaddrToString(char *dest, int destlen, const void *input);
 
-int Sys_StringToSockaddr(const char *s, void *sadr, int sadr_len)
-__attribute__((import_module("NET"), import_name("Sys_StringToSockaddr")));
+int Sys_StringToSockaddr(const char *s, void *sadr, int sadr_len);
 #define Sys_StringToSockaddr(x, y, z, w) Sys_StringToSockaddr(x, y, z)
 
-void *gethostbyname (const char *)
-__attribute__((import_module("NET"), import_name("gethostbyname")));
+void *gethostbyname (const char *);
 
-void  Sys_Print(const char *s)
-__attribute__((import_module("SYS"), import_name("Sys_Print")));
+void  Sys_Print(const char *s);
 
 struct in_addr { uint32_t s_addr; };
 
@@ -523,84 +463,48 @@ struct sockaddr_in {
 	uint8_t sin_zero[8];
 };
 
-double cos(double)
-__attribute__((import_module("MATH"), import_name("cos")));
-double sin(double)
-__attribute__((import_module("MATH"), import_name("sin")));
-double tan(double)
-__attribute__((import_module("MATH"), import_name("tan")));
-double acos(double)
-__attribute__((import_module("MATH"), import_name("acos")));
-double asin(double)
-__attribute__((import_module("MATH"), import_name("asin")));
-double atan(double)
-__attribute__((import_module("MATH"), import_name("atan")));
-double exp(double)
-__attribute__((import_module("MATH"), import_name("exp")));
-double log(double)
-__attribute__((import_module("MATH"), import_name("log")));
-double sqrt(double)
-__attribute__((import_module("MATH"), import_name("sqrt")));
-double fabs(double)
-__attribute__((import_module("MATH"), import_name("abs")));
-double ceil(double)
-__attribute__((import_module("MATH"), import_name("ceil")));
-double floor(double)
-__attribute__((import_module("MATH"), import_name("floor")));
+double cos(double);
+double sin(double);
+double tan(double);
+double acos(double);
+double asin(double);
+double atan(double);
+double exp(double);
+double log(double);
+double sqrt(double);
+double fabs(double);
+double ceil(double);
+double floor(double);
 
-float cosf(float)
-__attribute__((import_module("MATH"), import_name("cos")));
-float sinf(float)
-__attribute__((import_module("MATH"), import_name("sin")));
-float tanf(float)
-__attribute__((import_module("MATH"), import_name("tan")));
-float acosf(float)
-__attribute__((import_module("MATH"), import_name("acos")));
-float asinf(float)
-__attribute__((import_module("MATH"), import_name("asin")));
-float atanf(float)
-__attribute__((import_module("MATH"), import_name("atan")));
-float expf(float)
-__attribute__((import_module("MATH"), import_name("exp")));
-float logf(float)
-__attribute__((import_module("MATH"), import_name("log")));
-float sqrtf(float)
-__attribute__((import_module("MATH"), import_name("sqrt")));
+float cosf(float);
+float sinf(float);
+float tanf(float);
+float acosf(float);
+float asinf(float);
+float atanf(float);
+float expf(float);
+float logf(float);
+float sqrtf(float);
 
-float fabsf(float)
-__attribute__((import_module("MATH"), import_name("abs")));
-long double fabsl(long double x)
-__attribute__((import_module("MATH"), import_name("abs")));
+float fabsf(float);
+long double fabsl(long double x);
 
-float ceilf(float)
-__attribute__((import_module("MATH"), import_name("ceil")));
-float floorf(float)
-__attribute__((import_module("MATH"), import_name("floor")));
+float ceilf(float);
+float floorf(float);
 
-double atan2(double, double)
-__attribute__((import_module("MATH"), import_name("atan2")));
-double pow(double, double)
-__attribute__((import_module("MATH"), import_name("pow")));
+double atan2(double, double);
+double pow(double, double);
 
-float atan2f(float, float)
-__attribute__((import_module("MATH"), import_name("atan2")));
-float powf(float, float)
-__attribute__((import_module("MATH"), import_name("pow")));
+float atan2f(float, float);
+float powf(float, float);
 
-int rand(void)
-__attribute__((import_module("MATH"), import_name("random")));
-double round(double)
-__attribute__((import_module("MATH"), import_name("round")));
-float roundf(float)
-__attribute__((import_module("MATH"), import_name("round")));
-double rint(double)
-__attribute__((import_module("MATH"), import_name("round")));
-float rintf(float)
-__attribute__((import_module("MATH"), import_name("round")));
-int abs(int)
-__attribute__((import_module("MATH"), import_name("abs")));
-long labs(long)
-__attribute__((import_module("MATH"), import_name("abs")));
+int rand(void);
+double round(double);
+float roundf(float);
+double rint(double);
+float rintf(float);
+int abs(int);
+long labs(long);
 #endif
 
 #endif
@@ -971,10 +875,7 @@ void Snd_Memset (void* dest, const int val, const size_t count);
 #define Com_Memset memset
 #define Com_Memcpy memcpy
 #define Snd_Memset Com_Memset
-
-__attribute__((import_module("STD"), import_name("memset")))
 void *memset (void *, int, size_t);
-__attribute__((import_module("STD"), import_name("memcpy")))
 void *memcpy (void *, const void *, size_t);
 
 
@@ -2063,18 +1964,11 @@ typedef struct qtime_s {
 #ifdef __WASM__
 
 typedef struct qtime_s tm;
-
-__attribute__((import_module("DATE"), import_name("ctime")))
 char *ctime(const time_t *timer);
-
-__attribute__((import_module("DATE"), import_name("localtime")))
 struct tm *localtime(const time_t * t);
-
-__attribute__((import_module("DATE"), import_name("time")))
 time_t time(time_t *t);
 
-char *asctime (const struct tm *)
-__attribute__((import_module("DATE"), import_name("asctime")));
+char *asctime (const struct tm *);
 
 #endif
 

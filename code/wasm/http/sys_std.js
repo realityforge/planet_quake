@@ -94,7 +94,7 @@ typedef struct qtime_s {
 
 
 var STD = {
-  assert: console.assert, // TODO: convert to variadic fmt for help messages
+  assert_fail: console.assert, // TODO: convert to variadic fmt for help messages
   memset: function (addr, val, count) {
     Q3e.paged.fill(val, addr, addr + count)
     return addr
@@ -108,7 +108,9 @@ var STD = {
   tolower: function tolower(c) { return String.fromCharCode(c).toLowerCase().charCodeAt(0) },
   srand: function srand() {}, // TODO: highly under-appreciated game dynamic
   atoi: function (i) { return parseInt(addressToString(i)) },
+  atol: function (i) { return parseInt(addressToString(i)) },
   atof: function (f) { return parseFloat(addressToString(f)) },
+  atod: function (f) { return parseFloat(addressToString(f)) },
   strtof: function (f, n) { 
     // TODO: convert this to some sort of template?
     let str = addressToString(f)
@@ -184,6 +186,8 @@ var STD = {
   memcmp: function () { debugger },
   qsort: function () { debugger },
   strncat: function () { debugger },
+  rand: Math.random,
+  strtod: function (str, n) { return STD.strtof(str, n) },
 
 }
 

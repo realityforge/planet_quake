@@ -89,8 +89,8 @@ void Con_MakeCharsetShader( void ) {
 #define IMAGE_SIZE 256
 #define RASTER_BORDER_X 1.5f
 #define RASTER_BORDER_Y 2.1f
-#define RASTER_X (8.0f)
-#define RASTER_Y (13.0f)
+#define RASTER_X (9.0f)
+#define RASTER_Y (14.0f)
 #define ALIAS 3.1
 #define MAX_ALIAS (ALIAS * ALIAS * ALIAS)
 
@@ -205,8 +205,8 @@ void Con_MakeCharsetShader( void ) {
 			float coordX = (x - RASTER_BORDER_X) - floor(x / charSizeX) * charSizeX; // x - mod float
 			float coordY = (y - RASTER_BORDER_Y) - floor(y / charSizeY) * charSizeY; // y - mod float
 
-			float rasterY = (coordY - (RASTER_BORDER_Y - 0.1f)) / (charSizeY - RASTER_BORDER_Y * 2.0f);
-			float rasterX = (coordX - (RASTER_BORDER_X - 0.1f)) / (charSizeX - RASTER_BORDER_X * 2.0f);
+			float rasterY = (coordY - (RASTER_BORDER_Y)) / (charSizeY - RASTER_BORDER_Y * 2.0f);
+			float rasterX = (coordX - (RASTER_BORDER_X)) / (charSizeX - RASTER_BORDER_X * 2.0f);
 			int bitY = (int)rint(RASTER_Y * rasterY);
 			int bitX = 8 - (int)rint(RASTER_X * rasterX);
 			int bitCount = 0;
@@ -215,9 +215,9 @@ void Con_MakeCharsetShader( void ) {
 			}
 			charToSample = (charToSample - 32) % CHAR_RANGE;
 			byte *bitCharacter = alphaNumeric[charToSample % CHAR_RANGE];
-			if(coordX < RASTER_BORDER_X || coordY < RASTER_BORDER_Y ) {
+			if(coordX <= RASTER_BORDER_X || coordY <= RASTER_BORDER_Y ) {
 				
-			} else if (coordX + RASTER_BORDER_X >= charSizeX || coordY + RASTER_BORDER_Y >= charSizeY) {
+			} else if (coordX >= charSizeX - RASTER_BORDER_X - 1.0f || coordY >= charSizeY - RASTER_BORDER_Y - 1.0f) {
 				
 			} else if (bitCharacter[bitY] & (1 << (bitX))) {
 				bitCount = MAX_ALIAS;
@@ -246,6 +246,9 @@ void Con_MakeCharsetShader( void ) {
 				white = 255.0f; // * (bitCount / MAX_ALIAS) + 50.0f;
 				//if(white > 255) white = 255;
 				alpha = 255.0f * (1.0f - sqrtf(powf(rasterX, 2.0f) + powf(rasterY, 2.0f)) / 2.0f);
+			}
+			if(white < 50) {
+				alpha = 0;
 			}
 			if(bitCount > 0) {
 				imageData[18 + ((IMAGE_SIZE - y) * IMAGE_SIZE + x) * 4 + 2] = white;  // b
@@ -1003,11 +1006,13 @@ void Con_DrawSolidConsole( float frac ) {
 		} else if (cls.consoleShader) {
 			re.SetColor( g_color_table[ ColorIndex( COLOR_WHITE ) ] );
 			re.DrawStretchPic( 0, 0, wf, yf, 0, 0, 1, 1, cls.consoleShader );
-		} else {
+		}
+//#ifndef __WASM__ 
+		else {
 			re.SetColor( g_color_table[ ColorIndex( COLOR_BLACK ) ] );
 			re.DrawStretchPic( 0, 0, wf, yf, 0, 0, 1, 1, cls.whiteShader );
 		}
-
+//#endif
 	}
 
 	re.SetColor( g_color_table[ ColorIndex( COLOR_RED ) ] );

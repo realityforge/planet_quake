@@ -310,7 +310,14 @@ static void Field_KeyDownEvent( field_t *edit, int key ) {
 Field_CharEvent
 ==================
 */
-static void Field_CharEvent( field_t *edit, int ch ) {
+#ifdef __WASM__
+// for clipboard input
+Q_EXPORT
+void Field_CharEvent( field_t *edit, int ch )
+#else
+static void Field_CharEvent( field_t *edit, int ch )
+#endif
+{
 	int		len;
 
 	if ( ch == 'v' - 'a' + 1 ) {	// ctrl-v is paste
@@ -384,12 +391,6 @@ static void Field_CharEvent( field_t *edit, int ch ) {
 	}
 }
 
-
-#ifdef __WASM__
-void JS_Field_CharEvent( field_t *edit, int ch ) {
-  Field_CharEvent(edit, ch);
-}
-#endif
 
 /*
 =============================================================================
@@ -1030,6 +1031,9 @@ static int keyCatchers = 0;
 Key_GetCatcher
 ====================
 */
+#ifdef __WASM__
+Q_EXPORT
+#endif
 int Key_GetCatcher( void )
 {
 	return keyCatchers;

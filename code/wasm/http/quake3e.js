@@ -70,6 +70,13 @@ function Sys_Error(fmt, args) {
 function Sys_SetStatus(status) {
   // TODO: something like  window.title = , then setTimeout( window.title = 'Q3e' again)
   let desc = addressToString(status)
+  if(desc.includes('Main menu')) {
+    if(!Q3e.initialized) {
+      Q3e.initialized = true
+      document.body.className += ' done-loading '
+    }
+
+  }
   let description = document.querySelector('#loading-progress .description')
   let div = document.createElement('div')
   // TODO: use BG_sprintf like above?
@@ -123,6 +130,7 @@ function startProgram(program) {
   //   I'm not using emscripten anymore.
   let startup = [
     'quake3e_web',
+    '+set', 'developer', '1',
     '+set', 'fs_basepath', '/base',
     '+set', 'fs_homepath', '/home',
     '+set', 'sv_pure', '0', // require for now, TODO: server side zips
