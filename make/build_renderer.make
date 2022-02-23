@@ -7,16 +7,28 @@ MKFILE         := $(lastword $(MAKEFILE_LIST))
 include make/platform.make
 endif
 
+NEED_COMMON_REND := 0
+ifeq ($(USE_RENDERER_DLOPEN),1)
+NEED_COMMON_REND := 1
+endif
+ifneq ($(BUILD_CLIENT),1)
+REND_CFLAGS += -DUSE_RENDERER_DLOPEN
+REND_CFLAGS += -DRENDERER_PREFIX=$(CNAME)
+NEED_COMMON_REND := 1
+endif
+
 REND_TARGET    := $(CNAME)_opengl1_$(SHLIBNAME)
 ifeq ($(USE_MULTIVM_CLIENT),1)
 REND_TARGET    := $(CNAME)_mw_opengl1_$(SHLIBNAME)
 endif
 REND_SOURCES   := $(MOUNT_DIR)/$(REND_SOURCE) $(MOUNT_DIR)/renderercommon
 REND_CFILES    := $(foreach dir,$(REND_SOURCES), $(wildcard $(dir)/*.c))
-ifeq ($(USE_RENDERER_DLOPEN),1)
-REND_CFILES    := $(MOUNT_DIR)/qcommon/q_math.c $(MOUNT_DIR)/qcommon/q_shared.c \
+
+ifeq ($(NEED_COMMON_REND),1)
+REND_CFILES    += $(MOUNT_DIR)/qcommon/q_math.c $(MOUNT_DIR)/qcommon/q_shared.c \
                   $(MOUNT_DIR)/qcommon/puff.c
 endif
+
 REND_OBJS      := $(REND_CFILES:.c=.o) 
 REND_Q3OBJ     := $(addprefix $(B)/$(REND_WORKDIR)/,$(notdir $(REND_OBJS)))
 
@@ -33,13 +45,17 @@ debug:
 	$(echo_cmd) "MAKE $(REND_TARGET)"
 	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) WORKDIRS=$(REND_WORKDIR) mkdirs
 	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) pre-build
-	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) CFLAGS="$(REND_CFLAGS) $(DEBUG_CFLAGS)" LDFLAGS="$(LDFLAGS) $(DEBUG_LDFLAGS)" $(BD)/$(TARGET)
+	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) -j 8 \
+		CFLAGS="$(REND_CFLAGS) $(DEBUG_CFLAGS)" \
+		LDFLAGS="$(LDFLAGS) $(DEBUG_LDFLAGS)" $(BD)/$(REND_TARGET)
 
 release:
 	$(echo_cmd) "MAKE $(REND_TARGET)"
 	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) WORKDIRS=$(REND_WORKDIR) mkdirs
 	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) pre-build
-	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) CFLAGS="$(REND_CFLAGS) $(RELEASE_CFLAGS)" LDFLAGS="$(LDFLAGS) $(RELEASE_CFLAGS)" $(BR)/$(TARGET)
+	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) -j 8 \
+		CFLAGS="$(REND_CFLAGS) $(RELEASE_CFLAGS)" \
+		LDFLAGS="$(LDFLAGS) $(RELEASE_CFLAGS)" $(BR)/$(REND_TARGET)
 
 clean:
 	@rm -rf ./$(BD)/$(REND_WORKDIR) ./$(BD)/$(REND_TARGET)

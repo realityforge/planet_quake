@@ -124,8 +124,8 @@ function CL_Download(cmd, name, auto) {
     } else {
       // TODO: JSON.parse
       // save the file in memory for now
-      debugger
       if(!nameStr.includes(gamedir)) {
+        debugger
         throw new Error('something wrong')
       }
       FS.virtual[nameStr] = {

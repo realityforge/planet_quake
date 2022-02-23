@@ -1412,7 +1412,6 @@ const char *Info_NextPair( const char *s, char *key, char *value );
 int Info_RemoveKey( char *s, const char *key );
 
 // this is only here so the functions in q_shared.c and bg_*.c can link
-void Com_Outside_Error(int level, char *msg);
 #ifndef __WASM__
 __attribute__ ((noreturn))
 #endif

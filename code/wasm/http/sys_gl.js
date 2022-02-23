@@ -67,10 +67,20 @@ GLEmulation = {
   glScissor: function (x, y, w, h) {
     Q3e.webgl.scissor(x, y, w, h)
   },
+  matrixMode: 0x1700 /* GL_MODELVIEW */ ,
+  projectionMatrix: 0,
+  modelMatrix: 0,
   glMatrixMode: function (mode) {
+    GLEmulation.matrixMode = mode
     //Q3e.webgl.matrixMode(mode)
   },
-  glLoadMatrixf: function () {},
+  glLoadMatrixf: function (pointer) {
+    if(GLEmulation.matrixMode == 0x1700 /* GL_MODELVIEW */)
+      GLEmulation.modelMatrix = pointer
+    else if (GLEmulation.matrixMode == 0x1701 /* GL_PROJECTION */)
+      GLEmulation.projectionMatrix = pointer
+
+  },
   glLoadIdentity: function () {},
   //currentColor: [1, 1, 1, 1],
   currentColor: [0, 0, 0, 1],
@@ -224,7 +234,8 @@ GLEmulation = {
         // must have initial for 2D drawing?
         //GLEmulation.glBufferDataARB(Q3e.webgl.ELEMENT_ARRAY_BUFFER, 6, 0, Q3e.webgl.STATIC_DRAW)
         // set the resolution
-        Q3e.webgl.uniform2f(GLEmulation.uniforms.u_resolution, Q3e.canvas.width, Q3e.canvas.height);
+        Q3e.webgl.uniform2f(GLEmulation.uniforms.u_resolution, 
+          Q3e.canvas.width, Q3e.canvas.height);
       }
     } else if (cap == /* GL_TEXTURE_COORD_ARRAY */ 0x8078
         && GLEmulation.attribPointers.attr_TexCoord0 > -1) {
@@ -258,8 +269,12 @@ GLEmulation = {
     //WebGL2RenderingContext.glDepthRange.bind(Q3e.webgl)
     Q3e.webgl.depthRange(range) 
   },
-  glPushMatrix: function () {},
-  glPopMatrix: function () {},
+  glPushMatrix: function () {
+    debugger
+  },
+  glPopMatrix: function () {
+    debugger
+  },
   glReadPixels: function () {},
   glClearDepth: function (d) {
     Q3e.webgl.clearDepth(d)
@@ -294,7 +309,7 @@ GLEmulation = {
   colorStride: 0,
   colorSize: 4,
   colorPointer: null,
-  colorType: 0x1406, /* GL_FLOAT */
+  colorType: 0x1406, /* GL_FLOAT, 0x1401 GL_UNSIGNED_BYTE */ 
   glColorPointer: function (size, type, stride, pointer) {
     GLEmulation.colorStride = stride
     GLEmulation.colorSize = size
@@ -321,7 +336,6 @@ GLEmulation = {
 
   glDrawElements: function (mode, count, type, indices, start, end) {
      
-
     Q3e.webgl.bindBuffer(Q3e.webgl.ELEMENT_ARRAY_BUFFER, GLEmulation.indexBuffers[1])
     Q3e.webgl.bufferData(
       Q3e.webgl.ELEMENT_ARRAY_BUFFER, 
@@ -331,13 +345,23 @@ GLEmulation = {
       Q3e.webgl.STATIC_DRAW)
 
     Q3e.webgl.bindBuffer(Q3e.webgl.ARRAY_BUFFER, GLEmulation.colorBuffer)
-    Q3e.webgl.bufferData(
-      Q3e.webgl.ARRAY_BUFFER,
-      Q3e.paged32f.subarray(
-        GLEmulation.colorPointer >> 2,  // start
-        (GLEmulation.colorPointer >> 2) // end
+    if(GLEmulation.colorType == 0x1401) {
+      Q3e.webgl.bufferData(
+        Q3e.webgl.ARRAY_BUFFER,
+        Q3e.paged.subarray(
+        GLEmulation.colorPointer,  // start
+        (GLEmulation.colorPointer) // end
           + (count * (GLEmulation.colorSize + GLEmulation.colorStride))),
-      Q3e.webgl.STATIC_DRAW)
+        Q3e.webgl.STATIC_DRAW)
+    } else {
+      Q3e.webgl.bufferData(
+        Q3e.webgl.ARRAY_BUFFER,
+        Q3e.paged32f.subarray(
+          GLEmulation.colorPointer >> 2,  // start
+          (GLEmulation.colorPointer >> 2) // end
+            + (count * (GLEmulation.colorSize + GLEmulation.colorStride))),
+        Q3e.webgl.STATIC_DRAW)
+    }
     Q3e.webgl.vertexAttribPointer(
       GLEmulation.attribPointers.attr_Color, GLEmulation.colorSize, GLEmulation.colorType, false, GLEmulation.colorStride, 0);
   
@@ -366,10 +390,18 @@ GLEmulation = {
     Q3e.webgl.vertexAttrib4fv(GLEmulation.attribPointers.attr_Color, GLEmulation.vertexColor);
     Q3e.webgl.uniform1i(GLEmulation.uniforms.u_DiffuseMap, 0);
     Q3e.webgl.uniform1i(GLEmulation.uniforms.u_AlphaTest, 1);
-    //Q3e.webgl.uniform4f(GLEmulation.uniforms.u_BaseColor, 
-    //  Math.random(), Math.random(), Math.random(), 1);
+    Q3e.webgl.uniform4f(GLEmulation.uniforms.u_BaseColor, 
+      Math.random(300), Math.random(300), Math.random(300), 1);
     Q3e.webgl.uniform4f(GLEmulation.uniforms.u_BaseColor, 
       GLEmulation.currentColor[0], GLEmulation.currentColor[1], GLEmulation.currentColor[2], GLEmulation.currentColor[3]);
+
+    //Q3e.webgl.uniformMatrix4fv(GLEmulation.uniforms.u_modelView, false, 
+    //  Q3e.paged.subarray(GLEmulation.modelMatrix, 
+    //    GLEmulation.modelMatrix + count * 4 /* float32 */));
+    //Q3e.webgl.uniformMatrix4fv(GLEmulation.uniforms.u_projection, false, 
+    //  Q3e.paged.subarray(GLEmulation.projectionMatrix, 
+    //    GLEmulation.projectionMatrix + count * 4 /* float32 */));
+
 
     if(mode != Q3e.webgl.TRIANGLES) {
       debugger
@@ -519,6 +551,9 @@ GLEmulation = {
         u_BaseColor: Q3e.webgl.getUniformLocation(program, "u_BaseColor"),
         u_DiffuseMap: Q3e.webgl.getUniformLocation(program, "u_DiffuseMap"),
         u_AlphaTest: Q3e.webgl.getUniformLocation(program, "u_AlphaTest"),
+        u_modelView: Q3e.webgl.getUniformLocation(program, "u_modelView"),
+        u_projection: Q3e.webgl.getUniformLocation(program, "u_projection"),
+
       }
 
     }
@@ -533,45 +568,50 @@ GLEmulation = {
 
 
 const SHADERS = [
+
+/* vertext shader */
+
+// TODO: none of this matches renderer2 anymore :(
+
   `
   precision mediump float;
 
   attribute vec4 attr_Position;
   attribute vec3 attr_Normal;
   attribute vec4 attr_Color;
-  attribute vec4 attr_TexCoord0;
+  attribute vec2 attr_TexCoord0;
 
-  uniform mat4   u_ModelViewProjectionMatrix;
+  uniform mat4   u_modelView;
   uniform vec4   u_BaseColor;
   uniform vec4   u_VertColor;
 
   // TODO: remove
+  uniform mat4   u_projection;
   uniform vec2   u_resolution;
  
   varying vec2   var_DiffuseTex;
   varying vec4   var_Color;
 
   void main() {
-    //vec4 ecPosition = u_modelView * a_position
-    //gl_Position = u_projection * ecPosition
-    //v_color = a_color
-    vec2 position = vec2(attr_Position.x, attr_Position.y);
-    var_Color = attr_Color;
     //var_Color = attr_Color;
-    //var_Color = u_VertColor * attr_Color + u_BaseColor;
-    var_DiffuseTex = attr_TexCoord0.st;
+    //var_DiffuseTex = attr_TexCoord0;
+    //vec4 ecPosition = u_modelView * attr_Position;
+    //gl_Position = u_projection * ecPosition;
 
-    /*
-    //vec3 normal    = attr_Normal;
-    gl_Position = u_ModelViewProjectionMatrix * vec4(position, 1.0);
-    */
-
+    var_Color = attr_Color + u_BaseColor;
+    vec2 position = vec2(attr_Position.x, attr_Position.y);
     vec2 zeroToOne = position / u_resolution;
     vec2 zeroToTwo = zeroToOne * 2.0;
     vec2 clipSpace = zeroToTwo - 1.0;
     gl_Position = vec4(clipSpace.x, -clipSpace.y, 0, 1);
+    var_DiffuseTex = attr_TexCoord0;
 
   }`,
+
+
+/* fragment shader */
+
+
   `
   precision mediump float;
   uniform sampler2D u_DiffuseMap;
@@ -600,9 +640,12 @@ const SHADERS = [
         discard;
     }
 
-    //gl_FragColor.rgb = color.rgb * var_Color.rgb;
-    gl_FragColor = color;
+    gl_FragColor = color * (var_Color * 0.005);
     //gl_FragColor = color;
+
+
+    //gl_FragColor.rgb = color.rgb * var_Color.rgb;
+    //gl_FragColor = var_Color;
     //gl_FragColor.a = alpha;
   }`,
 

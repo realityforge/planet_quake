@@ -114,7 +114,9 @@ typedef struct download_s {
 	qboolean	headerCheck;
 	qboolean	mapAutoDownload;
 	qboolean  directDownload;
-
+#ifdef USE_ASYNCHRONOUS
+	qboolean  Cancelled;
+#endif
 
 	struct func_s {
 		char*		(*version)(void);

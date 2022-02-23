@@ -1,5 +1,5 @@
 HAVE_VM_COMPILED := false
-BUILD_CLIENT     := 1
+BUILD_CLIENT     ?= 0
 BUILD_SERVER     := 0
 BUILD_STANDALONE := 1
 USE_RENDERER_DLOPEN := 0
@@ -24,14 +24,26 @@ BINEXT           := .wasm
 
 SHLIBEXT         := wasm
 SHLIBCFLAGS      := 
-SHLIBLDFLAGS     := --import-memory --import-table --error-limit=200 --export-dynamic \
-                    --no-entry --allow-undefined-file=code/wasm/wasm.syms 
-LDFLAGS          := --import-memory --import-table --error-limit=200 --export-dynamic \
-                    --no-entry --strip-all --allow-undefined-file=code/wasm/wasm.syms
+SHLIBLDFLAGS     := -Wl,--import-memory -Wl,--import-table -Wl,--error-limit=200 \
+                    -Wl,--export-dynamic --no-standard-libraries \
+                    -Wl,--no-entry -Wl,--allow-undefined-file=code/wasm/wasm.syms 
+LDFLAGS          := -Wl,--import-memory -Wl,--import-table -Wl,--error-limit=200 \
+                    -Wl,--export-dynamic --no-standard-libraries \
+                    -Wl,--no-entry --strip-all 
+
+ifeq ($(BUILD_CLIENT),1)
+SHLIBLDFLAGS     += -Wl,--allow-undefined-file=code/wasm/wasm.syms
+LDFLAGS          += -Wl,--allow-undefined-file=code/wasm/wasm.syms
+endif
+
+ifeq ($(BUILD_RENDERER_OPENGL),1)
+SHLIBLDFLAGS     += -Wl,--allow-undefined-file=code/wasm/wasm-nogl.syms
+LDFLAGS          += -Wl,--allow-undefined-file=code/wasm/wasm-nogl.syms
+endif
 
 CLIENT_LDFLAGS   := 
 
-BASE_CFLAGS      += -Wall --target=wasm32 \
+BASE_CFLAGS      += -Wall --target=wasm32 --no-standard-libraries \
                     -Wimplicit -fstrict-aliasing \
                     -DGL_GLEXT_PROTOTYPES=1 \
                     -DGL_ARB_ES2_compatibility=1 \
@@ -44,7 +56,6 @@ BASE_CFLAGS      += -Wall --target=wasm32 \
                     -DUSE_LAZY_MEMORY \
                     -DUSE_MASTER_LAN \
                     -D__WASM__ \
-                    --no-standard-libraries \
                     -Icode/wasm/include 
 
 

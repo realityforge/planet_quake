@@ -38,9 +38,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include <sys/mman.h>
 #include <errno.h>
 #include <libgen.h> // dirname
-#ifndef __APPLE__
-#include <sys/inotify.h>
-#endif
 
 #include <dlfcn.h>
 
@@ -949,98 +946,6 @@ void Sys_PlatformInit2( void ) {
 }
 #endif
 
-#ifdef USE_LIVE_RELOAD
-extern cvar_t *fs_reloadEXE;
-extern int     exeWd;
-#ifndef __APPLE__
-static int inotifyFd;
-#endif
-static int notifyCount;
-static int prevCheck;
-static const char *argv1;
-static char *cmdline4;
-typedef struct {
-  char name[MAX_QPATH];
-  void (*cb)( void );
-  int wd;
-  time_t mtime;
-} notify_t;
-static notify_t callbacks[10];
-
-void Sys_ReloadClient( void ) {
-  if (0 == fork()) {
-    char *exec_argv[] = { (char *)argv1, cmdline4, 0 };
-    execv(argv1, exec_argv);
-  } else {
-    Sys_Exit(0);
-  }
-}
-
-void Sys_DenotifyChange(int wd) {
-#ifndef __APPLE__
-  inotify_rm_watch(inotifyFd, wd);
-#endif
-  for(int i = 0; i < ARRAY_LEN(callbacks); i++) {
-    if(callbacks[i].wd == wd) {
-      memset(&callbacks[i], 0, sizeof(notify_t));
-      break;
-    }
-  }
-}
-
-int Sys_NotifyChange(const char *filepath, void (*cb)( void )) {
-  notify_t *notify = &callbacks[(notifyCount++)%ARRAY_LEN(callbacks)];
-  memcpy(notify->name, filepath, sizeof(notify->name));
-  notify->cb = cb;
-#ifndef __APPLE__
-  notify->wd = inotify_add_watch(inotifyFd, filepath, IN_MODIFY);
-#else
-  notify->wd = notifyCount;
-#endif
-  return notify->wd;
-}
-
-#ifndef __APPLE__
-#define BUF_LEN (10 * (sizeof(struct inotify_event) + NAME_MAX + 1))
-#endif
-
-void FS_Frame(int msecs) {
-#ifndef __APPLE__
-  char *p;
-  char buf[BUF_LEN] __attribute__ ((aligned(8)));
-  struct inotify_event *event;
-  int numRead = read(inotifyFd, buf, BUF_LEN);
-  for (p = buf; p < buf + numRead; ) {
-    event = (struct inotify_event *) p;
-    for(int i = 0; i < ARRAY_LEN(callbacks); i++) {
-      if(callbacks[i].wd == event->wd) {
-        callbacks[i].cb();
-        break;
-      }
-    }
-    p += sizeof(struct inotify_event) + event->len;
-  }
-#else
-  if(msecs / 1000 > prevCheck) {
-    prevCheck = msecs / 1000;
-  } else {
-    return;
-  }
-  for(int i = 0; i < ARRAY_LEN(callbacks); i++) {
-    off_t size;
-    time_t mtime, ctime;
-    if(!callbacks[i].wd) continue;
-    Sys_GetFileStats( callbacks[i].name, &size, &mtime, &ctime );
-    if(callbacks[i].mtime != mtime) {
-      if(callbacks[i].mtime > 0) {
-        callbacks[i].cb();
-      }
-      callbacks[i].mtime = mtime;
-    }
-  }
-#endif
-}
-#endif
 
 int main( int argc, const char* argv[] )
 {
@@ -1113,25 +1018,6 @@ int main( int argc, const char* argv[] )
 
 	Com_Init( cmdline );
 	NET_Init();
-
-#ifdef USE_LIVE_RELOAD
-  argv1 = argv[0];
-  cmdline4 = malloc(len);
-  *cmdline4 = '\0';
-	for ( i = 1; i < argc; i++ )
-	{
-		if ( i > 1 ) {
-      strcat( cmdline4, " " );
-    }
-    strcat( cmdline4, argv[i] );
-	}
-#ifndef __APPLE__
-  inotifyFd = inotify_init();
-#endif
-  if(!exeWd && strlen(fs_reloadEXE->string) > 0) {
-    exeWd = Sys_NotifyChange(argv[0], Sys_ReloadClient);
-  }
-#endif
 
 	Com_Printf( "Working directory: %s\n", Sys_Pwd() );
 

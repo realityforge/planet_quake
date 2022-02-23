@@ -23,8 +23,6 @@ static jmp_buf q3map2done;	// an ERR_DROP occurred, exit the entire frame
 
 #include "../qcommon/cm_local.h"
 
-char *FS_RealPath(const char *localPath);
-
 char stroke[MAX_QPATH] = "";
 
 char output[2 * 1024 * 1024] = ""; // 2MB TODO: make alloc and optional
@@ -139,11 +137,13 @@ void SV_ExportMap(void) {
 	if ( Q_setjmp( q3map2done ) ) {
 		return;			// an ERR_DROP was thrown
 	}
+
 	// someone extracted the bsp file intentionally?
 	// don't do it if we already extracted
-	// if( FS_RealPath( va("maps/%s_converted.map", memoryMap) ) {
+	// if( FS_FileExists( va("maps/%s_converted.map", memoryMap) ) {
 	//	return;
 	//}
+
 	Sys_SetStatus("Building map %s", cm.name);
 	Com_Printf("Building map %s\n", cm.name);
 
@@ -223,9 +223,11 @@ void SV_LightMap(void) {
 
 
 void SV_MakeBSP(char *memoryMap) {
-	char *mapname = (char *)va("maps/%s.map", memoryMap);
+	char mapName[MAX_QPATH];
+	strcpy(mapName, va("maps/%s.map", memoryMap));
 	// no bsp file exists, try to make one, check for .map file
-	if(!FS_RealPath( mapname )) {
+	if(!FS_FileExists( mapname )) {
+		Com_Printf("Couldn\'t find map file %s\n", mapname);
 		return;
 	}
 
@@ -308,8 +310,8 @@ int SV_MakeMap( const char **map ) {
 	}
 
 	// early exit unless we force rebuilding
-	mapPath = FS_RealPath( va("maps/%s.bsp", memoryMap) );
-	if(!sv_bspRebuild->integer && mapPath) {
+	if(!sv_bspRebuild->integer 
+		&& FS_FileExists( va("maps/%s.bsp", memoryMap) )) {
 		return 1;
 	}
 

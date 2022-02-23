@@ -3849,6 +3849,32 @@ static void CL_CheckUserinfo( void ) {
 	}
 }
 
+#ifdef USE_LIVE_RELOAD
+void Sys_ChangeNotify( char *ready );
+static int changeTimer = 0;
+
+void CL_ChangeNotifcations( void ) {
+	char ready[MAX_OSPATH];
+	int newTime = Sys_Milliseconds();
+
+	if(newTime - changeTimer < 1000) {
+		return;
+	}
+
+	changeTimer = newTime;
+
+	ready[0] = '\0';
+	Sys_ChangeNotify(ready);
+	if(strlen(ready) == 0) {
+		return;
+	}
+
+	// TODO: use the same file update logic as USE_ASYNCHRONOUS
+	//FS_UpdateFiles(ready, &ready[MAX_QPATH]);
+
+}
+#endif
+
 
 #ifdef USE_LAZY_LOAD
 /*
@@ -3862,7 +3888,7 @@ void FS_UpdateFiles(const char *filename, const char* tempname);
 
 static int secondTimer = 0;
 
-void FS_CheckLazyUpdates( void ) {
+void CL_CheckLazyUpdates( void ) {
 	char downloadNeeded[MAX_OSPATH];
 	char ready[MAX_OSPATH];
 	int newTime = Sys_Milliseconds();
@@ -3907,7 +3933,7 @@ void FS_CheckLazyUpdates( void ) {
 			//	break; 
 			continue;
 		}
-			Com_Printf("goddamnit! %s\n", ready);
+
 		if(j == 0) {
 			if(cls.rendererStarted)
 				re.UpdateModel(ready);
@@ -3919,8 +3945,14 @@ void FS_CheckLazyUpdates( void ) {
 			if(cls.rendererStarted)
 				re.UpdateShader(&ready[13], atoi(&ready[0]));
 		} else if (j == 3) {
+			// intercept this here because it's client only code
+			if(Q_stristr(&ready[MAX_QPATH], "/scripts/")
+				&& Q_stristr(&ready[MAX_QPATH], ".shader")) {
+				re.ReloadShaders(qtrue);
+			}
+
 			ready[MAX_QPATH - 1] = '\0';
-			FS_UpdateFiles(ready, &ready[MAX_QPATH]); // called by cl_curl.c
+			FS_UpdateFiles(ready, &ready[MAX_QPATH]);
 		}
 		break; // something updated, that's good for this frame
 	}
@@ -3951,17 +3983,10 @@ void CL_Frame( int msec, int realMsec ) {
 
 
 #if defined(USE_LAZY_LOAD) || defined(USE_ASYNCHRONOUS)
-	FS_CheckLazyUpdates();
-	/*
-  if(!com_cl_running || !com_cl_running->integer) {
-    CL_SendCmd();
-    CL_CheckForResend();
-		FS_CheckLazyUpdates();
-    cls.frametime = msec;
-  	cls.realtime += msec;
-    return;
-  }
-	*/
+	CL_CheckLazyUpdates();
+#endif
+#ifdef USE_LIVE_RELOAD
+	CL_ChangeNotifcations();
 #endif
 
 

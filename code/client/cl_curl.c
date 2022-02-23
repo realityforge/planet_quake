@@ -315,6 +315,11 @@ static size_t Com_DL_CallbackWrite( void *ptr, size_t size, size_t nmemb, void *
 				dl->Name );
 			return (size_t)-1;
 		}
+#else
+		// don't download file streams
+		if(dl->Size == 0 && !dl->mapAutoDownload) {
+			return (size_t)-1;
+		}
 #endif
 
 		dl->fHandle = FS_SV_FOpenFileWrite( dl->TempName );
@@ -373,6 +378,25 @@ static size_t Com_DL_HeaderCallback( void *ptr, size_t size, size_t nmemb, void 
 	header[ size*nmemb ] = '\0';
 
 	//Com_Printf( "h: %s\n--------------------------\n", header );
+#ifdef USE_ASYNCHRONOUS
+	// try to avoid big files, don't download any unspecified streams automatically
+	s = (char*)Q_stristr( header, "content-length:" );
+	if ( s )
+	{
+		s += 16;
+		while ( *s == ' ' )
+			s++;
+		dl->Size = atoi( s );
+		if(dl->Size > 1024 * 1024 * 50) {
+			Com_Printf( S_COLOR_RED "Content length much too large: %s\n", sizeToString( dl->Size ) );
+			dl->Cancelled = qtrue;
+			return (size_t)-1;
+		}
+	} else if (!dl->mapAutoDownload) {
+		//dl->Cancelled = qtrue;
+		//return (size_t)-1;
+	}
+#endif
 
 	s = (char*)Q_stristr( header, "content-disposition:" );
 	if ( s ) 
@@ -511,6 +535,7 @@ qboolean Com_DL_Begin( download_t *dl, const char *localName, const char *remote
 	}
 
 #ifdef USE_ASYNCHRONOUS
+	dl->headerCheck = qtrue;
 	Com_DPrintf( "URL: %s\n", dl->URL );
 #else
 	Com_Printf( "URL: %s\n", dl->URL );
@@ -742,15 +767,15 @@ qboolean Com_DL_Perform( download_t *dl )
 	else
 	{
 		dl->func.easy_getinfo( msg->easy_handle, CURLINFO_RESPONSE_CODE, &code );
-#ifndef USE_ASYNCHRONOUS
+#ifdef USE_ASYNCHRONOUS
+		Sys_FileReady(dl->Name, NULL);
+
+		if(!dl->Cancelled && code != 404)
+#endif
 		Com_Printf( S_COLOR_RED "Download Error: %s Code: %ld URL: %s/%s\n",
 			dl->func.easy_strerror( msg->data.result ), 
 			code, clc.downloadURL, dl->Name );
-#endif
 		strcpy( name, dl->TempName );
-#ifdef USE_ASYNCHRONOUS
-		Sys_FileReady(dl->Name, NULL);
-#endif
 		Com_DL_Cleanup( dl );
 		FS_Remove( name );
 #ifndef USE_ASYNCHRONOUS
@@ -761,8 +786,7 @@ qboolean Com_DL_Perform( download_t *dl )
   			qcurl_easy_strerror(msg->data.result),
   			code, clc.downloadURL);
 		}
-#endif
-#ifdef USE_ASYNCHRONOUS
+#else
 		return qfalse; // was expecting ERR_DROP not to return
 #endif
 	}

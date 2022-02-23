@@ -376,28 +376,6 @@ static	int			fs_dirCount;			// total number of directories in searchpath
 
 static	int			fs_checksumFeed;
 
-#ifdef USE_LIVE_RELOAD
-cvar_t *fs_reloadGame;
-cvar_t *fs_reloadQVM;
-cvar_t *fs_reloadEXE;
-int     qvmWd;
-int     exeWd;
-int     gameWd;
-void Sys_DenotifyChange(int wd);
-int Sys_NotifyChange(const char *filepath, void (*cb)( void ));
-
-void FS_ReloadQVM( void ) {
-  Cbuf_AddText("wait; wait; wait; vid_restart;");
-}
-
-void FS_ReloadGame( void ) {
-  Cbuf_AddText("wait; wait; wait; map_restart;");
-}
-#endif
-
-#ifdef USE_ASYNCHRONOUS
-extern qboolean		com_fullyInitialized;
-#endif
 
 typedef union qfile_gus {
 	FILE*		o;
@@ -459,6 +437,10 @@ static void FS_CheckIdPaks( void );
 #endif
 void FS_Reload( void );
 
+
+#ifdef USE_ASYNCHRONOUS
+extern qboolean		com_fullyInitialized;
+#endif
 #ifdef USE_LAZY_LOAD
 #define PK3_HASH_SIZE 512
 #define FS_HashFileName Com_GenerateHashValue
@@ -769,14 +751,17 @@ void MakeDirectoryBuffer(char *paths, int count, int length, const char *localna
 		//curFile->pos = it.pos;
 
 		// download more directories recursively, at least for like 2 levels
-		if(!strrchr(currentPath, '.')
-			&& (Q_stristr(currentPath, "/maps")
-			|| Q_stristr(currentPath, "/vm"))
+		if(qfalse
+			//!strrchr(currentPath, '.')
+			//&& (Q_stristr(currentPath, "/maps")
+			//|| Q_stristr(currentPath, "/vm")
+			|| (Q_stristr(currentPath, "/scripts/")
+			&& Q_stristr(currentPath, ".shader"))
 		) {
 			// TODO: fix this, only works if directory listing allows slashes at the end?
 			// TODO: right thing to do would be test the content-type and duck out early 
 			//   on big files for anything that doesn't have a . dot in the name.
-			//Sys_FileNeeded(va("%s/", localName));
+			Sys_FileNeeded(va("%s", localName));
 		}
 
 		// update hash table
@@ -852,16 +837,21 @@ Com_Printf("downloaded: %s -> %s, %s\n", localName, filename, tempname);
 
 void FS_UpdateFiles(const char *filename, const char *tempname) {
 
-//Com_Printf("updating files: %s -> %s\n", filename, tempname);
+Com_Printf("updating files: %s -> %s\n", filename, tempname);
+
+	// TODO:
+	if(Q_stristr(tempname, "description.txt")) {
+		// refresh mod list
+	} else 
 
 	// try to reload UI with current game if needed
-	if(!Q_stristr(tempname, "vm/ui.qvm")) {
+	if(Q_stristr(tempname, "vm/ui.qvm")) {
     Cvar_Set("com_skipLoadUI", "0");
 		CL_StartHunkUsers();
-	}
+	} else 
 
 	// do some extra processing, restart UI if default.cfg is found
-	if(!Q_stristr(tempname, "default.cfg")) {
+	if(Q_stristr(tempname, "default.cfg")) {
 		// will restart automatically from NextDownload()
 		if(!fs_searchpaths)
 			FS_Restart(0);
@@ -943,7 +933,9 @@ void FS_CheckIndex(const char *filename) {
 				isInIndex = qtrue;
 			}
 
-			if(isInIndex) {
+			// TODO: test if the file exists once anyways if we havent received a
+			//   real index from the server and are working off HTTP
+			if(isInIndex || qtrue) {
 				Sys_FileNeeded(va("%s/%s", FS_GetCurrentGameDir(), filename));
 				break;
 			}
@@ -5477,18 +5469,6 @@ void FS_Shutdown( qboolean closemfp )
 		Z_Free( p );
 	}
 
-#ifdef USE_LIVE_RELOAD
-  if(qvmWd)
-    Sys_DenotifyChange(qvmWd);
-  if(gameWd)
-    Sys_DenotifyChange(gameWd);
-  if(exeWd)
-    Sys_DenotifyChange(exeWd);
-  gameWd = 0;
-  qvmWd = 0;
-  exeWd = 0;
-#endif
-
 	// any FS_ calls will now be an error until reinitialized
 	fs_searchpaths = NULL;
 	fs_packFiles = 0;
@@ -5698,10 +5678,24 @@ void Com_GamedirModified(char *oldValue, char *newValue, cvar_t *cv) {
   
 }
 
-#if defined(USE_MEMORY_MAPS) || defined(USE_LIVE_RELOAD)
-// give up the real path in the case of needed the path on the file system,
-//   like monitoring for live reload changes, and building .map files
-char *FS_RealPath(const char *localPath) {
+
+#ifdef USE_LIVE_RELOAD
+#define MAX_NOTIFICATIONS 10
+cvar_t *fs_notify[MAX_NOTIFICATIONS];
+// basic notification will just check file times once every few seconds
+//   if we wan't we can add inotify APIs here later
+//#ifndef __APPLE__
+//#include <sys/inotify.h>
+//#endif
+
+
+//void FS_ReloadQVM( void ) {
+//  Cbuf_AddText("wait; wait; wait; vid_restart;");
+
+//void FS_ReloadGame( void ) {
+//  Cbuf_AddText("wait; wait; wait; map_restart;");
+
+static const char *FS_RealPath(const char *localPath) {
   fileHandle_t file;
 	FILE *temp;
 	char *netpath;
@@ -5717,26 +5711,62 @@ char *FS_RealPath(const char *localPath) {
           fclose(temp);
           return netpath;
         }
-      }
-    }
-  }
+ 			}
+ 		}
+ 	}
 	return NULL;
 }
-#endif
 
 
-#ifdef USE_LIVE_RELOAD
-int FS_NotifyChange(const char *localPath, void (*cb)( void )) {
-  char *netpath;
-  if(!localPath[0]) {
-    return 0;
-  }
-	netpath = FS_RealPath(localPath);
-	if(!netpath) {
-		return 0;
+int fileTimes[MAX_NOTIFICATIONS];
+char realNames[MAX_NOTIFICATIONS][MAX_OSPATH];
+
+void Sys_ChangeNotify(char *ready) {
+	fileOffset_t size;
+	fileTime_t mtime;
+	fileTime_t ctime;
+	for(int i = 0; i < MAX_NOTIFICATIONS; i++) {
+		if(fileTimes[i] > 0 // make sure file was originally found
+			&& fs_notify[i]->string[0]  // make sure it wasn't switched off
+			&& realNames[i][0] // make sure it has a real path to check
+		) {
+			if(Sys_GetFileStats( realNames[i], &size, &mtime, &ctime )) {
+				fileTimes[i] = mtime;
+				// incase it gets reset by a command
+				strcpy(ready, fs_notify[i]->string);
+				break;
+			}
+		}
 	}
-  return Sys_NotifyChange(netpath, cb);
+
 }
+
+
+void FS_NotifyChange(const char *localPath) {
+	fileOffset_t size;
+	fileTime_t mtime;
+	fileTime_t ctime;
+	for(int i = 0; i < MAX_NOTIFICATIONS; i++) {
+		if(!fs_notify[i]->string[0] || !Q_stricmp(fs_notify[i]->string, localPath)) {
+			if(!fs_notify[i]->string[0]) {
+				Cvar_Set(va("fs_notify%d", i), localPath);
+			}
+
+			// set the initial file time so we know when to update
+			const char *realPath = FS_RealPath(localPath);
+			if(realPath && Sys_GetFileStats( realPath, &size, &mtime, &ctime )) {
+				fileTimes[i] = mtime;
+				strcpy(realNames[i], realPath);
+			} else {
+				realNames[i][0] = '\0';
+			}
+			break;
+		}
+	}
+}
+
+// TODO:
+//int FS_NotifyChange_f(const char *localPath) {
 #endif
 
 
@@ -5762,9 +5792,9 @@ static void FS_Startup( void ) {
 	fs_steampath = Cvar_Get( "fs_steampath", Sys_SteamPath(), CVAR_INIT | CVAR_PROTECTED | CVAR_PRIVATE );
 
 #ifdef USE_LIVE_RELOAD
-  fs_reloadGame = Cvar_Get( "fs_reloadGame", "0", CVAR_INIT | CVAR_PROTECTED );
-  fs_reloadQVM = Cvar_Get( "fs_reloadQVM", "0", CVAR_INIT | CVAR_PROTECTED );
-  fs_reloadEXE = Cvar_Get( "fs_reloadEXE", "0", CVAR_INIT | CVAR_PROTECTED );
+	for(int i = 0; i < MAX_NOTIFICATIONS; i++) {
+		fs_notify[i] = Cvar_Get(va("fs_notify%d", i), "", CVAR_INIT | CVAR_PROTECTED | CVAR_TEMP );
+	}
 #endif
 
 #ifndef USE_HANDLE_CACHE
@@ -5893,20 +5923,31 @@ static void FS_Startup( void ) {
 	fs_gamedirvar->modified = qfalse; // We just loaded, it's not modified
 
 #ifdef USE_LIVE_RELOAD
-  if(!qvmWd) {
-    if(fs_reloadQVM->string[0] != '1' || fs_reloadQVM->string[1] != '\0') {
-      qvmWd = FS_NotifyChange(fs_reloadQVM->string, FS_ReloadQVM);
-    } else if(fs_reloadQVM->integer) {
-      qvmWd = FS_NotifyChange("vm/cgame.qvm", FS_ReloadQVM);
-    }
-  }
-  if(!gameWd) {
-    if(fs_reloadGame->string[0] != '1' || fs_reloadGame->string[1] != '\0') {
-      gameWd = FS_NotifyChange(fs_reloadGame->string, FS_ReloadGame);
-    } else if(fs_reloadGame->integer) {
-      gameWd = FS_NotifyChange("vm/qagame.qvm", FS_ReloadGame);
-    }
-  }
+	// Automatically add to list of paths to check and reload
+	char *knownPaths[] = {
+		//"vm/cgame.qvm",  // POSIX systems allows directory checking
+		//"vm/qagame.qvm",
+		//"vm/ui.qvm",
+		"vm/",
+		"scripts/",
+		"maps/",
+		"textures/",
+	};
+	int endOfList = MAX_NOTIFICATIONS-1;
+
+	for(int i = 0; i < ARRAY_LEN(knownPaths); i++) {
+		if(fs_notify[endOfList]->string[0] == '\0') {
+			Cvar_Set(va("fs_notify%d", endOfList), knownPaths[i]);
+			endOfList--;
+		}
+	}
+
+	for(int i = 0; i < MAX_NOTIFICATIONS; i++) {
+		if(fs_notify[i]->string[0] != '\0') {
+			FS_NotifyChange(fs_notify[i]->string);
+		}
+	}
+
 #endif
 
 #ifndef STANDALONE
@@ -6589,6 +6630,7 @@ void FS_Restart( int checksumFeed ) {
 		Sys_FileNeeded(va("%s/", FS_GetCurrentGameDir()));
 		Sys_FileNeeded(va("%s/vm/", FS_GetCurrentGameDir()));
 		Sys_FileNeeded(va("%s/maps/", FS_GetCurrentGameDir()));
+		Sys_FileNeeded(va("%s/scripts/", FS_GetCurrentGameDir()));
 	}
 	if(!FS_Initialized()) {
 		return;

@@ -1149,7 +1149,6 @@ void		Info_Print( const char *s );
 
 void		Com_BeginRedirect (char *buffer, int buffersize, void (*flush)(const char *));
 void		Com_EndRedirect( void );
-void Com_Outside_Error(int level, char *msg);
 #ifdef USE_PRINT_CONSOLE
 void 		QDECL Com_PrintfReal( char *file, int line, const uint32_t source, const uint32_t flags, const char *fmt, ... ) __attribute__ ((format (printf, 5, 6)));
 void 		QDECL Com_DPrintfReal( char *file, int line, const uint32_t source, const uint32_t flags, const char *fmt, ... ) __attribute__ ((format (printf, 5, 6)));
