@@ -32,7 +32,7 @@ static void SV_CreateRecordCache( void )
 	mv_total_size = 0;
 
 	Com_Memset( mvrecords, 0, sizeof( mvrecords ) );
-	list = FS_ListFiles( "demos", ".dm_71" &nfiles );
+	list = FS_ListFiles( "demos", ".dm_71", &nfiles );
 	for ( i = 0; i < nfiles; i++ ) 
 	{
 		name = list[i];
