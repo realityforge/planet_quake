@@ -208,6 +208,10 @@ struct BufferedFile
 	int   BytesLeft;
 };
 
+#ifdef USE_ASYNCHRONOUS
+static qboolean noFree = qfalse;
+#endif
+
 /*
  *  Read a file into a buffer.
  */
@@ -232,7 +236,6 @@ static struct BufferedFile *ReadBufferedFile(const char *name)
 	/*
 	 *  Allocate control struct.
 	 */
-
 	BF = ri.Malloc(sizeof(struct BufferedFile));
 	if(!BF)
 	{
@@ -252,8 +255,25 @@ static struct BufferedFile *ReadBufferedFile(const char *name)
 	 *  Read the file.
 	 */
 
-	BF->Length = ri.FS_ReadFile((char *) name, &buffer.v);
-	BF->Buffer = buffer.b;
+#ifdef USE_ASYNCHRONOUS
+#define INCBIN_SILENCE_BITCODE_WARNING
+#include "../qcommon/incbin.h"
+#include "incbin.h"
+
+	noFree = qfalse;
+	if(Q_stristr(name, "gfx/2d/bigchars_backup")) {
+		INCBIN(_bigchars, "../renderercommon/bigchars.png");
+		BF->Buffer = (byte *)g_bigcharsData;
+		BF->Length = g_bigcharsSize;
+		BF->Ptr    = (byte *)g_bigcharsData;
+		BF->BytesLeft = g_bigcharsSize;
+		noFree = qtrue;
+	} else 
+#endif
+	{
+		BF->Length = ri.FS_ReadFile((char *) name, &buffer.v);
+		BF->Buffer = buffer.b;
+	}
 
 	/*
 	 *  Did we get it? Is it big enough?
@@ -284,6 +304,9 @@ static void CloseBufferedFile(struct BufferedFile *BF)
 {
 	if(BF)
 	{
+#ifdef USE_ASYNCHRONOUS
+		if(!noFree)
+#endif
 		if(BF->Buffer)
 		{
 			ri.FS_FreeFile(BF->Buffer);

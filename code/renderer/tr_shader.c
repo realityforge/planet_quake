@@ -3296,12 +3296,13 @@ shader_t *R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImag
 		// with that same strippedName a new default shader is created.
 		if ( (sh->lightmapSearchIndex == lightmapIndex || sh->defaultShader) && !Q_stricmp(sh->name, strippedName) 
 #ifdef USE_MULTIVM_CLIENT
-			&& tr.lastRegistrationTime == sh->lastTimeUsed
+			&& tr.lastRegistrationTime <= sh->lastTimeUsed
 #endif
 #ifdef USE_LAZY_LOAD
 			// if not mapping shaders and lightmaps match, leave default index
 			//   out of this decision because the default shader might be 
 			//   replaced this round if all images load
+			&& tr.lastRegistrationTime <= sh->lastTimeUsed
       && (!mapShaders && sh->lightmapSearchIndex == lightmapIndex)
 #endif
 		) {
@@ -3685,7 +3686,6 @@ static int loadShaderBuffers( char **shaderFiles, const int numShaderFiles, char
 	const char *shaderStart;
 	qboolean denyErrors;
 
-ri.Printf(PRINT_ALL, "goddamnit %i\n", numShaderFiles);
 	// load and parse shader files
 	for ( i = 0; i < numShaderFiles; i++ )
 	{
@@ -3997,6 +3997,8 @@ void RE_UpdateShader(char *shaderName, int lightmapIndex) {
 
 #if defined(USE_LAZY_MEMORY) || defined(USE_ASYNCHRONOUS)
 void RE_ReloadShaders( qboolean createNew ) {
+	return;
+	
 #ifdef USE_MULTIVM_CLIENT
 	if(createNew) {
 		int i;
@@ -4028,17 +4030,13 @@ void RE_ReloadShaders( qboolean createNew ) {
 	tr.registered = qtrue;
 
 	// quickly recheck any missing
-	/*
-	if(r_lazyLoad->integer != 2) { // TODO: _lazyLoad->integer != 4
-		for(int i = 0; i < tr.numShaders; i++) {
-			if(tr.shaders[i]->defaultShader) {
-				mapShaders = qtrue;
-				RE_RegisterShader(tr.shaders[i]->name);
-				mapShaders = qfalse;
-			}
-		}
+#ifdef USE_LAZY_LOAD
+	if(r_lazyLoad->integer != 2) // TODO: _lazyLoad->integer != 4
+#endif
+	for(int i = 0; i < tr.numShaders; i++) {
+		//RE_RegisterShader(tr.shaders[i]->name);
 	}
-	*/
+
 }
 #endif
 

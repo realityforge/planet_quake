@@ -1135,6 +1135,16 @@ image_t	*R_FindImageFile( const char *name, imgFlags_t flags )
 #else
   localName = R_LoadImage( name, &pic, &width, &height );
 #endif
+
+#ifdef USE_ASYNCHRONOUS
+	// use built in font
+	if(pic == NULL && (!Q_stricmp(name, "gfx/2d/bigchars")
+		|| !Q_stricmp(name, "gfx/2d/bigchars.tga"))) {
+		R_LoadPNG("gfx/2d/bigchars_backup", &pic, &width, &height);
+		localName = "gfx/2d/bigchars.png";
+	}
+#endif
+
 	if ( pic == NULL ) {
 		return NULL;
 	}
