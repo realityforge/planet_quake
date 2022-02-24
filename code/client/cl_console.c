@@ -266,7 +266,7 @@ void Con_MakeCharsetShader( void ) {
 	imageData[15] = IMAGE_SIZE >> 8;
 	imageData[16] = 32;    // pixel size
 
-	re.CreateShaderFromRaw("gfx/2d/bigchars_backup", &imageData[18], IMAGE_SIZE, IMAGE_SIZE);
+	cls.charSetShader = re.CreateShaderFromRaw("gfx/2d/bigchars_backup", &imageData[18], IMAGE_SIZE, IMAGE_SIZE);
 	re.RemapShader("gfx/2d/bigchars", "gfx/2d/bigchars_backup", 0);
 	//FILE *f = fopen( "bigchars_backup.tga", "wb");
 	//fwrite(imageData, IMAGE_SIZE * IMAGE_SIZE * 4 + 18, 1, f );

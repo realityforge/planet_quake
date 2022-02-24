@@ -123,10 +123,7 @@ typedef struct {
 
 	void ( *AddPolyBufferToScene )( polyBuffer_t* pPolyBuffer );
 
-#ifdef USE_LNBITS
-	qhandle_t  (*CreateShaderFromImageBytes)(const char* name, const byte *pic, int width, int height);
-#endif
-#ifdef USE_LAZY_MEMORY
+#if defined(USE_LAZY_MEMORY) || defined(USE_ASYNCHRONOUS)
 	void (*ReloadShaders)( qboolean createNew );
   void (*SwitchWorld)(int world);
 #endif
@@ -153,7 +150,10 @@ typedef struct {
   void (*FastCaptureOld)(byte *captureBuffer, byte *encodeBuffer);
 	void (*ResetBannerSpy)( void );
 #endif
-  
+ #ifdef USE_LNBITS
+	qhandle_t  (*CreateShaderFromImageBytes)(const char* name, const byte *pic, int width, int height);
+#endif
+ 
   const cplane_t *(*GetFrustum)( void );
 
 } refexport_t;

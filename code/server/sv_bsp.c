@@ -250,7 +250,7 @@ void SV_MakeBSP(char *memoryMap) {
 		(char *)FS_GetCurrentGameDir(),
 		//"-patchmeta", // makes compile  much slower
 		"-keeplights",
-		mapname
+		mapName
 	};
 	Q3MAP2Main(ARRAY_LEN(compileMeta), compileMeta);
 
@@ -292,7 +292,7 @@ void SV_MakeBSP(char *memoryMap) {
 		"-notrace",
 		"-samplesize",
 		"128",
-		mapname
+		mapName
 	};
 	Q3MAP2Main(ARRAY_LEN(compileLight), compileLight);
 }

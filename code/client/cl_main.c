@@ -3951,6 +3951,14 @@ void CL_CheckLazyUpdates( void ) {
 		} else if (j == 3) 
 #endif
 		{
+			// intercept this here because it's client only code
+			if(Q_stristr(&ready[MAX_QPATH], "/scripts/")
+				&& Q_stristr(&ready[MAX_QPATH], ".shader")) {
+				re.ReloadShaders(qfalse);
+				//Cbuf_AddText("wait; vid_restart;");
+				return;
+			}
+
 			ready[MAX_QPATH - 1] = '\0';
 			FS_UpdateFiles(ready, &ready[MAX_QPATH]);
 		}
@@ -4476,15 +4484,6 @@ void	CL_CM_Trace( trace_t *results, const vec3_t start, const vec3_t mins, const
 #endif
 
 
-#ifdef USE_ASYNCHRONOUS
-static int CL_FS_ReadFile( const char *qpath, void **buffer ) {
-	// be a bit more forgiving than FS
-	if(!FS_Initialized())
-		return -1;
-	return FS_ReadFile(qpath, buffer);
-}
-#endif
-
 
 #ifdef __WASM__
 int64_t CL_Microseconds( void ) {
@@ -4593,11 +4592,7 @@ static void CL_InitRef( void ) {
 	rimp.CM_ClusterPVS = CL_CM_ClusterPVS;
 	rimp.CM_DrawDebugSurface = CM_DrawDebugSurface;
 
-#ifndef USE_ASYNCHRONOUS
 	rimp.FS_ReadFile = FS_ReadFile;
-#else
-	rimp.FS_ReadFile = CL_FS_ReadFile;
-#endif
 	rimp.FS_FreeFile = FS_FreeFile;
 	rimp.FS_WriteFile = FS_WriteFile;
 	rimp.FS_FreeFileList = FS_FreeFileList;

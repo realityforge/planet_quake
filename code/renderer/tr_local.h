@@ -1535,7 +1535,7 @@ shader_t	*R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImag
 shader_t	*R_GetShaderByHandle( qhandle_t hShader );
 shader_t	*R_GetShaderByState( int index, long *cycleTime );
 shader_t	*R_FindShaderByName( const char *name );
-#ifdef USE_LAZY_MEMORY
+#if defined(USE_LAZY_MEMORY) || defined(USE_ASYNCHRONOUS)
 void		RE_ReloadShaders( qboolean createNew );
 #endif
 #ifdef USE_LAZY_LOAD

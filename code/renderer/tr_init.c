@@ -2134,7 +2134,7 @@ refexport_t *GetRefAPI ( int apiVersion, refimport_t *rimp ) {
 
 	re.AddPolyBufferToScene =   RE_AddPolyBufferToScene;
 
-#ifdef USE_LAZY_MEMORY
+#if defined(USE_LAZY_MEMORY) || defined(USE_ASYNCHRONOUS)
 	re.ReloadShaders = RE_ReloadShaders;
 #endif
 #ifdef USE_MULTIVM_CLIENT

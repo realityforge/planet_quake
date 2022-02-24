@@ -3685,13 +3685,13 @@ static int loadShaderBuffers( char **shaderFiles, const int numShaderFiles, char
 	const char *shaderStart;
 	qboolean denyErrors;
 
+ri.Printf(PRINT_ALL, "goddamnit %i\n", numShaderFiles);
 	// load and parse shader files
 	for ( i = 0; i < numShaderFiles; i++ )
 	{
 		Com_sprintf( filename, sizeof( filename ), "scripts/%s", shaderFiles[i] );
 		//ri.Printf( PRINT_DEVELOPER, "...loading '%s'\n", filename );
 		summand = ri.FS_ReadFile( filename, (void **)&buffers[i] );
-
 		if ( !buffers[i] )
 			ri.Error( ERR_DROP, "Couldn't load %s", filename );
 
@@ -3995,7 +3995,7 @@ void RE_UpdateShader(char *shaderName, int lightmapIndex) {
 #endif
 
 
-#ifdef USE_LAZY_MEMORY
+#if defined(USE_LAZY_MEMORY) || defined(USE_ASYNCHRONOUS)
 void RE_ReloadShaders( qboolean createNew ) {
 #ifdef USE_MULTIVM_CLIENT
 	if(createNew) {

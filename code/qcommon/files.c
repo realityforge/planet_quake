@@ -1019,14 +1019,6 @@ Com_Printf("updating files: %s -> %s\n", filename, tempname);
 	} else
 #endif
 
-	// intercept this here because it's client only code
-	if(Q_stristr(tempname, "/scripts/")
-		&& Q_stristr(tempname, ".shader")) {
-		//re.ReloadShaders(qtrue);
-		Cbuf_AddText("wait; vid_restart;");
-		return;
-	} else
-
 	// TODO:
 	if(Q_stristr(tempname, "description.txt")) {
 		// refresh mod list
