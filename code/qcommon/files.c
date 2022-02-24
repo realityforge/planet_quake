@@ -438,7 +438,119 @@ static void FS_CheckIdPaks( void );
 void FS_Reload( void );
 
 
+
+
+#ifdef USE_LIVE_RELOAD
+#define FS_HashFileName Com_GenerateHashValue
+#define MAX_NOTIFICATIONS 10
+cvar_t *fs_notify[MAX_NOTIFICATIONS];
+// basic notification will just check file times once every few seconds
+//   if we wan't we can add inotify APIs here later
+//#ifndef __APPLE__
+//#include <sys/inotify.h>
+//#endif
+
+
+//void FS_ReloadQVM( void ) {
+//  Cbuf_AddText("wait; wait; wait; vid_restart;");
+
+//void FS_ReloadGame( void ) {
+//  Cbuf_AddText("wait; wait; wait; map_restart;");
+
+// find the pk3 file or real file on the filessystem
+static const char *FS_RealPath(const char *localPath) {
+	char *netpath;
+	long			hash;
+	long			fullHash;
+	searchpath_t *search;
+	pack_t			*pak;
+	fileInPack_t	*pakFile;
+	FILE *temp;
+
+	fullHash = FS_HashFileName( localPath, 0U );
+	for ( search = fs_searchpaths ; search ; search = search->next ) {
+		if ( search->pack && search->pack->hashTable[ (hash = fullHash & (search->pack->hashSize-1)) ] ) {
+			pak = search->pack;
+			pakFile = pak->hashTable[hash];
+			do {
+				if ( !FS_FilenameCompare( pakFile->name, localPath ) ) {
+					// found it!
+					return search->pack->pakFilename;
+				}
+				pakFile = pakFile->next;
+			} while ( pakFile != NULL );
+		} else
+		if ( search->dir && search->policy != DIR_DENY ) {
+			netpath = FS_BuildOSPath( search->dir->path, search->dir->gamedir, localPath );
+			if((temp = Sys_FOpen( netpath, "rb" ))) {
+				fclose(temp);
+				return netpath;
+			}
+		}
+	}
+	return NULL;
+}
+
+
+int fileTimes[MAX_NOTIFICATIONS];
+char realNames[MAX_NOTIFICATIONS][MAX_OSPATH];
+
+void Sys_ChangeNotify(char *ready) {
+	fileOffset_t size;
+	fileTime_t mtime;
+	fileTime_t ctime;
+	for(int i = 0; i < MAX_NOTIFICATIONS; i++) {
+		if(fileTimes[i] > 0 // make sure file was originally found
+			&& fs_notify[i]->string[0]  // make sure it wasn't switched off
+			&& realNames[i][0] // make sure it has a real path to check
+		) {
+			if(Sys_GetFileStats( realNames[i], &size, &mtime, &ctime )) {
+				fileTimes[i] = mtime;
+				// incase it gets reset by a command
+				strcpy(ready, fs_notify[i]->string);
+				break;
+			}
+		}
+	}
+
+}
+
+
+void FS_NotifyChange(const char *localPath) {
+	fileOffset_t size;
+	fileTime_t mtime;
+	fileTime_t ctime;
+	for(int i = 0; i < MAX_NOTIFICATIONS; i++) {
+		if(!fs_notify[i]->string[0] || !Q_stricmp(fs_notify[i]->string, localPath)) {
+			if(!fs_notify[i]->string[0]) {
+				Cvar_Set(va("fs_notify%d", i), localPath);
+			}
+
+			// set the initial file time so we know when to update
+			const char *realPath = FS_RealPath(localPath);
+			if(realPath && Sys_GetFileStats( realPath, &size, &mtime, &ctime )) {
+				fileTimes[i] = mtime;
+				strcpy(realNames[i], realPath);
+			} else {
+				realNames[i][0] = '\0';
+			}
+			break;
+		}
+	}
+}
+
+// TODO:
+//int FS_NotifyChange_f(const char *localPath) {
+#endif
+
+
+
+
 #ifdef USE_ASYNCHRONOUS
+#define JSON_IMPLEMENTATION
+#include "../qcommon/json.h"
+#undef JSON_IMPLEMENTATION
+
 extern qboolean		com_fullyInitialized;
 #endif
 #ifdef USE_LAZY_LOAD
@@ -446,8 +558,8 @@ extern qboolean		com_fullyInitialized;
 #define FS_HashFileName Com_GenerateHashValue
 
 
+int FS_ReadFile( const char *qpath, void **buffer );
 void Sys_FreeFileList( char **list );
-
 static void FS_AddGameDirectory( const char *path, const char *dir, int igvm );
 static qboolean FS_BannedPakFile( const char *filename );
 static void FS_ConvertFilename( char *name );
@@ -461,6 +573,7 @@ typedef struct downloadLazy_s {
 	time_t lastRequested;
 	qboolean ready; // ready for updating
 	qboolean downloaded; // already processed
+	qboolean failed;
   struct downloadLazy_s *next;
 } downloadLazy_t;
 
@@ -521,7 +634,7 @@ void Sys_UpdateNeeded( int tableId, char *ready, char *downloadNeeded ) {
   }
 }
 
-static void Sys_FileNeeded(const char *filename) {
+void Sys_FileNeeded(const char *filename) {
   unsigned int hash;
 	const char *loading;
   downloadLazy_t* *downloadTable;
@@ -558,43 +671,54 @@ static void Sys_FileNeeded(const char *filename) {
 			downloadTable = shaderCallback;
 		}
 	}
-  
 
-  if(filename[0]) {
-    hash = FS_HashPK3( filename );
+  if(!filename[0]) {
+		return;
+	}
 
-    download = downloadTable[hash];
-    while ( download )
-    {
-      if ( !Q_stricmp( filename, download->downloadName ) ) {
-        found = qtrue;
-        break;
-      } else {
-        download = download->next;
-      }
-    }
-    if(!found) {
-			downloadSize = sizeof(downloadLazy_t)
-				 + MAX_OSPATH /* because it's replaced with temp download name strlen(loading) + 1 */ 
-				 + strlen(filename) + 1;
-      download = (downloadLazy_t *)Z_TagMalloc(downloadSize, TAG_SMALL);
-			memset(download, 0, downloadSize);
-			download->loadingName = &((void *)download)[sizeof(downloadLazy_t)];
-      download->downloadName = download->loadingName + MAX_OSPATH;
-      strcpy(download->loadingName, loading);
-      strcpy(download->downloadName, filename);
-      download->loadingName[strlen(loading)] = '\0';
-      download->downloadName[strlen(filename)] = '\0';
-      download->next = downloadTable[hash];
-			download->ready = qfalse;
-      downloadTable[hash] = download;
-			download->lastRequested = 0; // request immediately, updated after first request
-Com_Printf("file needed! %s %s %i\n", filename, loading, hash);
-   } else {
-			// add 1500 millis to whatever requested it a second time
-			//download->lastRequested = Sys_Milliseconds(); 
+	hash = FS_HashPK3( filename );
+	download = downloadTable[hash];
+	while ( download )
+	{
+		if ( !Q_stricmp( filename, download->downloadName ) ) {
+			found = qtrue;
+			break;
+		} else {
+			download = download->next;
 		}
-  }
+	}
+	if(!found) {
+		downloadSize = sizeof(downloadLazy_t)
+				+ MAX_OSPATH /* because it's replaced with temp download name strlen(loading) + 1 */ 
+				+ strlen(filename) + 1;
+		download = (downloadLazy_t *)Z_TagMalloc(downloadSize, TAG_SMALL);
+		memset(download, 0, downloadSize);
+		download->loadingName = &((void *)download)[sizeof(downloadLazy_t)];
+		download->downloadName = download->loadingName + MAX_OSPATH;
+		strcpy(download->loadingName, loading);
+		strcpy(download->downloadName, filename);
+		download->loadingName[strlen(loading)] = '\0';
+		download->downloadName[strlen(filename)] = '\0';
+		download->next = downloadTable[hash];
+		download->ready = qfalse;
+		downloadTable[hash] = download;
+		download->lastRequested = 0; // request immediately, updated after first request
+	} else {
+#ifdef USE_LIVE_RELOAD
+		// allow redownloading of this file because when it's received the game updates
+		if(/* !download->failed && */ Q_stristr(filename, "version.json")) {
+			download->downloaded = qfalse;
+			download->ready = qfalse;
+			download->failed = qfalse;
+			// add 1500 millis to whatever requested it a second time
+			download->lastRequested = Sys_Milliseconds(); 
+		} else
+#endif
+		return; // skip debug message below, that's all
+	}
+	// why is it repeating gamedir?
+	assert(!Q_stristr(filename, va("%s/%s", FS_GetCurrentGameDir(), FS_GetCurrentGameDir())));
+	Com_Printf("file needed! %s %s %i\n", filename, loading, hash);
 }
 
 
@@ -793,7 +917,9 @@ void Sys_FileReady(const char *filename, const char* tempname) {
 	}
 
 	// mark the correct file as ready
-	if(!Q_stricmp(filename, "pk3cache.dat")) {
+	if(!Q_stricmp(filename, "pk3cache.dat")
+	//	|| !Q_stricmp(filename, "version.json")
+	) {
 		// special exception because this is the only file we download outside the gamedir
 		// TODO: make a special exception for updating the EXE from Github?
 		Com_sprintf(localName, sizeof(localName), "%s", filename);
@@ -812,11 +938,15 @@ void Sys_FileReady(const char *filename, const char* tempname) {
 				if(tempname) {
 Com_Printf("downloaded: %s -> %s, %s\n", localName, filename, tempname);
 					download->ready = qtrue;
+					download->failed = qfalse;
+					download->downloaded = qfalse; // trigger client events
 					strcpy(&download->loadingName[MAX_QPATH], tempname);
 				} else {
 					// download failed!
+					download->failed = qtrue;
 					download->ready = qfalse;
 					download->downloaded = qtrue;
+					Com_DPrintf("WARNING: %i %s download failed.\n", hash, localName);
 				}
 				found = qtrue;
 				break;
@@ -835,9 +965,52 @@ Com_Printf("downloaded: %s -> %s, %s\n", localName, filename, tempname);
 
 }
 
+static int previousVersionTime = 0;
+
+static qboolean needUnixTime = qfalse;
+static int daysSinceUnix (int y, int m, int d) {
+	int result;
+	if(needUnixTime) {
+		int mo = (m + 9) % 12;
+		int ye = y - m/10;
+		return ye*365 + ye/4 - ye/100 + ye/400 + (mo*306 + 5)/10 + (d - 1);
+	} else {
+		needUnixTime = qtrue;
+		result = daysSinceUnix(y, m, d) - daysSinceUnix(1970, 1, 1);
+		needUnixTime = qfalse;
+		return result;
+	}
+}
+
+
 void FS_UpdateFiles(const char *filename, const char *tempname) {
 
 Com_Printf("updating files: %s -> %s\n", filename, tempname);
+
+#ifdef USE_LIVE_RELOAD
+	if(Q_stristr(tempname, "version.json")) {
+		int y, mo, d, h, m, s;
+		int approxTime;
+		int length;
+		const char *versionFile;
+		length = FS_ReadFile("version.json", (void **)&versionFile);
+		if (length < 1)
+			return;
+		const char *serverTime = JSON_ArrayGetValue(versionFile, versionFile + length, 0);
+		// convert string to approx timestamp
+		sscanf(serverTime, "\"%i-%i-%iT%i:%i:%i.", &y, &mo, &d, &h, &m, &s);
+		approxTime = daysSinceUnix(y, mo, d)*86400 + h*3600 + m*60 + s;
+		if(previousVersionTime == 0) {
+			previousVersionTime = approxTime;
+		} else if (approxTime > previousVersionTime) {
+			previousVersionTime = approxTime;
+			// TODO: some kind of reloading action?
+			// version was supposed to describe what changed in each index, 
+			//   0 - main program, 1 - asset files, 2 - scripts, 3 - sounds, 4 - qvms?
+			Cbuf_AddText("wait; wait; wait; vid_restart;");
+		}
+	} else
+#endif
 
 	// TODO:
 	if(Q_stristr(tempname, "description.txt")) {
@@ -858,7 +1031,9 @@ Com_Printf("updating files: %s -> %s\n", filename, tempname);
 		// TODO: try to restart UI VM
 		// TODO: check on networking, shaderlist, anything else we skipped, etc again
 		com_fullyInitialized = qtrue;
+#ifndef DEDICATED
 		CL_StartHunkUsers();  // wait to start until index arrives
+#endif
 	} else 
 	
 	// scan index files for HTTP directories and add links to q3cache.dat
@@ -893,7 +1068,9 @@ Com_Printf("updating files: %s -> %s\n", filename, tempname);
 		FS_HomeRemove( s );
 		// we should have a directory index by now to check for VMs and files we need
     Cvar_Set("com_skipLoadUI", "0");
+#ifndef DEDICATED
 		CL_StartHunkUsers();
+#endif
 	}
 }
 
@@ -936,7 +1113,11 @@ void FS_CheckIndex(const char *filename) {
 			// TODO: test if the file exists once anyways if we havent received a
 			//   real index from the server and are working off HTTP
 			if(isInIndex || qtrue) {
-				Sys_FileNeeded(va("%s/%s", FS_GetCurrentGameDir(), filename));
+				if(Q_stristr(filename, FS_GetCurrentGameDir())) {
+					Sys_FileNeeded(filename);
+				} else {
+					Sys_FileNeeded(va("%s/%s", FS_GetCurrentGameDir(), filename));
+				}
 				break;
 			}
 
@@ -5677,98 +5858,6 @@ void Com_GamedirModified(char *oldValue, char *newValue, cvar_t *cv) {
   Com_Printf("fs_game changed, but you probably need to run fs_restart or vid_restart\n");
   
 }
-
-
-#ifdef USE_LIVE_RELOAD
-#define MAX_NOTIFICATIONS 10
-cvar_t *fs_notify[MAX_NOTIFICATIONS];
-// basic notification will just check file times once every few seconds
-//   if we wan't we can add inotify APIs here later
-//#ifndef __APPLE__
-//#include <sys/inotify.h>
-//#endif
-
-
-//void FS_ReloadQVM( void ) {
-//  Cbuf_AddText("wait; wait; wait; vid_restart;");
-
-//void FS_ReloadGame( void ) {
-//  Cbuf_AddText("wait; wait; wait; map_restart;");
-
-static const char *FS_RealPath(const char *localPath) {
-  fileHandle_t file;
-	FILE *temp;
-	char *netpath;
-	FS_FOpenFileRead(localPath, &file, qtrue);
-  if(fsh[file].zipFile) {
-    return fsh[file].pak->pakFilename;
-  } else {
-    searchpath_t *search;
-    for ( search = fs_searchpaths ; search ; search = search->next ) {
-      if ( search->dir && search->policy != DIR_DENY ) {
-        netpath = FS_BuildOSPath( search->dir->path, search->dir->gamedir, fsh[file].name );
-        if((temp = Sys_FOpen( netpath, "rb" ))) {
-          fclose(temp);
-          return netpath;
-        }
- 			}
- 		}
- 	}
-	return NULL;
-}
-
-
-int fileTimes[MAX_NOTIFICATIONS];
-char realNames[MAX_NOTIFICATIONS][MAX_OSPATH];
-
-void Sys_ChangeNotify(char *ready) {
-	fileOffset_t size;
-	fileTime_t mtime;
-	fileTime_t ctime;
-	for(int i = 0; i < MAX_NOTIFICATIONS; i++) {
-		if(fileTimes[i] > 0 // make sure file was originally found
-			&& fs_notify[i]->string[0]  // make sure it wasn't switched off
-			&& realNames[i][0] // make sure it has a real path to check
-		) {
-			if(Sys_GetFileStats( realNames[i], &size, &mtime, &ctime )) {
-				fileTimes[i] = mtime;
-				// incase it gets reset by a command
-				strcpy(ready, fs_notify[i]->string);
-				break;
-			}
-		}
-	}
-
-}
-
-
-void FS_NotifyChange(const char *localPath) {
-	fileOffset_t size;
-	fileTime_t mtime;
-	fileTime_t ctime;
-	for(int i = 0; i < MAX_NOTIFICATIONS; i++) {
-		if(!fs_notify[i]->string[0] || !Q_stricmp(fs_notify[i]->string, localPath)) {
-			if(!fs_notify[i]->string[0]) {
-				Cvar_Set(va("fs_notify%d", i), localPath);
-			}
-
-			// set the initial file time so we know when to update
-			const char *realPath = FS_RealPath(localPath);
-			if(realPath && Sys_GetFileStats( realPath, &size, &mtime, &ctime )) {
-				fileTimes[i] = mtime;
-				strcpy(realNames[i], realPath);
-			} else {
-				realNames[i][0] = '\0';
-			}
-			break;
-		}
-	}
-}
-
-// TODO:
-//int FS_NotifyChange_f(const char *localPath) {
-#endif
-
 
 /*
 ================

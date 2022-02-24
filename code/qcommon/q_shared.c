@@ -2815,6 +2815,51 @@ static void _atos( const char **stringPtr, char *buffer, int delimiter, int widt
 	*buffer = '\0';
 }
 
+
+static void _htoi( const char **stringPtr, byte *total, int delimiter, int width ) 
+{
+	const char	*string;
+	qboolean half = qfalse;
+	string = *stringPtr;
+
+	if ( !delimiter ) 
+	{
+		// skip whitespace
+		while ( *string && *string != ' ' && *string != '\t' && width-- > 0 ) 
+		{
+			if(*string >= '0' && *string <= '9') {
+				*total = *total * 16 + *string - '0';
+			} else if ( *string >= 'a' && *string <= 'f' ) {
+				*total = *total * 16 + *string - 'a' + 10;
+			} else if ( *string >= 'A' && *string <= 'F' ) {
+				*total = *total * 16 + *string - 'A' + 10;
+			}
+			half = !half;
+			if(!half) {
+				total++;
+			}
+			string++;
+		}
+	} 
+	else while ( *string && *string != delimiter && width-- > 0 ) 
+	{
+		if(*string >= '0' && *string <= '9') {
+			*total = *total * 16 + *string - '0';
+		} else if ( *string >= 'a' && *string <= 'f' ) {
+			*total = *total * 16 + *string - 'a' + 10;
+		} else if ( *string >= 'A' && *string <= 'F' ) {
+			*total = *total * 16 + *string - 'A' + 10;
+		}
+		half = !half;
+		if(!half) {
+			total++;
+		}
+		string++;
+	}
+
+	*stringPtr = string;
+}
+
 int Q_sscanf( const char *buffer, const char *fmt, ... ) 
 {
 	va_list ap;
@@ -2883,6 +2928,8 @@ int Q_sscanf( const char *buffer, const char *fmt, ... )
 		case 's':
 			_atos( &buffer, va_arg(ap, char *), *fmt, width );
 			break;
+		case 'x':
+			_htoi( &buffer, *(va_arg(ap, byte *)), *fmt, width );
 		default:
 			return count;
 		}

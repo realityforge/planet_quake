@@ -3850,18 +3850,28 @@ static void CL_CheckUserinfo( void ) {
 }
 
 #ifdef USE_LIVE_RELOAD
+#ifdef USE_ASYNCHRONOUS
+void Sys_FileNeeded(const char *filename);
+#endif
 void Sys_ChangeNotify( char *ready );
 static int changeTimer = 0;
+
+
 
 void CL_ChangeNotifcations( void ) {
 	char ready[MAX_OSPATH];
 	int newTime = Sys_Milliseconds();
 
-	if(newTime - changeTimer < 1000) {
+	if(newTime - changeTimer < 10000) {
 		return;
 	}
 
 	changeTimer = newTime;
+
+#ifdef USE_ASYNCHRONOUS
+	// ping the server version.json file for a file time
+	Sys_FileNeeded(va("%s/version.json", FS_GetCurrentGameDir()));
+#endif
 
 	ready[0] = '\0';
 	Sys_ChangeNotify(ready);

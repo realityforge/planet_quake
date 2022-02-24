@@ -3,21 +3,7 @@
   "version": "0.0.1",
   "scripts": {
     "start": "node ./code/wasm/bin/web.js",
-    "content": "node ./code/wasm/bin/content.js",
-    "proxy": "node ./code/wasm/bin/proxy.js",
-    "repack": "node --max_old_space_size=4096 ./code/wasm/bin/repack.js",
-    "build": "make PLATFORM=js USE_LOCAL_HEADERS=1",
-    "install:emsdk": "./libs/emsdk/emsdk install latest-upstream",
-    "install:libs": "./libs/emsdk/upstream/emscripten/embuilder.py build sdl2 vorbis ogg zlib",
-    "write:version": "node -e \"try{require('fs').writeFileSync('./build/release-js-js/version.json', JSON.stringify([new Date(), new Date()]))}catch(e){require('fs').writeFileSync('./build/debug-js-js/version.json', JSON.stringify([new Date(), new Date()]))}\"",
-    "deploy:program": "gsutil cp ./build/release-js-js/quake3e.* gs://quake.games && gsutil setmeta -h \"Content-Type:application/wasm\" gs://quake.games/quake3e.wasm",
-    "deploy:version": "npm run write:version && gsutil cp ./build/*-js-js/version.json gs://quake.games/",
-    "deploy:assets": "npm run write:version && gsutil cp ./build/*-js-js/version.json gs://quake.games/assets/baseq3-cc/",
-    "deploy:precache": "gsutil cp ./code/wasm/bin/index.html gs://quake.games && gsutil cp ./code/wasm/bin/server-worker.js gs://quake.games && gsutil cp ./code/wasm/bin/service-worker.js gs://quake.games",
-    "deploy:built": "cp ./build/release-js-js/quake3e.* ./code/wasm/bin/ && ./build/release-js-js/version.json ./code/wasm/bin/",
-    "deploy:cors": "gsutil cors set ./code/wasm/bin/cors.json gs://quake.games/",
-    "deploy": "npm run deploy:program && npm run deploy:version && npm run deploy:precache && npm run deploy:built",
-    "update:lvl": "node -e \"require('./code/wasm/bin/lvlworldsync.js')\""
+    "proxy": "node ./code/wasm/bin/proxy.js"
   },
   "bin": {
     "quakejs-content": "bin/content.js",
