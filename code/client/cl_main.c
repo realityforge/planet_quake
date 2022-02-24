@@ -193,11 +193,6 @@ static void CL_ServerStatus_f( void );
 static void CL_ServerStatusResponse( const netadr_t *from, msg_t *msg );
 static void CL_ServerInfoPacket( const netadr_t *from, msg_t *msg );
 
-#ifdef USE_ASYNCHRONOUS
-extern char com_earlyConnect[MAX_OSPATH];
-void Con_MakeCharsetShader( void );
-#endif
-
 // TODO: make this same command work for web
 #ifdef USE_CURL
 static void CL_Download_f( void );
@@ -2831,11 +2826,11 @@ static void CL_DownloadsComplete( void ) {
 	S_DisableSounds();
 	re.ReloadShaders(qtrue);
 	// adopt the styles from the current mod
-	cls.charSetShader = re.RegisterShader( "gfx/2d/bigchars" );
+	//cls.charSetShader = re.RegisterShader( "gfx/2d/bigchars" );
 	//cls.whiteShader = re.RegisterShader( "white" );
-  cls.lagometerShader = re.RegisterShader( "lagometer" );
+  //cls.lagometerShader = re.RegisterShader( "lagometer" );
 #ifndef USE_NO_CONSOLE
-	cls.consoleShader = re.RegisterShader( "console" );
+	//cls.consoleShader = re.RegisterShader( "console" );
 #endif
 #ifndef __WASM__
 	cls.soundRegistered = qtrue;
@@ -3856,13 +3851,11 @@ void Sys_FileNeeded(const char *filename);
 void Sys_ChangeNotify( char *ready );
 static int changeTimer = 0;
 
-
-
 void CL_ChangeNotifcations( void ) {
 	char ready[MAX_OSPATH];
 	int newTime = Sys_Milliseconds();
 
-	if(newTime - changeTimer < 10000) {
+	if(newTime - changeTimer < 5000) {
 		return;
 	}
 
@@ -3886,7 +3879,7 @@ void CL_ChangeNotifcations( void ) {
 #endif
 
 
-#ifdef USE_LAZY_LOAD
+#if defined(USE_LAZY_LOAD) || defined(USE_ASYNCHRONOUS)
 /*
 	modelCallback,
 	soundCallback,
@@ -3944,6 +3937,7 @@ void CL_CheckLazyUpdates( void ) {
 			continue;
 		}
 
+#ifdef USE_LAZY_LOAD
 		if(j == 0) {
 			if(cls.rendererStarted)
 				re.UpdateModel(ready);
@@ -3954,13 +3948,9 @@ void CL_CheckLazyUpdates( void ) {
 			ready[12] = '\0';
 			if(cls.rendererStarted)
 				re.UpdateShader(&ready[13], atoi(&ready[0]));
-		} else if (j == 3) {
-			// intercept this here because it's client only code
-			if(Q_stristr(&ready[MAX_QPATH], "/scripts/")
-				&& Q_stristr(&ready[MAX_QPATH], ".shader")) {
-				re.ReloadShaders(qtrue);
-			}
-
+		} else if (j == 3) 
+#endif
+		{
 			ready[MAX_QPATH - 1] = '\0';
 			FS_UpdateFiles(ready, &ready[MAX_QPATH]);
 		}
@@ -4294,11 +4284,6 @@ static void CL_InitRenderer( void ) {
 
 	// load character sets
 	cls.charSetShader = re.RegisterShader( "gfx/2d/bigchars" );
-#ifdef USE_ASYNCHRONOUS
-	if(!cls.charSetShader) {
-		Con_MakeCharsetShader();
-	}
-#endif
 	cls.whiteShader = re.RegisterShader( "white" );
   cls.lagometerShader = re.RegisterShader( "lagometer" );
 #ifndef USE_NO_CONSOLE
@@ -4381,25 +4366,19 @@ void CL_StartHunkUsers( void ) {
 		&& FS_Initialized()
 #endif
   ) {
+		Sys_SetStatus("Loading UI...");
 		cls.uiStarted = qtrue;
 		CL_InitUI(qfalse);
 	}
 
 #ifdef USE_ASYNCHRONOUS
-	if(!com_earlyConnect[0]) {
-		Sys_SetStatus("Loading UI...");
-	}
 	// init with console down like Quake 1!
 	if(!uivm && !cls.uiStarted && cls.state == CA_DISCONNECTED) {
-		//Key_SetCatcher( Key_GetCatcher( ) | KEYCATCH_CONSOLE );
-	}
-
-	// not connecting?
-	if(cls.state == CA_DISCONNECTED && com_earlyConnect[0] != '\0') {
-		Cbuf_ExecuteText( EXEC_INSERT, va("connect %s\n", com_earlyConnect) );
-	} else {
+		Key_SetCatcher( Key_GetCatcher( ) | KEYCATCH_CONSOLE );
+		// not connecting?
 		Com_Printf( S_COLOR_RED "WARNING: Using asynchronous build without an early \\connect <address> command.\n");
 	}
+
 #endif
 
 }
@@ -4499,6 +4478,7 @@ void	CL_CM_Trace( trace_t *results, const vec3_t start, const vec3_t mins, const
 
 #ifdef USE_ASYNCHRONOUS
 static int CL_FS_ReadFile( const char *qpath, void **buffer ) {
+	// be a bit more forgiving than FS
 	if(!FS_Initialized())
 		return -1;
 	return FS_ReadFile(qpath, buffer);

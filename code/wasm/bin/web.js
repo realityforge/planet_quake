@@ -56,28 +56,42 @@ function writeVersionFile() {
 
 // okay this function is apparently a little idiotic and triggers on accesses
 //   this is not how native notify works, but maybes it's the best they could make the same
-function startFileWatcher(eventType, filename) {
-  if(fs.existsSync(ASSETS_DIRECTORY)) {
-    if(filename.includes('version.json')) {
-      return // this would be redundant
-    }
-    if(fileTimeout) {
-      clearTimeout(fileTimeout)
-      fileTimeout = null
-    }
-    let newMtime = fs.statSync(path.join(ASSETS_DIRECTORY, filename)).mtime
+function startFileWatcher(prefix, eventType, filename) {
+  if(filename.includes('version.json')) {
+    return // this would be redundant
+  }
+  if(fileTimeout) {
+    clearTimeout(fileTimeout)
+    fileTimeout = null
+  }
+  if(!fs.existsSync(path.join(ASSETS_DIRECTORY, prefix, filename))) {
+    // must have been deleted
+    latestMtime = new Date()
+  } else {
+    let newMtime = fs.statSync(path.join(ASSETS_DIRECTORY, prefix, filename)).mtime
     if(newMtime > latestMtime) {
       latestMtime = newMtime
     }
-    // debounce file changes for a second in case there is a copy process going on
-    fileTimeout = setTimeout(function () {
-      writeVersionFile()
-    }, 1000)
   }
+  // debounce file changes for a second in case there is a copy process going on
+  fileTimeout = setTimeout(function () {
+    console.log('Updating working directory...')
+    writeVersionFile()
+  }, 1000)
 }
 
 if(fs.existsSync(ASSETS_DIRECTORY)) {
-  fs.watch(ASSETS_DIRECTORY, startFileWatcher)
+  fs.watch(ASSETS_DIRECTORY, startFileWatcher.bind(null, ''))
+  // watch at least the top level directories for convenience
+  let directories = fs.readdirSync(ASSETS_DIRECTORY)
+    .filter(node => node[0] != '.' 
+      && fs.statSync(path.join(ASSETS_DIRECTORY, node)).isDirectory())
+  for(let i = 0; i < directories.length; i++) {
+    fs.watch(path.join(ASSETS_DIRECTORY, directories[i]), 
+      startFileWatcher.bind(null, directories[i]))
+  }
+
+  // always make a version file in live-reload mode
   app.use('/multigame/version.json', function (request, response) {
     if(!fs.existsSync(path.join(ASSETS_DIRECTORY, 'version.json'))) {
       writeVersionFile()

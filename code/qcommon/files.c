@@ -550,10 +550,7 @@ void FS_NotifyChange(const char *localPath) {
 #define JSON_IMPLEMENTATION
 #include "../qcommon/json.h"
 #undef JSON_IMPLEMENTATION
-
 extern qboolean		com_fullyInitialized;
-#endif
-#ifdef USE_LAZY_LOAD
 #define PK3_HASH_SIZE 512
 #define FS_HashFileName Com_GenerateHashValue
 
@@ -588,8 +585,9 @@ downloadLazy_t* *downloadTables[4] = {
 	filesCallback,
 };
 
-//static downloadLazy_t *readyFiles[256];
-//int numReadyFiles = 0;
+#ifdef USE_LIVE_RELOAD
+static int lastVersionTime = 0;
+#endif
 
 void Sys_UpdateNeeded( int tableId, char *ready, char *downloadNeeded ) {
 	downloadLazy_t* *downloadTable = downloadTables[tableId];
@@ -713,6 +711,12 @@ void Sys_FileNeeded(const char *filename) {
 			// add 1500 millis to whatever requested it a second time
 			download->lastRequested = Sys_Milliseconds(); 
 		} else
+		if( download->failed && download->lastRequested < lastVersionTime) {
+			download->downloaded = qfalse;
+			download->ready = qfalse;
+			download->failed = qfalse;
+			download->lastRequested = Sys_Milliseconds(); 
+		}
 #endif
 		return; // skip debug message below, that's all
 	}
@@ -965,8 +969,8 @@ Com_Printf("downloaded: %s -> %s, %s\n", localName, filename, tempname);
 
 }
 
+#ifdef USE_LIVE_RELOAD
 static int previousVersionTime = 0;
-
 static qboolean needUnixTime = qfalse;
 static int daysSinceUnix (int y, int m, int d) {
 	int result;
@@ -981,6 +985,7 @@ static int daysSinceUnix (int y, int m, int d) {
 		return result;
 	}
 }
+#endif
 
 
 void FS_UpdateFiles(const char *filename, const char *tempname) {
@@ -1005,12 +1010,22 @@ Com_Printf("updating files: %s -> %s\n", filename, tempname);
 		} else if (approxTime > previousVersionTime) {
 			previousVersionTime = approxTime;
 			// TODO: some kind of reloading action?
+			// clear out any failed states so they can be rechecked
+			lastVersionTime = Sys_Milliseconds();
 			// version was supposed to describe what changed in each index, 
 			//   0 - main program, 1 - asset files, 2 - scripts, 3 - sounds, 4 - qvms?
-			Cbuf_AddText("wait; wait; wait; vid_restart;");
+			Cbuf_AddText("wait; vid_restart;");
 		}
 	} else
 #endif
+
+	// intercept this here because it's client only code
+	if(Q_stristr(tempname, "/scripts/")
+		&& Q_stristr(tempname, ".shader")) {
+		//re.ReloadShaders(qtrue);
+		Cbuf_AddText("wait; vid_restart;");
+		return;
+	} else
 
 	// TODO:
 	if(Q_stristr(tempname, "description.txt")) {
@@ -2095,12 +2110,7 @@ fileHandle_t FS_FOpenFileAppend( const char *filename ) {
 	fileHandleData_t *fd;
 	fileHandle_t	f;
 
-#ifdef USE_ASYNCHRONOUS
-  if ( !com_fullyInitialized || !fs_searchpaths )
-#else
-	if ( !fs_searchpaths )
-#endif
-  {
+	if ( !fs_searchpaths ) {
 		Com_Error( ERR_FATAL, "Filesystem call made without initialization" );
 	}
 
@@ -2381,6 +2391,7 @@ Used for streaming data out of either a
 separate file or a ZIP file.
 ===========
 */
+extern qboolean		com_fullyInitialized;
 
 int FS_FOpenFileRead( const char *filename, fileHandle_t *file, qboolean uniqueFILE ) {
 	searchpath_t	*search;
@@ -2394,12 +2405,7 @@ int FS_FOpenFileRead( const char *filename, fileHandle_t *file, qboolean uniqueF
 	int				length;
 	fileHandleData_t *f;
 
-#ifdef USE_ASYNCHRONOUS
-  if ( !com_fullyInitialized || !fs_searchpaths )
-#else
-	if ( !fs_searchpaths )
-#endif
-  {
+	if ( !fs_searchpaths ) {
 		Com_Error( ERR_FATAL, "Filesystem call made without initialization" );
 	}
 
@@ -2443,10 +2449,6 @@ int FS_FOpenFileRead( const char *filename, fileHandle_t *file, qboolean uniqueF
 					}
 					pakFile = pakFile->next;
 				} while ( pakFile != NULL );
-#ifdef USE_LAZY_LOAD
-				// TODO: check q3cache?
-				Sys_FileNeeded(filename);
-#endif
 			} else if ( search->dir && search->policy != DIR_DENY ) {
 				dir = search->dir;
 				netpath = FS_BuildOSPath( dir->path, dir->gamedir, filename );
@@ -2456,14 +2458,12 @@ int FS_FOpenFileRead( const char *filename, fileHandle_t *file, qboolean uniqueF
 					fclose( temp );
 					return length;
 				}
-#ifdef USE_LAZY_LOAD
-				else {
-					Sys_FileNeeded(netpath);
-				}
-#endif
 			}
 		}
-		
+
+#ifdef USE_LAZY_LOAD
+	FS_CheckIndex(filename);
+#endif
 		return -1;
 	}
 
@@ -2595,12 +2595,7 @@ int FS_Home_FOpenFileRead( const char *filename, fileHandle_t *file )
 	fileHandleData_t *fd;
 	fileHandle_t f;	
 
-#ifdef USE_ASYNCHRONOUS
-  if ( !com_fullyInitialized || !fs_searchpaths )
-#else
-	if ( !fs_searchpaths )
-#endif
-	{
+	if ( !fs_searchpaths ) {
 		Com_Error( ERR_FATAL, "Filesystem call made without initialization" );
 	}
 
@@ -2648,12 +2643,7 @@ int FS_Read( void *buffer, int len, fileHandle_t f ) {
 	byte	*buf;
 	int		tries;
 
-#ifdef USE_ASYNCHRONOUS
-  if ( !com_fullyInitialized || !fs_searchpaths )
-#else
-	if ( !fs_searchpaths )
-#endif
-	{
+	if ( !fs_searchpaths ) {
 		Com_Error( ERR_FATAL, "Filesystem call made without initialization" );
 	}
 
@@ -2708,13 +2698,7 @@ int FS_Write( const void *buffer, int len, fileHandle_t h ) {
 	int		tries;
 	FILE	*f;
 
-#ifdef USE_ASYNCHRONOUS
-	// allows writing downloads from cURL
-  if ( com_fullyInitialized && !fs_searchpaths )
-#else
-	if ( !fs_searchpaths )
-#endif
-	{
+	if ( !fs_searchpaths ) {
 		Com_Error( ERR_FATAL, "Filesystem call made without initialization" );
 	}
 
@@ -2775,12 +2759,7 @@ FS_Seek
 int FS_Seek( fileHandle_t f, long offset, fsOrigin_t origin ) {
 	int		_origin;
 
-#ifdef USE_ASYNCHRONOUS
-  if ( !com_fullyInitialized || !fs_searchpaths )
-#else
-	if ( !fs_searchpaths )
-#endif
-	{
+	if ( !fs_searchpaths ) {
 		Com_Error( ERR_FATAL, "Filesystem call made without initialization" );
 		return -1;
 	}
@@ -2882,12 +2861,7 @@ qboolean FS_FileIsInPAK( const char *filename, int *pChecksum, char *pakName ) {
 	long			hash;
 	long			fullHash;
 
-#ifdef USE_ASYNCHRONOUS
-  if ( !com_fullyInitialized || !fs_searchpaths )
-#else
-	if ( !fs_searchpaths )
-#endif
-	{
+	if ( !fs_searchpaths ) {
 		Com_Error( ERR_FATAL, "Filesystem call made without initialization" );
 	}
 
@@ -2960,12 +2934,7 @@ int FS_ReadFile( const char *qpath, void **buffer ) {
 	qboolean		isConfig;
 	long			len;
 
-#ifdef USE_ASYNCHRONOUS
-  if ( !com_fullyInitialized || !fs_searchpaths )
-#else
-	if ( !fs_searchpaths )
-#endif
-	{
+	if ( !fs_searchpaths ) {
 		Com_Error( ERR_FATAL, "Filesystem call made without initialization" );
 	}
 
@@ -3075,12 +3044,7 @@ FS_FreeFile
 =============
 */
 void FS_FreeFile( void *buffer ) {
-#ifdef USE_ASYNCHRONOUS
-  if ( !com_fullyInitialized || !fs_searchpaths )
-#else
-	if ( !fs_searchpaths )
-#endif
-	{
+	if ( !fs_searchpaths ) {
 		Com_Error( ERR_FATAL, "Filesystem call made without initialization" );
 	}
 	if ( !buffer ) {
@@ -3107,12 +3071,7 @@ Filename are relative to the quake search path
 void FS_WriteFile( const char *qpath, const void *buffer, int size ) {
 	fileHandle_t f;
 
-#ifdef USE_ASYNCHRONOUS
-  if ( !com_fullyInitialized || !fs_searchpaths )
-#else
-	if ( !fs_searchpaths )
-#endif
-	{
+	if ( !fs_searchpaths ) {
 		Com_Error( ERR_FATAL, "Filesystem call made without initialization" );
 	}
 
@@ -3722,11 +3681,7 @@ static qboolean FS_SaveCache( void )
 	const searchpath_t *sp;
 	FILE *f;
 
-#ifdef USE_ASYNCHRONOUS
-  if ( !com_fullyInitialized || !fs_searchpaths )
-#else
 	if ( !fs_searchpaths )
-#endif
 		return qfalse;
 
 	if ( !fs_cacheLoaded )
@@ -3817,7 +3772,7 @@ static void FS_LoadCache( void )
 
 	fs_cacheLoaded = qtrue;
 
-	Com_DPrintf( "...found %i cached paks\n", fs_paksCached );
+	Com_Printf( "...found %i cached paks\n", fs_paksCached );
 }
 
 #endif // USE_PK3_CACHE_FILE
@@ -4471,7 +4426,7 @@ Returns a uniqued list of files that match the given criteria
 from all search paths
 ===============
 */
-char **FS_ListFilteredFiles( const char *path, const char *extension, const char *filter, int *numfiles, int flags ) {
+static char **FS_ListFilteredFiles( const char *path, const char *extension, const char *filter, int *numfiles, int flags ) {
 	int				nfiles;
 	char			**listCopy;
 	char			*list[MAX_FOUND_FILES];
@@ -4486,12 +4441,7 @@ char **FS_ListFilteredFiles( const char *path, const char *extension, const char
 	qboolean		hasPatterns;
 	const char		*x;
 
-#ifdef USE_ASYNCHRONOUS
-  if ( !com_fullyInitialized || !fs_searchpaths )
-#else
-	if ( !fs_searchpaths )
-#endif
-	{
+	if ( !fs_searchpaths ) {
 		Com_Error( ERR_FATAL, "Filesystem call made without initialization" );
 	}
 
@@ -4653,12 +4603,7 @@ FS_FreeFileList
 void FS_FreeFileList( char **list ) {
 	int		i;
 
-#ifdef USE_ASYNCHRONOUS
-  if ( !com_fullyInitialized || !fs_searchpaths )
-#else
-	if ( !fs_searchpaths )
-#endif
-	{
+	if ( !fs_searchpaths ) {
 		Com_Error( ERR_FATAL, "Filesystem call made without initialization" );
 	}
 
@@ -6721,9 +6666,6 @@ void FS_Restart( int checksumFeed ) {
 		Sys_FileNeeded(va("%s/maps/", FS_GetCurrentGameDir()));
 		Sys_FileNeeded(va("%s/scripts/", FS_GetCurrentGameDir()));
 	}
-	if(!FS_Initialized()) {
-		return;
-	}
 #endif
 
 	// if we can't find default.cfg, assume that the paths are
@@ -6744,7 +6686,11 @@ void FS_Restart( int checksumFeed ) {
 			Com_Error( ERR_DROP, "Invalid game folder" );
 			return;
 		}
+#ifdef USE_ASYNCHRONOUS
+		Com_Printf( S_COLOR_RED "Couldn't load default.cfg" );
+#else
 		Com_Error( ERR_FATAL, "Couldn't load default.cfg" );
+#endif
 	}
 
 	// new check before safeMode

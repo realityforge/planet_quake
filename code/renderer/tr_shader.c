@@ -716,14 +716,9 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 
 				stage->bundle[0].image[0] = R_FindImageFile( token, flags );
 
-#ifdef USE_LAZY_LOAD
-				if((!mapShaders || r_lazyLoad->integer >= 2) && (long)stage->bundle[0].image[0] == 1) {
-					stage->bundle[0].image[0] = NULL;
-					return qfalse;
-				} else
-#endif
-				if ( !stage->bundle[0].image[0] ) {
-					ri.Printf( PRINT_DEVELOPER, "WARNING: R_FindImageFile could not find '%s' in shader '%s'\n", token, shader.name );
+				if ( !stage->bundle[0].image[0] )
+				{
+					ri.Printf( PRINT_WARNING, "WARNING: R_FindImageFile could not find '%s' in shader '%s'\n", token, shader.name );
 					return qfalse;
 				}
 			}
@@ -764,12 +759,9 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 				flags |= IMGFLAG_NOLIGHTSCALE;
 
 			stage->bundle[0].image[0] = R_FindImageFile( token, flags );
-			if ( !stage->bundle[0].image[0] 
-#ifdef USE_LAZY_LOAD
-				|| (!mapShaders && r_lazyLoad->integer >= 2 && (long)stage->bundle[0].image[0] == 1)
-#endif
-			) {
-				ri.Printf( PRINT_DEVELOPER, "WARNING: R_FindImageFile could not find '%s' in shader '%s'\n", token, shader.name );
+			if ( !stage->bundle[0].image[0] )
+			{
+				ri.Printf( PRINT_WARNING, "WARNING: R_FindImageFile could not find '%s' in shader '%s'\n", token, shader.name );
 				return qfalse;
 			}
 		}
@@ -811,12 +803,9 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 						flags |= IMGFLAG_NOLIGHTSCALE;
 
 					stage->bundle[0].image[num] = R_FindImageFile( token, flags );
-					if ( !stage->bundle[0].image[num] 
-#ifdef USE_LAZY_LOAD
-						|| (!mapShaders && r_lazyLoad->integer >= 2 && (long)stage->bundle[0].image[num] == 1)
-#endif
-					) {
-						ri.Printf( PRINT_DEVELOPER, "WARNING: R_FindImageFile could not find '%s' in shader '%s'\n", token, shader.name );
+					if ( !stage->bundle[0].image[num] )
+					{
+						ri.Printf( PRINT_WARNING, "WARNING: R_FindImageFile could not find '%s' in shader '%s'\n", token, shader.name );
 						return qfalse;
 					}
 					stage->bundle[0].numImageAnimations++;
@@ -1406,11 +1395,7 @@ static void ParseSkyParms( const char **text ) {
 				, token, suf[i] );
 			shader.sky.outerbox[i] = R_FindImageFile( pathname, imgFlags | IMGFLAG_CLAMPTOEDGE );
 
-			if ( !shader.sky.outerbox[i] 
-#ifdef USE_LAZY_LOAD
-				|| (!mapShaders && r_lazyLoad->integer >= 2 && (long)shader.sky.outerbox[i] == 1)
-#endif
-			) {
+			if ( !shader.sky.outerbox[i] ) {
 				shader.sky.outerbox[i] = tr.defaultImage;
 			}
 		}
@@ -1439,11 +1424,7 @@ static void ParseSkyParms( const char **text ) {
 			Com_sprintf( pathname, sizeof(pathname), "%s_%s.tga"
 				, token, suf[i] );
 			shader.sky.innerbox[i] = R_FindImageFile( pathname, imgFlags );
-			if ( !shader.sky.innerbox[i] 
-#ifdef USE_LAZY_LOAD
-				|| (!mapShaders && r_lazyLoad->integer >= 2 && (long)shader.sky.innerbox[i] == 1)
-#endif
-			) {
+			if ( !shader.sky.innerbox[i] ) {
 				shader.sky.innerbox[i] = tr.defaultImage;
 			}
 		}
@@ -1804,7 +1785,7 @@ static qboolean ParseShader( const char **text )
 			{
 				return qfalse;
 			}
-        stages[s].active = qtrue;
+			stages[s].active = qtrue;
 			s++;
 
 			continue;
@@ -1815,8 +1796,7 @@ static qboolean ParseShader( const char **text )
 			continue;
 		}
 		// sun parms
-		else if ( !Q_stricmp( token, "q3map_sun" ) || !Q_stricmp( token, "q3map_sunExt" ) ) 
-		{
+		else if ( !Q_stricmp( token, "q3map_sun" ) || !Q_stricmp( token, "q3map_sunExt" ) ) {
 			float	a, b;
 
 			token = COM_ParseExt( text, qfalse );
@@ -3400,24 +3380,14 @@ shader_t *R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImag
 		}
 
 		image = R_FindImageFile( name, flags );
-#ifdef USE_LAZY_LOAD
-		// this indicates that it is lazily loading and it will be replaced when
-		// the image arrives
-		if((!mapShaders || r_lazyLoad->integer >= 2) && (long)image == 1) {
-			shader.remappedShader = tr.defaultShader;
-			shader.defaultShader = qfalse;
-		} else if (!image) {
-			// it's not going to be able to load over the network because it doesn't exist
-			ri.Cvar_Set("r_loadingShader", "");
-			return tr.defaultShader;
-		}
-#else
 		if ( !image ) {
 			ri.Printf( PRINT_DEVELOPER, "Couldn't find image file for shader %s\n", name );
+#ifdef USE_LAZY_LOAD
+			ri.Cvar_Set("r_loadingShader", "");
+#endif
 			shader.defaultShader = qtrue;
 			return FinishShader();
 		}
-#endif
 	}
 
 	//
@@ -4056,6 +4026,19 @@ void RE_ReloadShaders( qboolean createNew ) {
 
 	tr.inited = qtrue;
 	tr.registered = qtrue;
+
+	// quickly recheck any missing
+	/*
+	if(r_lazyLoad->integer != 2) { // TODO: _lazyLoad->integer != 4
+		for(int i = 0; i < tr.numShaders; i++) {
+			if(tr.shaders[i]->defaultShader) {
+				mapShaders = qtrue;
+				RE_RegisterShader(tr.shaders[i]->name);
+				mapShaders = qfalse;
+			}
+		}
+	}
+	*/
 }
 #endif
 
@@ -4072,9 +4055,7 @@ void R_InitShaders( void ) {
 
 	CreateInternalShaders();
 
-#ifndef USE_ASYNCHRONOUS // this will happen again when game starts so who cares?
 	ScanAndLoadShaderFiles();
-#endif
 
 	CreateExternalShaders();
 }

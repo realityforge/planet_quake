@@ -1666,6 +1666,9 @@ static qboolean ParseShader( const char **text )
 	branchType branch;
 	const char *token;
 	int s;
+#ifdef USE_LAZY_LOAD
+	qboolean failed = qfalse;
+#endif
 
 	s = 0;
 
@@ -1704,7 +1707,15 @@ static qboolean ParseShader( const char **text )
 
 			if ( !ParseStage( &stages[s], text ) )
 			{
+#ifdef USE_LAZY_LOAD
+				failed = qtrue;
+				// continue parsing stages to look for more missing images, then fail later
+				stages[s].active = qfalse;
+				s++;
+				continue;
+#else
 				return qfalse;
+#endif
 			}
 			stages[s].active = qtrue;
 			s++;
@@ -1928,6 +1939,11 @@ static qboolean ParseShader( const char **text )
 			ri.Printf( PRINT_WARNING, "WARNING: unknown general shader parameter '%s' in '%s'\n", token, shader.name );
 			return qfalse;
 		}
+	}
+
+#ifdef USE_LAZY_LOAD
+	if(failed) {
+		return qfalse;
 	}
 
 	//

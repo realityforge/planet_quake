@@ -226,8 +226,8 @@ void SV_MakeBSP(char *memoryMap) {
 	char mapName[MAX_QPATH];
 	strcpy(mapName, va("maps/%s.map", memoryMap));
 	// no bsp file exists, try to make one, check for .map file
-	if(!FS_FileExists( mapname )) {
-		Com_Printf("Couldn\'t find map file %s\n", mapname);
+	if(!FS_FileExists( mapName )) {
+		Com_Printf("Couldn\'t find map file %s\n", mapName);
 		return;
 	}
 

@@ -188,11 +188,11 @@ static int	lastTime;
 int			com_frameTime;
 static int	com_frameNumber;
 
-qboolean  com_skipLoadUI = qfalse;
 qboolean	com_errorEntered = qfalse;
 qboolean	com_fullyInitialized = qfalse;
+qboolean  com_skipLoadUI = qfalse;
 #ifdef USE_ASYNCHRONOUS
-char com_earlyConnect[MAX_OSPATH];
+qboolean com_earlyConnect = qfalse;
 #endif
 
 // renderer window states
@@ -834,27 +834,6 @@ qboolean Com_EarlyParseCmdLine( char *commandLine, char *con_title, int title_si
 			continue;
 		}
 
-#ifdef USE_ASYNCHRONOUS
-		com_skipLoadUI = qtrue; // always start with console, since it reports update errors
-    if( !Q_stricmp(Cmd_Argv(0), "connect") ) {
-      com_consoleLines[i][0] = '\0';
-      Q_strncpyz( com_earlyConnect, Cmd_Argv( 1 ), sizeof( com_earlyConnect ) );
-			continue;
-    } else {
-      Com_Printf("WARNING: Using asynchronous build without an early \\connect <address> command.\n");
-    }
-#endif
-
-#ifndef BUILD_GAME_STATIC
-    if( !Q_stricmp(Cmd_Argv(0), "map")
-      || !Q_stricmp(Cmd_Argv(0), "devmap")
-      || !Q_stricmp(Cmd_Argv(0), "spmap")
-      || !Q_stricmp(Cmd_Argv(0), "spdevmap") ) {
-      com_skipLoadUI = qtrue;
-      continue;
-    }
-#endif
-
 	}
 
 	return (flags == 3) ? qtrue : qfalse ;
@@ -930,6 +909,12 @@ will keep the demoloop from immediately starting
 static qboolean Com_AddStartupCommands( void ) {
 	int		i;
 	qboolean	added;
+#if !defined(BUILD_GAME_STATIC)
+	com_skipLoadUI = qfalse;
+#endif
+#ifdef USE_ASYNCHRONOUS
+	com_earlyConnect = qfalse;
+#endif
 
 	added = qfalse;
 	// quote every token, so args with semicolons can work
@@ -942,6 +927,21 @@ static qboolean Com_AddStartupCommands( void ) {
 		if ( !Q_stricmpn( com_consoleLines[i], "set ", 4 ) ) {
 			continue;
 		}
+
+#if !defined(BUILD_GAME_STATIC)
+    if( !Q_stricmp(Cmd_Argv(0), "map")
+      || !Q_stricmp(Cmd_Argv(0), "devmap")
+      || !Q_stricmp(Cmd_Argv(0), "spmap")
+      || !Q_stricmp(Cmd_Argv(0), "spdevmap") ) {
+      com_skipLoadUI = qtrue;
+    }
+#endif
+
+#ifdef USE_ASYNCHRONOUS
+    if( !Q_stricmp(Cmd_Argv(0), "connect") ) {
+			com_earlyConnect = qtrue;
+    }
+#endif
 
 		added = qtrue;
 		Cbuf_AddText( com_consoleLines[i] );
@@ -3136,21 +3136,6 @@ void Com_RunAndTimeServerPacket( const netadr_t *evFrom, msg_t *buf ) {
 #endif
 
 
-#ifdef USE_ASYNCHRONOUS
-extern cvar_t *cl_dlURL;
-extern cvar_t *cl_allowDownload;
-extern cvar_t *cl_shownet;
-extern void CL_Download_f( void );
-extern void CL_Connect_f( void );
-
-void *Com_PreviousEventPtr( void )
-{
-  return eventQue[ ( eventTail-1 ) & MASK_QUED_EVENTS ].evPtr;
-}
-
-#endif
-
-
 /*
 =================
 Com_EventLoop
@@ -3166,16 +3151,7 @@ int Com_EventLoop( void ) {
 
 	MSG_Init( &buf, bufData, MAX_MSGLEN );
 
-#ifdef USE_ASYNCHRONOUS
-  int currentTail = eventHead;
-	int count = 2; // how many events can happen in a single frame?
-  // limit event sequences to the current event because otherwise it could
-  //   loop forever before the system fully starts, events trigger more events
-
-	while ( count-- || com_fullyInitialized || currentTail - eventTail > 0 ) 
-#else
   while ( 1 ) 
-#endif
   {
 		ev = Com_GetEvent();
 
@@ -4278,14 +4254,20 @@ void Com_Init( char *commandLine ) {
 			}
 		}
 #endif    
-  } else if (com_skipLoadUI) {
-    Cvar_Set("com_skipLoadUI", "1");
-  }
+	} else if (com_skipLoadUI) {
+		Cvar_Set("com_skipLoadUI", "1");
+	}
+
 #ifdef USE_ASYNCHRONOUS
 	// always skip because async file-system triggers it to start after
 	//   index is recevied
-	Cvar_Set("com_skipLoadUI", "1"); 
+	Cvar_Set("com_skipLoadUI", "1");
+	if(!com_earlyConnect) {
+		Com_Printf("WARNING: Using asynchronous build without an early \\connect <address> command.\n");
+	}
 #endif
+
+
 
 #ifndef DEDICATED
 	CL_StartHunkUsers();
@@ -4722,9 +4704,7 @@ void Com_Frame( qboolean noDelay ) {
 	}
 #endif
 
-#ifndef USE_ASYNCHRONOUS
 	NET_FlushPacketQueue();
-#endif
 
 	//
 	// report timing information
