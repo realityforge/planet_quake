@@ -3386,6 +3386,14 @@ shader_t *R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImag
 #ifdef USE_LAZY_LOAD
 			ri.Cvar_Set("r_loadingShader", "");
 #endif
+#ifdef USE_LAZY_LOAD
+			// TODO: check index
+			//   in the future, we can check the index for specific known
+			//   shader reservations.
+			// Provide remap because it could replace it with a pallete shader
+			//   until the image arrives, but for now, just return the default
+			shader.remappedShader = tr.defaultShader;
+#endif
 			shader.defaultShader = qtrue;
 			return FinishShader();
 		}
@@ -3561,6 +3569,9 @@ qhandle_t RE_RegisterShaderNoMip( const char *name ) {
 	}
 
 	sh = R_FindShader( name, LIGHTMAP_2D, qfalse );
+if(Q_stristr(name, "menuback")) {
+	ri.Printf( PRINT_ALL, "menuback!!!!!!!!!!! %i, %i, %i\n", sh->defaultShader, sh->index, sh->lightmapSearchIndex);
+}
 
 #ifdef USE_LAZY_LOAD
 	if( sh == tr.defaultShader ) {

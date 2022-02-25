@@ -5,48 +5,51 @@ const serveIndex = require('serve-index');
 
 const app = express()
 
+const ASSETS_DIRECTORY = __dirname + '/../../../games/multigame/assets/'
+const BUILD_DIRECTORY = __dirname + '/../../../build/'
+
 app.use(express.static(__dirname + '/../http/'));
-app.use(express.static(__dirname + '/../../../build/debug-js-js/'));
+app.use(express.static(BUILD_DIRECTORY + 'debug-js-js/'));
 
 
 // layer alternatives because WASM loads QVM
-app.use('/multigame/vm/', serveIndex(__dirname + '/../../../build/release-js-js/multigame/vm/'));
-app.use('/multigame/vm/', serveIndex(__dirname + '/../../../build/debug-js-js/multigame/vm/'));
+app.use('/multigame/vm/', serveIndex(BUILD_DIRECTORY + 'release-js-js/multigame/vm/'));
+app.use('/multigame/vm/', serveIndex(BUILD_DIRECTORY + 'debug-js-js/multigame/vm/'));
 
-app.use('/multigame/vm/', serveIndex(__dirname + '/../../../build/release-darwin-x86_64/multigame/vm/'));
-app.use('/multigame/vm/', serveIndex(__dirname + '/../../../build/debug-darwin-x86_64/multigame/vm/'));
-app.use('/multigame/vm/', serveIndex(__dirname + '/../../../build/release-linux-x86_64/multigame/vm/'));
-app.use('/multigame/vm/', serveIndex(__dirname + '/../../../build/debug-linux-x86_64/multigame/vm/'));
-app.use('/multigame/vm/', serveIndex(__dirname + '/../../../build/release-win-x86_64/multigame/vm/'));
-app.use('/multigame/vm/', serveIndex(__dirname + '/../../../build/debug-win-x86_64/multigame/vm/'));
+app.use('/multigame/vm/', serveIndex(BUILD_DIRECTORY + 'release-darwin-x86_64/multigame/vm/'));
+app.use('/multigame/vm/', serveIndex(BUILD_DIRECTORY + 'debug-darwin-x86_64/multigame/vm/'));
+app.use('/multigame/vm/', serveIndex(BUILD_DIRECTORY + 'release-linux-x86_64/multigame/vm/'));
+app.use('/multigame/vm/', serveIndex(BUILD_DIRECTORY + 'debug-linux-x86_64/multigame/vm/'));
+app.use('/multigame/vm/', serveIndex(BUILD_DIRECTORY + 'release-win-x86_64/multigame/vm/'));
+app.use('/multigame/vm/', serveIndex(BUILD_DIRECTORY + 'debug-win-x86_64/multigame/vm/'));
 
 
-app.use('/multigame/vm/', express.static(__dirname + '/../../../build/release-js-js/multigame/vm/'));
-app.use('/multigame/vm/', express.static(__dirname + '/../../../build/debug-js-js/multigame/vm/'));
+app.use('/multigame/vm/', express.static(BUILD_DIRECTORY + 'release-js-js/multigame/vm/'));
+app.use('/multigame/vm/', express.static(BUILD_DIRECTORY + 'debug-js-js/multigame/vm/'));
 
-app.use('/multigame/vm/', express.static(__dirname + '/../../../build/release-darwin-x86_64/multigame/vm/'));
-app.use('/multigame/vm/', express.static(__dirname + '/../../../build/debug-darwin-x86_64/multigame/vm/'));
-app.use('/multigame/vm/', express.static(__dirname + '/../../../build/release-linux-x86_64/multigame/vm/'));
-app.use('/multigame/vm/', express.static(__dirname + '/../../../build/debug-linux-x86_64/multigame/vm/'));
-app.use('/multigame/vm/', express.static(__dirname + '/../../../build/release-win-x86_64/multigame/vm/'));
-app.use('/multigame/vm/', express.static(__dirname + '/../../../build/debug-win-x86_64/multigame/vm/'));
+app.use('/multigame/vm/', express.static(BUILD_DIRECTORY + 'release-darwin-x86_64/multigame/vm/'));
+app.use('/multigame/vm/', express.static(BUILD_DIRECTORY + 'debug-darwin-x86_64/multigame/vm/'));
+app.use('/multigame/vm/', express.static(BUILD_DIRECTORY + 'release-linux-x86_64/multigame/vm/'));
+app.use('/multigame/vm/', express.static(BUILD_DIRECTORY + 'debug-linux-x86_64/multigame/vm/'));
+app.use('/multigame/vm/', express.static(BUILD_DIRECTORY + 'release-win-x86_64/multigame/vm/'));
+app.use('/multigame/vm/', express.static(BUILD_DIRECTORY + 'debug-win-x86_64/multigame/vm/'));
 
 
 app.use('/multigame/', serveIndex(__dirname + '/../../../games/multigame/assets/'));
 app.use('/multigame/', express.static(__dirname + '/../../../games/multigame/assets/'));
 
 
-var fileTimeout;
-var latestMtime = new Date();
+var fileTimeout
+var latestMtime = new Date()
 
-var ASSETS_DIRECTORY = __dirname + '/../../../games/multigame/assets/'
-
-function writeVersionFile() {
+function writeVersionFile(time) {
+  console.log('Updating working directory...')
   try {
+    if(!time) time = new Date()
     // refresh any connected clients
     require('fs').writeFileSync(
       path.join(ASSETS_DIRECTORY, 'version.json'), 
-      JSON.stringify([latestMtime, latestMtime]))
+      JSON.stringify([time, time]))
     //fs.watchFile(file, function(curr, prev) {
     //});
   } catch(e) {
@@ -75,17 +78,22 @@ function startFileWatcher(prefix, eventType, filename) {
   }
   // debounce file changes for a second in case there is a copy process going on
   fileTimeout = setTimeout(function () {
-    console.log('Updating working directory...')
-    writeVersionFile()
+    writeVersionFile(latestMtime)
   }, 1000)
 }
 
 if(fs.existsSync(ASSETS_DIRECTORY)) {
   fs.watch(ASSETS_DIRECTORY, startFileWatcher.bind(null, ''))
+  let buildDirs = fs.readdirSync(BUILD_DIRECTORY)
+    .filter(node => node[0] != '.' && fs.statSync(path.join(BUILD_DIRECTORY, node)).isDirectory())
+  for(let i = 0; i < buildDirs.length; i++) {
+    fs.watch(path.join(BUILD_DIRECTORY, buildDirs[i]), function () {
+      writeVersionFile()
+    })
+  }
   // watch at least the top level directories for convenience
   let directories = fs.readdirSync(ASSETS_DIRECTORY)
-    .filter(node => node[0] != '.' 
-      && fs.statSync(path.join(ASSETS_DIRECTORY, node)).isDirectory())
+    .filter(node => node[0] != '.' && fs.statSync(path.join(ASSETS_DIRECTORY, node)).isDirectory())
   for(let i = 0; i < directories.length; i++) {
     fs.watch(path.join(ASSETS_DIRECTORY, directories[i]), 
       startFileWatcher.bind(null, directories[i]))
@@ -94,7 +102,7 @@ if(fs.existsSync(ASSETS_DIRECTORY)) {
   // always make a version file in live-reload mode
   app.use('/multigame/version.json', function (request, response) {
     if(!fs.existsSync(path.join(ASSETS_DIRECTORY, 'version.json'))) {
-      writeVersionFile()
+      writeVersionFile(latestMtime)
     }
     response.sendFile(path.join(ASSETS_DIRECTORY, 'version.json'));
   });

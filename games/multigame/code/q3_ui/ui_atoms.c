@@ -1237,7 +1237,6 @@ void UI_Refresh( int realtime )
 				//trap_R_ClearScene();
 			}
 			*/
-Com_Printf("wtf? %i\n", uis.menuBackShader);
 
 			// draw the background
 			trap_R_DrawStretchPic( 0, 0, uis.glconfig.vidWidth, uis.glconfig.vidHeight, 0, 0, 1, 1, uis.menuBackNoLogoShader );

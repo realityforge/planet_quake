@@ -271,7 +271,7 @@ typedef struct fileInPack_s {
 	unsigned long			pos;		// file info position in zip
 	unsigned long			size;		// file size
 #ifdef USE_LIVE_RELOAD
-	unsigned long     mtime;
+	fileTime_t     mtime;
 #endif
 	struct	fileInPack_s*	next;		// next file in the hash
 } fileInPack_t;
@@ -873,7 +873,8 @@ void MakeDirectoryBuffer(char *paths, int count, int length, const char *localna
 		curFile->name[strlen(s)] = '\0';
 #ifdef USE_LIVE_RELOAD
 		if(FS_FileExists(curFile->name)) {
-			int _s, _c;
+			fileOffset_t _s;
+			fileTime_t _c;
 			Sys_GetFileStats(FS_BuildOSPath(fs_homepath->string, FS_GetCurrentGameDir(), curFile->name),
 				&_s, &curFile->mtime, &_c);
 		} else {
@@ -912,6 +913,23 @@ void MakeDirectoryBuffer(char *paths, int count, int length, const char *localna
 		curFile++;
 	}
 
+}
+
+
+
+fileInPack_t *FindFileInIndex(long hash, const char *filename, fileInPack_t* *hashTable) {
+	fileInPack_t	*pakFile;
+	if(hashTable[hash]) {
+		pakFile = hashTable[hash];
+		do {
+			//printf("comparing: %li,  %s != %s\n", hash, pakFile->name, filename);
+			if ( !FS_FilenameCompare( pakFile->name, filename ) ) {
+				return pakFile;
+			}
+			pakFile = pakFile->next;
+		} while ( pakFile != NULL );
+	}
+	return NULL;
 }
 
 
@@ -956,6 +974,18 @@ void Sys_FileReady(const char *filename, const char* tempname) {
 					download->failed = qfalse;
 					download->downloaded = qfalse; // trigger client events
 					strcpy(&download->loadingName[MAX_QPATH], tempname);
+#ifdef USE_LIVE_RELOAD
+					searchpath_t *search;
+					// update file mtime so we know if it changed again
+					for ( search = fs_searchpaths ; search ; search = search->next ) {
+						if(search->dir && search->dir->hashTable) {
+							fileInPack_t *file;
+							if((file = FindFileInIndex(hash, filename, search->dir->hashTable))) {
+								file->mtime = lastVersionTime;
+							}
+						}
+					}
+#endif
 				} else {
 					// download failed!
 					download->failed = qtrue;
@@ -980,24 +1010,6 @@ void Sys_FileReady(const char *filename, const char* tempname) {
 
 }
 
-#ifdef USE_LIVE_RELOAD
-static int previousVersionTime = 0;
-static qboolean needUnixTime = qfalse;
-static int daysSinceUnix (int y, int m, int d) {
-	int result;
-	if(needUnixTime) {
-		int mo = (m + 9) % 12;
-		int ye = y - m/10;
-		return ye*365 + ye/4 - ye/100 + ye/400 + (mo*306 + 5)/10 + (d - 1);
-	} else {
-		needUnixTime = qtrue;
-		result = daysSinceUnix(y, m, d) - daysSinceUnix(1970, 1, 1);
-		needUnixTime = qfalse;
-		return result;
-	}
-}
-#endif
-
 
 void FS_UpdateFiles(const char *filename, const char *tempname) {
 
@@ -1006,7 +1018,8 @@ Com_Printf("updating files: %s -> %s\n", filename, tempname);
 #ifdef USE_LIVE_RELOAD
 	if(Q_stristr(tempname, "version.json")) {
 		int y, mo, d, h, m, s;
-		int approxTime;
+		struct tm tm;
+		int approxTime = 0;
 		int length;
 		const char *versionFile;
 		length = FS_ReadFile("version.json", (void **)&versionFile);
@@ -1014,18 +1027,22 @@ Com_Printf("updating files: %s -> %s\n", filename, tempname);
 			return;
 		const char *serverTime = JSON_ArrayGetValue(versionFile, versionFile + length, 0);
 		// convert string to approx timestamp
-		sscanf(serverTime, "\"%i-%i-%iT%i:%i:%i.", &y, &mo, &d, &h, &m, &s);
-		approxTime = daysSinceUnix(y, mo, d)*86400 + h*3600 + m*60 + s;
-		if(previousVersionTime == 0) {
-			previousVersionTime = approxTime;
-		} else if (approxTime > previousVersionTime) {
-			previousVersionTime = approxTime;
-			// TODO: some kind of reloading action?
-			// clear out any failed states so they can be rechecked
-			lastVersionTime = Sys_Milliseconds();
-			// version was supposed to describe what changed in each index, 
-			//   0 - main program, 1 - asset files, 2 - scripts, 3 - sounds, 4 - qvms?
-			Cbuf_AddText("wait; vid_restart;");
+		if ( sscanf(serverTime, "\"%i-%i-%iT%i:%i:%i.", &y, &mo, &d, &h, &m, &s) ) {
+			tm.tm_year = y - 1900;
+			tm.tm_mon = mo - 1;
+			tm.tm_mday = d;
+			tm.tm_hour = h;
+			tm.tm_min = m;
+			tm.tm_sec = s;
+			approxTime = mktime(&tm);
+			if (lastVersionTime == 0 || approxTime > lastVersionTime) {
+				// TODO: some kind of reloading action?
+				// clear out any failed states so they can be rechecked
+				lastVersionTime = approxTime;
+				// version was supposed to describe what changed in each index, 
+				//   0 - main program, 1 - asset files, 2 - scripts, 3 - sounds, 4 - qvms?
+				Cbuf_AddText("wait; vid_restart;");
+			}
 		}
 	} else
 #endif
@@ -1038,7 +1055,11 @@ Com_Printf("updating files: %s -> %s\n", filename, tempname);
 	// try to reload UI with current game if needed
 	if(Q_stristr(tempname, "vm/ui.qvm")) {
     Cvar_Set("com_skipLoadUI", "0");
+		Com_Printf("goddamnit\n");
 		CL_StartHunkUsers();
+#ifdef USE_LIVE_RELOAD
+		Cbuf_AddText("wait; vid_restart;");
+#endif
 	} else 
 
 	// do some extra processing, restart UI if default.cfg is found
@@ -1092,23 +1113,6 @@ Com_Printf("updating files: %s -> %s\n", filename, tempname);
 	}
 }
 
-
-fileInPack_t *FindFileInIndex(long hash, const char *filename, fileInPack_t* *hashTable) {
-	fileInPack_t	*pakFile;
-	if(hashTable[hash]) {
-		pakFile = hashTable[hash];
-		do {
-			//printf("comparing: %li,  %s != %s\n", hash, pakFile->name, filename);
-			if ( !FS_FilenameCompare( pakFile->name, filename ) ) {
-				return pakFile;
-			}
-			pakFile = pakFile->next;
-		} while ( pakFile != NULL );
-	}
-	return NULL;
-}
-
-
 void FS_CheckIndex(const long fullHash, const char *filename) {
 	searchpath_t	*search;
 	char firstDirectory[MAX_QPATH];
@@ -1131,6 +1135,10 @@ Com_Printf("searching index for %s\n", filename);
 
 			// TODO: test if the file exists once anyways if we havent received a
 			//   real index from the server and are working off HTTP
+			if(isInIndex && Q_stristr(filename, "vm/ui.qvm")) {
+				// check if we have a local copy of the UI
+				Com_Printf("god fucking damnit: %i != %i\n", (int)file->mtime, lastVersionTime);
+			}
 			if(!isInIndex
 #ifdef USE_LIVE_RELOAD
 				|| file->mtime < lastVersionTime
@@ -1179,7 +1187,6 @@ Com_Printf("searching index for %s\n", filename);
 	}
 
 }
-
 
 #endif
 
