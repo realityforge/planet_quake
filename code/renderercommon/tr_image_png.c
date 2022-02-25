@@ -256,12 +256,17 @@ static struct BufferedFile *ReadBufferedFile(const char *name)
 	 */
 
 #ifdef USE_ASYNCHRONOUS
+#ifdef __WASM__
+extern char *g_bigcharsData;
+extern int g_bigcharsSize;
+#else
 #define INCBIN_SILENCE_BITCODE_WARNING
 #include "../qcommon/incbin.h"
 #include "incbin.h"
+INCBIN(_bigchars, "../renderercommon/bigchars.png");
+#endif
 	noFree = qfalse;
 	if(Q_stristr(name, "gfx/2d/bigchars_backup")) {
-		INCBIN(_bigchars, "../renderercommon/bigchars.png");
 		BF->Buffer = (byte *)g_bigcharsData;
 		BF->Length = g_bigcharsSize;
 		BF->Ptr    = (byte *)g_bigcharsData;

@@ -795,14 +795,23 @@ static void NeedCDKeyAction( qboolean result ) {
 }
 
 
-void UI_SetActiveMenu( uiMenuCommand_t menu ) {
+void UI_SetActiveMenu( uiMenuCommand_t menu, const char *breadcrumb ) {
 	// this should be the ONLY way the menu system is brought up
 	// enusure minumum menu data is cached
 	Menu_Cache();
 
 	switch ( menu ) {
 	case UIMENU_NONE:
-		UI_ForceMenuOff();
+		if(breadcrumb) {
+			if(Q_stristr(breadcrumb, "main")) {
+				UI_SetActiveMenu(UIMENU_MAIN, NULL);
+			} else if (Q_stristr(breadcrumb, "multiplayer")) {
+				UI_ArenaServersMenu();
+				return;
+			}
+		} else {
+			UI_ForceMenuOff();
+		}
 		return;
 	case UIMENU_MAIN:
 		UI_MainMenu();
@@ -821,9 +830,6 @@ void UI_SetActiveMenu( uiMenuCommand_t menu ) {
 		*/
 		trap_Cvar_Set( "cl_paused", "1" );
 		UI_InGameMenu();
-		return;
-	case 	UIMENU_MULTIPLAYER:
-		UI_ArenaServersMenu();
 		return;
 	// bk001204
 	case UIMENU_TEAM:
@@ -1207,6 +1213,7 @@ void UI_UpdateScreen( void ) {
 UI_Refresh
 =================
 */
+static int goddamnit;
 void UI_Refresh( int realtime )
 {
 	int amount;
@@ -1237,6 +1244,10 @@ void UI_Refresh( int realtime )
 				//trap_R_ClearScene();
 			}
 			*/
+			if(realtime - goddamnit > 1000) {
+				goddamnit = realtime;
+Com_Printf("wtf 6? %i\n", uis.menuBackShader);
+			}
 
 			// draw the background
 			trap_R_DrawStretchPic( 0, 0, uis.glconfig.vidWidth, uis.glconfig.vidHeight, 0, 0, 1, 1, uis.menuBackNoLogoShader );

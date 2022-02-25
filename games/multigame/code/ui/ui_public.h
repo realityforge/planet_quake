@@ -124,7 +124,7 @@ typedef enum {
 	UIMENU_BAD_CD_KEY,
 	UIMENU_TEAM,
 	UIMENU_POSTGAME,
-	UIMENU_MULTIPLAYER,
+	UIMENU_BREADCRUMB = 0,
 } uiMenuCommand_t;
 
 #define SORT_HOST			0

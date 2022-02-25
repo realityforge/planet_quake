@@ -574,6 +574,7 @@ typedef struct downloadLazy_s {
 	qboolean ready; // ready for updating
 	qboolean downloaded; // already processed
 	qboolean failed;
+	qboolean isDirectory;
   struct downloadLazy_s *next;
 } downloadLazy_t;
 
@@ -637,7 +638,7 @@ void Sys_UpdateNeeded( int tableId, char *ready, char *downloadNeeded ) {
 
 static char stupidPathError[MAX_OSPATH];
 
-void Sys_FileNeeded(const char *needs) {
+void Sys_FileNeeded(const char *needs, qboolean isDirectoryIndex) {
   unsigned int hash;
 	const char *loading;
   downloadLazy_t* *downloadTable;
@@ -656,6 +657,10 @@ void Sys_FileNeeded(const char *needs) {
 		strcat(filename, "/");
 	}
 	strcat(filename, needs);
+	if(needs[strlen(needs)-1] != '/' && isDirectoryIndex) {
+		strcat(filename, "/");
+	}
+
 
 	// check index need to download
 	loading = Cvar_VariableString("r_loadingShader");
@@ -706,6 +711,7 @@ void Sys_FileNeeded(const char *needs) {
 		download->downloadName[strlen(filename)] = '\0';
 		download->next = downloadTable[hash];
 		download->ready = qfalse;
+		download->isDirectory = isDirectoryIndex;
 		downloadTable[hash] = download;
 		download->lastRequested = 0; // request immediately, updated after first request
 	} else {
@@ -715,18 +721,21 @@ void Sys_FileNeeded(const char *needs) {
 			download->downloaded = qfalse;
 			download->ready = qfalse;
 			download->failed = qfalse;
+			download->isDirectory = qfalse;
 			// add 1500 millis to whatever requested it a second time
 			download->lastRequested = Sys_Milliseconds(); 
 		} else
 		if( download->failed && download->lastRequested < lastVersionTime) {
 			download->downloaded = qfalse;
 			download->ready = qfalse;
+			download->isDirectory = isDirectoryIndex;
 			download->failed = qfalse;
 			download->lastRequested = Sys_Milliseconds(); 
 		}
 #endif
 		return; // skip debug message below, that's all
 	}
+
 	// why is it repeating gamedir?
 	if(!stupidPathError[0]) {
 		strcat(stupidPathError, FS_GetCurrentGameDir());
@@ -734,7 +743,7 @@ void Sys_FileNeeded(const char *needs) {
 		strcat(stupidPathError, FS_GetCurrentGameDir());
 	}
 
-assert(!Q_stristr(filename, stupidPathError));
+	assert(!Q_stristr(filename, stupidPathError));
 	//Com_Printf("file needed! %s %s %i\n", filename, loading, hash);
 }
 
@@ -945,6 +954,7 @@ fileInPack_t *FindFileInIndex(long hash, const char *filename, fileInPack_t* *ha
 	return NULL;
 }
 
+#define CACHE_FILE_NAME "pk3cache.dat"
 
 // TODO: move this to cl_main?
 #ifdef __WASM__
@@ -963,10 +973,7 @@ void Sys_FileReady(const char *filename, const char* tempname) {
 	}
 
 	// mark the correct file as ready
-	if(!Q_stricmp(filename, "pk3cache.dat")
-	//	|| !Q_stricmp(filename, "version.json")
-		|| !Q_stricmp(filename, FS_GetCurrentGameDir())
-	) {
+	if(Q_stristr(filename, FS_GetCurrentGameDir())) {
 		// special exception because this is the only file we download outside the gamedir
 		// TODO: make a special exception for updating the EXE from Github?
 		Com_sprintf(localName, sizeof(localName), "%s", filename);
@@ -1032,7 +1039,7 @@ Com_Printf("updating files: %s -> %s\n", filename, tempname);
 #ifdef USE_LIVE_RELOAD
 	if(Q_stristr(tempname, "version.json")) {
 		int y, mo, d, h, m, s;
-		struct tm tm;
+		struct tm tmi;
 		int approxTime = 0;
 		int length;
 		const char *versionFile;
@@ -1040,15 +1047,15 @@ Com_Printf("updating files: %s -> %s\n", filename, tempname);
 		if (length < 1)
 			return;
 		const char *serverTime = JSON_ArrayGetValue(versionFile, versionFile + length, 0);
-		// convert string to approx timestamp
-		if ( sscanf(serverTime, "\"%i-%i-%iT%i:%i:%i.", &y, &mo, &d, &h, &m, &s) ) {
-			tm.tm_year = y - 1900;
-			tm.tm_mon = mo - 1;
-			tm.tm_mday = d;
-			tm.tm_hour = h;
-			tm.tm_min = m;
-			tm.tm_sec = s;
-			approxTime = mktime(&tm);
+		// convert string to approx timestamp, skip quote
+		if ( sscanf(serverTime + 1, "%i-%i-%iT%i:%i:%i.", &y, &mo, &d, &h, &m, &s) ) {
+			tmi.tm_year = y - 1900;
+			tmi.tm_mon = mo - 1;
+			tmi.tm_mday = d;
+			tmi.tm_hour = h;
+			tmi.tm_min = m;
+			tmi.tm_sec = s;
+			approxTime = mktime(&tmi);
 			if (lastVersionTime == 0 || approxTime > lastVersionTime) {
 				// TODO: some kind of reloading action?
 				// clear out any failed states so they can be rechecked
@@ -1158,7 +1165,7 @@ Com_Printf("searching index for %s\n", filename);
 				|| (isInIndex && file->mtime < lastVersionTime)
 #endif
 			) {
-					Sys_FileNeeded(filename);
+					Sys_FileNeeded(filename, qfalse);
 			} else {
 				continue;
 			}
@@ -1183,15 +1190,9 @@ Com_Printf("searching index for %s\n", filename);
 				lastDirectory[0] = '\0';
 			}
 
-			//localName[0] = '\0';
-			//Com_sprintf(localName, sizeof(localName), "%s/%s/", FS_GetCurrentGameDir(), firstDirectory);
-			hash = FS_HashFileName(firstDirectory, search->dir->hashSize);
-			if(FindFileInIndex(hash, firstDirectory, search->dir->hashTable)) {
-				Sys_FileNeeded(filename);
-				Sys_FileNeeded(firstDirectory);
-				if(lastDirectory[0]) {
-					Sys_FileNeeded(lastDirectory);
-				}
+			FS_CheckIndex(0, firstDirectory, qfalse);
+			if(lastDirectory[0]) {
+				FS_CheckIndex(0, lastDirectory, qfalse);
 			}
 
 			// found something!
@@ -2459,9 +2460,11 @@ int FS_FOpenFileRead( const char *filename, fileHandle_t *file, qboolean uniqueF
 	// we can do that as long as we know properties of our hash function
 	fullHash = FS_HashFileName( filename, 0U );
 
+#if defined(USE_ASYNCHRONOUS) || defined(USE_LAZY_LOAD)
 #ifdef USE_LIVE_RELOAD
 	// check for updates!
 	FS_CheckIndex(fullHash, filename, qfalse);
+#endif
 #endif
 
 	if ( file == NULL ) {
@@ -5896,7 +5899,7 @@ static void FS_Startup( void ) {
 #ifdef USE_ASYNCHRONOUS
 	// setup paths for downloading to use
 	if(!FS_SV_FileExists(CACHE_FILE_NAME)) {
-		Sys_FileNeeded(CACHE_FILE_NAME);
+		Sys_FileNeeded(CACHE_FILE_NAME, qfalse);
 	}
 #endif
 
@@ -6692,14 +6695,14 @@ void FS_Restart( int checksumFeed ) {
 #ifdef USE_ASYNCHRONOUS
 	const char *downloadFile = va("%s/default.cfg", FS_GetCurrentGameDir());
 	if(!FS_SV_FileExists(downloadFile)) {
-		Sys_FileNeeded(downloadFile);
+		Sys_FileNeeded(downloadFile, qfalse);
 	}
 	// snoop on directory index
 	if(!Cvar_VariableIntegerValue("sv_pure")) {
-		Sys_FileNeeded(FS_GetCurrentGameDir());
-		Sys_FileNeeded("vm/");
-		Sys_FileNeeded("maps/");
-		Sys_FileNeeded("scripts/");
+		Sys_FileNeeded(FS_GetCurrentGameDir(), qtrue);
+		Sys_FileNeeded("vm/", qtrue);
+		Sys_FileNeeded("maps/", qtrue);
+		Sys_FileNeeded("scripts/", qtrue);
 	}
 
 #endif

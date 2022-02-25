@@ -2759,7 +2759,6 @@ static void InitShader( const char *name, int lightmapIndex ) {
 	Com_Memset( &stages, 0, sizeof( stages ) );
 
 	Q_strncpyz( shader.name, name, sizeof( shader.name ) );
-  shader.lastTimeUsed = tr.lastRegistrationTime;
 	shader.lightmapIndex = lightmapIndex;
 
 	// we need to know original (unmodified) lightmap index
@@ -3295,15 +3294,16 @@ shader_t *R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImag
 		// have to check all default shaders otherwise for every call to R_FindShader
 		// with that same strippedName a new default shader is created.
 		if ( (sh->lightmapSearchIndex == lightmapIndex || sh->defaultShader) && !Q_stricmp(sh->name, strippedName) 
-#ifdef USE_MULTIVM_CLIENT
-			&& tr.lastRegistrationTime <= sh->lastTimeUsed
-#endif
 #ifdef USE_LAZY_LOAD
 			// if not mapping shaders and lightmaps match, leave default index
 			//   out of this decision because the default shader might be 
 			//   replaced this round if all images load
 			&& tr.lastRegistrationTime <= sh->lastTimeUsed
       && (!mapShaders && sh->lightmapSearchIndex == lightmapIndex)
+#else
+#ifdef USE_MULTIVM_CLIENT
+			&& tr.lastRegistrationTime <= sh->lastTimeUsed
+#endif
 #endif
 		) {
 			// match found
@@ -3312,6 +3312,7 @@ shader_t *R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImag
 	}
 
 	InitShader( strippedName, lightmapIndex );
+  shader.lastTimeUsed = tr.lastRegistrationTime;
 
 	// FIXME: set these "need" values appropriately
 	//shader.needsNormal = qtrue;
@@ -4041,6 +4042,9 @@ void RE_ReloadShaders( qboolean createNew ) {
 #endif
 	for(int i = 0; i < tr.numShaders; i++) {
 		//RE_RegisterShader(tr.shaders[i]->name);
+	}
+	for(int i = 0; i < tr.numModels; i++) {
+		//RE_RegisterModel(tr.models[i]->name);
 	}
 
 }

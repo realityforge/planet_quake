@@ -19,13 +19,13 @@ GLEmulation = {
   glGetIntegerv: function (pname, param) {
     switch (pname) {
       case 0x8872 /* GL_MAX_TEXTURE_IMAGE_UNITS */: 
-        Q3e.paged32[(param) >> 2] = Q3e.webgl.MAX_TEXTURE_IMAGE_UNITS
+        HEAP32[(param) >> 2] = Q3e.webgl.MAX_TEXTURE_IMAGE_UNITS
         break
       case 0x0D33 /* GL_MAX_TEXTURE_SIZE */:
-        Q3e.paged32[(param) >> 2] = Q3e.webgl.MAX_TEXTURE_SIZE
+        HEAP32[(param) >> 2] = Q3e.webgl.MAX_TEXTURE_SIZE
         break
       case 0x8B4D /* GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS */:
-        Q3e.paged32[(param) >> 2] = Q3e.webgl.MAX_COMBINED_TEXTURE_IMAGE_UNITS
+        HEAP32[(param) >> 2] = Q3e.webgl.MAX_COMBINED_TEXTURE_IMAGE_UNITS
         break
       case 0x864B /* GL_PROGRAM_ERROR_POSITION_ARB */:
         // TODO: copy from renderer2 requirements
@@ -134,7 +134,7 @@ GLEmulation = {
   ],
   glGenTextures: function (n, textures) {
     GLEmulation.textures.push(Q3e.webgl.createTexture())
-    Q3e.paged32[textures >> 2] = GLEmulation.textures.length
+    HEAP32[textures >> 2] = GLEmulation.textures.length
   },
   glBindTexture: function (target, id) { 
     // TODO: target, bloom has 2 textures above and here 
@@ -144,7 +144,7 @@ GLEmulation = {
   },
   glTexSubImage2D: function (target, level, xoffset, yoffset, width, height, format, type, pixels) { 
     debugger
-    let imageView = Q3e.paged.subarray(pixels, pixels + computedSize)
+    let imageView = HEAP8.subarray(pixels, pixels + computedSize)
     Q3e.webgl.texSubImage2D(Q3e.webgl.TEXTURE_2D, level, xoffset, yoffset, width, height, format, type, imageView) 
   },
   glTexImage2D: function (target, level, internalFormat, width, height, border, format, type, pixels) {
@@ -172,7 +172,7 @@ GLEmulation = {
     }
 
     let computedSize = width * height * (GLEmulation.colorChannels[format - 0x1902] + 1)
-    let imageView = Q3e.paged.subarray(pixels, pixels + computedSize)
+    let imageView = HEAP8.subarray(pixels, pixels + computedSize)
     Q3e.webgl.texImage2D(Q3e.webgl.TEXTURE_2D, level, internalFormat, width, height, border, format, type, imageView)
     // gl.generateMipmap(gl.TEXTURE_2D);
   },
@@ -331,7 +331,7 @@ GLEmulation = {
     //   when drawelements or drawarrays is called
     //Q3e.webgl.vertexAttribPointer(
     //  GLEmulation.attribPointers.attr_Position, size, type, false, stride, 
-    //  Q3e.paged.subarray(pointer, pointer + size));
+    //  HEAP8.subarray(pointer, pointer + size));
   },
 
   glDrawElements: function (mode, count, type, indices, start, end) {
@@ -339,7 +339,7 @@ GLEmulation = {
     Q3e.webgl.bindBuffer(Q3e.webgl.ELEMENT_ARRAY_BUFFER, GLEmulation.indexBuffers[1])
     Q3e.webgl.bufferData(
       Q3e.webgl.ELEMENT_ARRAY_BUFFER, 
-      Q3e.paged32.subarray(
+      HEAP32.subarray(
         indices >> 2,                   // start 
         (indices >> 2) + count), // end
       Q3e.webgl.STATIC_DRAW)
@@ -348,7 +348,7 @@ GLEmulation = {
     if(GLEmulation.colorType == 0x1401) {
       Q3e.webgl.bufferData(
         Q3e.webgl.ARRAY_BUFFER,
-        Q3e.paged.subarray(
+        HEAP8.subarray(
         GLEmulation.colorPointer,  // start
         (GLEmulation.colorPointer) // end
           + (count * (GLEmulation.colorSize + GLEmulation.colorStride))),
@@ -356,7 +356,7 @@ GLEmulation = {
     } else {
       Q3e.webgl.bufferData(
         Q3e.webgl.ARRAY_BUFFER,
-        Q3e.paged32f.subarray(
+        HEAPF32.subarray(
           GLEmulation.colorPointer >> 2,  // start
           (GLEmulation.colorPointer >> 2) // end
             + (count * (GLEmulation.colorSize + GLEmulation.colorStride))),
@@ -368,7 +368,7 @@ GLEmulation = {
     Q3e.webgl.bindBuffer(Q3e.webgl.ARRAY_BUFFER, GLEmulation.texcoordBuffer)
     Q3e.webgl.bufferData(
       Q3e.webgl.ARRAY_BUFFER,
-      Q3e.paged32f.subarray(
+      HEAPF32.subarray(
         GLEmulation.texcoordPointer >> 2,  // start
         (GLEmulation.texcoordPointer >> 2) // end
           + (count * (GLEmulation.texcoordSize + GLEmulation.texcoordStride))),
@@ -379,7 +379,7 @@ GLEmulation = {
     Q3e.webgl.bindBuffer(Q3e.webgl.ARRAY_BUFFER, GLEmulation.positionBuffer)
     Q3e.webgl.bufferData(
       Q3e.webgl.ARRAY_BUFFER,
-      Q3e.paged32f.subarray(
+      HEAPF32.subarray(
         GLEmulation.vertexPointer >> 2,  // start
         (GLEmulation.vertexPointer >> 2) // end
           + (count * (GLEmulation.vertexSize + GLEmulation.vertexStride))),
@@ -396,10 +396,10 @@ GLEmulation = {
       GLEmulation.currentColor[0], GLEmulation.currentColor[1], GLEmulation.currentColor[2], GLEmulation.currentColor[3]);
 
     //Q3e.webgl.uniformMatrix4fv(GLEmulation.uniforms.u_modelView, false, 
-    //  Q3e.paged.subarray(GLEmulation.modelMatrix, 
+    //  HEAP8.subarray(GLEmulation.modelMatrix, 
     //    GLEmulation.modelMatrix + count * 4 /* float32 */));
     //Q3e.webgl.uniformMatrix4fv(GLEmulation.uniforms.u_projection, false, 
-    //  Q3e.paged.subarray(GLEmulation.projectionMatrix, 
+    //  HEAP8.subarray(GLEmulation.projectionMatrix, 
     //    GLEmulation.projectionMatrix + count * 4 /* float32 */));
 
 
@@ -560,7 +560,7 @@ GLEmulation = {
     for(let i = 0; i < size; i++) {
       GLEmulation.programPointers[++GLEmulation.numProgramPointers] = 
         Q3e.webgl.createProgram()
-      Q3e.paged32[(programs >> 2) + i] = GLEmulation.numProgramPointers
+      HEAP32[(programs >> 2) + i] = GLEmulation.numProgramPointers
     }
   },
 

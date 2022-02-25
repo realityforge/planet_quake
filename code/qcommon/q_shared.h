@@ -122,6 +122,30 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #endif
 
 
+#ifdef __WASM__
+// vid_restart fast hack scans memory to change ratio values cgame uses to position the HUD and game
+//#define USE_VID_FAST 1
+// allow touch events to set exact cursor position using "cursor spy"
+#define USE_ABS_MOUSE 1
+// start a dedicated server even for single player mode, automatically join a match
+#define USE_LOCAL_DED 1
+// allow loading graphics after the BSP and world has been entered
+#define USE_LAZY_LOAD 1
+// minimize the number of times the renderer restarts
+#define USE_LAZY_MEMORY 1
+// set specific master servers to be used in the Local LAN game list, 
+//   as if masters were also used in LAN games instead of just broadcasting
+//   or to specific master servers that host games geographically nearby
+#define USE_MASTER_LAN 1
+// make the engine asynchronous, required by wasm build
+#define USE_ASYNCHRONOUS 1
+// TODO: need the whole thing or just mtime checker/updater?
+#define USE_LIVE_RELOAD 1
+// 
+#endif // __WASM__
+
+
+
 #ifdef USE_SERVER_ROLES
 #define MAX_CLIENT_ROLES 24
 #endif
@@ -154,28 +178,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define MV_MULTIWORLD_VERSION 2
 #define MV_PROTOCOL_VERSION MV_MULTIWORLD_VERSION
 #endif
-
-
-
-#ifdef __WASM__
-// vid_restart fast hack scans memory to change ratio values cgame uses to position the HUD and game
-//#define USE_VID_FAST 1
-// allow touch events to set exact cursor position using "cursor spy"
-#define USE_ABS_MOUSE 1
-// start a dedicated server even for single player mode, automatically join a match
-#define USE_LOCAL_DED 1
-// allow loading graphics after the BSP and world has been entered
-#define USE_LAZY_LOAD 1
-// minimize the number of times the renderer restarts
-#define USE_LAZY_MEMORY 1
-// set specific master servers to be used in the Local LAN game list, 
-//   as if masters were also used in LAN games instead of just broadcasting
-//   or to specific master servers that host games geographically nearby
-#define USE_MASTER_LAN 1
-// make the engine asynchronous, required by wasm build
-#define USE_ASYNCHRONOUS 1
-// 
-#endif // __WASM__
 
 
 #ifdef DEDICATED
@@ -339,18 +341,19 @@ int *__errno_location(void);
 #define abort Sys_Exit
 #define UINT_MAX 0xffffffffU
 #define RAND_MAX (0x7fffffff)
+typedef int off_t;
 typedef unsigned long uintptr_t;
 typedef long intptr_t;
 typedef long ptrdiff_t;
 typedef signed char     int8_t;
 typedef signed short    int16_t;
 typedef signed int      int32_t;
-typedef signed long long   int64_t;
+typedef signed int   int64_t;
 typedef unsigned char   uint8_t;
 typedef unsigned short  uint16_t;
 typedef unsigned int    uint32_t;
-typedef unsigned long long    uint64_t;
-typedef signed long long time_t;
+typedef unsigned int    uint64_t;
+typedef signed int time_t;
 struct _IO_FILE { char __x; };
 typedef struct _IO_FILE FILE;
 typedef __builtin_va_list va_list;
@@ -359,7 +362,7 @@ typedef __SIZE_TYPE__ size_t;
 typedef struct {
 	unsigned long fds_bits[FD_SETSIZE / 8 / sizeof(long)];
 } fd_set;
-
+struct timeval { time_t tv_sec; time_t tv_usec; };
 
 void srand (unsigned);
 void *malloc (size_t);
@@ -390,8 +393,10 @@ void Sys_Error( const char *error, ... );
 void Sys_Error( const char *error, ... );
 
 typedef void*jmp_buf;
-void longjmp( void *buf, int ret );
-int setjmp( void *buf );
+#define setjmp(x) (qfalse)
+#define longjmp(x, y)
+//void longjmp( void *buf, int ret );
+//int setjmp( void *buf );
 int CL_Download( const char *cmd, const char *pakname, int autoDownload );
 
 
@@ -514,6 +519,7 @@ float FloatSwap( const float *f );
 #include "q_platform.h"
 
 //=============================================================
+#ifndef __WASM__
 
 #ifdef Q3_VM
 	typedef int intptr_t;
@@ -540,6 +546,8 @@ float FloatSwap( const float *f );
 		#define Q_vsnprintf vsnprintf
 	#endif
 #endif
+
+#endif // !__WASM__
 
 
 #ifdef USE_PRINT_CONSOLE
@@ -699,6 +707,9 @@ typedef unsigned char byte;
 
 #ifndef __BYTEBOOL__
 typedef enum { qfalse = 0, qtrue } qboolean;
+#ifdef __WASM__
+typedef qboolean bool;
+#endif
 #define __BYTEBOOL__
 #endif
 
@@ -1945,6 +1956,7 @@ typedef struct {
 //=============================================
 
 
+#ifndef __WASM__
 typedef struct qtime_s {
 	int tm_sec;     /* seconds after the minute - [0,59] */
 	int tm_min;     /* minutes after the hour - [0,59] */
@@ -1957,12 +1969,24 @@ typedef struct qtime_s {
 	int tm_isdst;   /* daylight savings time flag */
 } qtime_t;
 
-#ifdef __WASM__
+#else
+struct tm {
+	int tm_sec;     /* seconds after the minute - [0,59] */
+	int tm_min;     /* minutes after the hour - [0,59] */
+	int tm_hour;    /* hours since midnight - [0,23] */
+	int tm_mday;    /* day of the month - [1,31] */
+	int tm_mon;     /* months since January - [0,11] */
+	int tm_year;    /* years since 1900 */
+	int tm_wday;    /* days since Sunday - [0,6] */
+	int tm_yday;    /* days since January 1 - [0,365] */
+	int tm_isdst;   /* daylight savings time flag */
+};
 
-typedef struct qtime_s tm;
+typedef struct tm qtime_t;
 char *ctime(const time_t *timer);
 struct tm *localtime(const time_t * t);
 time_t time(time_t *t);
+time_t mktime (struct tm *);
 
 char *asctime (const struct tm *);
 

@@ -3846,7 +3846,7 @@ static void CL_CheckUserinfo( void ) {
 
 #ifdef USE_LIVE_RELOAD
 #ifdef USE_ASYNCHRONOUS
-void Sys_FileNeeded(const char *filename);
+void Sys_FileNeeded(const char *filename, qboolean isDirectoryIndex);
 #endif
 void Sys_ChangeNotify( char *ready );
 static int changeTimer = 0;
@@ -3863,7 +3863,7 @@ void CL_ChangeNotifcations( void ) {
 
 #ifdef USE_ASYNCHRONOUS
 	// ping the server version.json file for a file time
-	Sys_FileNeeded(va("%s/version.json", FS_GetCurrentGameDir()));
+	Sys_FileNeeded("version.json", qfalse);
 #endif
 
 	ready[0] = '\0';
@@ -3914,17 +3914,16 @@ void CL_CheckLazyUpdates( void ) {
 			Sys_UpdateNeeded(j, ready, downloadNeeded);
 			// check for files that need to be downloaded, runs on separate thread!?
 			if(downloadNeeded[0] != '\0') {
+				if(qfalse
 #ifdef USE_CURL
-				if(!Com_DL_InProgress( &download )) {
-					CL_Download( "lazydl", downloadNeeded, qfalse );
-				}
-#else
+					|| !Com_DL_InProgress( &download )
+#endif
 #ifdef __WASM__
-				if(!clc.downloadTempName[0]) {
+					|| !clc.downloadTempName[0]
+#endif
+				) {
 					CL_Download( "lazydl", downloadNeeded, qfalse );
 				}
-#endif
-#endif
 			}
 		} else {
 			Sys_UpdateNeeded(j, ready, NULL);
@@ -3948,9 +3947,6 @@ void CL_CheckLazyUpdates( void ) {
 			ready[12] = '\0';
 			if(cls.rendererStarted) {
 				re.UpdateShader(&ready[13], atoi(&ready[0]));
-				if(!Q_stricmp(FS_GetCurrentGameDir(), "multigame") && cls.uiStarted) {
-					VM_Call( uivm, UI_INIT, (cls.state >= CA_AUTHORIZING && cls.state < CA_ACTIVE) );
-				}
 			}
 		} else if (j == 3) 
 #endif
@@ -3959,12 +3955,18 @@ void CL_CheckLazyUpdates( void ) {
 			if(Q_stristr(&ready[MAX_QPATH], "/scripts/")
 				&& Q_stristr(&ready[MAX_QPATH], ".shader")) {
 				re.ReloadShaders(qfalse);
-				//Cbuf_AddText("wait; vid_restart;");
-				return;
+				//Cbuf_AddText("wait; vid_restart;");;
+			} else {
+				ready[MAX_QPATH - 1] = '\0';
+				FS_UpdateFiles(ready, &ready[MAX_QPATH]);
 			}
+		}
 
-			ready[MAX_QPATH - 1] = '\0';
-			FS_UpdateFiles(ready, &ready[MAX_QPATH]);
+//#if defined(USE_LAZY_LOAD) || defined(USE_ASYNCHRONOUS)
+
+		// multigame has a special feature to reload an missing assets when INIT is called
+		if(!Q_stricmp(FS_GetCurrentGameDir(), "multigame") && cls.uiStarted) {
+			VM_Call( uivm, UI_INIT, (cls.state >= CA_AUTHORIZING && cls.state < CA_ACTIVE) );
 		}
 		break; // something updated, that's good for this frame
 	}
@@ -4381,6 +4383,11 @@ void CL_StartHunkUsers( void ) {
 		Sys_SetStatus("Loading UI...");
 		cls.uiStarted = qtrue;
 		CL_InitUI(qfalse);
+	}
+
+	if(cls.uiStarted && Cvar_VariableString("ui_breadCrumb")[0]) {
+		VM_Call( uivm, 2, UI_SET_ACTIVE_MENU, UIMENU_BREADCRUMB, Cvar_VariableString("ui_breadCrumb") );
+		Cvar_Set("ui_breadCrumb", "");
 	}
 
 #ifdef USE_ASYNCHRONOUS
@@ -5422,6 +5429,8 @@ void CL_Init( void ) {
 	in_mouseAbsolute = Cvar_Get("in_mouseAbsolute", "1", CVAR_ARCHIVE);
 #endif
 
+	// get the menu path from multigame VM so we can start on a specific screen
+	Cvar_Get("ui_breadCrumb", "", CVAR_TEMP);
 #ifdef __WASM__
 	cl_returnURL = Cvar_Get("cl_returnURL", "", CVAR_TEMP);
 #endif

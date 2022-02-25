@@ -47,20 +47,15 @@ function Sys_Offline() {
 function Sys_NET_MulticastLocal (net, length, data) {
   // all this does is use a dedicated server in a service worker
   window.serverWorker.postMessage([
-    'net', net, Uint8Array.from(Q3e.paged.slice(data, data+length))])
+    'net', net, Uint8Array.from(HEAP8.slice(data, data+length))])
 }
-
-var controller
-var signal
-if(AbortController) {
-  controller = new AbortController()
-  signal = controller.signal;
-}
-
 
 function CL_Download(cmd, name, auto) {
   if(!FS.database) {
     openDatabase()
+  }
+  if(AbortController && !NET.controller) {
+    NET.controller = new AbortController()
   }
 
   // TODO: make a utility for Cvar stuff?
@@ -80,7 +75,7 @@ function CL_Download(cmd, name, auto) {
     mode: 'cors',
     responseType: 'arraybuffer',
     credentials: 'omit',
-    signal: controller ? signal : null
+    signal: NET.controller ? NET.controller.signal : null
   })
   .catch(function (error) {
     return
@@ -146,6 +141,7 @@ function CL_Download(cmd, name, auto) {
 }
 
 var NET = {
+  controller: null,
   Sys_Offline: Sys_Offline,
   Sys_SockaddrToString: Sys_SockaddrToString,
   Sys_StringToSockaddr: Sys_StringToSockaddr,

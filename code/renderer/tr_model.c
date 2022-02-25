@@ -314,7 +314,11 @@ qhandle_t RE_RegisterModel( const char *name )
 #ifdef USE_LAZY_LOAD
 			found = qtrue;
 			// break instead in-case its time to re-load the model after download
-			if( mod->type != MOD_BAD || !updateModels ) {
+			if( (mod->type != MOD_BAD || !updateModels)
+				// reload models if we got a new .shader file we have to reload surface references too
+				//   don't need to reload geometry though, unless the model was MOD_BAD
+				&& tr.lastRegistrationTime <= mod->lastTimeUsed
+			) {
 				return mod->index;
 			} else {
 				break;
@@ -323,11 +327,7 @@ qhandle_t RE_RegisterModel( const char *name )
 			if( mod->type == MOD_BAD ) {
 				return 0;
 			}
-#ifdef USE_MULTIVM_CLIENT
-			return mod->index;
-#else
 			return hModel;
-#endif
 #endif
 		}
 	}

@@ -112,10 +112,13 @@ endif
 SYSTEM           := 
 
 ifeq ($(PLATFORM),js)
+SYSTEM           += sys_main.o 
+endif # not js
+ifeq ($(PLATFORM),wasm)
 SYSTEM           += sys_main.o 	dlmalloc.o sbrk.o
-endif
+endif # not wasm
 
-ifneq ($(PLATFORM),js)
+
 ifdef MINGW
 SYSTEM           += win_main.o win_shared.o win_syscon.o win_resource.o
 ifneq ($(USE_SDL),1)
@@ -127,6 +130,8 @@ SYSTEM           += win_qvk.o
 endif
 endif
 
+ifneq ($(PLATFORM),wasm)
+ifneq ($(PLATFORM),js)
 ifndef MINGW
 SYSTEM           += unix_main.o unix_shared.o linux_signals.o
 ifneq ($(USE_SDL),1)
@@ -139,11 +144,13 @@ endif # not SDL
 
 endif # MINGW
 
-endif # not js
-
 ifeq ($(USE_SDL),1)
 SYSTEM           += sdl_glimp.o sdl_gamma.o sdl_input.o sdl_snd.o
 endif
+
+endif # !js
+endif # !wasm
+
 
 VIDEO            :=
 # TODO static linking? have to switch to gnu++
@@ -307,15 +314,8 @@ $(B)/$(WORKDIR)/%.o: $(MOUNT_DIR)/server/%.c
 $(B)/$(WORKDIR)/%.o: $(MOUNT_DIR)/botlib/%.c
 	$(DO_BOT_CC)
 
-ifeq ($(PLATFORM),js)
-$(B)/$(TARGET_CLIENT): $(Q3OBJ)
-	$(echo_cmd) "LD $@"
-	$(Q)$(LD) -o $@ $(Q3OBJ) $(CLIENT_LDFLAGS) $(LDFLAGS)
-	$(Q)$(OPT) -Os --no-validation -o $@ $@
-
-else
 $(B)/$(TARGET_CLIENT): $(Q3OBJ)
 	$(echo_cmd) "LD $@"
 	$(Q)$(CC) -o $@ $(Q3OBJ) $(CLIENT_LDFLAGS) $(LDFLAGS) 
-endif
+
 endif

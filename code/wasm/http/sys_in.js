@@ -18,7 +18,7 @@ function GLimp_StartDriverAndSetMode(mode, modeFS, fullscreen, fallback) {
   Q3e.canvas.width = document.body.clientWidth
   Q3e.canvas.height = document.body.clientHeight
   document.getElementById('viewport-frame').appendChild(Q3e.canvas)
-  //Q3e.paged32[win>>2] = 1
+  //HEAP32[win>>2] = 1
   //window.title = addressToString(title)
   //return 1 //win;
 
@@ -37,7 +37,7 @@ function GLimp_StartDriverAndSetMode(mode, modeFS, fullscreen, fallback) {
   Q3e.webgl.viewport(0, 0, Q3e.canvas.width, Q3e.canvas.height);
   if (!Q3e.webgl) return 2
   //let handle = malloc(8);
-  //Q3e.paged32[handle>>2] = 1
+  //HEAP32[handle>>2] = 1
 
   // set the window to do the grabbing, when ungrabbing this doesn't really matter
   if(!INPUT.firstClick) {
@@ -181,7 +181,7 @@ function InputPushKeyEvent(evt) {
   }
   if(evt.keyCode === 27) {
     INPUT.cancelBackspace = true;
-    INPUT.InputPushFocusEvent({visible: false})
+    InputPushFocusEvent({visible: false})
   }
 
   checkPasteEvent(evt)
@@ -420,8 +420,8 @@ var INPUT = {
   SDL_ShowCursor: SDL_ShowCursor,
   SDL_SetWindowGrab: SDL_SetWindowGrab,
   GL_GetDrawableSize: function (width, height) {
-    Q3e.paged32[(width+0)>>2] = Q3e.canvas.width
-    Q3e.paged32[(height+0)>>2] = Q3e.canvas.height
+    HEAP32[(width+0)>>2] = Q3e.canvas.width
+    HEAP32[(height+0)>>2] = Q3e.canvas.height
   }
 }
 

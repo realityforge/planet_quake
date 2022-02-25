@@ -1,5 +1,5 @@
 
-const DB_STORE_NAME = 'FILE_DATA';
+var DB_STORE_NAME = 'FILE_DATA';
 
 function openDatabase() {
   if(!FS.open || Date.now() - FS.openTime > 1000) {
@@ -77,7 +77,24 @@ function Sys_Mkdir(filename) {
 }
 
 function Sys_GetFileStats( filename, size, mtime, ctime ) {
-  debugger
+  let fileStr = addressToString(filename)
+  let localName = fileStr
+  if(localName.startsWith('/base')
+    || localName.startsWith('/home'))
+    localName = localName.substring('/base'.length)
+  if(localName[0] == '/')
+    localName = localName.substring(1)
+  if(typeof FS.virtual[localName] != 'undefined') {
+    HEAP32[size >> 2] = (FS.virtual[localName].contents || []).length
+    HEAP32[mtime >> 2] = FS.virtual[localName].timestamp.getTime()
+    HEAP32[ctime >> 2] = FS.virtual[localName].timestamp.getTime()
+    return 1
+  } else {
+    HEAP32[size >> 2] = 0
+    HEAP32[mtime >> 2] = 0
+    HEAP32[ctime >> 2] = 0
+    return 0
+  }
 }
 
 function Sys_FOpen(filename, mode) {
@@ -151,7 +168,7 @@ function Sys_FRead(bufferAddress, byteSize, count, pointer) {
     if(FS.pointers[pointer][0] + i >= FS.pointers[pointer][2].contents.length) {
       break
     }
-    Q3e.paged[bufferAddress + i] = FS.pointers[pointer][2].contents[FS.pointers[pointer][0] + i]
+    HEAP8[bufferAddress + i] = FS.pointers[pointer][2].contents[FS.pointers[pointer][0] + i]
   }
   return i
 }
@@ -194,9 +211,9 @@ function Sys_ListFiles (directory, extension, filter, numfiles, wantsubs) {
   let listInMemory = Z_Malloc( ( matches.length + 1 ) * 4 )
   for(let i = 0; i < matches.length; i++) {
     //matches.push(files[i])
-    Q3e.paged32[(listInMemory + i*4)>>2] = FS_CopyString(stringToAddress(matches[i]));
+    HEAP32[(listInMemory + i*4)>>2] = FS_CopyString(stringToAddress(matches[i]));
   }
-  Q3e.paged32[numfiles >> 2] = matches.length
+  HEAP32[numfiles >> 2] = matches.length
   // skip address-list because for-loop counts \0 with numfiles
   return listInMemory
 }

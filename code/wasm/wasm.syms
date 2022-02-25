@@ -27,6 +27,9 @@ asctime
 longjmp
 setjmp
 ctime
+mktime
+g_bigcharsData
+g_bigcharsSize
 assert_fail
 Com_RealTime
 Sys_Milliseconds

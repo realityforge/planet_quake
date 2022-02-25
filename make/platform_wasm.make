@@ -29,7 +29,7 @@ SHLIBLDFLAGS     := -Wl,--import-memory -Wl,--import-table -Wl,--error-limit=200
                     -Wl,--no-entry -Wl,--allow-undefined-file=code/wasm/wasm.syms 
 LDFLAGS          := -Wl,--import-memory -Wl,--import-table -Wl,--error-limit=200 \
                     -Wl,--export-dynamic --no-standard-libraries \
-                    -Wl,--no-entry --strip-all 
+                    -Wl,--no-entry -Wl,--strip-all 
 
 ifeq ($(BUILD_CLIENT),1)
 SHLIBLDFLAGS     += -Wl,--allow-undefined-file=code/wasm/wasm.syms
@@ -69,6 +69,13 @@ export INCLUDE   := -Icode/wasm/include
 
 
 ifdef B
+
 pre-build:
 	@:
+
+post-build:
+	$(Q)$(OPT) -Os --no-validation -o $@ $@
+# TODO: compile all js files into one/minify/webpack
+# TODO: insert bigchars font into web page
+
 endif

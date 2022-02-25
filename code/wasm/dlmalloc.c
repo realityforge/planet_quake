@@ -4,6 +4,7 @@
 
 #include "../qcommon/q_shared.h"
 
+#define LACKS_SYS_PARAM_H 1
 // When building for wasm we export `malloc` and `emscripten_builtin_malloc` as
 // weak alias of the internal `dlmalloc` which is static to this file.
 #define DLMALLOC_EXPORT static

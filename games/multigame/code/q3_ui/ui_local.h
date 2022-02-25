@@ -580,7 +580,7 @@ extern qboolean 	UI_CursorInRect (int x, int y, int width, int height);
 extern void			UI_AdjustFrom640( float *x, float *y, float *w, float *h );
 extern void			UI_DrawTextBox (int x, int y, int width, int lines);
 extern qboolean		UI_IsFullscreen( void );
-extern void			UI_SetActiveMenu( uiMenuCommand_t menu );
+extern void			UI_SetActiveMenu( uiMenuCommand_t menu, const char *breadcrumb );
 extern void			UI_PushMenu ( menuframework_s *menu );
 extern void			UI_PopMenu (void);
 extern void			UI_ForceMenuOff (void);

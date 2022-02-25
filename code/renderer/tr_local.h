@@ -940,8 +940,10 @@ typedef struct model_s {
 	bmodel_t	*bmodel;		// only if type == MOD_BRUSH
 	md3Header_t	*md3[MD3_MAX_LODS];	// only if type == MOD_MESH
 	void	*modelData;			// only if type == (MOD_MDR | MOD_IQM)
-
 	int			 numLods;
+#ifdef USE_LAZY_LOAD
+	int lastTimeUsed;
+#endif
 } model_t;
 
 #define	MAX_MOD_KNOWN	1024

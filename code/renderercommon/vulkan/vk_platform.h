@@ -61,6 +61,8 @@ extern "C"
     #define VKAPI_PTR
 #endif
 
+#ifndef __WASM__
+
 #include <stddef.h>
 
 #if !defined(VK_NO_STDINT_H)
@@ -77,6 +79,8 @@ extern "C"
         #include <stdint.h>
     #endif
 #endif // !defined(VK_NO_STDINT_H)
+
+#endif // !__WASM__
 
 #ifdef __cplusplus
 } // extern "C"

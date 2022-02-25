@@ -88,8 +88,8 @@ static qboolean	winsockInitialized = qfalse;
 #		define _BSD_SOCKLEN_T_
 #	endif
 
-# include <netinet/tcp.h>
 #ifndef __WASM__
+# include <netinet/tcp.h>
 #	include <sys/socket.h>
 #	include <errno.h>
 #	include <netdb.h>

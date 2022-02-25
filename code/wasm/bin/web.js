@@ -8,8 +8,8 @@ const app = express()
 const ASSETS_DIRECTORY = __dirname + '/../../../games/multigame/assets/'
 const BUILD_DIRECTORY = __dirname + '/../../../build/'
 
-app.use(express.static(__dirname + '/../http/'));
-app.use(express.static(BUILD_DIRECTORY + 'debug-js-js/'));
+app.use('/', express.static(BUILD_DIRECTORY + 'release-js-js/'));
+app.use('/', express.static(BUILD_DIRECTORY + 'debug-js-js/'));
 
 
 // layer alternatives because WASM loads QVM
@@ -37,6 +37,7 @@ app.use('/multigame/vm/', express.static(BUILD_DIRECTORY + 'debug-win-x86_64/mul
 
 app.use('/multigame/', serveIndex(__dirname + '/../../../games/multigame/assets/'));
 app.use('/multigame/', express.static(__dirname + '/../../../games/multigame/assets/'));
+app.use('/', express.static(__dirname + '/../http/'));
 
 
 var fileTimeout

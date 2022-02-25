@@ -55,7 +55,7 @@ DLLEXPORT intptr_t vmMain( int command, int arg0, int arg1, int arg2 )
 		return UI_IsFullscreen();
 
 	case UI_SET_ACTIVE_MENU:
-		UI_SetActiveMenu( arg0 );
+		UI_SetActiveMenu( arg0, arg1 );
 		return 0;
 
 	case UI_CONSOLE_COMMAND:

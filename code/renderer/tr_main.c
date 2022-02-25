@@ -23,7 +23,9 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #include "tr_local.h"
 
+#ifndef __WASM__
 #include <string.h> // memcpy
+#endif
 
 #ifdef USE_MULTIVM_CLIENT
 trGlobals_t		trWorlds[MAX_NUM_WORLDS];

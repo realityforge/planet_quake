@@ -402,7 +402,7 @@ void Con_Init( void )
 	con_notifytime = Cvar_Get( "con_notifytime", "3", 0 );
 	con_conspeed = Cvar_Get( "scr_conspeed", "3", 0 );
 	con_autoclear = Cvar_Get("con_autoclear", "1", CVAR_ARCHIVE_ND);
-	con_scale = Cvar_Get( "con_scale", "1", CVAR_ARCHIVE_ND );
+	con_scale = Cvar_Get( "con_scale", "1.5", CVAR_ARCHIVE_ND );
 	Cvar_CheckRange( con_scale, "0.5", "8", CV_FLOAT );
   con_preserve = Cvar_Get("con_preserve", "1", CVAR_ARCHIVE);
 
