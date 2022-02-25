@@ -1,5 +1,6 @@
 // Mostly from https://github.com/xq3e/engine/blob/master/code/client/x_ddamage.c
 #include "client.h"
+
 #ifdef USE_XDAMAGE
 
 static const char X_NUMBERS_SHADER[]   = "xmod/gfx/2d/numbers/%d_64a";

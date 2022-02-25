@@ -270,6 +270,9 @@ typedef struct fileInPack_s {
 	char					*name;		// name of the file
 	unsigned long			pos;		// file info position in zip
 	unsigned long			size;		// file size
+#ifdef USE_LIVE_RELOAD
+	unsigned long     mtime;
+#endif
 	struct	fileInPack_s*	next;		// next file in the hash
 } fileInPack_t;
 
@@ -722,7 +725,7 @@ void Sys_FileNeeded(const char *filename) {
 	}
 	// why is it repeating gamedir?
 	assert(!Q_stristr(filename, va("%s/%s", FS_GetCurrentGameDir(), FS_GetCurrentGameDir())));
-	Com_Printf("file needed! %s %s %i\n", filename, loading, hash);
+	//Com_Printf("file needed! %s %s %i\n", filename, loading, hash);
 }
 
 
@@ -807,7 +810,6 @@ void MakeDirectoryBuffer(char *paths, int count, int length, const char *localna
 
 	// give us some room to expand with additional directory requests
 	realPath = FS_BuildOSPath(fs_homepath->string, FS_GetCurrentGameDir(), localname);
-	
 
 	for ( search = fs_searchpaths ; search ; search = search->next ) {
 		if(search->dir 
@@ -869,6 +871,15 @@ void MakeDirectoryBuffer(char *paths, int count, int length, const char *localna
 		}
 		strcpy(curFile->name, s);
 		curFile->name[strlen(s)] = '\0';
+#ifdef USE_LIVE_RELOAD
+		if(FS_FileExists(curFile->name)) {
+			int _s, _c;
+			Sys_GetFileStats(FS_BuildOSPath(fs_homepath->string, FS_GetCurrentGameDir(), curFile->name),
+				&_s, &curFile->mtime, &_c);
+		} else {
+			curFile->mtime = lastVersionTime;
+		}
+#endif
 		FS_ConvertFilename( curFile->name );
 		hash = FS_HashFileName( curFile->name, hashSize );
 		//printf("adding %li, %s\n", hash, curFile->name);
@@ -940,7 +951,7 @@ void Sys_FileReady(const char *filename, const char* tempname) {
       if ( !Q_stricmp( download->downloadName, localName ) ) {
 				// file is ready for processing!
 				if(tempname) {
-Com_Printf("downloaded: %s -> %s, %s\n", localName, filename, tempname);
+//Com_Printf("downloaded: %s -> %s, %s\n", localName, filename, tempname);
 					download->ready = qtrue;
 					download->failed = qfalse;
 					download->downloaded = qfalse; // trigger client events
@@ -1098,28 +1109,33 @@ fileInPack_t *FindFileInIndex(long hash, const char *filename, fileInPack_t* *ha
 }
 
 
-void FS_CheckIndex(const char *filename) {
+void FS_CheckIndex(const long fullHash, const char *filename) {
 	searchpath_t	*search;
 	char firstDirectory[MAX_QPATH];
 	char lastDirectory[MAX_QPATH];
 	//char localName[MAX_OSPATH];
-	long			hash;
 	const char *s;
+	int hash;
+	fileInPack_t *file;
 	qboolean isInIndex = qfalse;
 
-//printf("searching index for %s\n", filename);
+Com_Printf("searching index for %s\n", filename);
 
 	for ( search = fs_searchpaths ; search ; search = search->next ) {
 		if(search->dir && search->dir->hashTable) {
 			// check the current index for the requested file
-			hash = FS_HashFileName(filename, search->dir->hashSize);
-			if(FindFileInIndex(hash, filename, search->dir->hashTable)) {
+			hash = fullHash & (search->dir->hashSize-1);
+			if((file = FindFileInIndex(hash, filename, search->dir->hashTable))) {
 				isInIndex = qtrue;
 			}
 
 			// TODO: test if the file exists once anyways if we havent received a
 			//   real index from the server and are working off HTTP
-			if(isInIndex || qtrue) {
+			if(!isInIndex
+#ifdef USE_LIVE_RELOAD
+				|| file->mtime < lastVersionTime
+#endif
+			) {
 				if(Q_stristr(filename, FS_GetCurrentGameDir())) {
 					Sys_FileNeeded(filename);
 				} else {
@@ -2422,6 +2438,10 @@ int FS_FOpenFileRead( const char *filename, fileHandle_t *file, qboolean uniqueF
 	// we can do that as long as we know properties of our hash function
 	fullHash = FS_HashFileName( filename, 0U );
 
+#ifdef USE_LAZY_LOAD
+	FS_CheckIndex(fullHash, filename);
+#endif
+
 	if ( file == NULL ) {
 		// just wants to see if file is there
 		for ( search = fs_searchpaths ; search ; search = search->next ) {
@@ -2452,10 +2472,6 @@ int FS_FOpenFileRead( const char *filename, fileHandle_t *file, qboolean uniqueF
 				}
 			}
 		}
-
-#ifdef USE_LAZY_LOAD
-	FS_CheckIndex(filename);
-#endif
 		return -1;
 	}
 
@@ -2514,9 +2530,6 @@ int FS_FOpenFileRead( const char *filename, fileHandle_t *file, qboolean uniqueF
 			return FS_FileLength( f->handleFiles.file.o );
 		}
 	}
-#ifdef USE_LAZY_LOAD
-	FS_CheckIndex(filename);
-#endif
 
 #ifdef FS_MISSING
 	if ( missingFiles ) {

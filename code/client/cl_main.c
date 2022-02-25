@@ -3946,8 +3946,12 @@ void CL_CheckLazyUpdates( void ) {
 				S_UpdateSound(ready, qtrue);
 		} else if (j == 2) {
 			ready[12] = '\0';
-			if(cls.rendererStarted)
+			if(cls.rendererStarted) {
 				re.UpdateShader(&ready[13], atoi(&ready[0]));
+				if(!Q_stricmp(FS_GetCurrentGameDir(), "multigame") && cls.uiStarted) {
+					VM_Call( uivm, UI_INIT, (cls.state >= CA_AUTHORIZING && cls.state < CA_ACTIVE) );
+				}
+			}
 		} else if (j == 3) 
 #endif
 		{

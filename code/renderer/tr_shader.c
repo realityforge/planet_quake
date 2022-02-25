@@ -3997,8 +3997,6 @@ void RE_UpdateShader(char *shaderName, int lightmapIndex) {
 
 #if defined(USE_LAZY_MEMORY) || defined(USE_ASYNCHRONOUS)
 void RE_ReloadShaders( qboolean createNew ) {
-	return;
-	
 #ifdef USE_MULTIVM_CLIENT
 	if(createNew) {
 		int i;

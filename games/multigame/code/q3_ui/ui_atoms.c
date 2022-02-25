@@ -1227,7 +1227,7 @@ void UI_Refresh( int realtime )
 		if (uis.activemenu->fullscreen)
 		{
 
-/*
+			/*
 			amount = uis.realtime - uis.startTime;
 			if(!uis.startTime || amount < 1500) {
 				color[0] = color[1] = color[2] = 0;
@@ -1236,7 +1236,8 @@ void UI_Refresh( int realtime )
 			} else {
 				//trap_R_ClearScene();
 			}
-*/
+			*/
+Com_Printf("wtf? %i\n", uis.menuBackShader);
 
 			// draw the background
 			trap_R_DrawStretchPic( 0, 0, uis.glconfig.vidWidth, uis.glconfig.vidHeight, 0, 0, 1, 1, uis.menuBackNoLogoShader );

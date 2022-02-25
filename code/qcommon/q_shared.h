@@ -186,9 +186,9 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 // require all 3 of these engine options for asynchronous to work
 #if defined(USE_ASYNCHRONOUS) || defined(USE_LAZY_LOAD)
-//#define USE_ASYNCHRONOUS 1
-//#define USE_LAZY_LOAD 1
-//#define USE_LAZY_MEMORY 1
+#define USE_ASYNCHRONOUS 1
+#define USE_LAZY_LOAD 1
+#define USE_LAZY_MEMORY 1
 #endif
 
 
