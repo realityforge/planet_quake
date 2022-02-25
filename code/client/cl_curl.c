@@ -707,6 +707,7 @@ qboolean Com_DL_Perform( download_t *dl )
 #ifdef USE_ASYNCHRONOUS
 		// only take commands from server after valid connect
 		if(!dl->mapAutoDownload && cls.state < CA_CONNECTED) {
+			Com_Printf("goddamnit %s - %s\n", dl->Name, dl->TempName);
 			// use this as a marker for files not meant to be kept around
 			// remove it below, don't even bother moving it to HOME dir
 			if(Q_stristr(dl->TempName, "/.")) {
@@ -768,6 +769,7 @@ qboolean Com_DL_Perform( download_t *dl )
 	{
 		dl->func.easy_getinfo( msg->easy_handle, CURLINFO_RESPONSE_CODE, &code );
 #ifdef USE_ASYNCHRONOUS
+		Com_Printf("goddamnit %s - %s\n", dl->Name, dl->TempName);
 		Sys_FileReady(dl->Name, NULL);
 
 		if(!dl->Cancelled && code != 404)

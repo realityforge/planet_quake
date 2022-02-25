@@ -635,42 +635,46 @@ void Sys_UpdateNeeded( int tableId, char *ready, char *downloadNeeded ) {
   }
 }
 
-void Sys_FileNeeded(const char *filename) {
+static char stupidPathError[MAX_OSPATH];
+
+void Sys_FileNeeded(const char *needs) {
   unsigned int hash;
 	const char *loading;
   downloadLazy_t* *downloadTable;
   downloadLazy_t *download;
 	int downloadSize;
   qboolean found = qfalse;
+	char filename[MAX_OSPATH];
+	filename[0] = '\0';
 
 	// skip leading slashes
 	while ( *filename == '/' || *filename == '\\' )
-		filename++;
+		needs++;
+
+	if(!Q_stristr(needs, FS_GetCurrentGameDir())) {
+		strcat(filename, FS_GetCurrentGameDir());
+		strcat(filename, "/");
+	}
+	strcat(filename, needs);
 
 	// check index need to download
-	if(filename[strlen(filename)-1] == '/') {
-		// path ends with slash, definitely use files table
-		downloadTable = filesCallback;
-		loading = filename;
-	} else {
-		loading = Cvar_VariableString("r_loadingShader");
+	loading = Cvar_VariableString("r_loadingShader");
+	if(!loading[0]) {
+		loading = Cvar_VariableString("snd_loadingSound");
 		if(!loading[0]) {
-			loading = Cvar_VariableString("snd_loadingSound");
-			if(!loading[0]) {
-				loading = Cvar_VariableString("r_loadingModel");
-				if(loading[0]) {
-					downloadTable = modelCallback;
-				} else {
-					// special files for calling just below
-					downloadTable = filesCallback;
-					loading = filename;
-				}
+			loading = Cvar_VariableString("r_loadingModel");
+			if(loading[0]) {
+				downloadTable = modelCallback;
 			} else {
-				downloadTable = soundCallback;
+				// special files for calling just below
+				downloadTable = filesCallback;
+				loading = filename;
 			}
 		} else {
-			downloadTable = shaderCallback;
+			downloadTable = soundCallback;
 		}
+	} else {
+		downloadTable = shaderCallback;
 	}
 
   if(!filename[0]) {
@@ -724,7 +728,13 @@ void Sys_FileNeeded(const char *filename) {
 		return; // skip debug message below, that's all
 	}
 	// why is it repeating gamedir?
-	assert(!Q_stristr(filename, va("%s/%s", FS_GetCurrentGameDir(), FS_GetCurrentGameDir())));
+	if(!stupidPathError[0]) {
+		strcat(stupidPathError, FS_GetCurrentGameDir());
+		strcat(stupidPathError, "/");
+		strcat(stupidPathError, FS_GetCurrentGameDir());
+	}
+
+assert(!Q_stristr(filename, stupidPathError));
 	//Com_Printf("file needed! %s %s %i\n", filename, loading, hash);
 }
 
@@ -774,7 +784,7 @@ static void ParseHtmlFileList(char *buf, int len, char *list, int *count, int *m
 			if(buf[c] == '"') {
 				insideHref = qfalse;
 				link[lenLink] = '\0';
-				if(Q_stristr(link, va("%s/", FS_GetCurrentGameDir()))) {
+				if(Q_stristr(link, FS_GetCurrentGameDir())) {
 					// inject filepath into pk3cache.dat with some unknown information
 					if((*count) < 1024)
 						strcpy(list + (*max), link);
@@ -792,6 +802,8 @@ static void ParseHtmlFileList(char *buf, int len, char *list, int *count, int *m
 		c++;
 	}
 }
+
+static void FS_CheckIndex(const long fullHash, const char *filename, qboolean isNotFound);
 
 
 void MakeDirectoryBuffer(char *paths, int count, int length, const char *localname) {
@@ -901,7 +913,8 @@ void MakeDirectoryBuffer(char *paths, int count, int length, const char *localna
 			// TODO: fix this, only works if directory listing allows slashes at the end?
 			// TODO: right thing to do would be test the content-type and duck out early 
 			//   on big files for anything that doesn't have a . dot in the name.
-			Sys_FileNeeded(va("%s", localName));
+			// TODO: check index instead
+			FS_CheckIndex(0, localName, qfalse);
 		}
 
 		// update hash table
@@ -952,6 +965,7 @@ void Sys_FileReady(const char *filename, const char* tempname) {
 	// mark the correct file as ready
 	if(!Q_stricmp(filename, "pk3cache.dat")
 	//	|| !Q_stricmp(filename, "version.json")
+		|| !Q_stricmp(filename, FS_GetCurrentGameDir())
 	) {
 		// special exception because this is the only file we download outside the gamedir
 		// TODO: make a special exception for updating the EXE from Github?
@@ -1055,7 +1069,6 @@ Com_Printf("updating files: %s -> %s\n", filename, tempname);
 	// try to reload UI with current game if needed
 	if(Q_stristr(tempname, "vm/ui.qvm")) {
     Cvar_Set("com_skipLoadUI", "0");
-		Com_Printf("goddamnit\n");
 		CL_StartHunkUsers();
 #ifdef USE_LIVE_RELOAD
 		Cbuf_AddText("wait; vid_restart;");
@@ -1113,7 +1126,8 @@ Com_Printf("updating files: %s -> %s\n", filename, tempname);
 	}
 }
 
-void FS_CheckIndex(const long fullHash, const char *filename) {
+
+static void FS_CheckIndex(long fullHash, const char *filename, qboolean isNotFound) {
 	searchpath_t	*search;
 	char firstDirectory[MAX_QPATH];
 	char lastDirectory[MAX_QPATH];
@@ -1125,6 +1139,10 @@ void FS_CheckIndex(const long fullHash, const char *filename) {
 
 Com_Printf("searching index for %s\n", filename);
 
+	if(!fullHash) {
+		fullHash = FS_HashFileName( filename, 0U );
+	}
+
 	for ( search = fs_searchpaths ; search ; search = search->next ) {
 		if(search->dir && search->dir->hashTable) {
 			// check the current index for the requested file
@@ -1133,29 +1151,22 @@ Com_Printf("searching index for %s\n", filename);
 				isInIndex = qtrue;
 			}
 
-			// TODO: test if the file exists once anyways if we havent received a
+			// test if the file exists once anyways if we havent received a
 			//   real index from the server and are working off HTTP
-			if(isInIndex && Q_stristr(filename, "vm/ui.qvm")) {
-				// check if we have a local copy of the UI
-				Com_Printf("god fucking damnit: %i != %i\n", (int)file->mtime, lastVersionTime);
-			}
-			if(!isInIndex
+			if((!isInIndex && isNotFound)
 #ifdef USE_LIVE_RELOAD
-				|| file->mtime < lastVersionTime
+				|| (isInIndex && file->mtime < lastVersionTime)
 #endif
 			) {
-				if(Q_stristr(filename, FS_GetCurrentGameDir())) {
 					Sys_FileNeeded(filename);
-				} else {
-					Sys_FileNeeded(va("%s/%s", FS_GetCurrentGameDir(), filename));
-				}
-				break;
+			} else {
+				continue;
 			}
 
 			// search the index again but for the first folder name, if it exists
 			//   then make the needed request for the parent directory and the file
 			if(!(s = strchr(filename, '/'))) {
-				continue;
+				break;
 			}
 
 			firstDirectory[0] = '\0';
@@ -1176,12 +1187,15 @@ Com_Printf("searching index for %s\n", filename);
 			//Com_sprintf(localName, sizeof(localName), "%s/%s/", FS_GetCurrentGameDir(), firstDirectory);
 			hash = FS_HashFileName(firstDirectory, search->dir->hashSize);
 			if(FindFileInIndex(hash, firstDirectory, search->dir->hashTable)) {
-				Sys_FileNeeded(va("%s/%s", FS_GetCurrentGameDir(), filename));
-				Sys_FileNeeded(va("%s/%s/", FS_GetCurrentGameDir(), firstDirectory));
+				Sys_FileNeeded(filename);
+				Sys_FileNeeded(firstDirectory);
 				if(lastDirectory[0]) {
-					Sys_FileNeeded(va("%s/%s/", FS_GetCurrentGameDir(), lastDirectory));
+					Sys_FileNeeded(lastDirectory);
 				}
 			}
+
+			// found something!
+			break;
 		}
 
 	}
@@ -2445,8 +2459,9 @@ int FS_FOpenFileRead( const char *filename, fileHandle_t *file, qboolean uniqueF
 	// we can do that as long as we know properties of our hash function
 	fullHash = FS_HashFileName( filename, 0U );
 
-#ifdef USE_LAZY_LOAD
-	FS_CheckIndex(fullHash, filename);
+#ifdef USE_LIVE_RELOAD
+	// check for updates!
+	FS_CheckIndex(fullHash, filename, qfalse);
 #endif
 
 	if ( file == NULL ) {
@@ -2479,6 +2494,10 @@ int FS_FOpenFileRead( const char *filename, fileHandle_t *file, qboolean uniqueF
 				}
 			}
 		}
+#if defined(USE_ASYNCHRONOUS) || defined(USE_LAZY_LOAD)
+		// check for updates!
+		FS_CheckIndex(fullHash, filename, qtrue);
+#endif
 		return -1;
 	}
 
@@ -2537,6 +2556,10 @@ int FS_FOpenFileRead( const char *filename, fileHandle_t *file, qboolean uniqueF
 			return FS_FileLength( f->handleFiles.file.o );
 		}
 	}
+#if defined(USE_ASYNCHRONOUS) || defined(USE_LAZY_LOAD)
+	// check for updates!
+	FS_CheckIndex(fullHash, filename, qtrue);
+#endif
 
 #ifdef FS_MISSING
 	if ( missingFiles ) {
@@ -6673,11 +6696,12 @@ void FS_Restart( int checksumFeed ) {
 	}
 	// snoop on directory index
 	if(!Cvar_VariableIntegerValue("sv_pure")) {
-		Sys_FileNeeded(va("%s/", FS_GetCurrentGameDir()));
-		Sys_FileNeeded(va("%s/vm/", FS_GetCurrentGameDir()));
-		Sys_FileNeeded(va("%s/maps/", FS_GetCurrentGameDir()));
-		Sys_FileNeeded(va("%s/scripts/", FS_GetCurrentGameDir()));
+		Sys_FileNeeded(FS_GetCurrentGameDir());
+		Sys_FileNeeded("vm/");
+		Sys_FileNeeded("maps/");
+		Sys_FileNeeded("scripts/");
 	}
+
 #endif
 
 	// if we can't find default.cfg, assume that the paths are

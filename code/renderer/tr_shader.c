@@ -3569,9 +3569,6 @@ qhandle_t RE_RegisterShaderNoMip( const char *name ) {
 	}
 
 	sh = R_FindShader( name, LIGHTMAP_2D, qfalse );
-if(Q_stristr(name, "menuback")) {
-	ri.Printf( PRINT_ALL, "menuback!!!!!!!!!!! %i, %i, %i\n", sh->defaultShader, sh->index, sh->lightmapSearchIndex);
-}
 
 #ifdef USE_LAZY_LOAD
 	if( sh == tr.defaultShader ) {

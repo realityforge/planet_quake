@@ -259,7 +259,6 @@ static struct BufferedFile *ReadBufferedFile(const char *name)
 #define INCBIN_SILENCE_BITCODE_WARNING
 #include "../qcommon/incbin.h"
 #include "incbin.h"
-
 	noFree = qfalse;
 	if(Q_stristr(name, "gfx/2d/bigchars_backup")) {
 		INCBIN(_bigchars, "../renderercommon/bigchars.png");
