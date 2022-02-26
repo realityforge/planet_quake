@@ -402,6 +402,10 @@ static void CL_AddCgameCommand( const char *cmdName ) {
 }
 
 
+#ifdef USE_LOCAL_DED
+void CL_ParseServerInfo( int igs );
+#endif
+
 /*
 =====================
 CL_ConfigstringModified

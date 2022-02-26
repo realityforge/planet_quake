@@ -81,7 +81,7 @@ void Sys_FreeFileList( char **list ) {
 // NOTE: if the user is editing a line when something gets printed to the early console then it won't look good
 //   so we provide tty_Clear and tty_Show to be called before and after a stdout or stderr output
 // =============================================================
-void Sys_Exit( int code );
+void Sys_Exit( int code ) __attribute((noreturn));
 void *try_dlopen( const char* base, const char* gamedir, const char* fname );
 char *dlerror( void );
 void *dlsym( void *handle, char *symbol );

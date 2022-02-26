@@ -36,6 +36,29 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define Com_DPrintf Net_DPrintf
 #endif
 
+extern void Cvar_SetNetDescriptions( void );
+
+#ifdef __WASM__
+
+#ifdef __WASM__
+int NET_OpenIP(void);
+uint16_t ntohs(uint16_t n);
+
+int NET_Close(void);
+
+#ifdef USE_MULTIVM_SERVER
+int NET_GetPacket( netadr_t *net_from, msg_t *net_message, const fd_set *fdr, int igvm );
+#else
+int NET_GetPacket( netadr_t *net_from, msg_t *net_message, const fd_set *fdr );
+#endif
+
+void Sys_SendPacket( int length, const void *data, const netadr_t *to );
+
+static void	NET_Restart_f( void );
+void Sys_SockaddrToString(char *dest, int destlen, const void *input);
+
+#else
+
 #ifdef _WIN32
 #	include <winsock2.h>
 #	include <ws2tcpip.h>
@@ -168,6 +191,9 @@ typedef union socks5_udp_request_s {
 #pragma pack(pop)
 
 
+#endif
+
+
 static qboolean usingSocks = qfalse;
 static int networkingEnabled = 0;
 
@@ -188,6 +214,8 @@ static cvar_t	*net_mcast6addr;
 static cvar_t	*net_mcast6iface;
 #endif
 static cvar_t	*net_dropsim;
+
+#ifndef __WASM__
 
 static sockaddr_t socksRelayAddr;
 
@@ -235,21 +263,9 @@ typedef struct
 static nip_localaddr_t localIP[MAX_IPS];
 static int numIP;
 
-extern void Cvar_SetNetDescriptions( void );
-
 static void	NET_Restart_f( void );
 
 //=============================================================================
-
-#ifdef __WASM__
-#ifdef USE_MULTIVM_SERVER
-int NET_GetPacket( netadr_t *net_from, msg_t *net_message, const fd_set *fdr, int igvm );
-#else
-int NET_GetPacket( netadr_t *net_from, msg_t *net_message, const fd_set *fdr );
-#endif
-
-void Sys_SendPacket( int length, const void *data, const netadr_t *to );
-#endif
 
 
 
@@ -529,6 +545,10 @@ qboolean Sys_StringToAdr( const char *s, netadr_t *a, netadrtype_t family ) {
 }
 
 
+#endif // !__WASM__
+
+
+
 /*
 ===================
 NET_CompareBaseAdrMask
@@ -619,9 +639,11 @@ const char *NET_AdrToString( const netadr_t *a )
 	else if (a->type == NA_IP)
 #endif
 	{
+#ifndef __WASM__
 		sockaddr_t sadr;
 		NetadrToSockadr( a, &sadr );
 		Sys_SockaddrToString( s, sizeof(s), &sadr );
+#endif
 	}
 
 	return s;
@@ -696,6 +718,8 @@ qboolean NET_IsLocalAddress( const netadr_t *adr )
 }
 
 //=============================================================================
+
+#ifndef __WASM__
 
 /*
 ==================
@@ -1611,13 +1635,6 @@ static void NET_GetLocalAddress( void ) {
 #endif
 
 
-#ifdef __WASM__
-
-int NET_OpenIP(void);
-
-int NET_Close(void);
-
-#else
 /*
 ====================
 NET_OpenIP
@@ -1715,8 +1732,9 @@ void NET_OpenIP( int igvm )
 }
 
 
-//===================================================================
+#endif // !__WASM__
 
+//===================================================================
 
 /*
 ====================
@@ -1761,7 +1779,8 @@ static qboolean NET_GetCvars( void ) {
 	Cvar_CheckRange( net_port, "0", "65535", CV_INTEGER );
 	modified += net_port->modified;
 	net_port->modified = qfalse;
-	
+
+#ifndef __WASM__
 #ifdef USE_IPV6
 	net_ip6 = Cvar_Get( "net_ip6", "::", CVAR_LATCH );
 	modified += net_ip6->modified;
@@ -1789,6 +1808,7 @@ static qboolean NET_GetCvars( void ) {
 	modified += net_mcast6iface->modified;
 	net_mcast6iface->modified = qfalse;
 #endif // USE_IPV6
+#endif
 
 	net_socksEnabled = Cvar_Get( "net_socksEnabled", "0", CVAR_LATCH | CVAR_ARCHIVE_ND );
 	Cvar_CheckRange( net_socksEnabled, "0", "1", CV_INTEGER );
@@ -1862,6 +1882,7 @@ static void NET_Config( qboolean enableNetworking ) {
 		networkingEnabled = enableNetworking;
 	}
 
+#ifndef __WASM__
 	if( stop ) {
 #ifdef USE_MULTIVM_SERVER
     for(int igvm = 0; igvm < MAX_NUM_PORTS; igvm++)
@@ -1888,8 +1909,8 @@ static void NET_Config( qboolean enableNetworking ) {
 			closesocket( socks_socket );
 			socks_socket = INVALID_SOCKET;
 		}
-		
 	}
+#endif
 
 	if( start )
 	{
@@ -1952,6 +1973,8 @@ void NET_Init( void ) {
 #define PRINT_FLAGS PC_COMMON_FLAGS
 #endif
 
+
+#ifndef __WASM__
 
 /*
 ====================
@@ -2134,6 +2157,8 @@ qboolean NET_Sleep( int timeout )
 
 #endif
 
+
+#endif
 
 /*
 ====================

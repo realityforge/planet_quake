@@ -784,7 +784,10 @@ qboolean CL_GameSwitch( void )
 CL_ParseServerInfo
 ==================
 */
-static void CL_ParseServerInfo( int igs )
+#ifndef USE_LOCAL_DED
+static 
+#endif
+void CL_ParseServerInfo( int igs )
 {
   gameState_t	oldGs;
 	const char *serverInfo;

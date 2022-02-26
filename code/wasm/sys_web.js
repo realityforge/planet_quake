@@ -93,6 +93,7 @@ var _glGetTexEnvfv = null
 
 //GLImmediate.setupFuncs()
 // start a brand new call frame, in-case error bubbles up
+Module['noFSInit'] = true
 Module['onRuntimeInitialized'] = function () {
   try {
 

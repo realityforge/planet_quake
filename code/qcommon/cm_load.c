@@ -78,6 +78,9 @@ cvar_t    *cm_entityString;
 static cmodel_t	box_modelWorlds[MAX_NUM_MAPS];
 static cplane_t	*box_planesWorlds[MAX_NUM_MAPS];
 static cbrush_t	*box_brushWorlds[MAX_NUM_MAPS];
+#define box_model box_modelWorlds[cmi]
+#define box_planes box_planesWorlds[cmi]
+#define box_brush box_brushWorlds[cmi]
 #else
 static cmodel_t	box_model;
 static cplane_t	*box_planes;

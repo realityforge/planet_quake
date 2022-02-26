@@ -1109,13 +1109,11 @@ void GL_SetDefaultState( void )
 
 	qglCullFace(GL_FRONT);
 
-	ri.Printf(PRINT_ALL, "goddamnit: %i\n", qglClearDepth);
 	GL_BindNullTextures();
 
 	if (glRefConfig.framebufferObject)
 		GL_BindNullFramebuffers();
 
-	ri.Printf(PRINT_ALL, "goddamnit: %i\n", GL_TextureMode);
 	GL_TextureMode( r_textureMode->string );
 
 	//qglShadeModel( GL_SMOOTH );

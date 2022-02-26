@@ -166,9 +166,7 @@ typedef struct {
 	void	(QDECL *Printf)( printParm_t printLevel, const char *fmt, ... ) __attribute__ ((format (printf, 2, 3)));
 
 	// abort the game
-#ifndef __WASM__
 	__attribute__ ((noreturn))
-#endif
 	__attribute__ ((format (printf, 2, 3)))
 	void	(QDECL *Error)( errorParm_t errorLevel, const char *fmt, ... );
 

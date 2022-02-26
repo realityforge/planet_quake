@@ -318,6 +318,21 @@ int ReadStructure(source_t *source, structdef_t *def, char *structure)
 	} //end while
 	return qtrue;
 } //end of the function ReadStructure
+
+
+#define fprintf Com_fprintf
+static int Com_fprintf(fileHandle_t fp, const char *fmt, ...) {
+	char maxline[2048];
+	va_list argptr;
+	int len;
+	va_start(argptr, fmt);
+	len = Q_vsnprintf(maxline, sizeof(maxline), fmt, argptr);
+	va_end(argptr);
+	botimport.FS_Write(maxline, len, fp);
+	return len;
+}
+
+
 //===========================================================================
 //
 // Parameter:				-

@@ -23,11 +23,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #ifndef _QCOMMON_H_
 #define _QCOMMON_H_
 
-#ifndef __WASM__
 #include <sys/types.h>
-#endif
-#include "../qcommon/cm_public.h"
-
+#include "cm_public.h"
 
 //Ignore __attribute__ on non-gcc/clang platforms
 #if !defined(__GNUC__) && !defined(__clang__)
@@ -1300,6 +1297,10 @@ temp file loading
 --- high memory ---
 
 */
+#ifdef  __WASM__
+void DebugBreak( void );
+#endif
+
 
 #if defined(_DEBUG) && !defined(BSPC)
 	#define ZONE_DEBUG

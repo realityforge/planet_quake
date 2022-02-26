@@ -2,10 +2,11 @@
 
 #ifdef USE_MEMORY_MAPS
 
-#ifndef  __WASM__
 #ifdef _DEBUG
 #ifndef _WIN32
+#ifndef __WASM__
 #include <execinfo.h>
+#endif
 #include <unistd.h>
 #endif
 #include <stdio.h>
@@ -13,7 +14,6 @@
 #endif
 
 #include <setjmp.h>
-#endif
 
 static jmp_buf q3map2done;	// an ERR_DROP occurred, exit the entire frame
 

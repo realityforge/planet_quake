@@ -23,28 +23,29 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #include "q_shared.h"
 #include "qcommon.h"
-#ifndef __WASM__
 #include <setjmp.h>
 #ifndef _WIN32
+#ifndef __WASM__
 #include <netinet/in.h>
+#endif
 #include <sys/stat.h> // umask
 #include <sys/time.h>
 #else
 #include <winsock.h>
 #endif
-#endif
 
 
-#ifndef  __WASM__
 #ifdef _DEBUG
 #ifndef _WIN32
+#ifndef __WASM__
 #include <execinfo.h>
+#endif
 #include <unistd.h>
 #endif
 #include <stdio.h>
 #include <stdlib.h>
 #endif
-#endif
+
 
 #include "../client/keys.h"
 
@@ -670,9 +671,6 @@ void QDECL Com_Error( errorParm_t code, const char *fmt, ... ) {
 
 	calledSysError = qtrue;
 	Sys_Error( "%s", com_errorMessage );
-#ifdef __WASM__
-	Q_longjmp( abortframe, 1 ); // not using noreturn so must bubble up
-#endif
 }
 
 
@@ -3160,6 +3158,7 @@ int Com_EventLoop( void ) {
 
 		// if no more events are available
 		if ( ev.evType == SE_NONE ) {
+#ifndef __WASM__ // PUSH NOW!!!!
 			// manually send packet events for the loopback channel
 #ifndef DEDICATED
 			while ( NET_GetLoopPacket( NS_CLIENT, &evFrom, &buf ) ) {
@@ -3185,7 +3184,7 @@ int Com_EventLoop( void ) {
 				}
 			}
 #endif
-
+#endif // !__WASM__
 			return ev.evTime;
 		}
 
@@ -4626,9 +4625,11 @@ void Com_Frame( qboolean noDelay ) {
 			Com_EventLoop();
 #endif
 #ifdef __WASM__
-    break; // break out of frame here because requestAnimationFrame sleeps enough
-#endif
+		// break out of frame here because requestAnimationFrame sleeps enough
+    break;
+#else
 		NET_Sleep( sleepMsec * 1000 - 500 );
+#endif
 	} while( Com_TimeVal( minMsec ) );
 
 

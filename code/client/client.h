@@ -541,6 +541,10 @@ qboolean	Com_DL_ValidFileName( const char *fileName );
 qboolean	CL_Download( const char *cmd, const char *pakname, qboolean autoDownload );
 
 #endif
+#ifdef __WASM__
+qboolean	CL_Download( const char *cmd, const char *pakname, qboolean autoDownload );
+#endif
+
 
 //=============================================================================
 

@@ -22,15 +22,15 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 // cl_main.c  -- client main loop
 
 #include "client.h"
-#ifndef  __WASM__
 #include <limits.h>
 #ifdef _DEBUG
 #ifndef _WIN32
+#ifndef __WASM__
 #include <execinfo.h>
+#endif
 #include <unistd.h>
 #endif
 #include <sys/time.h>
-#endif
 #endif
 
 #ifdef USE_VID_FAST
@@ -4349,8 +4349,6 @@ void CL_StartHunkUsers( void ) {
   const size_t size = backtrace( syms, ARRAY_LEN( syms ) );
   backtrace_symbols_fd( syms, size, STDERR_FILENO );
 #endif
-#else
-	DebugError();
 #endif
 
 	// fixup renderer -EC-
@@ -5066,7 +5064,7 @@ void CL_LoadVM_f( void ) {
 		}
 		count++;
 		CL_InitUI(qtrue);
-		VM_Call( uivm, 1, UI_SET_ACTIVE_MENU, UIMENU_MULTIPLAYER );
+		VM_Call( uivm, 1, UI_SET_ACTIVE_MENU, UIMENU_NONE, "multiplayer" );
 		uivmi = 0;
 		return;
   } else if (FS_SV_FOpenFileRead(va("maps/%s.bsp", name), NULL)) {
@@ -5561,7 +5559,9 @@ void CL_Init( void ) {
 	Cmd_SetCommandCompletionFunc( "rcon", CL_CompleteRcon );
 	Cmd_AddCommand ("ping", CL_Ping_f );
 	Cmd_AddCommand ("serverstatus", CL_ServerStatus_f );
+#ifndef __WASM__
 	Cmd_AddCommand ("showip", CL_ShowIP_f );
+#endif
 	Cmd_AddCommand ("model", CL_SetModel_f );
 	Cmd_AddCommand ("video", CL_Video_f );
 	Cmd_AddCommand ("video-pipe", CL_Video_f );
@@ -6700,6 +6700,7 @@ static void CL_ServerStatus_f( void ) {
 }
 
 
+#ifndef __WASM__
 /*
 ==================
 CL_ShowIP_f
@@ -6708,6 +6709,7 @@ CL_ShowIP_f
 static void CL_ShowIP_f( void ) {
 	Sys_ShowIP();
 }
+#endif
 
 
 // TODO: something else for server and dedicated, perhaps download from 

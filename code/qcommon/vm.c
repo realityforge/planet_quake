@@ -1110,7 +1110,8 @@ const char *VM_LoadInstructions( const byte *code_pos, int codeLength, int instr
 		code_pos++;
 		ci->op = op0;
 		if ( n == 4 ) {
-			ci->value = LittleLong( *((int32_t*)code_pos) );
+			//ci->value = LittleLong( *((int32_t*)code_pos) );
+			memcpy(&ci->value, code_pos, 4);
 			code_pos += 4;
 		} else if ( n == 1 ) { 
 			ci->value = *((unsigned char*)code_pos);

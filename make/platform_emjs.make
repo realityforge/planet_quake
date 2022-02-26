@@ -1,9 +1,10 @@
 USE_RENDERER_DLOPEN := 0
-USE_BOTLIB_DLOPEN   := 1
+USE_BOTLIB_DLOPEN   := 0
 USE_SYSTEM_JPEG     := 0
 USE_CURL            := 0
 USE_OPENGL2         := 1
 USE_VULKAN          := 0
+NO_MAKE_LOCAL       := 1
 
 include make/configure.make
 

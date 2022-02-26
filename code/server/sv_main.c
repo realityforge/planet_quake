@@ -195,39 +195,6 @@ static const char *SV_ExpandNewlines( const char *in ) {
 
 /*
 ======================
-SV_ReplacePendingServerCommands
-
-FIXME: This is ugly
-======================
-*/
-#if 0 // unused
-static int SV_ReplacePendingServerCommands( client_t *client, const char *cmd ) {
-	int i, index, csnum1, csnum2;
-
-	for ( i = client->reliableSent+1; i <= client->reliableSequence; i++ ) {
-		index = i & ( MAX_RELIABLE_COMMANDS - 1 );
-		//
-		if ( !Q_strncmp(cmd, client->reliableCommands[ index ], strlen("cs")) ) {
-			sscanf(cmd, "cs %i", &csnum1);
-			sscanf(client->reliableCommands[ index ], "cs %i", &csnum2);
-			if ( csnum1 == csnum2 ) {
-				Q_strncpyz( client->reliableCommands[ index ], cmd, sizeof( client->reliableCommands[ index ] ) );
-				/*
-				if ( client->netchan.remoteAddress.type != NA_BOT ) {
-					Com_Printf( "WARNING: client %i removed double pending config string %i: %s\n", client-svs.clients, csnum1, cmd );
-				}
-				*/
-				return qtrue;
-			}
-		}
-	}
-	return qfalse;
-}
-#endif
-
-
-/*
-======================
 SV_AddServerCommand
 
 The given command will be transmitted to the client, and is guaranteed to
@@ -1636,7 +1603,7 @@ happen before SV_Frame is called
 void SV_Frame( int msec ) {
 	int		frameMsec;
 	int		startTime;
-	int		i, n;
+	int		i;
 
   if(!com_fullyInitialized) {
     return;
@@ -1753,7 +1720,7 @@ void SV_Frame( int msec ) {
 				for(int j = 0; j < MAX_NUM_VMS; j++) {
 #define frames frames[j]
 #endif
-				for ( n = 0; n < PACKET_BACKUP; n++ ) {
+				for ( int n = 0; n < PACKET_BACKUP; n++ ) {
 					if ( svs.clients[ i ].frames[ n ].first_psf > svs.modSnapshotPSF )
 						svs.clients[ i ].frames[ n ].first_psf -= svs.modSnapshotPSF;
 				}

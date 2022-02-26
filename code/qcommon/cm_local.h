@@ -197,14 +197,6 @@ extern	cvar_t		*cm_noAreas;
 extern	cvar_t		*cm_noCurves;
 extern	cvar_t		*cm_playerCurveClip;
 
-#if defined(USE_MULTIVM_CLIENT) || defined(USE_MULTIVM_SERVER)
-extern  cmodel_t	box_modelWorlds[MAX_NUM_MAPS];
-extern  cplane_t	*box_planesWorlds[MAX_NUM_MAPS];
-extern  cbrush_t	*box_brushWorlds[MAX_NUM_MAPS];
-#define box_model box_modelWorlds[cmi]
-#define box_planes box_planesWorlds[cmi]
-#define box_brush box_brushWorlds[cmi]
-#endif
 
 
 

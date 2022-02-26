@@ -335,33 +335,27 @@ void SV_UpdateServerCommandsToClient( client_t *client, msg_t *msg ) {
 			for ( i = 0; i < MAX_RELIABLE_COMMANDS; i++ )
 				client->multiview.z.stream[ i ].zcommandNum = -1;
 #endif
-			//client->reliableSent = client->reliableSequence;
-			client->reliableSent = -1;
 			return;
 		}
 
-		// write any unacknowledged serverCommands
-		n = client->reliableSequence - client->reliableAcknowledge;
-
-		for ( i = 0; i < n; i++ ) {
-			const int index = client->reliableAcknowledge + 1 + i;
+		for ( i = client->reliableAcknowledge + 1 ; i <= client->reliableSequence ; i++ ) {
 #ifdef USE_MV_ZCMD
 			// !!! do not start compression sequence from already sent uncompressed commands
 			// (re)send them uncompressed and only after that initiate compression sequence
-			if ( i <= client->reliableSent ) {
+			/*if ( i <= client->reliableSent ) {
 				MSG_WriteByte( msg, svc_serverCommand );
-				MSG_WriteLong( msg, index );
-				MSG_WriteString( msg, client->reliableCommands[ index & (MAX_RELIABLE_COMMANDS-1) ] );
-			} else{
+				MSG_WriteLong( msg, i );
+				MSG_WriteString( msg, client->reliableCommands[ i & (MAX_RELIABLE_COMMANDS-1) ] );
+			} else {*/
 				// build new compressed stream or re-send existing
-				SV_BuildCompressedBuffer( client, index );
-				MSG_WriteLZStream( msg, &client->multiview.z.stream[ index & (MAX_RELIABLE_COMMANDS-1) ] );
+				SV_BuildCompressedBuffer( client, i );
+				MSG_WriteLZStream( msg, &client->multiview.z.stream[ i & (MAX_RELIABLE_COMMANDS-1) ] );
 				// TODO: indicate compressedSent?
-			}
+			//}
 #else
 			MSG_WriteByte( msg, svc_serverCommand );
-			MSG_WriteLong( msg, index );
-			MSG_WriteString( msg, client->reliableCommands[ index & (MAX_RELIABLE_COMMANDS-1) ] );
+			MSG_WriteLong( msg, i );
+			MSG_WriteString( msg, client->reliableCommands[ i & (MAX_RELIABLE_COMMANDS-1) ] );
 #endif
 		}
 
@@ -380,12 +374,14 @@ void SV_UpdateServerCommandsToClient( client_t *client, msg_t *msg ) {
 #endif // USE_MV
 
 	// write any unacknowledged serverCommands
-	for ( i = client->reliableAcknowledge + 1 ; i <= client->reliableSequence ; i++ ) {
+	n = client->reliableSequence - client->reliableAcknowledge;
+
+	for ( i = 0 ; i < n ; i++ ) {
+		const int index = client->reliableAcknowledge + 1 + i;
 		MSG_WriteByte( msg, svc_serverCommand );
-		MSG_WriteLong( msg, i );
-		MSG_WriteString( msg, client->reliableCommands[ i & (MAX_RELIABLE_COMMANDS-1) ] );
+		MSG_WriteLong( msg, index );
+		MSG_WriteString( msg, client->reliableCommands[ index & (MAX_RELIABLE_COMMANDS-1) ] );
 	}
-	client->reliableSent = client->reliableSequence;
 
 #ifdef USE_MV
 	if ( client->reliableSequence > client->reliableAcknowledge ) {

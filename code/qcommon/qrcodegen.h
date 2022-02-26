@@ -23,11 +23,9 @@
 
 #pragma once
 
-#ifndef __WASM__
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
-#endif
 
 
 #ifdef __cplusplus

@@ -76,6 +76,7 @@ function Sys_SetStatus(status, replacementStr) {
     }
 
   }
+  /*
   let description = document.querySelector('#loading-progress .description')
   let div = document.createElement('div')
   // TODO: use BG_sprintf like above?
@@ -86,10 +87,10 @@ function Sys_SetStatus(status, replacementStr) {
     || div.innerText.toLowerCase() != description
       .children[description.children.length-1].innerText.toLowerCase())
     description.appendChild(div)
+  */
 }
 
 var SYS = {
-  DebugError: function () { console.log(new Error('debug').stack) },
   DebugBreak: function () { debugger; },
   Sys_RandomBytes: Sys_RandomBytes,
   Sys_Milliseconds: Sys_Milliseconds,

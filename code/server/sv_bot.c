@@ -578,9 +578,8 @@ SV_BotInitBotLib
 ==================
 */
 void SV_BotInitBotLib(void) {
-#ifndef USE_BOTLIB_DLOPEN
 	botlib_import_t	botlib_import;
-#else
+#ifdef USE_BOTLIB_DLOPEN
 	GetBotLibAPI_t		GetBotLibAPI;
 
 #if defined (__linux__) && defined(__i386__)
