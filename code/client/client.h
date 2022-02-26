@@ -677,7 +677,6 @@ void Field_BigDraw( field_t *edit, int x, int y, int width, qboolean showCursor,
 extern int cl_connectedToPureServer;
 extern int cl_connectedToCheatServer;
 
-void CL_ParseServerInfo( int igs );
 void CL_ParseServerMessage( msg_t *msg );
 #ifdef USE_MULTIVM_CLIENT
 void CL_ParseSnapshot( msg_t *msg, int igs );
@@ -705,7 +704,6 @@ void Con_CheckResize( void );
 void Con_Init( void );
 void Con_Shutdown( void );
 void Con_ToggleConsole_f( void );
-void Con_DrawNotify( void );
 void Con_ClearNotify( void );
 void Con_RunConsole( void );
 void Con_DrawConsole( void );
@@ -791,8 +789,6 @@ void CL_UIContextRender(void);
 void CL_ShutdownUI( void );
 int Key_GetCatcher( void );
 void Key_SetCatcher( int catcher );
-void LAN_LoadCachedServers( void );
-void LAN_SaveServersToCache( void );
 
 
 //
@@ -828,7 +824,6 @@ void	GLimp_EndFrame( void );
 
 void	GLimp_InitGamma( glconfig_t *config );
 void	GLimp_SetGamma( unsigned char red[256], unsigned char green[256], unsigned char blue[256] );
-
 
 void	*GL_GetProcAddress( const char *name );
 

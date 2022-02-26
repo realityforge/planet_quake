@@ -94,12 +94,6 @@ extern const char *(*qcurl_multi_strerror)(CURLMcode);
 #define qcurl_multi_strerror curl_multi_strerror
 #endif
 
-qboolean CL_cURL_Init( void );
-void CL_cURL_Shutdown( void );
-void CL_cURL_BeginDownload( const char *localName, const char *remoteURL );
-void CL_cURL_PerformDownload( void );
-void CL_cURL_Cleanup( void );
-
 typedef struct download_s {
 	char		URL[MAX_OSPATH];
 	char		Name[MAX_OSPATH];

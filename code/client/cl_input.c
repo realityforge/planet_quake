@@ -416,8 +416,9 @@ Joystick values stay set until changed
 void CL_JoystickEvent( int axis, int value, int time ) {
 	if ( axis < 0 || axis >= MAX_JOYSTICK_AXIS ) {
 		Com_Error( ERR_DROP, "CL_JoystickEvent: bad axis %i", axis );
+	} else {
+		cl.joystickAxis[axis] = value;
 	}
-	cl.joystickAxis[axis] = value;
 }
 
 
@@ -511,7 +512,7 @@ static void CL_MouseMove( usercmd_t *cmd )
 
 			// clip at a small positive number to avoid division
 			// by zero (or indeed going backwards!)
-			if (offset < 0.001) {
+			if ( offset < 0.001f ) {
 				offset = 0.001f;
 			}
 
@@ -520,8 +521,8 @@ static void CL_MouseMove( usercmd_t *cmd )
 			// cl_mouseAccelOffset is the rate for which the acceleration will have doubled the non accelerated amplification
 			// NOTE: decouple the config cvars for independent acceleration setup along X and Y?
 
-			rate[0] = fabs(mx) / (float) frame_msec;
-			rate[1] = fabs(my) / (float) frame_msec;
+			rate[0] = fabsf( mx ) / (float) frame_msec;
+			rate[1] = fabsf( my ) / (float) frame_msec;
 			power[0] = powf( rate[0] / offset, cl_mouseAccel->value );
 			power[1] = powf( rate[1] / offset, cl_mouseAccel->value );
 
@@ -653,10 +654,9 @@ static usercmd_t CL_CreateCmd( int igvm ) {
 	// draw debug graphs of turning for mouse testing
 	if ( cl_debugMove->integer ) {
 		if ( cl_debugMove->integer == 1 ) {
-			SCR_DebugGraph( fabs(cl.viewangles[YAW] - oldAngles[YAW]) );
-		}
-		if ( cl_debugMove->integer == 2 ) {
-			SCR_DebugGraph( fabs(cl.viewangles[PITCH] - oldAngles[PITCH]) );
+			SCR_DebugGraph( fabsf( cl.viewangles[YAW] - oldAngles[YAW] ) );
+		} else if ( cl_debugMove->integer == 2 ) {
+			SCR_DebugGraph( fabsf( cl.viewangles[PITCH] - oldAngles[PITCH] ) );
 		}
 	}
 
@@ -745,13 +745,13 @@ static qboolean CL_ReadyToSendPacket( void ) {
 	}
 
 	// send every frame for LAN
-	if ( cl_lanForcePackets && cl_lanForcePackets->integer && clc.netchan.isLANAddress ) {
+	if ( cl_lanForcePackets->integer && clc.netchan.isLANAddress ) {
 		return qtrue;
 	}
 
 	oldPacketNum = (clc.netchan.outgoingSequence - 1) & PACKET_MASK;
 	delta = cls.realtime -  cl.outPackets[ oldPacketNum ].p_realtime;
-	if ( cl_maxpackets && delta < 1000 / cl_maxpackets->integer ) {
+	if ( delta < 1000 / cl_maxpackets->integer ) {
 		// the accumulated commands will go out in the next packet
 		return qfalse;
 	}
@@ -784,7 +784,7 @@ During normal gameplay, a client packet will contain something like:
 void CL_WritePacket( void ) {
 	msg_t		buf;
 	byte		data[ MAX_MSGLEN_BUF ];
-	int			i, j;
+	int			i, j, n;
 	usercmd_t	*cmd, *oldcmd;
 	usercmd_t	nullcmd;
 	int			packetNum;
@@ -845,10 +845,12 @@ void CL_WritePacket( void ) {
 	MSG_WriteLong( &buf, clc.serverCommandSequence );
 
 	// write any unacknowledged clientCommands
-	for ( i = clc.reliableAcknowledge + 1 ; i <= clc.reliableSequence ; i++ ) {
+	n = clc.reliableSequence - clc.reliableAcknowledge;
+	for ( i = 0; i < n; i++ ) {
+		const int index = clc.reliableAcknowledge + 1 + i;
 		MSG_WriteByte( &buf, clc_clientCommand );
-		MSG_WriteLong( &buf, i );
-		MSG_WriteString( &buf, clc.reliableCommands[ i & (MAX_RELIABLE_COMMANDS-1) ] );
+		MSG_WriteLong( &buf, index );
+		MSG_WriteString( &buf, clc.reliableCommands[ index & ( MAX_RELIABLE_COMMANDS - 1 ) ] );
 	}
 
 	// we want to send all the usercmds that were generated in the last
@@ -870,7 +872,7 @@ void CL_WritePacket( void ) {
 		Com_Printf("MAX_PACKET_USERCMDS\n");
 	}
 	if ( count >= 1 ) {
-		if ( cl_showSend && cl_showSend->integer ) {
+		if ( cl_showSend->integer ) {
 			Com_Printf( "(%i)", count );
 		}
 
@@ -932,7 +934,7 @@ void CL_WritePacket( void ) {
 #endif
 	clc.lastPacketSentTime = cls.realtime;
 
-	if ( cl_showSend && cl_showSend->integer ) {
+	if ( cl_showSend->integer ) {
 		Com_Printf( "%i ", buf.cursize );
 	}
 
@@ -973,8 +975,7 @@ void CL_SendCmd( void ) {
 	}
 
 	// don't send commands if paused
-	if ( com_sv_running && com_sv_running->integer 
-    && sv_paused->integer && cl_paused->integer ) {
+	if ( com_sv_running->integer && sv_paused->integer && cl_paused->integer ) {
 		return;
 	}
 
@@ -985,7 +986,7 @@ void CL_SendCmd( void ) {
 
 	// don't send a packet if the last packet was sent too recently
 	if ( !CL_ReadyToSendPacket() ) {
-		if ( cl_showSend && cl_showSend->integer ) {
+		if ( cl_showSend->integer ) {
 			Com_Printf( ". " );
 		}
 		return;
@@ -1003,78 +1004,53 @@ CL_InitInput
 void CL_InitInput( void ) {
 	Cmd_AddCommand ("centerview",IN_CenterView);
 
-	Cmd_SetDescription("centerview", "Quickly move current view to the center of screen\nUsage: bind <key> centerview");
 	Cmd_AddCommand ("+moveup",IN_UpDown);
-	Cmd_SetDescription("+moveup", "Start moving up (jump, climb up, swim up)\nUsage: bind <key> +moveup");
 	Cmd_AddCommand ("-moveup",IN_UpUp);
 	Cmd_AddCommand ("+movedown",IN_DownDown);
-	Cmd_SetDescription("+movedown", "Start moving down (crouch, climb down, swim down)\nUsage: bind <key> +movedown");
 	Cmd_AddCommand ("-movedown",IN_DownUp);
 	Cmd_AddCommand ("+left",IN_LeftDown);
-	Cmd_SetDescription("+left", "Start turning left\nUsage: bind <key> +left");
 	Cmd_AddCommand ("-left",IN_LeftUp);
 	Cmd_AddCommand ("+right",IN_RightDown);
-	Cmd_SetDescription("+right", "Start turning right\nUsage: bind <key> +right");
 	Cmd_AddCommand ("-right",IN_RightUp);
 	Cmd_AddCommand ("+forward",IN_ForwardDown);
-	Cmd_SetDescription("+forward", "Start moving forward\nUsage: bind <key> +forward");
 	Cmd_AddCommand ("-forward",IN_ForwardUp);
 	Cmd_AddCommand ("+back",IN_BackDown);
-	Cmd_SetDescription("+back", "Start moving backwards\nUsage: bind <key> +back");
 	Cmd_AddCommand ("-back",IN_BackUp);
 	Cmd_AddCommand ("+lookup", IN_LookupDown);
-	Cmd_SetDescription("+lookup", "Start looking up\nUsage: bind <key> +lookup");
 	Cmd_AddCommand ("-lookup", IN_LookupUp);
 	Cmd_AddCommand ("+lookdown", IN_LookdownDown);
-	Cmd_SetDescription("+lookdown", "Start looking down\nUsage: bind <key> +lookdown");
 	Cmd_AddCommand ("-lookdown", IN_LookdownUp);
 	Cmd_AddCommand ("+strafe", IN_StrafeDown);
-	Cmd_SetDescription("+strafe", "Start changing directional movement into strafing movement\nUsage: bind <key> +strafe");
 	Cmd_AddCommand ("-strafe", IN_StrafeUp);
 	Cmd_AddCommand ("+moveleft", IN_MoveleftDown);
-	Cmd_SetDescription("+moveleft", "Start strafing to the left\nUsage: bind <key> +moveleft");
 	Cmd_AddCommand ("-moveleft", IN_MoveleftUp);
 	Cmd_AddCommand ("+moveright", IN_MoverightDown);
-	Cmd_SetDescription("+moveright", "Start strafing to the right\nUsage: bind <key> +moveright");
 	Cmd_AddCommand ("-moveright", IN_MoverightUp);
 	Cmd_AddCommand ("+speed", IN_SpeedDown);
-	Cmd_SetDescription("+speed", "Speed toggle bound to shift key by default toggles run/walk\nUsage: bind <key> +speed");
 	Cmd_AddCommand ("-speed", IN_SpeedUp);
 	Cmd_AddCommand ("+attack", IN_Button0Down);
-	Cmd_SetDescription("+attack", "Start attacking (shooting, punching)\nUsage: bind <key> +attack");
 	Cmd_AddCommand ("-attack", IN_Button0Up);
 	Cmd_AddCommand ("+button0", IN_Button0Down);
-	Cmd_SetDescription("+button0", "Start firing same as mouse button 1 (fires weapon)\nUsage: bind <key> +button0");
 	Cmd_AddCommand ("-button0", IN_Button0Up);
 	Cmd_AddCommand ("+button1", IN_Button1Down);
-	Cmd_SetDescription("+button1", "Start displaying chat bubble\nUsage: bind <key> +button1");
 	Cmd_AddCommand ("-button1", IN_Button1Up);
 	Cmd_AddCommand ("+button2", IN_Button2Down);
-	Cmd_SetDescription("+button2", "Start using items (same as enter)\nUsage: bind <key> +button2");
 	Cmd_AddCommand ("-button2", IN_Button2Up);
 	Cmd_AddCommand ("+button3", IN_Button3Down);
-	Cmd_SetDescription("+button3", "Start player taunt animation\nUsage: bind <key> +button3");
 	Cmd_AddCommand ("-button3", IN_Button3Up);
 	Cmd_AddCommand ("+button4", IN_Button4Down);
-	Cmd_SetDescription("+button4", "Fixed +button4 not causing footsteps\nUsage: bind <key> +button4");
 	Cmd_AddCommand ("-button4", IN_Button4Up);
 	Cmd_AddCommand ("+button5", IN_Button5Down);
-	Cmd_SetDescription("+button5", "Used for MODS also used by Team Arena Mission Pack\nUsage: bind <key> +button5");
 	Cmd_AddCommand ("-button5", IN_Button5Up);
 	Cmd_AddCommand ("+button6", IN_Button6Down);
-	Cmd_SetDescription("+button6", "Used for MODS also used by Team Arena Mission Pack\nUsage: bind <key> +button6");
 	Cmd_AddCommand ("-button6", IN_Button6Up);
 	Cmd_AddCommand ("+button7", IN_Button7Down);
-	Cmd_SetDescription("+button7", "Start hand signal, player model looks like it's motioning to team \"move forward\"\nUsage: bind <key> +button7");
 	Cmd_AddCommand ("-button7", IN_Button7Up);
 	Cmd_AddCommand ("+button8", IN_Button8Down);
-	Cmd_SetDescription("+button8", "Start hand signal, player model looks like it's motioning to team \"come here\"\nUsage: bind <key> +button8");
 	Cmd_AddCommand ("-button8", IN_Button8Up);
 	Cmd_AddCommand ("+button9", IN_Button9Down);
-	Cmd_SetDescription("+button9", "Stop hand signal, player model looks like it's motioning to team \"come to my left side\"\nUsage: bind <key> +button9");
 	Cmd_AddCommand ("-button9", IN_Button9Up);
 	Cmd_AddCommand ("+button10", IN_Button10Down);
-	Cmd_SetDescription("+button10", "Start hand signal, player model looks like it's motioning to team \"come to my right side\"\nUsage: bind <key> +button10");
 	Cmd_AddCommand ("-button10", IN_Button10Up);
 	Cmd_AddCommand ("+button11", IN_Button11Down);
 	Cmd_AddCommand ("-button11", IN_Button11Up);
@@ -1087,11 +1063,11 @@ void CL_InitInput( void ) {
 	Cmd_AddCommand ("+button15", IN_Button15Down);
 	Cmd_AddCommand ("-button15", IN_Button15Up);
 	Cmd_AddCommand ("+mlook", IN_MLookDown);
-	Cmd_SetDescription("+mlook", "Start using mouse movements to control head movement\nUsage: bind <key> +mlook");
 	Cmd_AddCommand ("-mlook", IN_MLookUp);
 
 	cl_nodelta = Cvar_Get( "cl_nodelta", "0", CVAR_DEVELOPER );
 	cl_debugMove = Cvar_Get( "cl_debugMove", "0", 0 );
+	Cvar_CheckRange( cl_debugMove, "0", "2", CV_INTEGER );
 
 	cl_showSend = Cvar_Get( "cl_showSend", "0", CVAR_TEMP );
 
@@ -1134,7 +1110,7 @@ void CL_InitInput( void ) {
 
 /*
 ============
-CL_InitInput
+CL_ClearInput
 ============
 */
 void CL_ClearInput( void ) {

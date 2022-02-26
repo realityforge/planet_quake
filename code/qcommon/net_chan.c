@@ -153,7 +153,7 @@ void Netchan_TransmitNextFragment( netchan_t *chan ) {
 	chan->lastSentTime = Sys_Milliseconds();
 	chan->lastSentSize = send.cursize;
 
-	if ( showpackets && showpackets->integer ) {
+	if ( showpackets->integer ) {
 		Com_Printf ("%s send %4i : s=%i fragment=%i,%i\n"
 			, netsrcString[ chan->sock ]
 			, send.cursize
@@ -225,7 +225,7 @@ void Netchan_Transmit( netchan_t *chan, int length, const byte *data ) {
 	chan->lastSentTime = Sys_Milliseconds();
 	chan->lastSentSize = send.cursize;
 
-	if ( showpackets && showpackets->integer ) {
+	if ( showpackets->integer ) {
 		Com_Printf( "%s send %4i : s=%i ack=%i\n"
 			, netsrcString[ chan->sock ]
 			, send.cursize
@@ -307,7 +307,7 @@ qboolean Netchan_Process( netchan_t *chan, msg_t *msg ) {
 	//
 	// discard out of order or duplicated packets
 	//
-	if ( sequence <= chan->incomingSequence ) {
+	if ( sequence - chan->incomingSequence <= 0 ) {
 		if ( showdrop->integer || showpackets->integer ) {
 			Com_Printf( "%s:Out of order packet %i at %i\n"
 				, NET_AdrToString( &chan->remoteAddress )
@@ -387,7 +387,7 @@ qboolean Netchan_Process( netchan_t *chan, msg_t *msg ) {
 		// copy the full message over the partial fragment
 
 		// make sure the sequence number is still there
-		*(int *)msg->data = LittleLong( sequence );
+		*(int32_t *)msg->data = LittleLong( sequence );
 
 		Com_Memcpy( msg->data + 4, chan->fragmentBuffer, chan->fragmentLength );
 		msg->cursize = chan->fragmentLength + 4;
@@ -449,7 +449,7 @@ qboolean NET_GetLoopPacket( netsrc_t sock, netadr_t *net_from, msg_t *net_messag
 	if (loop->send - loop->get > MAX_LOOPBACK)
 		loop->get = loop->send - MAX_LOOPBACK;
 
-	if (loop->get >= loop->send)
+	if ( loop->send - loop->get <= 0 )
 		return qfalse;
 
 	i = loop->get & (MAX_LOOPBACK-1);
@@ -474,7 +474,7 @@ qboolean NET_GetLoopPacket( netsrc_t sock, netadr_t *net_from, msg_t *net_messag
 }
 
 
-void NET_SendLoopPacket( netsrc_t sock, int length, const void *data )
+static void NET_SendLoopPacket( netsrc_t sock, int length, const void *data )
 {
 	int		i;
 	loopback_t	*loop;
@@ -504,7 +504,7 @@ typedef struct packetQueue_s {
         int release;
 } packetQueue_t;
 
-packetQueue_t *packetQueue = NULL;
+static packetQueue_t *packetQueue = NULL;
 
 static void NET_QueuePacket( int length, const void *data, const netadr_t *to, int offset )
 {
@@ -556,10 +556,9 @@ void NET_FlushPacketQueue( void )
 void NET_SendPacket( netsrc_t sock, int length, const void *data, const netadr_t *to ) {
 
 	// sequenced packets are shown in netchan, so just show oob
-	if ( showpackets && showpackets->integer && *(int *)data == -1 )	{
+	if ( showpackets->integer && *(int32_t *)data == -1 ) {
 		Com_Printf ("send packet %4i\n", length);
 	}
-
 
 	if ( to->type == NA_LOOPBACK ) {
 		NET_SendLoopPacket( sock, length, data );

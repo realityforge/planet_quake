@@ -196,7 +196,6 @@ extern	int			c_traces, c_brush_traces, c_patch_traces;
 extern	cvar_t		*cm_noAreas;
 extern	cvar_t		*cm_noCurves;
 extern	cvar_t		*cm_playerCurveClip;
-extern  byte	  	*cmod_base;
 
 #if defined(USE_MULTIVM_CLIENT) || defined(USE_MULTIVM_SERVER)
 extern  cmodel_t	box_modelWorlds[MAX_NUM_MAPS];
@@ -205,10 +204,6 @@ extern  cbrush_t	*box_brushWorlds[MAX_NUM_MAPS];
 #define box_model box_modelWorlds[cmi]
 #define box_planes box_planesWorlds[cmi]
 #define box_brush box_brushWorlds[cmi]
-#else
-extern  cmodel_t	box_model;
-extern  cplane_t	*box_planes;
-extern  cbrush_t	*box_brush;
 #endif
 
 
@@ -250,18 +245,13 @@ typedef struct leafList_s {
 } leafList_t;
 
 void LoadQ2Map(const char *name);
-void CMod_LoadNodes (lump_t *l);
 int CM_BoxBrushes( const vec3_t mins, const vec3_t maxs, cbrush_t **list, int listsize );
-void CMod_CheckLeafBrushes( void );
 void CM_StoreLeafs( leafList_t *ll, int nodenum );
 void CM_StoreBrushes( leafList_t *ll, int nodenum );
-void CMod_LoadPatches( lump_t *surfs, lump_t *verts );
 void CM_BoxLeafnums_r( leafList_t *ll, int nodenum );
-void CM_BoundBrush( cbrush_t *b );
 cmodel_t	*CM_ClipHandleToModel( clipHandle_t handle );
 qboolean CM_BoundsIntersect( const vec3_t mins, const vec3_t maxs, const vec3_t mins2, const vec3_t maxs2 );
 qboolean CM_BoundsIntersectPoint( const vec3_t mins, const vec3_t maxs, const vec3_t point );
-void CMod_LoadEntityString( lump_t *l, const char *name );
 	
 // cm_patch.c
 

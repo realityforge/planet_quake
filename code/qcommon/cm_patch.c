@@ -80,7 +80,7 @@ typedef struct {
 #define	WRAP_POINT_EPSILON	0.1
 */
 
-int	c_totalPatchBlocks;
+static int c_totalPatchBlocks;
 int	c_totalPatchSurfaces;
 int	c_totalPatchEdges;
 

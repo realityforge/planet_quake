@@ -1,6 +1,4 @@
-#ifndef __WASM__
 #include <string.h>
-#endif
 #include "server.h"
 
 #define MAX_FILTER_MESSAGE 1000

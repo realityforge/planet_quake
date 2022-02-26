@@ -46,21 +46,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #endif
 
 #if defined (_WIN32) || defined(__linux__)
-#ifndef __WASM__
 #define USE_AFFINITY_MASK
-#else
-#undef USE_AFFINITY_MASK
 #endif
-#endif
-
-#ifdef __WASM__
-
-void DebugBreak( void );
-
-void DebugError( void );
-
-#endif
-
 
 // stringify macro
 #define XSTRING(x)	STRING(x)
@@ -145,7 +132,6 @@ void MSG_ReadDeltaSharedEntity( msg_t *msg, void *from, void *to,
 								 int number );
 
 void MSG_ReportChangeVectors_f( void );
-
 
 //============================================================================
 // PureMultiView protocol
@@ -323,11 +309,7 @@ qboolean	NET_GetLoopPacket( netsrc_t sock, netadr_t *net_from, msg_t *net_messag
 void		NET_JoinMulticast6( void );
 void		NET_LeaveMulticast6( void );
 #endif
-#ifndef __WASM__
 qboolean	NET_Sleep( int timeout );
-#else
-int NET_Sleep(int timeout);
-#endif
 
 #define	MAX_PACKETLEN	1400	// max size of a network packet
 
@@ -397,10 +379,12 @@ PROTOCOL
 ==============================================================
 */
 
-#define	PROTOCOL_VERSION		68
+#define	OLD_PROTOCOL_VERSION	68
 // new protocol with UDP spoofing protection:
 #define	NEW_PROTOCOL_VERSION	71
 // 1.31 - 67
+
+#define DEFAULT_PROTOCOL_VERSION	OLD_PROTOCOL_VERSION
 
 
 // maintain a list of compatible protocols for demo playing
@@ -469,6 +453,7 @@ enum clc_ops_e {
 	clc_moveNoDelta,		// [[usercmd_t]
 	clc_clientCommand,		// [string] message
 	clc_EOF,
+
 #if defined(USE_MULTIVM_SERVER) || defined(USE_MULTIVM_CLIENT)
 	clc_mvMove,
 	clc_mvMoveNoDelta,
@@ -545,7 +530,20 @@ vm_t	*VM_Create( vmIndex_t index, syscall_t systemCalls, dllSyscall_t dllSyscall
 void	VM_Free( vm_t *vm );
 void	VM_Clear(void);
 #ifndef BUILD_GAME_STATIC
+// we don't need more than 4 arguments (counting callnum) for vmMain, at least in Vanilla Quake3
+#define MAX_VMMAIN_CALL_ARGS 4
+
+typedef intptr_t (QDECL *vmMainFunc_t)( int command, int arg0, int arg1, int arg2 );
+
+typedef intptr_t (*syscall_t)( intptr_t *parms );
+typedef intptr_t (QDECL *dllSyscall_t)( intptr_t callNum, ... );
+typedef void (QDECL *dllEntry_t)( dllSyscall_t syscallptr );
+
 void	VM_Init( void );
+vm_t	*VM_Create( vmIndex_t index, syscall_t systemCalls, dllSyscall_t dllSyscalls, vmInterpret_t interpret );
+
+void	VM_Free( vm_t *vm );
+void	VM_Clear(void);
 void	VM_Forced_Unload_Start(void);
 void	VM_Forced_Unload_Done(void);
 vm_t	*VM_Restart( vm_t *vm );
@@ -883,7 +881,11 @@ typedef enum {
 #endif
 
 typedef	time_t fileTime_t;
+#if defined  (_MSC_VER) && defined (__clang__)
+typedef	_off_t  fileOffset_t;
+#else
 typedef	off_t  fileOffset_t;
+#endif
 
 qboolean FS_Initialized( void );
 
@@ -1157,18 +1159,10 @@ void 		QDECL Com_DPrintfReal( char *file, int line, const uint32_t source, const
 void 		QDECL Com_Printf( const char *fmt, ... ) __attribute__ ((format (printf, 1, 2)));
 void 		QDECL Com_DPrintf( const char *fmt, ... ) __attribute__ ((format (printf, 1, 2)));
 #endif
-#ifndef __WASM__
-__attribute__ ((noreturn))
-#endif
-__attribute__ ((format (printf, 2, 3)))
-void 		QDECL Com_Error( errorParm_t code, const char *fmt, ... );
 void 		Com_Quit_f( void );
 void		Com_GameRestart( int checksumFeed, qboolean clientRestart );
 
 int			Com_EventLoop( void );
-#ifdef USE_ASYNCHRONOUS
-void *Com_PreviousEventPtr( void );
-#endif
 int			Com_Milliseconds( void );	// will be journaled properly
 
 // MD4 functions
@@ -1191,7 +1185,6 @@ int			Com_Filter( const char *filter, const char *name );
 qboolean	Com_FilterExt( const char *filter, const char *name );
 qboolean	Com_HasPatterns( const char *str );
 int			Com_FilterPath( const char *filter, const char *name );
-
 int			Com_RealTime(qtime_t *qtime);
 qboolean	Com_SafeMode( void );
 void		Com_RunAndTimeServerPacket( const netadr_t *evFrom, msg_t *buf );
@@ -1229,10 +1222,10 @@ extern	cvar_t	*com_timescale;
 extern	cvar_t	*com_viewlog;			// 0 = hidden, 1 = visible, 2 = minimized
 extern	cvar_t	*com_version;
 extern	cvar_t	*com_blood;
-extern	cvar_t	*com_buildScript;		// for building release pak files
 extern	cvar_t	*com_journal;
 extern	cvar_t	*com_cameraMode;
 extern	cvar_t	*com_protocol;
+extern	qboolean com_protocolCompat;
 extern	cvar_t	*cl_execTimeout;
 extern	cvar_t	*cl_execOverflow;
 
@@ -1511,16 +1504,8 @@ void	Sys_SendKeyEvents( void );
 void	Sys_Sleep( int msec );
 char	*Sys_ConsoleInput( void );
 
-#ifndef __WASM__
-__attribute__ ((noreturn))
-#endif
-__attribute__ ((format (printf, 1, 2)))
-void	QDECL Sys_Error( const char *error, ...);
-
-#ifndef __WASM__
-__attribute__ ((noreturn))
-#endif
-void	Sys_Quit (void);
+void	QDECL Sys_Error( const char *error, ...) __attribute__ ((noreturn, format (printf, 1, 2)));
+void	Sys_Quit (void) __attribute__ ((noreturn));
 
 #ifdef __WASM__
 void JS_Field_CharEvent( field_t *edit, int ch );
@@ -1540,9 +1525,7 @@ void	Sys_SetAffinityMask( int mask );
 
 // Sys_Milliseconds should only be used for profiling purposes,
 // any game related timing information should come from event timestamps
-
 int		Sys_Milliseconds( void );
-
 int64_t	Sys_Microseconds( void );
 
 void	Sys_SnapVector( float *vector );
@@ -1562,18 +1545,13 @@ void	Sys_SetErrorText( const char *text );
 
 void	Sys_SendPacket( int length, const void *data, const netadr_t *to );
 
-
 qboolean	Sys_StringToAdr( const char *s, netadr_t *a, netadrtype_t family );
 //Does NOT parse port numbers, only base addresses.
-
 
 qboolean	Sys_IsLANAddress(const netadr_t *adr);
 void		Sys_ShowIP(void);
 
-
 void	Sys_Mkdir( const char *path );
-
-
 FILE	*Sys_FOpen( const char *ospath, const char *mode );
 qboolean Sys_ResetReadOnlyAttribute( const char *ospath );
 
@@ -1582,10 +1560,7 @@ const char *Sys_DefaultBasePath( void );
 const char *Sys_DefaultHomePath( void );
 const char *Sys_SteamPath( void );
 
-
 char **Sys_ListFiles( const char *directory, const char *extension, const char *filter, int *numfiles, qboolean wantsubs );
-
-
 void Sys_FreeFileList( char **list );
 
 qboolean Sys_GetFileStats( const char *filename, fileOffset_t *size, fileTime_t *mtime, fileTime_t *ctime );
@@ -1597,13 +1572,9 @@ qboolean Sys_LowPhysicalMemory( void );
 
 int Sys_MonkeyShouldBeSpanked( void );
 
-
 void *Sys_LoadLibrary( const char *name );
-
 void *Sys_LoadFunction( void *handle, const char *name );
-
 int   Sys_LoadFunctionErrors( void );
-
 void  Sys_UnloadLibrary( void *handle );
 
 // adaptive huffman functions

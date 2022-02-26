@@ -60,7 +60,7 @@ static void CL_Netchan_Encode( msg_t *msg ) {
 	msg->oob = soob;
 	msg->bit = sbit;
 	msg->readcount = srdc;
-
+        
 	string = (byte *)clc.serverCommands[ reliableAcknowledge & (MAX_RELIABLE_COMMANDS-1) ];
 	index = 0;
 	//

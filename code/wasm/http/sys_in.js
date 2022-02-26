@@ -33,7 +33,9 @@ function GLimp_StartDriverAndSetMode(mode, modeFS, fullscreen, fallback) {
 
   // TODO: keep track of multiple?
   let webGLContextAttributes = {
-    failIfMajorPerformanceCaveat: true
+    failIfMajorPerformanceCaveat: true,
+    alpha: false,
+    stencil: false,
   }
 
 
@@ -221,6 +223,9 @@ function InputPushKeyEvent(evt) {
       Sys_QueEvent( Sys_Milliseconds(), SE_CHAR, 8, 0, 0, null );
 
     if ( evt.keyCode ) {
+      if(evt.keyCode >= 65 && evt.keyCode <= 90) {
+
+      }
       Sys_QueEvent( Sys_Milliseconds(), SE_KEY, evt.keyCode, true, 0, null );
 
       if( evt.ctrlKey && key >= 'a' && evt.keyCode <= 'z' ) {

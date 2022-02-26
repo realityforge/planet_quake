@@ -88,8 +88,6 @@ static qboolean	winsockInitialized = qfalse;
 #		define _BSD_SOCKLEN_T_
 #	endif
 
-#ifndef __WASM__
-# include <netinet/tcp.h>
 #	include <sys/socket.h>
 #	include <errno.h>
 #	include <netdb.h>
@@ -103,7 +101,6 @@ static qboolean	winsockInitialized = qfalse;
 #	if !defined(__sun) && !defined(__sgi)
 #		include <ifaddrs.h>
 #	endif
-#endif
 
 #	ifdef __sun
 #		include <sys/filio.h>
@@ -115,20 +112,14 @@ typedef int SOCKET;
 #	define closesocket			close
 #	define ioctlsocket			ioctl
 typedef int	ioctlarg_t;
-#ifndef __WASM__
 #	define socketError			errno
-#else
-extern int socketError;
-#endif
 
 #endif
 
 typedef union {
 	struct sockaddr_in v4;
-#ifndef __WASM__
 	struct sockaddr_in6 v6;
 	struct sockaddr_storage ss;
-#endif
 } sockaddr_t;
 
 #pragma pack(push,1)
@@ -177,9 +168,7 @@ typedef union socks5_udp_request_s {
 #pragma pack(pop)
 
 
-#ifndef __WASM__
 static qboolean usingSocks = qfalse;
-#endif
 static int networkingEnabled = 0;
 
 static cvar_t	*net_enabled;
@@ -200,9 +189,7 @@ static cvar_t	*net_mcast6iface;
 #endif
 static cvar_t	*net_dropsim;
 
-#ifndef __WASM__
 static sockaddr_t socksRelayAddr;
-#endif
 
 #ifdef USE_MULTIVM_SERVER
 #define ip_socket ip_sockets[igvm]
@@ -212,17 +199,9 @@ static SOCKET	ip_sockets[MAX_NUM_PORTS] = {
   INVALID_SOCKET, INVALID_SOCKET
 };
 #else
-#ifndef __WASM__
 static SOCKET	ip_socket = INVALID_SOCKET;
 #endif
-#endif
-#ifdef __WASM__
-// maybe on desktop we have the luxury of maintaining separate connections
-//  but the web browser is limit to 3 per thread
-#define socks_socket ip_socket
-#else
 static SOCKET	socks_socket = INVALID_SOCKET;
-#endif
 
 #ifdef USE_IPV6
 static SOCKET	ip6_socket = INVALID_SOCKET;
@@ -248,11 +227,7 @@ typedef struct
 	char ifname[IF_NAMESIZE];
 	
 	netadrtype_t type;
-#ifndef __WASM__
 	sa_family_t family;
-#else
-	int family;
-#endif
 	sockaddr_t addr;
 	sockaddr_t netmask;
 } nip_localaddr_t;
@@ -266,6 +241,17 @@ static void	NET_Restart_f( void );
 
 //=============================================================================
 
+#ifdef __WASM__
+#ifdef USE_MULTIVM_SERVER
+int NET_GetPacket( netadr_t *net_from, msg_t *net_message, const fd_set *fdr, int igvm );
+#else
+int NET_GetPacket( netadr_t *net_from, msg_t *net_message, const fd_set *fdr );
+#endif
+
+void Sys_SendPacket( int length, const void *data, const netadr_t *to );
+#endif
+
+
 
 /*
 ====================
@@ -273,7 +259,6 @@ NET_ErrorString
 ====================
 */
 static char *NET_ErrorString( void ) {
-#ifndef __WASM__
 #ifdef _WIN32
 	//FIXME: replace with FormatMessage?
 	switch( socketError ) {
@@ -326,11 +311,9 @@ static char *NET_ErrorString( void ) {
 #else
 	return strerror(socketError);
 #endif
-#endif
 }
 
 
-#ifndef __WASM__
 static void NetadrToSockadr( const netadr_t *a, sockaddr_t *s ) {
 	switch ( a->type ) {
 		case NA_BROADCAST:
@@ -416,7 +399,6 @@ static const char *gai_error_str( int ecode )
 			return gai_strerror( ecode );
 	}
 }
-
 
 
 /*
@@ -545,7 +527,6 @@ qboolean Sys_StringToAdr( const char *s, netadr_t *a, netadrtype_t family ) {
 	SockadrToNetadr( &sadr, a );
 	return qtrue;
 }
-#endif
 
 
 /*
@@ -639,9 +620,7 @@ const char *NET_AdrToString( const netadr_t *a )
 #endif
 	{
 		sockaddr_t sadr;
-#ifndef __WASM__
 		NetadrToSockadr( a, &sadr );
-#endif
 		Sys_SockaddrToString( s, sizeof(s), &sadr );
 	}
 
@@ -718,19 +697,6 @@ qboolean NET_IsLocalAddress( const netadr_t *adr )
 
 //=============================================================================
 
-
-#ifdef __WASM__
-#ifdef USE_MULTIVM_SERVER
-int NET_GetPacket( netadr_t *net_from, msg_t *net_message, const fd_set *fdr, int igvm );
-#else
-int NET_GetPacket( netadr_t *net_from, msg_t *net_message, const fd_set *fdr );
-#endif
-
-void Sys_SendPacket( int length, const void *data, const netadr_t *to );
-#endif
-
-
-#ifndef __WASM__
 /*
 ==================
 NET_GetPacket
@@ -862,7 +828,6 @@ static qboolean NET_GetPacket( netadr_t *net_from, msg_t *net_message, const fd_
 	return qfalse;
 }
 
-
 //=============================================================================
 
 
@@ -871,8 +836,7 @@ static qboolean NET_GetPacket( netadr_t *net_from, msg_t *net_message, const fd_
 Sys_SendPacket
 ==================
 */
-void Sys_SendPacket( int length, const void *data, const netadr_t *to )
-{
+void Sys_SendPacket( int length, const void *data, const netadr_t *to ) {
 	int ret = SOCKET_ERROR;
 #ifdef USE_MULTIVM_SERVER
 	int igvm = to->netWorld;
@@ -1056,7 +1020,6 @@ qboolean Sys_IsLANAddress( const netadr_t *adr ) {
 	
 	return qfalse;
 }
-#endif
 
 
 /*
@@ -1084,7 +1047,7 @@ void Sys_ShowIP( void ) {
 
 //=============================================================================
 
-#ifndef __WASM__
+
 /*
 ====================
 NET_IPSocket
@@ -1093,6 +1056,8 @@ NET_IPSocket
 static SOCKET NET_IPSocket( const char *net_interface, int port, int *err ) {
 	SOCKET				newsocket;
 	struct sockaddr_in	address;
+	ioctlarg_t			_true = 1;
+	int					i = 1;
 
 	*err = 0;
 
@@ -1108,10 +1073,6 @@ static SOCKET NET_IPSocket( const char *net_interface, int port, int *err ) {
 		Com_Printf( "WARNING: NET_IPSocket: socket: %s\n", NET_ErrorString() );
 		return newsocket;
 	}
-
-#ifndef __WASM__
-  ioctlarg_t _true = 1;
-  int i = 1;
 	// make it non-blocking
 	if( ioctlsocket( newsocket, FIONBIO, &_true ) == SOCKET_ERROR ) {
 		Com_Printf( "WARNING: NET_IPSocket: ioctl FIONBIO: %s\n", NET_ErrorString() );
@@ -1124,7 +1085,6 @@ static SOCKET NET_IPSocket( const char *net_interface, int port, int *err ) {
 	if( setsockopt( newsocket, SOL_SOCKET, SO_BROADCAST, (char *) &i, sizeof(i) ) == SOCKET_ERROR ) {
 		Com_Printf( "WARNING: NET_IPSocket: setsockopt SO_BROADCAST: %s\n", NET_ErrorString() );
 	}
-#endif
 
 	if( !net_interface || !net_interface[0]) {
 		address.sin_family = AF_INET;
@@ -1187,7 +1147,6 @@ static SOCKET NET_IP6Socket( const char *net_interface, int port, struct sockadd
 		return newsocket;
 	}
 
-#ifndef __WASM__
 	// make it non-blocking
 	if( ioctlsocket( newsocket, FIONBIO, &_true ) == SOCKET_ERROR ) {
 		Com_Printf( "WARNING: NET_IP6Socket: ioctl FIONBIO: %s\n", NET_ErrorString() );
@@ -1195,7 +1154,6 @@ static SOCKET NET_IP6Socket( const char *net_interface, int port, struct sockadd
 		closesocket(newsocket);
 		return INVALID_SOCKET;
 	}
-#endif
 
 #ifdef IPV6_V6ONLY
 	{
@@ -1356,27 +1314,14 @@ void NET_LeaveMulticast6( void )
 NET_OpenSocks
 ====================
 */
-int porto;
 static void NET_OpenSocks( int port ) {
 	struct sockaddr_in	address;
-#ifdef __WASM__
-	uint32_t h;
-#else
 	struct hostent		*h;
-#endif
 	int					len;
 	unsigned char		buf[4 + 255 * 2];
 	socks5_request_t	cmd;
 
 	usingSocks = qfalse;
-#ifdef __WASM__
-  if(!Cvar_VariableIntegerValue("net_socksLoading")
-    && strcmp(Cmd_Argv(0), "net_restart")) {
-    Cvar_Set("net_socksLoading", "0");
-    Cvar_Set("net_socksLoading", "1");
-    return;
-  }
-#endif
 
 	Com_Printf( "Opening connection to SOCKS server.\n" );
 
@@ -1385,15 +1330,7 @@ static void NET_OpenSocks( int port ) {
 		return;
 	}
 
-#ifndef __WASM__
-  int i;
-	// set no delay
-	if( setsockopt( socks_socket, IPPROTO_TCP, TCP_NODELAY, (char *) &i, sizeof(i) ) == SOCKET_ERROR ) {
-		Com_Printf( "WARNING: NET_IPSocket: setsockopt TCP_NODELAY: %s\n", NET_ErrorString() );
-	}
-#endif
-  
-  h = gethostbyname( NET_ParseProtocol(net_socksServer->string, 0));
+	h = gethostbyname( net_socksServer->string );
 	if ( h == NULL ) {
 		Com_Printf( "WARNING: NET_OpenSocks: gethostbyname: %s\n", NET_ErrorString() );
 		return;
@@ -1407,14 +1344,11 @@ static void NET_OpenSocks( int port ) {
 	address.sin_addr.s_addr = *(uint32_t *)h->h_addr_list[0];
 	address.sin_port = htons( net_socksPort->integer );
 
-	if ( connect( socks_socket, (struct sockaddr *)&address, sizeof( address ) ) == SOCKET_ERROR ) {
-#ifndef __WASM__
-    Com_Printf( "NET_OpenSocks: connect: %s\n", NET_ErrorString() );
+	if ( connect( socks_socket, ( struct sockaddr * )&address, sizeof( struct sockaddr_in ) ) == SOCKET_ERROR ) {
+		Com_Printf( "%s: connect: %s\n", __func__, NET_ErrorString() );
     return;
-#else
-//	TODO: insert async macro
-#endif
 	}
+
 	buf[0] = 5;	// SOCKS version
 
 	if ( *net_socksUsername->string || *net_socksPassword->string ) {
@@ -1430,11 +1364,6 @@ static void NET_OpenSocks( int port ) {
 	}
 
 	if ( send( socks_socket, (void *)buf, len, 0 ) == SOCKET_ERROR ) {
-		Com_Printf( "NET_OpenSocks: send: %s\n", NET_ErrorString() );
-#ifdef __WASM__
-    Cvar_Set("net_socksLoading", "0");
-    socks_socket = INVALID_SOCKET;
-#endif
 		Com_Printf( "%s: send: %s\n", __func__, NET_ErrorString() );
 		return;
 	}
@@ -1442,14 +1371,10 @@ static void NET_OpenSocks( int port ) {
 	// get the response
 	len = recv( socks_socket, (void *)buf, 32, 0 );
 	if ( len == SOCKET_ERROR ) {
-    Cvar_Set("net_socksLoading", "0");
-    socks_socket = INVALID_SOCKET;
 		Com_Printf( "%s: recv: %s\n", __func__, NET_ErrorString() );
 		return;
 	}
 	if ( len != 2 || buf[0] != 5 ) {
-    Cvar_Set("net_socksLoading", "0");
-    socks_socket = INVALID_SOCKET;
 		Com_Printf( "%s: bad auth.method response\n", __func__ );
 		return;
 	}
@@ -1459,7 +1384,6 @@ static void NET_OpenSocks( int port ) {
 		case 2: // username/password authentication
 			break;
 		default:
-    Cvar_Set("net_socksLoading", "0");
 			Com_Printf( "%s: unsupported auth.method\n", __func__ );
 			return;
 	}
@@ -1490,8 +1414,6 @@ static void NET_OpenSocks( int port ) {
 
 		// send it
 		if ( send( socks_socket, (void *)buf, 3 + ulen + plen, 0 ) == SOCKET_ERROR ) {
-      Cvar_Set("net_socksLoading", "0");
-      socks_socket = INVALID_SOCKET;
 			Com_Printf( "%s: send: %s\n", __func__, NET_ErrorString() );
 			return;
 		}
@@ -1499,20 +1421,16 @@ static void NET_OpenSocks( int port ) {
 		// get the response
 		len = recv( socks_socket, (void *)buf, 64, 0 );
 		if ( len == SOCKET_ERROR ) {
-      Cvar_Set("net_socksLoading", "0");
 			Com_Printf( "%s: recv: %s\n", __func__, NET_ErrorString() );
 			return;
 		}
 		if ( len != 2 || buf[0] != 1 ) {
-      socks_socket = INVALID_SOCKET;
-      Cvar_Set("net_socksLoading", "0");
 			Com_Printf( "%s: bad auth response\n", __func__ );
 			return;
 		}
 	}
 
 	// send the UDP associate request
-  Cvar_Set("net_socksLoading", "0");
 	cmd.version = 5;  // SOCKS version
 	cmd.command = 3;  // UDP associate
 	cmd.reserved = 0; // reserved
@@ -1527,26 +1445,19 @@ static void NET_OpenSocks( int port ) {
 	// get the response
 	len = recv( socks_socket, (void *)&cmd, sizeof( cmd ), 0 );
 	if ( len == SOCKET_ERROR ) {
-    Cvar_Set("net_socksLoading", "0");
-    socks_socket = INVALID_SOCKET;
 		Com_Printf( "%s: recv: %s\n", __func__, NET_ErrorString() );
 		return;
 	}
-    Cvar_Set("net_socksLoading", "0");
-    socks_socket = INVALID_SOCKET;
 	if ( len < 10 || cmd.version != 5 ) {
 		Com_Printf( "%s: bad response\n", __func__ );
 		return;
 	}
 
 	// check completion code
-    Cvar_Set("net_socksLoading", "0");
 	if ( cmd.command != 0 ) {
 		Com_Printf( "%s: request denied: %i\n", __func__, cmd.command );
 		return;
 	}
-    Cvar_Set("net_socksLoading", "0");
-    socks_socket = INVALID_SOCKET;
 	if ( cmd.addrtype != 1 ) {
 		Com_Printf( "%s: relay address is not IPV4: %i\n", __func__, cmd.addrtype );
 		return;
@@ -1558,15 +1469,6 @@ static void NET_OpenSocks( int port ) {
 	socksRelayAddr.v4.sin_addr.s_addr = cmd.u.v4.addr.s_addr;
 	socksRelayAddr.v4.sin_port = cmd.u.v4.port;
 
-  Com_Printf( "NET_OpenSocks: SOCKS relay configured: %i.%i.%i.%i:%hu\n",
-    socksRelayAddr.v4.sin_addr.s_addr & 0xFF,
-    socksRelayAddr.v4.sin_addr.s_addr >> 8 & 0xFF,
-    socksRelayAddr.v4.sin_addr.s_addr >> 16 & 0xFF,
-    socksRelayAddr.v4.sin_addr.s_addr >> 24 & 0xFF,
-    socksRelayAddr.v4.sin_port);
-#ifdef __WASM__
-  Cvar_Set("net_socksLoading", "0");
-#endif
 	usingSocks = qtrue;
 }
 
@@ -1701,7 +1603,6 @@ static void NET_GetLocalAddress( void ) {
 		freeaddrinfo( res );
 }
 #endif // _WIN32
-#endif
 
 
 #ifdef USE_PRINT_CONSOLE
@@ -1758,9 +1659,7 @@ void NET_OpenIP( int igvm )
 	port6 = net_port6->integer;
 #endif
 
-#ifndef __WASM__
 	NET_GetLocalAddress();
-#endif
 
 	// automatically scan for a valid port, so multiple
 	// dedicated servers can be started without requiring
@@ -1800,10 +1699,6 @@ void NET_OpenIP( int igvm )
 
 				if (net_socksEnabled->integer)
 					NET_OpenSocks( port + i );
-#ifdef __WASM__
-        else // for blocking Com_Frame until net is setup
-          Cvar_Set("net_socksLoading", "0");
-#endif
 
 				break;
 			}
@@ -1818,10 +1713,10 @@ void NET_OpenIP( int igvm )
 			Com_Printf( "WARNING: Couldn't bind to a v4 ip address.\n");
 	}
 }
-#endif
 
 
 //===================================================================
+
 
 /*
 ====================
@@ -1841,6 +1736,14 @@ static qboolean NET_GetCvars( void ) {
 	net_enabled = Cvar_Get( "net_enabled", "3", CVAR_LATCH | CVAR_ARCHIVE_ND | CVAR_NORESTART );
 #endif
 
+	Cvar_SetDescription( net_enabled, "Networking options, bitmask:\n"
+		" 1 - enable IPv4\n"
+#ifdef USE_IPV6
+		" 2 - enable IPv6\n"
+		" 4 - prioritize IPv6 connections over IPv4\n"
+		" 8 - disable IPv6 multicast"
+#endif
+		);
 
 	Cvar_CheckRange( net_enabled, NULL, NULL, CV_INTEGER );
 	modified = net_enabled->modified;
@@ -1932,9 +1835,6 @@ static void NET_Config( qboolean enableNetworking ) {
 		enableNetworking = qfalse;
 	}
 
-#ifdef __WASM__
-	if(qfalse)
-#endif
 	// if enable state is the same and no cvars were modified, we have nothing to do
 	if( enableNetworking == networkingEnabled && !modified ) {
 		return;
@@ -1962,7 +1862,6 @@ static void NET_Config( qboolean enableNetworking ) {
 		networkingEnabled = enableNetworking;
 	}
 
-#ifndef __WASM__
 	if( stop ) {
 #ifdef USE_MULTIVM_SERVER
     for(int igvm = 0; igvm < MAX_NUM_PORTS; igvm++)
@@ -1991,9 +1890,6 @@ static void NET_Config( qboolean enableNetworking ) {
 		}
 		
 	}
-#else
-	NET_Close();
-#endif
 
 	if( start )
 	{
@@ -2120,7 +2016,7 @@ static void NET_Event( const fd_set *fdr )
 			Com_RunAndTimeServerPacket( &from, &netmsg );
 #else
 #ifndef BUILD_SLIM_CLIENT
-			if ( (com_sv_running && com_sv_running->integer) || com_dedicated->integer )
+			if ( com_sv_running->integer || com_dedicated->integer )
 				Com_RunAndTimeServerPacket( &from, &netmsg );
 			else
 #endif
@@ -2132,8 +2028,6 @@ static void NET_Event( const fd_set *fdr )
 	}
 }
 
-
-#ifndef __WASM__
 
 /*
 ====================
@@ -2190,7 +2084,6 @@ qboolean NET_Sleep( int timeout )
 
 	if ( highestfd == INVALID_SOCKET )
 	{
-#ifndef __WASM__
 #ifdef _WIN32
 		// windows ain't happy when select is called without valid FDs
 		Sleep( timeout / 1000 );
@@ -2198,9 +2091,6 @@ qboolean NET_Sleep( int timeout )
 #else
 		usleep( timeout );
 		return qtrue;
-#endif
-#else
-    return qtrue;
 #endif
 	}
 

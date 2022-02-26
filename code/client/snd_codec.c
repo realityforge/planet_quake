@@ -25,6 +25,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "snd_codec.h"
 
 snd_codec_t *codecs;
+
 static void S_CodecRegister(snd_codec_t *codec);
 
 #ifdef USE_LAZY_LOAD
@@ -148,6 +149,7 @@ static void *S_CodecGetSound(const char *filename, snd_info_t *info)
 	return NULL;
 }
 
+
 /*
 =================
 S_CodecInit
@@ -184,6 +186,7 @@ void S_CodecShutdown( void )
 	codecs = NULL;
 }
 
+
 /*
 =================
 S_CodecRegister
@@ -194,6 +197,7 @@ static void S_CodecRegister(snd_codec_t *codec)
 	codec->next = codecs;
 	codecs = codec;
 }
+
 
 /*
 =================
@@ -214,6 +218,7 @@ void *S_CodecLoad(const char *filename, snd_info_t *info)
 	return result;
 }
 
+
 /*
 =================
 S_CodecOpenStream
@@ -233,15 +238,28 @@ snd_stream_t *S_CodecOpenStream(const char *filename)
 	return result;
 }
 
+
+/*
+=================
+S_CodecCloseStream
+=================
+*/
 void S_CodecCloseStream(snd_stream_t *stream)
 {
 	stream->codec->close(stream);
 }
 
+
+/*
+=================
+S_CodecReadStream
+=================
+*/
 int S_CodecReadStream(snd_stream_t *stream, int bytes, void *buffer)
 {
 	return stream->codec->read(stream, bytes, buffer);
 }
+
 
 //=======================================================================
 // Util functions (used by codecs)

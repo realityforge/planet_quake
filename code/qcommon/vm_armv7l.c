@@ -41,9 +41,7 @@ ARMv7-A_ARMv7-R_DDI0406_2007.pdf
 #include <sys/mman.h>
 #include <fcntl.h>
 #include <unistd.h>
-#ifndef __WASM__
 #include <math.h>
-#endif
 #endif
 
 #include "vm_local.h"

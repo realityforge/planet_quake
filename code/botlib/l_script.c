@@ -35,13 +35,11 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 //#define BSPC
 
 #ifdef SCREWUP
-#ifndef __WASM__
 #include <stdio.h>
 #include <stdlib.h>
 #include <limits.h>
 #include <string.h>
 #include <stdarg.h>
-#endif
 #include "l_memory.h"
 #include "l_script.h"
 
@@ -163,9 +161,9 @@ punctuation_t default_punctuations[] =
 };
 
 #ifdef BSPC
-char basefolder[MAX_PATH];
+static char basefolder[MAX_PATH];
 #else
-char basefolder[MAX_QPATH];
+static char basefolder[MAX_QPATH];
 #endif
 
 //===========================================================================
@@ -1306,7 +1304,7 @@ int ScriptSkipTo(script_t *script, char *value)
 // Returns:					-
 // Changes Globals:		-
 //============================================================================
-int FileLength(FILE *fp)
+int FileLength(fileHandle_t *fp)
 {
 	int pos;
 	int end;
@@ -1327,29 +1325,19 @@ int FileLength(FILE *fp)
 //============================================================================
 script_t *LoadScriptFile(const char *filename)
 {
-#ifdef BOTLIB
 	fileHandle_t fp;
-	char pathname[MAX_QPATH];
-#else
-	FILE *fp;
-#endif
+	char pathname[MAX_QPATH*2];
 	int length;
 	void *buffer;
 	script_t *script;
 
-#ifdef BOTLIB
-	if (strlen(basefolder))
+	if ( basefolder[0] != '\0' )
 		Com_sprintf(pathname, sizeof(pathname), "%s/%s", basefolder, filename);
 	else
 		Com_sprintf(pathname, sizeof(pathname), "%s", filename);
+
 	length = botimport.FS_FOpenFile( pathname, &fp, FS_READ );
 	if (!fp) return NULL;
-#else
-	fp = Sys_FOpen(filename, "rb");
-	if (!fp) return NULL;
-
-	length = FileLength(fp);
-#endif
 
 	buffer = GetClearedMemory(sizeof(script_t) + length + 1);
 	script = (script_t *) buffer;
@@ -1435,17 +1423,10 @@ void FreeScript(script_t *script)
 #endif //PUNCTABLE
 	FreeMemory(script);
 } //end of the function FreeScript
-//============================================================================
-//
-// Parameter:				-
-// Returns:					-
-// Changes Globals:		-
-//============================================================================
+
+
+//set the base folder to load files from
 void PS_SetBaseFolder(const char *path)
 {
-#ifdef BSPC
-	sprintf(basefolder, path);
-#else
 	Q_strncpyz( basefolder, path, sizeof( basefolder ) );
-#endif
-} //end of the function PS_SetBaseFolder
+}

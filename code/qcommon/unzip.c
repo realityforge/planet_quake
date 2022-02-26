@@ -13,7 +13,6 @@
 #include "../qcommon/qcommon.h"
 #include "unzip.h"
 
-
 /* unzip.h -- IO for uncompress .zip files using zlib 
    Version 0.15 beta, Mar 19th, 1998,
 
@@ -1181,7 +1180,6 @@ static int unzlocal_getLong (FILE *fin, uLong *pX)
 }
 
 
-#ifndef __WASM__
 static int unzlocal_getData( FILE *fin, byte *buf, int size )
 {
 	if ( fread( buf, size, 1, fin ) != 1 )
@@ -1191,7 +1189,6 @@ static int unzlocal_getData( FILE *fin, byte *buf, int size )
 
 	return UNZ_OK;
 }
-#endif
 
 
 /* My own strcmpi / strcasecmp */
@@ -1491,7 +1488,9 @@ static int unzlocal_GetCurrentFileInfoInternal (unzFile file,
 	unz_s* s;
 	unz_file_info file_info;
 	unz_file_info_internal file_info_internal;
+	byte buf[46];
 	int err=UNZ_OK;
+	//uLong uMagic;
 	long lSeek=0;
 
 	if (file==NULL)
@@ -1500,9 +1499,7 @@ static int unzlocal_GetCurrentFileInfoInternal (unzFile file,
 	if (fseek(s->file,s->pos_in_central_dir+s->byte_before_the_zipfile,SEEK_SET)!=0)
 		err=UNZ_ERRNO;
 
-#ifndef __WASM__
-  byte buf[46];
-//#if 1 // try ro reduce fread() overhead
+#if 1 // try ro reduce fread() overhead
 	if ( unzlocal_getData( s->file, buf, 46 ) != UNZ_OK )
 		return UNZ_ERRNO;
 	//uMagic = LittleLong( *(int*)(buf+0) );
@@ -1528,7 +1525,7 @@ static int unzlocal_GetCurrentFileInfoInternal (unzFile file,
 	file_info.external_fa = LittleLong( *(int*)(buf+38) );
 	file_info_internal.offset_curfile = LittleLong( *(int*)(buf+42) );
 #else
-  unsigned long uMagic;
+
 	/* we check the magic */
 	if (err==UNZ_OK) {
 		if (unzlocal_getLong(s->file,&uMagic) != UNZ_OK)

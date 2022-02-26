@@ -570,8 +570,9 @@ void SV_SpawnServer( const char *mapname, qboolean killBots ) {
 	// try to reset level time if server is empty
 	if ( !sv_levelTimeReset->integer && !sv.restartTime ) {
 		for ( i = 0; i < sv_maxclients->integer; i++ ) {
-			if ( svs.clients[ i ].state != CS_FREE )
+			if ( svs.clients[i].state >= CS_CONNECTED ) {
 				break;
+		}
 		}
 		if ( i == sv_maxclients->integer ) {
 			sv.time = 0;
@@ -606,18 +607,18 @@ void SV_SpawnServer( const char *mapname, qboolean killBots ) {
 	Com_RandomBytes( (byte*)&sv.checksumFeed, sizeof( sv.checksumFeed ) );
 	FS_Restart( sv.checksumFeed );
 
+	Sys_SetStatus( "Loading map %s", mapname );
+#ifndef USE_MULTIVM_SERVER
+	CM_LoadMap( va( "maps/%s.bsp", mapname ), qfalse, &checksum );
+#else
+	gameWorlds[gvmi] = CM_LoadMap( va( "maps/%s.bsp", mapname ), qfalse, &checksum );
+#endif
+
 	// set serverinfo visible name
 	Cvar_Set( "mapname", mapname );
 #ifdef USE_MULTIVM_SERVER
   Cvar_Get( va("mapname_%i", gvmi), mapname, CVAR_TAGGED_SPECIFIC );
   Cvar_Set( va("mapname_%i", gvmi), mapname );
-#endif
-
-	Sys_SetStatus( "Loading map %s", mapname );
-#ifdef USE_MULTIVM_SERVER
-	gameWorlds[gvmi] = CM_LoadMap( va( "maps/%s.bsp", mapname ), qfalse, &checksum );
-#else
-  gameWorlds[0] = CM_LoadMap( va( "maps/%s.bsp", mapname ), qfalse, &checksum );
 #endif
 
 	Cvar_Set( "sv_mapChecksum", va( "%i", checksum ) );
@@ -718,7 +719,7 @@ void SV_SpawnServer( const char *mapname, qboolean killBots ) {
 					ent->s.number = i;
 					client->gentity = ent;
 
-					client->deltaMessage = -1;
+					client->deltaMessage = client->netchan.outgoingSequence - ( PACKET_BACKUP + 1 ); // force delta reset
 					client->lastSnapshotTime = svs.time - 9999; // generate a snapshot immediately
 
 					VM_Call( gvm, 1, GAME_CLIENT_BEGIN, i );
@@ -828,6 +829,7 @@ void SV_SpawnServer( const char *mapname, qboolean killBots ) {
 
 	Hunk_SetMark();
 
+	Com_Printf ("-----------------------------------\n");
 #ifdef USE_LOCAL_DED
 	svShuttingDown = qfalse;
 #else
@@ -968,6 +970,7 @@ void SV_Init( void )
 
 	sv_maxclientsPerIP = Cvar_Get( "sv_maxclientsPerIP", "3", CVAR_ARCHIVE );
 	Cvar_CheckRange( sv_maxclientsPerIP, "1", NULL, CV_INTEGER );
+	Cvar_SetDescription( sv_maxclientsPerIP, "Limits number of simultaneous connections from the same IP address." );
 
 	sv_clientTLD = Cvar_Get( "sv_clientTLD", "0", CVAR_ARCHIVE_ND );
 	Cvar_CheckRange( sv_clientTLD, NULL, NULL, CV_INTEGER );
@@ -1006,6 +1009,7 @@ void SV_Init( void )
 	sv_minRate = Cvar_Get ("sv_minRate", "0", CVAR_ARCHIVE_ND | CVAR_SERVERINFO );
 	sv_maxRate = Cvar_Get ("sv_maxRate", "0", CVAR_ARCHIVE_ND | CVAR_SERVERINFO );
 	sv_dlRate = Cvar_Get("sv_dlRate", "100", CVAR_ARCHIVE | CVAR_SERVERINFO);
+	Cvar_CheckRange( sv_dlRate, "0", "500", CV_INTEGER );
 	sv_floodProtect = Cvar_Get ("sv_floodProtect", "1", CVAR_ARCHIVE | CVAR_SERVERINFO );
 
 	// systeminfo
@@ -1065,8 +1069,10 @@ void SV_Init( void )
 #endif
 	sv_timeout = Cvar_Get( "sv_timeout", "200", CVAR_TEMP );
 	Cvar_CheckRange( sv_timeout, "4", NULL, CV_INTEGER );
+	Cvar_SetDescription( sv_timeout, "Seconds without any message before automatic client disconnect" );
 	sv_zombietime = Cvar_Get( "sv_zombietime", "2", CVAR_TEMP );
 	Cvar_CheckRange( sv_zombietime, "1", NULL, CV_INTEGER );
+	Cvar_SetDescription( sv_zombietime, "Seconds to sink messages after disconnect" );
   // share with client for predictive loading
 #ifdef USE_MULTIVM_SERVER
 	Cvar_Get ("nextmap", "", CVAR_TEMP | CVAR_SERVERINFO );
@@ -1088,7 +1094,7 @@ void SV_Init( void )
 	sv_reconnectlimit = Cvar_Get( "sv_reconnectlimit", "3", 0 );
 	Cvar_CheckRange( sv_reconnectlimit, "0", "12", CV_INTEGER );
 
-	sv_padPackets = Cvar_Get ("sv_padPackets", "0", 0);
+	sv_padPackets = Cvar_Get( "sv_padPackets", "0", CVAR_DEVELOPER );
 	sv_killserver = Cvar_Get ("sv_killserver", "0", 0);
 	sv_mapChecksum = Cvar_Get ("sv_mapChecksum", "", CVAR_ROM);
 #ifdef USE_MULTIVM_SERVER
@@ -1231,7 +1237,7 @@ void SV_FinalMessage( const char *message ) {
 				// force a snapshot to be sent
 				cl->lastSnapshotTime = svs.time - 9999; // generate a snapshot immediately
 				cl->state = CS_ZOMBIE; // skip delta generation
-				SV_SendClientSnapshot( cl, qfalse );
+				SV_SendClientSnapshot( cl );
 			}
 		}
 	}
@@ -1295,7 +1301,7 @@ void SV_Shutdown( const char *finalmsg ) {
 	if ( sv_demoFile != FS_INVALID_HANDLE ) {
 		// finalize record
 		if ( svs.clients[ sv_maxclients->integer ].multiview.recorder ) {
-			SV_SendClientSnapshot( &svs.clients[ sv_maxclients->integer ], qfalse );
+			SV_SendClientSnapshot( &svs.clients[ sv_maxclients->integer ] );
 		}
 		SV_MultiViewStopRecord_f();
 	}

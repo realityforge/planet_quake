@@ -760,7 +760,7 @@ void SV_UpdateServerCommandsToClient( client_t *client, msg_t *msg );
 void SV_WriteFrameToClient( client_t *client, msg_t *msg );
 void SV_SendMessageToClient( msg_t *msg, client_t *client );
 void SV_SendClientMessages( void );
-void SV_SendClientSnapshot( client_t *client, qboolean includeBaselines );
+void SV_SendClientSnapshot( client_t *client );
 
 void SV_InitSnapshotStorage( void );
 void SV_IssueNewSnapshot( void );

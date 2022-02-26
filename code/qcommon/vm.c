@@ -36,10 +36,6 @@ and one exported function: Perform
 
 #include "vm_local.h"
 
-#ifdef BUILD_GAME_STATIC
-//#include <game/bg_public.h>
-#endif
-
 opcode_info_t ops[ OP_MAX ] = 
 {
 	// size, stack, nargs, flags
@@ -1813,7 +1809,7 @@ Used to load a development dll instead of a virtual machine
 TTimo: added some verbosity in debug
 =================
 */
-static void * QDECL VM_LoadDll( const char *name, dllSyscall_t *entryPoint, dllSyscall_t systemcalls ) {
+static void * QDECL VM_LoadDll( const char *name, vmMainFunc_t *entryPoint, dllSyscall_t systemcalls ) {
 
 	const char	*gamedir = Cvar_VariableString( "fs_game" );
 	char		filename[ MAX_QPATH ];
@@ -2087,11 +2083,11 @@ intptr_t QDECL VM_Call( vm_t *vm, int nargs, int callnum, ... )
 	if ( vm->entryPoint ) 
 	{
 		//rcg010207 -  see dissertation at top of VM_DllSyscall() in this file.
-		int args[MAX_VMMAIN_CALL_ARGS-1];
+		int32_t args[MAX_VMMAIN_CALL_ARGS-1];
 		va_list ap;
 		va_start( ap, callnum );
 		for ( i = 0; i < nargs; i++ ) {
-			args[i] = va_arg( ap, int );
+			args[i] = va_arg( ap, int32_t );
 		}
 		va_end(ap);
 
@@ -2101,18 +2097,18 @@ intptr_t QDECL VM_Call( vm_t *vm, int nargs, int callnum, ... )
 #if id386 && !defined __clang__ // calling convention doesn't need conversion in some cases
 #ifndef NO_VM_COMPILED
 		if ( vm->compiled )
-			r = VM_CallCompiled( vm, nargs+1, (int*)&callnum );
+			r = VM_CallCompiled( vm, nargs+1, (int32_t*)&callnum );
 		else
 #endif
-			r = VM_CallInterpreted2( vm, nargs+1, (int*)&callnum );
+			r = VM_CallInterpreted2( vm, nargs+1, (int32_t*)&callnum );
 #else
-		int args[MAX_VMMAIN_CALL_ARGS];
+		int32_t args[MAX_VMMAIN_CALL_ARGS];
 		va_list ap;
 
 		args[0] = callnum;
 		va_start( ap, callnum );
 		for ( i = 0; i < nargs; i++ ) {
-			args[i+1] = va_arg( ap, int );
+			args[i+1] = va_arg( ap, int32_t );
 		}
 		va_end(ap);
 #ifndef NO_VM_COMPILED

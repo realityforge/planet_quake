@@ -415,8 +415,8 @@ static void CL_ConfigstringModified( void ) {
 	int			len;
 
 	index = atoi( Cmd_Argv(1) );
-	if ( index < 0 || index >= MAX_CONFIGSTRINGS ) {
-		Com_Error( ERR_DROP, "%s: bad index %i", __func__, index );
+	if ( (unsigned) index >= MAX_CONFIGSTRINGS ) {
+		Com_Error( ERR_DROP, "%s: bad configstring index %i", __func__, index );
 	}
 	// get everything after "cs <num>"
 	s = Cmd_ArgsFrom(2);
@@ -1454,7 +1454,6 @@ See if the current console command is claimed by the cgame
 ====================
 */
 qboolean CL_GameCommand( void ) {
-	qboolean result;
 #ifdef USE_MULTIVM_CLIENT
 	cgvmi = clc.currentView;
   int igs = clientGames[cgvmi];
@@ -1479,9 +1478,7 @@ qboolean CL_GameCommand( void ) {
 	}
 #endif
 
-	result = VM_Call( cgvm, 0, CG_CONSOLE_COMMAND );
-
-	return result;
+	return VM_Call( cgvm, 0, CG_CONSOLE_COMMAND );
 }
 
 
@@ -1735,7 +1732,7 @@ void CL_SetCGameTime( void ) {
 	}
 
 #ifndef USE_MULTIVM_CLIENT
-	if ( cl.snap.serverTime < cl.oldFrameServerTime && !clc.demoplaying ) {
+	if ( cl.snap.serverTime - cl.oldFrameServerTime < 0 && !clc.demoplaying ) {
 		Com_Error( ERR_DROP, "cl.snap.serverTime < cl.oldFrameServerTime" );
 	}
 #endif
@@ -1768,7 +1765,7 @@ void CL_SetCGameTime( void ) {
 
 		// guarantee that time will never flow backwards, even if
 		// serverTimeDelta made an adjustment or cl_timeNudge was changed
-		if ( cl.serverTime < cl.oldServerTime ) {
+		if ( cl.serverTime - cl.oldServerTime < 0 ) {
 			cl.serverTime = cl.oldServerTime;
 		}
 		cl.oldServerTime = cl.serverTime;
@@ -1776,7 +1773,8 @@ void CL_SetCGameTime( void ) {
 
 		// note if we are almost past the latest frame (without timeNudge),
 		// so we will try and adjust back a bit when the next snapshot arrives
-		if ( cls.realtime + cl.serverTimeDelta >= cl.snap.serverTime - 5 ) {
+		//if ( cls.realtime + cl.serverTimeDelta >= cl.snap.serverTime - 5 ) {
+		if ( cls.realtime + cl.serverTimeDelta - cl.snap.serverTime >= -5 ) {
 			cl.extrapolatedSnapshot = qtrue;
 		}
 	}
@@ -1813,9 +1811,9 @@ void CL_SetCGameTime( void ) {
   }
 
 #ifdef USE_MULTIVM_CLIENT
-  while ( cl.serverTimes[0] >= cl.snapWorlds[igs].serverTime )
+  while ( cl.serverTimes[0] - cl.snapWorlds[igs].serverTime >= 0 )
 #else
-  while ( cl.serverTime >= cl.snap.serverTime )
+  while ( cl.serverTime - cl.snap.serverTime >= 0 )
 #endif
   {
     // feed another messag, which should change

@@ -112,7 +112,7 @@ Module['onRuntimeInitialized'] = function () {
           console.log(e)
         }
       })
-    }, 1000 / 20);
+    }, 1000 / 30);
   } catch (e) {
     console.log(e)
   }

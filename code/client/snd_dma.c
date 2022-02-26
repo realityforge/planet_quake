@@ -1478,6 +1478,7 @@ void S_FreeOldestSound( void ) {
 // =======================================================================
 
 static void S_Base_Shutdown( void ) {
+
 	if ( !s_soundStarted ) {
 		return;
 	}
@@ -1511,6 +1512,7 @@ static void S_Base_Shutdown( void ) {
 	dma_buffer2 = NULL;
 
 	Cmd_RemoveCommand( "s_info" );
+
 	cls.soundRegistered = qfalse;
 }
 
@@ -1554,6 +1556,10 @@ qboolean S_Base_Init( soundInterface_t *si ) {
 	s_testsound = Cvar_Get( "s_testsound", "0", CVAR_CHEAT );
 #if defined(__linux__) && !defined(USE_SDL)
 	s_device = Cvar_Get( "s_device", "default", CVAR_ARCHIVE_ND | CVAR_LATCH );
+	Cvar_SetDescription( s_device, "Set ALSA output device\n"
+		" Use \"default\", \"sysdefault\", \"front\", etc.\n"
+		" Enter " S_COLOR_CYAN "aplay -L "S_COLOR_WHITE"in your shell to see all options.\n"
+		S_COLOR_YELLOW " Please note that only mono/stereo devices are acceptable.\n" );
 #endif
 
 	r = SNDDMA_Init();
@@ -1561,7 +1567,7 @@ qboolean S_Base_Init( soundInterface_t *si ) {
 	if ( r ) {
 		s_soundStarted = qtrue;
 		s_soundMuted = qtrue;
-		s_numSfx = 0;
+//		s_numSfx = 0;
 
 		Com_Memset( sfxHash, 0, sizeof( sfxHash ) );
 

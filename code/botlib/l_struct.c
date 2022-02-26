@@ -324,7 +324,7 @@ int ReadStructure(source_t *source, structdef_t *def, char *structure)
 // Returns:					-
 // Changes Globals:		-
 //===========================================================================
-int WriteIndent(FILE *fp, int indent)
+int WriteIndent(fileHandle_t fp, int indent)
 {
 	while(indent-- > 0)
 	{
@@ -338,7 +338,7 @@ int WriteIndent(FILE *fp, int indent)
 // Returns:					-
 // Changes Globals:		-
 //===========================================================================
-int WriteFloat(FILE *fp, float value)
+int WriteFloat(fileHandle_t fp, float value)
 {
 	char buf[128];
 	int l;
@@ -366,7 +366,7 @@ int WriteFloat(FILE *fp, float value)
 // Returns:					-
 // Changes Globals:		-
 //===========================================================================
-int WriteStructWithIndent(FILE *fp, structdef_t *def, char *structure, int indent)
+int WriteStructWithIndent(fileHandle_t fp, structdef_t *def, char *structure, int indent)
 {
 	int i, num;
 	void *p;
@@ -452,7 +452,7 @@ int WriteStructWithIndent(FILE *fp, structdef_t *def, char *structure, int inden
 // Returns:					-
 // Changes Globals:		-
 //===========================================================================
-int WriteStructure(FILE *fp, structdef_t *def, char *structure)
+int WriteStructure(fileHandle_t fp, structdef_t *def, char *structure)
 {
 	return WriteStructWithIndent(fp, def, structure, 0);
 } //end of the function WriteStructure

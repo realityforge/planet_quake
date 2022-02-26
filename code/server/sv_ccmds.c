@@ -167,7 +167,6 @@ static void SV_Map_f( void ) {
 	// make sure the level exists before trying to change, so that
 	// a typo at the server console won't end the game
 	Com_sprintf( expanded, sizeof( expanded ), "maps/%s.bsp", map );
-
 	// bypass pure check so we can open downloaded map
 	FS_BypassPure();
 
@@ -318,12 +317,15 @@ static void SV_MapRestart_f( void ) {
 
 	if (Cmd_Argc() > 1 ) {
 		delay = atoi( Cmd_Argv(1) );
-	}
-	else {
+	} else {
 		delay = 5;
 	}
+
 	if ( delay && !Cvar_VariableIntegerValue( "g_doWarmup" ) ) {
 		sv.restartTime = sv.time + delay * 1000;
+		if ( sv.restartTime == 0 ) {
+			sv.restartTime = 1;
+		}
 		SV_SetConfigstring( CS_WARMUP, va("%i", sv.restartTime) );
 		return;
 	}
@@ -513,7 +515,6 @@ static void SV_Kick_f( void ) {
 	}
 	if( cl->netchan.remoteAddress.type == NA_LOOPBACK ) {
 		Com_Printf("Cannot kick host player\n");
-
 		return;
 	}
 
@@ -521,6 +522,100 @@ static void SV_Kick_f( void ) {
 	cl->lastPacketTime = svs.time;	// in case there is a funny zombie
 }
 
+/*
+==================
+SV_KickBots_f
+
+Kick all bots off of the server
+==================
+*/
+static void SV_KickBots_f( void ) {
+	client_t	*cl;
+	int			i;
+
+	// make sure server is running
+	if ( !com_sv_running->integer ) {
+		Com_Printf("Server is not running.\n");
+		return;
+	}
+
+	for( i = 0, cl = svs.clients; i < sv_maxclients->integer; i++, cl++ ) {
+		if ( cl->state < CS_CONNECTED ) {
+			continue;
+		}
+
+		if ( cl->netchan.remoteAddress.type != NA_BOT ) {
+			continue;
+		}
+
+	SV_DropClient( cl, "was kicked" );
+	cl->lastPacketTime = svs.time;	// in case there is a funny zombie
+}
+}
+/*
+==================
+SV_KickAll_f
+
+Kick all users off of the server
+==================
+*/
+static void SV_KickAll_f( void ) {
+	client_t *cl;
+	int i;
+
+	// make sure server is running
+	if ( !com_sv_running->integer ) {
+		Com_Printf( "Server is not running.\n" );
+		return;
+	}
+
+	for( i = 0, cl = svs.clients; i < sv_maxclients->integer; i++, cl++ ) {
+		if ( cl->state < CS_CONNECTED ) {
+			continue;
+		}
+
+		if ( cl->netchan.remoteAddress.type == NA_LOOPBACK ) {
+			continue;
+		}
+
+		SV_DropClient( cl, "was kicked" );
+		cl->lastPacketTime = svs.time; // in case there is a funny zombie
+	}
+}
+
+/*
+==================
+SV_KickNum_f
+
+Kick a user off of the server
+==================
+*/
+static void SV_KickNum_f( void ) {
+	client_t	*cl;
+
+	// make sure server is running
+	if ( !com_sv_running->integer ) {
+		Com_Printf( "Server is not running.\n" );
+		return;
+	}
+
+	if ( Cmd_Argc() != 2 ) {
+		Com_Printf ("Usage: %s <client number>\n", Cmd_Argv(0));
+		return;
+	}
+
+	cl = SV_GetPlayerByNum();
+	if ( !cl ) {
+		return;
+	}
+	if ( cl->netchan.remoteAddress.type == NA_LOOPBACK ) {
+		Com_Printf("Cannot kick host player\n");
+		return;
+	}
+
+	SV_DropClient( cl, "was kicked" );
+	cl->lastPacketTime = svs.time;	// in case there is a funny zombie
+}
 
 #ifndef STANDALONE
 // these functions require the auth server which of course is not available anymore for stand-alone games.
@@ -1159,41 +1254,6 @@ static void SV_ExceptDel_f(void)
 #endif // USE_BANS
 
 /*
-==================
-SV_KickNum_f
-
-Kick a user off of the server  FIXME: move to game
-==================
-*/
-static void SV_KickNum_f( void ) {
-	client_t	*cl;
-
-	// make sure server is running
-	if ( !com_sv_running->integer ) {
-		Com_Printf( "Server is not running.\n" );
-		return;
-	}
-
-	if ( Cmd_Argc() != 2 ) {
-		Com_Printf ("Usage: kicknum <client number>\n");
-		return;
-	}
-
-	cl = SV_GetPlayerByNum();
-	if ( !cl ) {
-		return;
-	}
-	if( cl->netchan.remoteAddress.type == NA_LOOPBACK ) {
-		SV_SendServerCommand(NULL, "print \"%s\"", "Cannot kick host player\n");
-		return;
-	}
-
-	SV_DropClient( cl, "was kicked" );
-	cl->lastPacketTime = svs.time;	// in case there is a funny zombie
-}
-
-
-/*
 ** SV_Strlen -- skips color escape codes
 */
 int SV_Strlen( const char *str ) {
@@ -1781,7 +1841,10 @@ void SV_AddOperatorCommands( void ) {
 	}
 #endif
 #endif
-	Cmd_AddCommand ("clientkick", SV_KickNum_f);
+	Cmd_AddCommand ("kickbots", SV_KickBots_f);
+	Cmd_AddCommand ("kickall", SV_KickAll_f);
+	Cmd_AddCommand ("kicknum", SV_KickNum_f);
+	Cmd_AddCommand ("clientkick", SV_KickNum_f); // Legacy command
 	Cmd_SetDescription( "clientkick", "Kick a client by slot number used\nUsage: clientkick <slot #>" );
 	Cmd_AddCommand ("status", SV_Status_f);
 	Cmd_SetDescription( "status", "Show status of the currently connected server\nUsage: status" );
@@ -1884,7 +1947,10 @@ void SV_RemoveOperatorCommands( void ) {
 	// removing these won't let the server start again
 	Cmd_RemoveCommand ("heartbeat");
 	Cmd_RemoveCommand ("kick");
+	Cmd_RemoveCommand ("kicknum");
 	Cmd_RemoveCommand ("clientkick");
+	Cmd_RemoveCommand ("kickall");
+	Cmd_RemoveCommand ("kickbots");
 	Cmd_RemoveCommand ("banUser");
 	Cmd_RemoveCommand ("banClient");
 	Cmd_RemoveCommand ("status");

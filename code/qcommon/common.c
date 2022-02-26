@@ -48,7 +48,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #include "../client/keys.h"
 
-const int demo_protocols[] = { 66, 67, PROTOCOL_VERSION, NEW_PROTOCOL_VERSION, 0 };
+const int demo_protocols[] = { 66, 67, OLD_PROTOCOL_VERSION, NEW_PROTOCOL_VERSION, 0 };
 
 #define USE_MULTI_SEGMENT // allocate additional zone segments on demand
 
@@ -135,6 +135,7 @@ cvar_t	*com_timescale;
 static cvar_t *com_fixedtime;
 cvar_t	*com_journal;
 cvar_t	*com_protocol;
+qboolean com_protocolCompat;
 #ifndef DEDICATED
 cvar_t	*com_maxfps;
 cvar_t	*com_maxfpsUnfocused;
@@ -147,7 +148,7 @@ cvar_t	*com_affinityMask;
 static cvar_t *com_logfile;		// 1 = buffer log, 2 = flush after each print
 static cvar_t *com_showtrace;
 cvar_t	*com_version;
-cvar_t	*com_buildScript;	// for automated data building scripts
+static cvar_t *com_buildScript;	// for automated data building scripts
 cvar_t	*com_blood;
 
 #ifndef DEDICATED
@@ -727,8 +728,9 @@ quake3 set test blah + map test
 */
 
 #define	MAX_CONSOLE_LINES	1024
-int		com_numConsoleLines;
-char	*com_consoleLines[MAX_CONSOLE_LINES];
+static int		com_numConsoleLines;
+static char	*com_consoleLines[MAX_CONSOLE_LINES];
+
 // master rcon password
 char	rconPassword2[MAX_CVAR_VALUE_STRING];
 
@@ -739,7 +741,7 @@ Com_ParseCommandLine
 Break it up into multiple console lines
 ==================
 */
-void Com_ParseCommandLine( char *commandLine ) {
+static void Com_ParseCommandLine( char *commandLine ) {
 	static int parsed = 0;
 	int inq;
 
@@ -833,7 +835,6 @@ qboolean Com_EarlyParseCmdLine( char *commandLine, char *con_title, int title_si
 			Q_strncpyz( rconPassword2, Cmd_Argv( 2 ), sizeof( rconPassword2 ) );
 			continue;
 		}
-
 	}
 
 	return (flags == 3) ? qtrue : qfalse ;
@@ -1198,7 +1199,6 @@ int Com_RealTime(qtime_t *qtime) {
 }
 
 
-
 /*
 ================
 Sys_Microseconds
@@ -1529,7 +1529,7 @@ static void Z_ClearZone( memzone_t *zone, memzone_t *head, int size, int segnum 
 	if ( minfragment < min_fragment ) {
 		// in debug mode size of memblock_t may exceed MINFRAGMENT
 		minfragment = PAD( min_fragment, sizeof( intptr_t ) );
-		//Com_DPrintf( "zone.minfragment adjusted to %i bytes\n", minfragment );
+		Com_DPrintf( "zone.minfragment adjusted to %i bytes\n", minfragment );
 	}
 
 	// set the entire zone to one free block
@@ -2342,7 +2342,6 @@ static void Com_InitSmallZoneMemory( void ) {
 }
 
 
-
 /*
 =================
 Com_InitZoneMemory
@@ -2359,8 +2358,9 @@ static void Com_InitZoneMemory( void ) {
 	// configure the memory manager.
 
 	// allocate the random block zone
-	cv = Cvar_Get( "com_zoneMegs", "12", CVAR_LATCH | CVAR_ARCHIVE );
+	cv = Cvar_Get( "com_zoneMegs", XSTRING( DEF_COMZONEMEGS ), CVAR_LATCH | CVAR_ARCHIVE );
 	Cvar_CheckRange( cv, "1", NULL, CV_INTEGER );
+
 #ifndef USE_MULTI_SEGMENT
 	if ( cv->integer < DEF_COMZONEMEGS )
 		mainZoneSize = 1024 * 1024 * DEF_COMZONEMEGS;
@@ -2388,6 +2388,7 @@ void Hunk_Log( void ) {
 
 	if ( logfile == FS_INVALID_HANDLE || !FS_Initialized() )
 		return;
+
 	size = 0;
 	numBlocks = 0;
 	Com_sprintf(buf, sizeof(buf), "\r\n================\r\nHunk log\r\n================\r\n");
@@ -2412,6 +2413,7 @@ void Hunk_Log( void ) {
 Hunk_SmallLog
 =================
 */
+#ifdef HUNK_DEBUG
 void Hunk_SmallLog( void ) {
 	hunkblock_t	*block, *block2;
 	char		buf[4096];
@@ -2419,6 +2421,7 @@ void Hunk_SmallLog( void ) {
 
 	if ( logfile == FS_INVALID_HANDLE || !FS_Initialized() )
 		return;
+
 	for (block = hunkblocks ; block; block = block->next) {
 		block->printed = qfalse;
 	}
@@ -2442,10 +2445,8 @@ void Hunk_SmallLog( void ) {
 			locsize += block2->size;
 			block2->printed = qtrue;
 		}
-#ifdef HUNK_DEBUG
 		Com_sprintf(buf, sizeof(buf), "size = %8d: %s, line: %d (%s)\r\n", locsize, block->file, block->line, block->label);
 		FS_Write(buf, strlen(buf), logfile);
-#endif
 		size += block->size;
 		numBlocks++;
 	}
@@ -2454,6 +2455,7 @@ void Hunk_SmallLog( void ) {
 	Com_sprintf(buf, sizeof(buf), "%d hunk blocks\r\n", numBlocks);
 	FS_Write(buf, strlen(buf), logfile);
 }
+#endif
 
 
 /*
@@ -2479,6 +2481,7 @@ static void Com_InitHunkMemory( void ) {
 	cv = Cvar_Get( "com_hunkMegs", XSTRING( DEF_COMHUNKMEGS ), CVAR_LATCH | CVAR_ARCHIVE );
 #endif
 	Cvar_CheckRange( cv, XSTRING( MIN_COMHUNKMEGS ), NULL, CV_INTEGER );
+	Cvar_SetDescription( cv, "The size of the hunk memory segment" );
 
 	s_hunkTotal = cv->integer * 1024 * 1024;
 
@@ -2889,7 +2892,7 @@ static const char *Sys_EventName( sysEventType_t evType ) {
 		"SE_CONSOLE" 
 	};
 
-	if ( evType >= SE_MAX ) {
+	if ( (unsigned)evType >= ARRAY_LEN( evNames ) ) {
 		return "SE_UNKNOWN";
 	} else {
 		return evNames[ evType ];
@@ -2965,6 +2968,7 @@ static sysEvent_t Com_GetSystemEvent( void )
 	const char	*s;
 	int			evTime;
 
+	// return if we have data
 	if ( eventHead - eventTail > 0 )
 		return eventQue[ ( eventTail++ ) & MASK_QUED_EVENTS ];
 
@@ -3151,8 +3155,7 @@ int Com_EventLoop( void ) {
 
 	MSG_Init( &buf, bufData, MAX_MSGLEN );
 
-  while ( 1 ) 
-  {
+	while ( 1 ) {
 		ev = Com_GetEvent();
 
 		// if no more events are available
@@ -4023,6 +4026,9 @@ void Com_Init( char *commandLine ) {
 	Com_StartupVariable( "vm_rtChecks" );
 	vm_rtChecks = Cvar_Get( "vm_rtChecks", "15", CVAR_INIT | CVAR_PROTECTED );
 	Cvar_CheckRange( vm_rtChecks, "0", "15", CV_INTEGER );
+	Cvar_SetDescription( vm_rtChecks,
+		"Runtime checks in compiled vm code, bitmask:\n 1 - program stack overflow\n" \
+		" 2 - opcode stack overflow\n 4 - jump target range\n 8 - data read/write range" );
 
 	Com_StartupVariable( "journal" );
 	com_journal = Cvar_Get( "journal", "0", CVAR_INIT | CVAR_PROTECTED );
@@ -4035,7 +4041,16 @@ void Com_Init( char *commandLine ) {
 	Cvar_Get( "sv_master2", "master.ioquake3.org", CVAR_INIT );
 	Cvar_Get( "sv_master3", "master.maverickservers.com", CVAR_INIT );
 
-	com_protocol = Cvar_Get( "protocol", XSTRING( PROTOCOL_VERSION ), 0 );
+	com_protocol = Cvar_Get( "protocol", XSTRING( DEFAULT_PROTOCOL_VERSION ), 0 );
+	if ( Q_stristr( com_protocol->string, "-compat" ) > com_protocol->string ) {
+		// strip -compat suffix
+		Cvar_Set2( "protocol", va( "%i", com_protocol->integer ), qtrue );
+		// enforce legacy stream encoding but with new challenge format
+		com_protocolCompat = qtrue;
+	} else {
+		com_protocolCompat = qfalse;
+	}
+
 	Cvar_CheckRange( com_protocol, "0", NULL, CV_INTEGER );
 	com_protocol->flags &= ~CVAR_USER_CREATED;
 	com_protocol->flags |= CVAR_SERVERINFO | CVAR_ROM;
@@ -4100,7 +4115,7 @@ void Com_Init( char *commandLine ) {
 	com_affinityMask->modified = qfalse;
 #endif
 
-	com_blood = Cvar_Get ("com_blood", "1", CVAR_ARCHIVE_ND );
+	// com_blood = Cvar_Get( "com_blood", "1", CVAR_ARCHIVE_ND );
 
 #ifdef USE_PERSIST_CONSOLE
   com_logfile = Cvar_Get( "logfile", "4", CVAR_TEMP );
@@ -4137,6 +4152,12 @@ void Com_Init( char *commandLine ) {
 	com_logfile = Cvar_Get( "logfile", "0", CVAR_TEMP );
 #endif
   Cvar_CheckRange( com_logfile, "0", "4", CV_INTEGER );
+	Cvar_SetDescription( com_logfile, "System console logging:\n"
+		" 0 - disabled\n"
+		" 1 - overwrite mode, buffered\n"
+		" 2 - overwrite mode, synced\n"
+		" 3 - append mode, buffered\n"
+		" 4 - append mode, synced\n" );
 
 	com_timescale = Cvar_Get( "timescale", "1", CVAR_CHEAT | CVAR_SYSTEMINFO );
 	Cvar_CheckRange( com_timescale, "0", NULL, CV_FLOAT );
@@ -4158,7 +4179,6 @@ void Com_Init( char *commandLine ) {
 	sv_packetdelay = Cvar_Get ("sv_packetdelay", "0", CVAR_CHEAT);
 	com_sv_running = Cvar_Get( "sv_running", "0", CVAR_ROM | CVAR_NOTABCOMPLETE );
 	
-
 	com_buildScript = Cvar_Get( "com_buildScript", "0", 0 );
 
 	Cvar_Get( "com_errorMessage", "", CVAR_ROM | CVAR_NORESTART );
@@ -4437,7 +4457,7 @@ static int Com_ModifyMsec( int msec ) {
 
 		clampTime = 5000;
 	} else 
-	if ( !com_sv_running || !com_sv_running->integer ) {
+	if ( !com_sv_running->integer ) {
 		// clients of remote servers do not want to clamp time, because
 		// it would skew their view of the server's time temporarily
 		clampTime = 5000;
@@ -4622,6 +4642,7 @@ void Com_Frame( qboolean noDelay ) {
 	msec = Com_ModifyMsec( realMsec );
 
 	//
+	// server side
 	//
 	if ( com_speeds->integer ) {
 		timeBeforeServer = Sys_Milliseconds();

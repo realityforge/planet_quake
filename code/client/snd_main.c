@@ -135,7 +135,7 @@ void S_RawSamples (int samples, int rate, int width, int channels,
 	}
 }
 
-extern qboolean dropped;
+
 /*
 =================
 S_StopAllSounds

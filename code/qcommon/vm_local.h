@@ -177,18 +177,18 @@ struct vm_s {
 	int32_t		*opStack;			// pointer to local function stack
 	int32_t		*opStackTop;
 
-	int			programStack;		// the vm may be recursively entered
-	int			stackBottom;		// if programStack < stackBottom, error
+	int32_t		programStack;		// the vm may be recursively entered
+	int32_t		stackBottom;		// if programStack < stackBottom, error
 
 	//------------------------------------
 
-	const char	*name;
+	const char	*name;				// module should be bare: "cgame", not "cgame.dll" or "vm/cgame.qvm"
 	vmIndex_t	index;
 	int       vmIndex;
 
 	// for dynamic linked modules
 	void		*dllHandle;
-	dllSyscall_t entryPoint;
+	vmMainFunc_t entryPoint;
 	dllSyscall_t dllSyscall;
 	void (*destroy)(vm_t* self);
 
@@ -217,7 +217,7 @@ struct vm_s {
 	int			breakCount;
 
 	int32_t		*jumpTableTargets;
-	int			numJumpTableTargets;
+	int32_t		numJumpTableTargets;
 
 	uint32_t	crc32sum;
 

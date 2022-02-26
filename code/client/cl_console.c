@@ -79,7 +79,7 @@ cvar_t    *con_preserve;
 
 int         g_console_field_width = DEFAULT_CONSOLE_WIDTH;
 
-void		Con_Fixup( void );
+static void		Con_Fixup( void );
 
 
 /*
@@ -139,7 +139,7 @@ Con_MessageMode3_f
 ================
 */
 static void Con_MessageMode3_f( void ) {
-	chat_playerNum = VM_Call( cgvm, 0, CG_CROSSHAIR_PLAYER );
+	chat_playerNum = cgvm ? VM_Call( cgvm, 0, CG_CROSSHAIR_PLAYER ) : -1;
 	if ( chat_playerNum < 0 || chat_playerNum >= MAX_CLIENTS ) {
 		chat_playerNum = -1;
 		return;
@@ -157,7 +157,7 @@ Con_MessageMode4_f
 ================
 */
 static void Con_MessageMode4_f( void ) {
-	chat_playerNum = VM_Call( cgvm, 0, CG_LAST_ATTACKER );
+	chat_playerNum = cgvm ? VM_Call( cgvm, 0, CG_LAST_ATTACKER ) : -1;
 	if ( chat_playerNum < 0 || chat_playerNum >= MAX_CLIENTS ) {
 		chat_playerNum = -1;
 		return;
@@ -385,7 +385,7 @@ void Con_CheckResize( void )
 Cmd_CompleteTxtName
 ==================
 */
-void Cmd_CompleteTxtName( char *args, int argNum ) {
+static void Cmd_CompleteTxtName( char *args, int argNum ) {
 	if( argNum == 2 ) {
 		Field_CompleteFilename( "", "txt", qfalse, FS_MATCH_EXTERN | FS_MATCH_STICK );
 	}
@@ -410,20 +410,13 @@ void Con_Init( void )
 	g_consoleField.widthInChars = g_console_field_width;
 
 	Cmd_AddCommand( "clear", Con_Clear_f );
-	Cmd_SetDescription("clear", "Clear all text from console\nUsage: clear");
 	Cmd_AddCommand( "condump", Con_Dump_f );
 	Cmd_SetCommandCompletionFunc( "condump", Cmd_CompleteTxtName );
-	Cmd_SetDescription("condump", "Write the console text to a file\nUsage: condump <file>");
 	Cmd_AddCommand( "toggleconsole", Con_ToggleConsole_f );
-	Cmd_SetDescription("toggleconsole", "Usually bound to ~ the tilde key brings the console up and down\nUsage: bind <key> toggleconsole");
 	Cmd_AddCommand( "messagemode", Con_MessageMode_f );
-	Cmd_SetDescription("messagemode", "Send a message to everyone");
 	Cmd_AddCommand( "messagemode2", Con_MessageMode2_f );
-	Cmd_SetDescription("messagemode2", "Send a message to teammates");
 	Cmd_AddCommand( "messagemode3", Con_MessageMode3_f );
-	Cmd_SetDescription("messagemode3", "Send a message to targeted player");
 	Cmd_AddCommand( "messagemode4", Con_MessageMode4_f );
-	Cmd_SetDescription("messagemode4", "Send a message to last attacker");
 }
 
 
@@ -449,7 +442,7 @@ void Con_Shutdown( void )
 Con_Fixup
 ===============
 */
-void Con_Fixup( void ) 
+static void Con_Fixup( void ) 
 {
 	int filled;
 
@@ -476,7 +469,7 @@ Con_Linefeed
 Move to newline only when we _really_ need this
 ===============
 */
-void Con_NewLine( void ) 
+static void Con_NewLine( void )
 {
 	short *s;
 	int i;
@@ -499,7 +492,7 @@ void Con_NewLine( void )
 Con_Linefeed
 ===============
 */
-void Con_Linefeed( qboolean skipnotify )
+static void Con_Linefeed( qboolean skipnotify )
 {
 	// mark time for transparent overlay
 	if ( con.current >= 0 )	{
@@ -641,7 +634,7 @@ Con_DrawInput
 Draw the editline after a ] prompt
 ================
 */
-void Con_DrawInput( void ) {
+static void Con_DrawInput( void ) {
 	int		y;
 
 	if ( cls.state != CA_DISCONNECTED && !(Key_GetCatcher( ) & KEYCATCH_CONSOLE ) ) {
@@ -666,7 +659,7 @@ Con_DrawNotify
 Draws the last few lines of output transparently over the game top
 ================
 */
-void Con_DrawNotify( void )
+static void Con_DrawNotify( void )
 {
 	int		x, v;
 	short	*text;
@@ -750,7 +743,7 @@ Con_DrawSolidConsole
 Draws the console with the solid background
 ================
 */
-void Con_DrawSolidConsole( float frac ) {
+static void Con_DrawSolidConsole( float frac ) {
 
 	static float conColorValue[4] = { 0.0, 0.0, 0.0, 0.0 };
 	// for cvar value change tracking

@@ -50,7 +50,7 @@ static const char *svc_strings[256] = {
 };
 
 void SHOWNET( msg_t *msg, const char *s ) {
-	if ( cl_shownet && cl_shownet->integer >= 2) {
+	if ( cl_shownet->integer >= 2) {
 		Com_Printf ("%3i:%s\n", msg->readcount-1, s);
 	}
 }
@@ -165,6 +165,7 @@ static void CL_ParsePacketEntities( msg_t *msg, const clSnapshot_t *oldframe, cl
 #else
 			CL_DeltaEntity( msg, newframe, oldnum, oldstate, qtrue);
 #endif
+
 			oldindex++;
 
 			if ( oldindex >= oldframe->numEntities ) {
@@ -185,6 +186,7 @@ static void CL_ParsePacketEntities( msg_t *msg, const clSnapshot_t *oldframe, cl
 #else
 			CL_DeltaEntity( msg, newframe, newnum, oldstate, qfalse );
 #endif
+
 			oldindex++;
 
 			if ( oldindex >= oldframe->numEntities ) {
@@ -223,6 +225,7 @@ static void CL_ParsePacketEntities( msg_t *msg, const clSnapshot_t *oldframe, cl
 #else
 		CL_DeltaEntity( msg, newframe, oldnum, oldstate, qtrue );
 #endif
+
 		oldindex++;
 
 		if ( oldindex >= oldframe->numEntities ) {
@@ -236,6 +239,7 @@ static void CL_ParsePacketEntities( msg_t *msg, const clSnapshot_t *oldframe, cl
 }
 
 void CL_AddLagometerSnapshotInfo(clSnapshot_t *snapshot);
+
 /*
 ================
 CL_ParseSnapshot
@@ -259,7 +263,7 @@ void CL_ParseSnapshot( msg_t *msg )
 	clSnapshot_t	newSnap;
 	int			deltaNum;
 	int			oldMessageNum;
-	int			i, packetNum;
+	int			i, n, packetNum;
 	int			commandTime;
 #ifdef USE_MV
 	int			clientNum;
@@ -579,10 +583,9 @@ void CL_ParseSnapshot( msg_t *msg )
 	if ( newSnap.messageNum - oldMessageNum >= PACKET_BACKUP ) {
 		oldMessageNum = newSnap.messageNum - ( PACKET_BACKUP - 1 );
 	}
-	for ( ; oldMessageNum < newSnap.messageNum ; oldMessageNum++ ) {
-//		if(cl.snapshots[oldMessageNum & PACKET_MASK].valid)
-//Com_Printf("Invalidated (%i): %i\n", oldMessageNum, igs);
-		cl.snapshots[oldMessageNum & PACKET_MASK].valid = qfalse;
+
+	for ( i = 0, n = newSnap.messageNum - oldMessageNum; i < n; i++ ) {
+		cl.snapshots[ ( oldMessageNum + i ) & PACKET_MASK ].valid = qfalse;
 	}
 
 	// copy to the current good spot
@@ -591,7 +594,7 @@ void CL_ParseSnapshot( msg_t *msg )
 	// calculate ping time
 	for ( i = 0 ; i < PACKET_BACKUP ; i++ ) {
 		packetNum = ( clc.netchan.outgoingSequence - 1 - i ) & PACKET_MASK;
-		if ( commandTime >= cl.outPackets[ packetNum ].p_serverTime ) {
+		if ( cl.snap.ps.commandTime - cl.outPackets[packetNum].p_serverTime >= 0 ) {
 			cl.snap.ping = cls.realtime - cl.outPackets[ packetNum ].p_realtime;
 			break;
 		}
@@ -599,7 +602,7 @@ void CL_ParseSnapshot( msg_t *msg )
 	// save the frame off in the backup array for later delta comparisons
 	cl.snapshots[cl.snap.messageNum & PACKET_MASK] = cl.snap;
 
-	if (cl_shownet && cl_shownet->integer == 3) {
+	if (cl_shownet->integer == 3) {
 		Com_Printf( "   snapshot:%i  delta:%i  ping:%i\n", cl.snap.messageNum,
 		cl.snap.deltaNum, cl.snap.ping );
 	}
@@ -660,7 +663,7 @@ void CL_SystemInfoChanged( qboolean onlyGame, int igs ) {
 
 	if ( FS_InvalidGameDir( s ) ) {
 		Com_Printf( S_COLOR_YELLOW "WARNING: Server sent invalid fs_game value %s\n", s );
-	} else if(Q_stricmp(Cvar_VariableString("fs_basegame"), s)) {
+	} else {
 		Cvar_Set( "fs_game", s );
 	}
 
@@ -781,7 +784,7 @@ qboolean CL_GameSwitch( void )
 CL_ParseServerInfo
 ==================
 */
-void CL_ParseServerInfo( int igs )
+static void CL_ParseServerInfo( int igs )
 {
   gameState_t	oldGs;
 	const char *serverInfo;
@@ -1014,7 +1017,7 @@ static void CL_ParseGamestate( msg_t *msg ) {
 	CL_SystemInfoChanged( qtrue, igs );
 
 	// stop recording now so the demo won't have an unnecessary level load at the end.
-	if ( cl_autoRecordDemo && cl_autoRecordDemo->integer && clc.demorecording ) {
+	if ( cl_autoRecordDemo->integer && clc.demorecording ) {
 		if ( !clc.demoplaying ) {
 			CL_StopRecord_f();
 		}
@@ -1212,7 +1215,7 @@ static void CL_ParseCommandString( msg_t *msg ) {
 		Com_Printf( " %3i(%3i) %s\n", seq, clc.serverCommandSequence, s );
 
 	// see if we have already executed stored it off
-	if ( clc.serverCommandSequence >= seq ) {
+	if ( clc.serverCommandSequence - seq >= 0 ) {
 		return;
 	}
 
@@ -1328,9 +1331,9 @@ void CL_ParseServerMessage( msg_t *msg ) {
   int igs = clientGames[clc.currentView];
 #endif
 
-	if ( cl_shownet && cl_shownet->integer == 1 ) {
+	if ( cl_shownet->integer == 1 ) {
 		Com_Printf ("%i ",msg->cursize);
-	} else if ( cl_shownet && cl_shownet->integer >= 2 ) {
+	} else if ( cl_shownet->integer >= 2 ) {
 		Com_Printf ("------------------\n");
 	}
 
@@ -1344,9 +1347,7 @@ void CL_ParseServerMessage( msg_t *msg ) {
 		clc.reliableAcknowledge = clc.reliableSequence;
 	}
 
-	//
 	// parse the message
-	//
 	while ( 1 ) {
 		if ( msg->readcount > msg->cursize ) {
 			Com_Error (ERR_DROP,"CL_ParseServerMessage: read past end of server message");
@@ -1360,7 +1361,7 @@ void CL_ParseServerMessage( msg_t *msg ) {
 			break;
 		}
 
-		if ( cl_shownet && cl_shownet->integer >= 2 ) {
+		if ( cl_shownet->integer >= 2 ) {
 			if ( (cmd < 0) || (!svc_strings[cmd]) ) {
 				Com_Printf( "%3i:BAD CMD %i\n", msg->readcount-1, cmd );
 			} else {

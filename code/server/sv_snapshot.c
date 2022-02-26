@@ -159,14 +159,17 @@ static void SV_WriteSnapshotToClient( const client_t *client, msg_t *msg ) {
 #endif
 
 	// try to use a previous frame as the source for delta compressing the snapshot
-	if ( client->deltaMessage <= 0 || client->state != CS_ACTIVE ) {
+	if ( /* client->deltaMessage <= 0 || */ client->state != CS_ACTIVE ) {
 		// client is asking for a retransmit
 		oldframe = NULL;
 		lastframe = 0;
-	} else if ( client->netchan.outgoingSequence - client->deltaMessage 
-		>= (PACKET_BACKUP - 3) ) {
+	} else if ( client->netchan.outgoingSequence - client->deltaMessage >= (PACKET_BACKUP - 3) ) {
 		// client hasn't gotten a good message through in a long time
-		Com_DPrintf( "%s: Delta request from out of date packet.\n", client->name );
+		if ( com_developer->integer ) {
+			if ( client->deltaMessage != client->netchan.outgoingSequence - ( PACKET_BACKUP + 1 ) ) {
+				Com_Printf( "%s: Delta request from out of date packet.\n", client->name );
+			}
+		}
 		oldframe = NULL;
 		lastframe = 0;
 	} else {
@@ -179,8 +182,8 @@ static void SV_WriteSnapshotToClient( const client_t *client, msg_t *msg ) {
 		lastframe = client->netchan.outgoingSequence - client->deltaMessage;
 		// we may refer on outdated frame
 #ifndef USE_MULTIVM_SERVER
-		if ( svs.lastValidFrame > oldframe->frameNum ) {
-			Com_Printf( "%s: Delta request from out of date frame.\n", client->name );
+		if ( oldframe->frameNum - svs.lastValidFrame < 0 ) {
+			Com_DPrintf( "%s: Delta request from out of date frame.\n", client->name );
 			oldframe = NULL;
 			lastframe = 0;
 		}
@@ -296,9 +299,6 @@ static void SV_WriteSnapshotToClient( const client_t *client, msg_t *msg ) {
 		}
 
 		// delta encode the entities
-		if((int)(client - svs.clients) > 0) {
-			//Com_Printf("ents [%i]: %i -> %i, %i, %i\n", (int)(client - svs.clients), gvmi, frame->num_entities, client->gameWorld, client->newWorld);
-		}
 		SV_EmitPacketEntities( oldframe, frame, msg );
 	} // !client->MVProtocol
 
@@ -311,7 +311,6 @@ static void SV_WriteSnapshotToClient( const client_t *client, msg_t *msg ) {
 }
 
 
-
 /*
 ==================
 SV_UpdateServerCommandsToClient
@@ -320,7 +319,7 @@ SV_UpdateServerCommandsToClient
 ==================
 */
 void SV_UpdateServerCommandsToClient( client_t *client, msg_t *msg ) {
-	int		i;
+	int i, n;
 
 #ifdef USE_MV
 	if ( client->multiview.protocol /*&& client->state >= CS_CONNECTED*/ ) {
@@ -342,24 +341,27 @@ void SV_UpdateServerCommandsToClient( client_t *client, msg_t *msg ) {
 		}
 
 		// write any unacknowledged serverCommands
-		for ( i = client->reliableAcknowledge + 1 ; i <= client->reliableSequence ; i++ ) {
+		n = client->reliableSequence - client->reliableAcknowledge;
+
+		for ( i = 0; i < n; i++ ) {
+			const int index = client->reliableAcknowledge + 1 + i;
 #ifdef USE_MV_ZCMD
 			// !!! do not start compression sequence from already sent uncompressed commands
 			// (re)send them uncompressed and only after that initiate compression sequence
 			if ( i <= client->reliableSent ) {
 				MSG_WriteByte( msg, svc_serverCommand );
-				MSG_WriteLong( msg, i );
-				MSG_WriteString( msg, client->reliableCommands[ i & (MAX_RELIABLE_COMMANDS-1) ] );
+				MSG_WriteLong( msg, index );
+				MSG_WriteString( msg, client->reliableCommands[ index & (MAX_RELIABLE_COMMANDS-1) ] );
 			} else{
 				// build new compressed stream or re-send existing
-				SV_BuildCompressedBuffer( client, i );
-				MSG_WriteLZStream( msg, &client->multiview.z.stream[ i & (MAX_RELIABLE_COMMANDS-1) ] );
+				SV_BuildCompressedBuffer( client, index );
+				MSG_WriteLZStream( msg, &client->multiview.z.stream[ index & (MAX_RELIABLE_COMMANDS-1) ] );
 				// TODO: indicate compressedSent?
 			}
 #else
 			MSG_WriteByte( msg, svc_serverCommand );
-			MSG_WriteLong( msg, i );
-			MSG_WriteString( msg, client->reliableCommands[ i & (MAX_RELIABLE_COMMANDS-1) ] );
+			MSG_WriteLong( msg, index );
+			MSG_WriteString( msg, client->reliableCommands[ index & (MAX_RELIABLE_COMMANDS-1) ] );
 #endif
 		}
 
@@ -450,13 +452,11 @@ static void SV_SortEntityNumbers( entityNum_t *num, const int size ) {
 		}
 	}
 	// consistency check for delta encoding
-	/*
 	for ( i = 1 ; i < size; i++ ) {
 		if ( num[i-1] >= num[i] ) {
 			Com_Error( ERR_DROP, "%s: invalid entity number %i", __func__, num[ i ] );
 		}
 	}
-	*/
 }
 
 
@@ -1231,7 +1231,7 @@ static void SV_BuildClientSnapshot( client_t *client ) {
 #endif
 
 	clientNum = frame->ps.clientNum;
-	if ( clientNum < 0 || clientNum >= MAX_GENTITIES-1 ) {
+	if ( clientNum < 0 || clientNum >= MAX_GENTITIES ) {
 		Com_Error( ERR_DROP, "SV_SvEntityForGentity: bad gEnt" );
 	}
 
@@ -1395,7 +1395,7 @@ Also called by SV_FinalMessage
 
 =======================
 */
-void SV_SendClientSnapshot( client_t *client, qboolean includeBaselines ) {
+void SV_SendClientSnapshot( client_t *client ) {
 	byte		msg_buf[ MAX_MSGLEN_BUF ];
 	msg_t		msg;
 	int     headerBytes;
@@ -1488,28 +1488,6 @@ void SV_SendClientSnapshot( client_t *client, qboolean includeBaselines ) {
 	// (re)send any reliable server commands
 	SV_UpdateServerCommandsToClient( client, &msg );
 
-/*
-	if(includeBaselines) {
-		qboolean first = qtrue;
-		// write the baselines
-		Com_Memset( &nullstate, 0, sizeof( nullstate ) );
-		for ( start = 0 ; start < MAX_GENTITIES; start++ ) {
-			if ( !sv.baselineUsed[ start ] ) {
-				continue;
-			}
-			svEnt = &sv.svEntities[ start ];
-			MSG_WriteByte( &msg, svc_baseline );
-#ifdef USE_MULTIVM_SERVER
-			if(first) {
-				MSG_WriteByte( &msg, client->newWorld );
-				first = qfalse;
-			}
-#endif
-			MSG_WriteDeltaEntity( &msg, &nullstate, &svEnt->baseline, qtrue );
-		}
-	}
-*/
-
 	// send over all the relevant entityState_t
 	// and the playerState_t
 	SV_WriteSnapshotToClient( client, &msg );
@@ -1574,7 +1552,7 @@ void SV_SendClientMessages( void )
 	 	&& !svs.emptyFrame // we want to record only synced game frames
 		&& c->state >= CS_PRIMED)
 	{
-		SV_SendClientSnapshot( c, qfalse );
+		SV_SendClientSnapshot( c );
 		c->lastSnapshotTime = svs.time;
 		c->rateDelayed = qfalse;
 	}
@@ -1626,7 +1604,7 @@ void SV_SendClientMessages( void )
 #endif
 
 		// generate and send a new message
-		SV_SendClientSnapshot( c, qfalse );
+		SV_SendClientSnapshot( c );
 		c->lastSnapshotTime = svs.time;
 		c->rateDelayed = qfalse;
 	}

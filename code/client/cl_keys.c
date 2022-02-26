@@ -171,6 +171,7 @@ Field_Paste
 static void Field_Paste( field_t *edit ) {
 	char	*cbd;
 	int		pasteLen, i;
+
 #ifdef __WASM__
 	// because this happens asynchronously, the char events are created when the browser keypress event fires
 	//   all this does is set the field now, so that when something is pasted it can be send to playername

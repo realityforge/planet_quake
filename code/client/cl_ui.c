@@ -65,7 +65,7 @@ static void GetClientState( uiClientState_t *state ) {
 LAN_LoadCachedServers
 ====================
 */
-void LAN_LoadCachedServers( void ) {
+static void LAN_LoadCachedServers( void ) {
 	fileHandle_t fileIn;
 	int size, file_size;
 
@@ -101,7 +101,7 @@ void LAN_LoadCachedServers( void ) {
 LAN_SaveServersToCache
 ====================
 */
-void LAN_SaveServersToCache( void ) {
+static void LAN_SaveServersToCache( void ) {
 	fileHandle_t fileOut;
 	int size;
 
@@ -1232,7 +1232,7 @@ static intptr_t CL_UISystemCalls( intptr_t *args ) {
 UI_DllSyscall
 ====================
 */
-intptr_t QDECL UI_DllSyscall( intptr_t arg, ... ) {
+static intptr_t QDECL UI_DllSyscall( intptr_t arg, ... ) {
 #if !id386 || defined __clang__
 	intptr_t	args[10]; // max.count for UI
 	va_list	ap;
@@ -1406,7 +1406,6 @@ See if the current console command is claimed by the ui
 ====================
 */
 qboolean UI_GameCommand( void ) {
-  qboolean result;
 #ifdef USE_MULTIVM_CLIENT
 	uivmi = clc.currentView;
   CM_SwitchMap( clientMaps[uivmi] );
@@ -1416,7 +1415,5 @@ qboolean UI_GameCommand( void ) {
 		return qfalse;
   }
 
-	result = VM_Call( uivm, 1, UI_CONSOLE_COMMAND, cls.realtime );
-
-  return result;
+	return VM_Call( uivm, 1, UI_CONSOLE_COMMAND, cls.realtime );
 }
