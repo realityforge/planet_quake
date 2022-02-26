@@ -73,7 +73,6 @@ function Sys_SetStatus(status, replacementStr) {
   if(desc.includes('Main menu')) {
     if(!Q3e.initialized) {
       Q3e.initialized = true
-      document.body.className += ' done-loading '
     }
 
   }

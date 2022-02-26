@@ -224,7 +224,7 @@ GLEmulation = {
       if(typeof GLEmulation.positionBuffer == 'undefined'
         && GLEmulation.attribPointers.attr_Position > -1) {
           // set up some buffers
-        if(typeof GLEmulation.texcoordBuffer == 'undefined') {
+        if(typeof GLEmulation.positionBuffer == 'undefined') {
           GLEmulation.positionBuffer = Q3e.webgl.createBuffer()
         }
         Q3e.webgl.bindBuffer(Q3e.webgl.ARRAY_BUFFER, GLEmulation.positionBuffer)
@@ -418,6 +418,10 @@ GLEmulation = {
   glLineWidth: function (w) { Q3e.webgl.lineWidth(w) },
   glStencilFunc: function () {},
   glStencilOp: function () {},
+  glRenderbufferStorage: function () {},
+  glGetRenderbufferParameteriv: function () {},
+  glIsFramebuffer: function () {},
+  glGetFramebufferAttachmentParameteriv: function () {},
   glMultiTexCoord2fARB: function () {
     debugger
   },
@@ -476,10 +480,6 @@ GLEmulation = {
 
     return numIndexes
   },
-  glRenderbufferStorage: function () {},
-  glGetRenderbufferParameteriv: function () {},
-  glIsFramebuffer: function () {},
-  glGetFramebufferAttachmentParameteriv: function () {},
 
 
   /* --------------  ARB */

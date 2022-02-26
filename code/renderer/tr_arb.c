@@ -970,6 +970,7 @@ qboolean ARB_CompileProgram( programType ptype, const char *text, GLuint program
 	else
 		kind = GL_VERTEX_PROGRAM_ARB;
 
+#ifndef __WASM__
 	qglBindProgramARB( kind, program );
 	qglProgramStringARB( kind, GL_PROGRAM_FORMAT_ASCII_ARB, strlen( text ), text );
 	qglGetIntegerv( GL_PROGRAM_ERROR_POSITION_ARB, &errorPos );
@@ -985,6 +986,7 @@ qboolean ARB_CompileProgram( programType ptype, const char *text, GLuint program
 			return qfalse;
 		}
 	}
+#endif
 
 	return qtrue;
 }

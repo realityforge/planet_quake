@@ -23,7 +23,9 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #include "tr_local.h"
 
+#ifndef USE_ASYNCHRONOUS
 #define JSON_IMPLEMENTATION
+#endif
 #include "../qcommon/json.h"
 #undef JSON_IMPLEMENTATION
 

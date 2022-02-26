@@ -9,8 +9,8 @@ function startProgram(program) {
   for(let i = 0; i < newMethods.length; i++) {
     window[newMethods[i]] = Q3e['exports'][newMethods[i]] //.apply(Q3e['exports'])
   }
-  if(typeof Q3e.exports['Z_Malloc'] == 'undefined') {
-    window.Z_Malloc = Q3e.exports['Z_MallocDebug']
+  if(typeof window['Z_Malloc'] == 'undefined') {
+    window.Z_Malloc = window['Z_MallocDebug']
   }
   Object.assign(window, Q3e['exports'])
 
@@ -41,7 +41,7 @@ function startProgram(program) {
       setInterval(function () {
         requestAnimationFrame(function () {
           try {
-            Q3e.exports.Sys_Frame()
+            window.Sys_Frame()
           } catch (e) {
             console.log(e)
           }

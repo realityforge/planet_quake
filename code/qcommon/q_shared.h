@@ -401,6 +401,7 @@ int CL_Download( const char *cmd, const char *pakname, int autoDownload );
 
 
 #ifdef __WASM__
+#define offsetof(type, member) __builtin_offsetof(type, member)
 #define ftell Sys_FTell
 #define fseek Sys_FSeek
 #define fclose Sys_FClose

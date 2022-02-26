@@ -38,7 +38,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include <windows.h>
 #include <GL/gl.h>
 #elif defined(__WASM__)
-#include <GL/gl.h>
+#include "../wasm/gl.h"
 #undef GL_RGBA8
 #define GL_RGBA8 GL_RGBA
 #undef GL_RGB8
@@ -318,7 +318,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 // OpenGL 3.0 specific
 #define QGL_3_0_PROCS \
-	GLE(const GLubyte *, GetStringi, GLenum name, GLuint index) \
+	GLE(const GLubyte *, GetStringi, GLenum name, GLuint index)
+	
 
 // GL_ARB_framebuffer_object, built-in to OpenGL 3.0
 #define QGL_ARB_framebuffer_object_PROCS \
@@ -393,7 +394,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 	GLE(GLvoid, NamedFramebufferRenderbufferEXT, GLuint framebuffer, GLenum attachment, GLenum renderbuffertarget, GLuint renderbuffer) \
 
 #ifdef __WASM__
-#define GLE(ret, name, ...) extern ret APIENTRY qgl##name(__VA_ARGS__);
+#define GLE(ret, name, ...) extern ret APIENTRY gl##name(__VA_ARGS__); \
+typedef ret APIENTRY name##proc(__VA_ARGS__); extern name##proc * qgl##name;
 #else
 #define GLE(ret, name, ...) typedef ret APIENTRY name##proc(__VA_ARGS__); extern name##proc * qgl##name;
 #endif

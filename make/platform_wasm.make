@@ -13,6 +13,8 @@ USE_MASTER_LAN   := 1
 USE_CURL         := 0
 USE_SDL          := 0
 USE_IPV6         := 0
+USE_OPENGL2      := 1
+USE_VULKAN       := 0
 
 include make/configure.make
 

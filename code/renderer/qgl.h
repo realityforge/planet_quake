@@ -222,12 +222,29 @@ typedef char GLchar;
 	GLE( void, glVertexPointer, GLint size, GLenum type, GLsizei stride, const GLvoid *pointer ) \
 	GLE( void, glViewport, GLint x, GLint y, GLsizei width, GLsizei height )
 
+#ifdef __WASM__
+#define glClientActiveTextureARB glClientActiveTexture
+#define glMultiTexCoord2fARB glMultiTexCoord2f
+#define glActiveTextureARB glActiveTexture
+#define glLockArraysEXT glLockArrays
+#define glUnlockArraysEXT glUnlockArrays
+#endif
+
 #define QGL_Ext_PROCS \
 	GLE( void, glMultiTexCoord2fARB, GLenum texture, GLfloat s, GLfloat t ) \
 	GLE( void, glActiveTextureARB, GLenum texture ) \
 	GLE( void, glClientActiveTextureARB, GLenum texture ) \
 	GLE( void, glLockArraysEXT, GLint, GLint) \
 	GLE( void, glUnlockArraysEXT, void )
+
+#ifdef __WASM__
+#define glGenProgramsARB glGenPrograms
+#define glDeleteProgramsARB glDeletePrograms
+#define glProgramStringARB glProgramString
+#define glBindProgramARB glBindProgram
+#define glProgramLocalParameter4fARB glProgramLocalParameter4f
+#define glProgramLocalParameter4fvARB glProgramLocalParameter4fv
+#endif
 
 #define QGL_ARB_PROGRAM_PROCS \
 	GLE( void, glGenProgramsARB, GLsizei n, GLuint *programs ) \
@@ -236,6 +253,14 @@ typedef char GLchar;
 	GLE( void, glBindProgramARB, GLenum target, GLuint program ) \
 	GLE( void, glProgramLocalParameter4fARB, GLenum target, GLuint index, GLfloat x, GLfloat y, GLfloat z, GLfloat w ) \
 	GLE( void, glProgramLocalParameter4fvARB, GLenum target, GLuint index, const GLfloat *params )
+
+#ifdef __WASM__
+#define glGenBuffersARB glGenBuffers
+#define glDeleteBuffersARB glDeleteBuffers
+#define glBindBufferARB glBindBuffer
+#define glBufferDataARB glBufferData
+
+#endif
 
 #define QGL_VBO_PROCS \
 	GLE( void, glGenBuffersARB, GLsizei n, GLuint *buffers ) \

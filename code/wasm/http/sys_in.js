@@ -18,6 +18,15 @@ function GLimp_StartDriverAndSetMode(mode, modeFS, fullscreen, fallback) {
   Q3e.canvas.width = document.body.clientWidth
   Q3e.canvas.height = document.body.clientHeight
   document.getElementById('viewport-frame').appendChild(Q3e.canvas)
+  let bigchars = atob(document.getElementById('bigchars').src.substring(22))
+    .split("").map(function(c) { return c.charCodeAt(0); })
+  let startPos = HEAP32[g_bigcharsData >> 2] = malloc(bigchars.length)
+  g_bigcharsSize = bigchars.length
+  for(let i = 0; i < bigchars.length; i++) {
+    HEAP8[startPos] = bigchars[i]
+    startPos++
+  }
+ 
   //HEAP32[win>>2] = 1
   //window.title = addressToString(title)
   //return 1 //win;
@@ -33,11 +42,20 @@ function GLimp_StartDriverAndSetMode(mode, modeFS, fullscreen, fallback) {
     : (Q3e.canvas.getContext('webgl', webGLContextAttributes)
       || Q3e.canvas.getContext('experimental-webgl'))
 
+  document.body.className += ' done-loading '
 
   Q3e.webgl.viewport(0, 0, Q3e.canvas.width, Q3e.canvas.height);
   if (!Q3e.webgl) return 2
   //let handle = malloc(8);
   //HEAP32[handle>>2] = 1
+  if(typeof GL != 'undefined') {
+    INPUT.handle = GL.registerContext(Q3e.webgl, webGLContextAttributes)
+    GL.makeContextCurrent(INPUT.handle)
+    Module.useWebGL = true;
+    //GLImmediate.clientColor = new Float32Array([ 1, 1, 1, 1 ]);
+    //GLImmediate.init()
+    //GLImmediate.getRenderer()
+  }
 
   // set the window to do the grabbing, when ungrabbing this doesn't really matter
   if(!INPUT.firstClick) {
@@ -105,11 +123,11 @@ function InputPushFocusEvent (evt) {
   if (document.visibilityState === 'visible'
     & (typeof evt.visible === 'undefined' || evt.visible !== false)) {
     Key_ClearStates();
-    Q3e.exports.gw_active = false;
+    gw_active = false;
   } else {
     Key_ClearStates();
-    Q3e.exports.gw_active = true;
-    Q3e.exports.gw_minimized = false;
+    gw_active = true;
+    gw_minimized = false;
   }
 }
 
@@ -202,14 +220,15 @@ function InputPushKeyEvent(evt) {
     if ( evt.keyCode == 8 /* BAKCSPACE */ )
       Sys_QueEvent( Sys_Milliseconds(), SE_CHAR, 8, 0, 0, null );
 
-    if ( evt.charCode ) {
-      Sys_QueEvent( Sys_Milliseconds(), SE_KEY, evt.charCode, true, 0, null );
+    if ( evt.keyCode ) {
+      Sys_QueEvent( Sys_Milliseconds(), SE_KEY, evt.keyCode, true, 0, null );
 
-      if( kevt.ctrlKey && key >= 'a' && evt.charCode <= 'z' )
-        Sys_QueEvent( Sys_Milliseconds(), SE_CHAR, evt.charCode-'a'+1, 0, 0, null );
+      if( evt.ctrlKey && key >= 'a' && evt.keyCode <= 'z' ) {
+        Sys_QueEvent( Sys_Milliseconds(), SE_CHAR, evt.keyCode-'a'+1, 0, 0, null );
+      }
     }
   } else if (evt.type == 'keyup') {
-    Sys_QueEvent( Sys_Milliseconds(), SE_KEY, evt.charCode, false, 0, null );
+    Sys_QueEvent( Sys_Milliseconds(), SE_KEY, evt.keyCode, false, 0, null );
   }
 
 }

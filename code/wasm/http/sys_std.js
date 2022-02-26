@@ -29,6 +29,17 @@ function stringToAddress(str, addr) {
   return start
 }
 
+function Com_RealTime(outAddress) {
+  let now = new Date()
+  let t = t.now() / 1000
+  HEAP32[(tm >> 2) + 5] = now.getFullYear() - 1900
+  HEAP32[(tm >> 2) + 4] = now.getMonth() // already subtracted by 1
+  HEAP32[(tm >> 2) + 3] = now.getDate() 
+  HEAP32[(tm >> 2) + 2] = (t / 60 / 60) % 24
+  HEAP32[(tm >> 2) + 1] = (t / 60) % 60
+  HEAP32[(tm >> 2) + 0] = t % 60
+  return t
+}
 
 // here's the thing, I know for a fact that all the callers copy this stuff
 //   so I don't need to increase my temporary storage because by the time it's
@@ -70,7 +81,7 @@ var DATE = {
   time: function () {
     // The pointer returned by localtime (and some other functions) are actually pointers to statically allocated memory.
     // perfect.
-
+    debugger
   },
   localtime: function (t) {
     // TODO: only uses this for like file names, so doesn't have to be fast
@@ -97,9 +108,7 @@ typedef struct qtime_s {
   ctime: function (t) {
     return stringToAddress(new Date(t).toString())
   },
-  Com_RealTime: function (outAddress) {
-    localtime(Date.now())
-  }
+  Com_RealTime: Com_RealTime
 }
 
 

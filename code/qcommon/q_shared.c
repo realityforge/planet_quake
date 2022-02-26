@@ -2929,7 +2929,7 @@ int Q_sscanf( const char *buffer, const char *fmt, ... )
 			_atos( &buffer, va_arg(ap, char *), *fmt, width );
 			break;
 		case 'x':
-			_htoi( &buffer, *(va_arg(ap, byte *)), *fmt, width );
+			_htoi( &buffer, va_arg(ap, byte *), *fmt, width );
 		default:
 			return count;
 		}

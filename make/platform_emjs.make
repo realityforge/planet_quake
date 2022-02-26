@@ -1,7 +1,9 @@
-USE_RENDERER_DLOPEN := 1
+USE_RENDERER_DLOPEN := 0
 USE_BOTLIB_DLOPEN   := 1
 USE_SYSTEM_JPEG     := 0
 USE_CURL            := 0
+USE_OPENGL2         := 1
+USE_VULKAN          := 0
 
 include make/configure.make
 
@@ -72,17 +74,30 @@ ifeq ($(BUILD_RENDERER_OPENGL2),1)
 SHLIBLDFLAGS     += -s EXPORTED_FUNCTIONS="[$(SHLIBLDEXPORTS), '_GetRefAPI']"
 endif
 
-ifeq ($(BUILD_RENDERER_OPENGL),1)
-CLIENT_LDFLAGS += \
-          -lglemu.js \
-          -s LEGACY_GL_EMULATION=1 \
-          -s USE_WEBGL2=1
+ifeq ($(USE_RENDERER_DLOPEN),0)
+ifeq ($(USE_OPENGL2),1)
+CLIENT_LDFLAGS   += -lGL \
+                    -s MIN_WEBGL_VERSION=2 \
+                    -s MAX_WEBGL_VERSION=3 \
+                    -s WEBGL2_BACKWARDS_COMPATIBILITY_EMULATION=1 \
+                    -s FULL_ES2=1
+                    -s FULL_ES3=1
+else
+CLIENT_LDFLAGS   += -lGL \
+                    -s LEGACY_GL_EMULATION=1 \
+                    -s MAX_WEBGL_VERSION=3 \
+                    -s USE_WEBGL2=1
+endif
 endif
 
 LDEXPORTS := '_free', '_BG_sprintf', '_malloc', '_RunGame', '_Z_Free', \
   '_Cvar_Set', '_Cvar_SetValue', '_Cvar_Get', '_Cbuf_ExecuteText', \
   '_Cvar_VariableIntegerValue', '_FS_AllowedExtension', '_Sys_Frame', \
-  '_Cvar_VariableString', '_FS_GetCurrentGameDir', '_Sys_FileReady'
+  '_Cvar_VariableString', '_FS_GetCurrentGameDir', '_Sys_FileReady', \
+  '_Key_KeynumToString', '_Sys_QueEvent', '_Sys_Milliseconds', \
+  '_Key_ClearStates', '_gw_minimized', '_gw_active', '_g_bigcharsData', \
+  '_g_bigcharsSize', '_glGetStringi', '_Cvar_SetIntegerValue', '_Key_GetCatcher', \
+  '_Key_SetCatcher' 
 
 DEBUG_LDFLAGS    += -O0 -g -gsource-map \
                     -s WASM=1 \
@@ -92,13 +107,13 @@ DEBUG_LDFLAGS    += -O0 -g -gsource-map \
                     -s DEMANGLE_SUPPORT=1 \
                     -s ASSERTIONS=2 \
                     -s SINGLE_FILE=1 \
-                    -s VERBOSE \
                     -DDEBUG -D_DEBUG \
                     -DASSERTIONS \
                     --source-map-base http://local.games:8080/ \
                     -s EXPORTED_FUNCTIONS=\"[$(LDEXPORTS), '_Z_MallocDebug', '_S_MallocDebug']\"
 
-RELEASE_LDFLAGS  += -s WASM=1 \
+RELEASE_LDFLAGS  += -O3 -Os \
+                    -s WASM=1 \
                     -s MODULARIZE=0 \
                     -s SAFE_HEAP=1 \
                     -s DEMANGLE_SUPPORT=0 \
@@ -119,7 +134,7 @@ CLIENT_LDFLAGS   += $(CLIENT_LIBS) \
                     -s ALLOW_TABLE_GROWTH=1 \
                     -s ERROR_ON_UNDEFINED_SYMBOLS=0 \
                     -s FORCE_FILESYSTEM=0 \
-                    -s EXPORTED_RUNTIME_METHODS="['SYS']" \
+                    -s EXPORTED_RUNTIME_METHODS="['SYS', 'GL']" \
                     -s DEFAULT_LIBRARY_FUNCS_TO_INCLUDE="[]" \
                     -s INCLUDE_FULL_LIBRARY=0 \
                     -s MAIN_MODULE=0 \

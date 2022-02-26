@@ -216,6 +216,18 @@ static qboolean noFree = qfalse;
  *  Read a file into a buffer.
  */
 
+#ifdef USE_ASYNCHRONOUS
+#ifndef __WASM__
+#define INCBIN_SILENCE_BITCODE_WARNING
+#include "../qcommon/incbin.h"
+#include "incbin.h"
+INCBIN(_bigchars, "../renderercommon/bigchars.png");
+#else
+int g_bigcharsSize = 0;
+char *g_bigcharsData = NULL;
+#endif
+#endif
+
 static struct BufferedFile *ReadBufferedFile(const char *name)
 {
 	struct BufferedFile *BF;
@@ -256,15 +268,6 @@ static struct BufferedFile *ReadBufferedFile(const char *name)
 	 */
 
 #ifdef USE_ASYNCHRONOUS
-#ifdef __WASM__
-extern char *g_bigcharsData;
-extern int g_bigcharsSize;
-#else
-#define INCBIN_SILENCE_BITCODE_WARNING
-#include "../qcommon/incbin.h"
-#include "incbin.h"
-INCBIN(_bigchars, "../renderercommon/bigchars.png");
-#endif
 	noFree = qfalse;
 	if(Q_stristr(name, "gfx/2d/bigchars_backup")) {
 		BF->Buffer = (byte *)g_bigcharsData;
