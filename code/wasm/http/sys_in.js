@@ -398,7 +398,7 @@ function SDL_ShowCursor() {
   document.mozExitPointerLock()
 }
 
-function GLimp_Shutdown() {
+function GLimp_Shutdown(destroy) {
   window.removeEventListener('resize', resizeViewport)
   window.removeEventListener('keydown', InputPushKeyEvent)
   window.removeEventListener('keyup', InputPushKeyEvent)
@@ -410,7 +410,7 @@ function GLimp_Shutdown() {
   //document.removeEventListener('dragenter', SYSI.dragEnterHandler)
   //document.removeEventListener('dragover', SYSI.dragOverHandler)
 
-  if (Q3e.canvas) {
+  if (destroy && Q3e.canvas) {
     Q3e.canvas.removeEventListener('mousemove', InputPushMouseEvent)
     Q3e.canvas.removeEventListener('mousedown', InputPushMouseEvent)
     Q3e.canvas.removeEventListener('mouseup', InputPushMouseEvent)

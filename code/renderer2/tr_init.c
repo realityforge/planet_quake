@@ -1854,7 +1854,7 @@ void RE_Shutdown( refShutdownCode_t code ) {
 	R_DoneFreeType();
 
 	// shut down platform specific OpenGL stuff
-	if ( code == REF_DESTROY_WINDOW ) {
+	if ( code != REF_KEEP_CONTEXT ) {
 		if ( tr.registered )
 			GLSL_ShutdownGPUShaders();
 		ri.GLimp_Shutdown( code == REF_UNLOAD_DLL ? qtrue: qfalse );
