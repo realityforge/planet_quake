@@ -134,17 +134,17 @@ void GLimp_InitExtraExtensions( void )
 	if ( strstr((char *)qglGetString(GL_RENDERER), "Intel") )
 		glRefConfig.intelGraphics = qtrue;
 
-#ifdef __WASM__
-return;
-#endif
-
 	// OpenGL 3.0 - GL_ARB_framebuffer_object
 	extension = "GL_ARB_framebuffer_object";
 	glRefConfig.framebufferObject = qfalse;
 	glRefConfig.framebufferBlit = qfalse;
 	glRefConfig.framebufferMultisample = qfalse;
 
+#ifndef __WASM__
 	if (q_gl_version_at_least_3_0 || GLimp_HaveExtension(extension))
+#else
+	if(qtrue)
+#endif
 	{
 		glRefConfig.framebufferObject = !!r_ext_framebuffer_object->integer;
 		glRefConfig.framebufferBlit = qtrue;
@@ -165,7 +165,11 @@ return;
 	// OpenGL 3.0 - GL_ARB_vertex_array_object
 	extension = "GL_ARB_vertex_array_object";
 	glRefConfig.vertexArrayObject = qfalse;
+#ifndef __WASM__
 	if (q_gl_version_at_least_3_0 || GLimp_HaveExtension(extension))
+#else
+	if(qtrue)
+#endif
 	{
 		if (q_gl_version_at_least_3_0)
 		{
@@ -189,7 +193,11 @@ return;
 	// OpenGL 3.0 - GL_ARB_texture_float
 	extension = "GL_ARB_texture_float";
 	glRefConfig.textureFloat = qfalse;
+#ifndef __WASM__
 	if (q_gl_version_at_least_3_0 || GLimp_HaveExtension(extension))
+#else
+	if(qtrue)
+#endif
 	{
 		glRefConfig.textureFloat = !!r_ext_texture_float->integer;
 
@@ -203,7 +211,11 @@ return;
 	// OpenGL 3.2 - GL_ARB_depth_clamp
 	extension = "GL_ARB_depth_clamp";
 	glRefConfig.depthClamp = qfalse;
+#ifndef __WASM__
 	if (q_gl_version_at_least_3_2 || GLimp_HaveExtension(extension))
+#else
+	if(qtrue)
+#endif
 	{
 		glRefConfig.depthClamp = qtrue;
 
@@ -217,7 +229,11 @@ return;
 	// OpenGL 3.2 - GL_ARB_seamless_cube_map
 	extension = "GL_ARB_seamless_cube_map";
 	glRefConfig.seamlessCubeMap = qfalse;
+#ifndef __WASM__
 	if (q_gl_version_at_least_3_2 || GLimp_HaveExtension(extension))
+#else
+	if(qtrue)
+#endif
 	{
 		glRefConfig.seamlessCubeMap = !!r_arb_seamless_cube_map->integer;
 
@@ -279,7 +295,11 @@ return;
 
 	// GL_ARB_texture_compression_rgtc
 	extension = "GL_ARB_texture_compression_rgtc";
+#ifndef __WASM__
 	if (GLimp_HaveExtension(extension))
+#else
+	if(qtrue)
+#endif
 	{
 		qboolean useRgtc = r_ext_compressed_textures->integer >= 1;
 
@@ -297,7 +317,11 @@ return;
 
 	// GL_ARB_texture_compression_bptc
 	extension = "GL_ARB_texture_compression_bptc";
+#ifndef __WASM__
 	if (GLimp_HaveExtension(extension))
+#else
+	if(qtrue)
+#endif
 	{
 		qboolean useBptc = r_ext_compressed_textures->integer >= 2;
 
@@ -314,9 +338,9 @@ return;
 	// GL_EXT_direct_state_access
 	extension = "GL_EXT_direct_state_access";
 	glRefConfig.directStateAccess = qfalse;
+#ifndef __WASM__
 	if (GLimp_HaveExtension(extension))
 	{
-#ifndef __WASM__
 		glRefConfig.directStateAccess = !!r_ext_direct_state_access->integer;
 
 		// QGL_*_PROCS becomes several functions, do not remove {}
@@ -324,11 +348,11 @@ return;
 		{
 			QGL_EXT_direct_state_access_PROCS;
 		}
-#endif
 
 		ri.Printf(PRINT_ALL, result[glRefConfig.directStateAccess], extension);
 	}
 	else
+#endif
 	{
 		ri.Printf(PRINT_ALL, result[2], extension);
 	}

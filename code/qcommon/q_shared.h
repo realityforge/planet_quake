@@ -140,7 +140,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 // make the engine asynchronous, required by wasm build
 #define USE_ASYNCHRONOUS 1
 // TODO: need the whole thing or just mtime checker/updater?
-#define USE_LIVE_RELOAD 1
+//#define USE_LIVE_RELOAD 1
 // 
 #endif // __WASM__
 

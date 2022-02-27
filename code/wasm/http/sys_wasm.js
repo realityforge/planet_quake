@@ -38,7 +38,7 @@ function startProgram(program) {
     try {
       // Startup args is expecting a char **
       RunGame(startup.length, stringsToMemory(startup))
-      setInterval(function () {
+      Q3e.frameInterval = setInterval(function () {
         requestAnimationFrame(function () {
           try {
             window.Sys_Frame()

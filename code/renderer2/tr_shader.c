@@ -3354,7 +3354,6 @@ static void InitShader( const char *name, int lightmapIndex ) {
 	Com_Memset( &stages, 0, sizeof( stages ) );
 
 	Q_strncpyz( shader.name, name, sizeof( shader.name ) );
-  shader.lastTimeUsed = tr.lastRegistrationTime;
 	shader.lightmapIndex = lightmapIndex;
 
 	// we need to know original (unmodified) lightmap index
@@ -3746,11 +3745,16 @@ shader_t *R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImag
 		}
 	}
 
+	if(Q_stristr(strippedName, "white")) {
+		return tr.whiteShader;
+	}
+
+	InitShader( strippedName, lightmapIndex );
+  shader.lastTimeUsed = tr.lastRegistrationTime;
+
 #ifdef USE_LAZY_LOAD
   ri.Cvar_Set( "r_loadingShader", va("%12i;%s", lightmapIndex, name) );
 #endif
-
-	InitShader( strippedName, lightmapIndex );
 
 	if ( r_ext_compressed_textures->integer == 2 ) {
 		// if the shader hasn't specifically asked for it, don't allow compression
@@ -3803,6 +3807,7 @@ shader_t *R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImag
 		if ( !image ) {
 			ri.Printf( PRINT_DEVELOPER, "Couldn't find image file for shader %s\n", name );
 			shader.defaultShader = qtrue;
+			shader.remappedShader = tr.defaultShader;
 			return FinishShader();
 		}
 	}
@@ -3977,7 +3982,6 @@ qhandle_t RE_RegisterShaderLightMap( const char *name, int lightmapIndex ) {
   	sh = R_FindShader( name, lightmapIndex, qtrue );
   }
 
-#ifndef USE_LAZY_LOAD
 	// we want to return 0 if the shader failed to
 	// load for some reason, but R_FindShader should
 	// still keep a name allocated for it, so if
@@ -3986,7 +3990,6 @@ qhandle_t RE_RegisterShaderLightMap( const char *name, int lightmapIndex ) {
 	if ( sh->defaultShader ) {
 		return 0;
 	}
-#endif
 
 	return sh->index;
 }
@@ -4018,7 +4021,6 @@ qhandle_t RE_RegisterShader( const char *name ) {
 
 	sh = R_FindShader( name, LIGHTMAP_2D, qtrue );
 
-#ifndef USE_LAZY_LOAD
 	// we want to return 0 if the shader failed to
 	// load for some reason, but R_FindShader should
 	// still keep a name allocated for it, so if
@@ -4027,7 +4029,6 @@ qhandle_t RE_RegisterShader( const char *name ) {
 	if ( sh->defaultShader ) {
 		return 0;
 	}
-#endif
 
 	return sh->index;
 }
@@ -4056,9 +4057,7 @@ qhandle_t RE_RegisterShaderNoMip( const char *name ) {
 	// something calls RE_RegisterShader again with
 	// the same name, we don't try looking for it again
 	if ( sh->defaultShader ) {
-#ifndef USE_LAZY_LOAD
 		return 0;
-#endif
 	}
 
 	return sh->index;
@@ -4394,6 +4393,13 @@ static void CreateInternalShaders( void ) {
 	stages[0].active = qtrue;
 	stages[0].stateBits = GLS_DEFAULT;
 	tr.defaultShader = FinishShader();
+
+	InitShader( "<whiteShader>", LIGHTMAP_NONE );
+	stages[0].bundle[0].image[0] = tr.whiteImage;
+	stages[0].active = qtrue;
+	stages[0].rgbGen = CGEN_EXACT_VERTEX;
+	stages[0].stateBits = GLS_DEPTHTEST_DISABLE | GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA;
+	tr.whiteShader = FinishShader();
 
 	// shadow shader is just a marker
 	Q_strncpyz( shader.name, "<stencil shadow>", sizeof( shader.name ) );

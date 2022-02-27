@@ -78,9 +78,8 @@ endif
 ifeq ($(USE_RENDERER_DLOPEN),0)
 ifeq ($(USE_OPENGL2),1)
 CLIENT_LDFLAGS   += -lGL \
-                    -s MIN_WEBGL_VERSION=2 \
+                    -s MIN_WEBGL_VERSION=3 \
                     -s MAX_WEBGL_VERSION=3 \
-                    -s WEBGL2_BACKWARDS_COMPATIBILITY_EMULATION=1 \
                     -s FULL_ES2=1
                     -s FULL_ES3=1
 else
@@ -92,13 +91,13 @@ endif
 endif
 
 LDEXPORTS := '_free', '_BG_sprintf', '_malloc', '_RunGame', '_Z_Free', \
-  '_Cvar_Set', '_Cvar_SetValue', '_Cvar_Get', '_Cbuf_ExecuteText', \
+  '_Cvar_Set', '_Cvar_SetValue', '_Cvar_Get', '_Cbuf_AddText', \
   '_Cvar_VariableIntegerValue', '_FS_AllowedExtension', '_Sys_Frame', \
   '_Cvar_VariableString', '_FS_GetCurrentGameDir', '_Sys_FileReady', \
   '_Key_KeynumToString', '_Sys_QueEvent', '_Sys_Milliseconds', \
   '_Key_ClearStates', '_gw_minimized', '_gw_active', '_g_bigcharsData', \
   '_g_bigcharsSize', '_glGetStringi', '_Cvar_SetIntegerValue', '_Key_GetCatcher', \
-  '_Key_SetCatcher' 
+  '_Key_SetCatcher', '_FS_CopyString'
 
 DEBUG_LDFLAGS    += -O0 -g -gsource-map \
                     -s WASM=1 \
@@ -111,16 +110,19 @@ DEBUG_LDFLAGS    += -O0 -g -gsource-map \
                     -DDEBUG -D_DEBUG \
                     -DASSERTIONS \
                     --source-map-base http://local.games:8080/ \
-                    -s EXPORTED_FUNCTIONS=\"[$(LDEXPORTS), '_Z_MallocDebug', '_S_MallocDebug']\"
+                    -s EXPORTED_FUNCTIONS=\"[$(LDEXPORTS), '_Z_MallocDebug', '_S_MallocDebug']\" \
+                    -s DISABLE_EXCEPTION_CATCHING=0
+
 
 RELEASE_LDFLAGS  += -O3 -Os \
                     -s WASM=1 \
                     -s MODULARIZE=0 \
-                    -s SAFE_HEAP=1 \
+                    -s SAFE_HEAP=0 \
                     -s DEMANGLE_SUPPORT=0 \
                     -s ASSERTIONS=0 \
                     -s SINGLE_FILE=1 \
-                    -s EXPORTED_FUNCTIONS=\"[$(LDEXPORTS), '_Z_Malloc', '_S_Malloc']\"
+                    -s EXPORTED_FUNCTIONS=\"[$(LDEXPORTS), '_Z_Malloc', '_S_Malloc']\" \
+                    -s DISABLE_EXCEPTION_CATCHING=1
 
 #-s EXPORTED_RUNTIME_METHODS="['FS', 'SYS', 'SYSC',  \
 #  'SYSF', 'SYSN', 'SYSM', 'ccall', 'callMain', 'addFunction', \
@@ -145,7 +147,6 @@ CLIENT_LDFLAGS   += $(CLIENT_LIBS) \
                     -s STRICT=1 \
                     -s AUTO_JS_LIBRARIES=0 \
                     --memory-init-file 0 \
-                    -s DISABLE_EXCEPTION_CATCHING=0 \
                     -s DISABLE_DEPRECATED_FIND_EVENT_TARGET_BEHAVIOR=1
 
 #ifeq ($(USE_BOTLIB_DLOPEN),1)

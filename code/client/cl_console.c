@@ -898,7 +898,6 @@ Con_DrawConsole
 ==================
 */
 void Con_DrawConsole( void ) {
-
 	// check for console width changes from a vid mode change
 	Con_CheckResize();
 

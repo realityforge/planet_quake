@@ -8,22 +8,24 @@ window.Q3e = Q3e
 
 let startup = [
   'quake3e_web',
-  '+set', 'developer', '1',
+  '+set', 'developer', '0',
   '+set', 'fs_basepath', '/base',
   '+set', 'fs_homepath', '/home',
   '+set', 'sv_pure', '0', // require for now, TODO: server side zips
   '+set', 'fs_basegame', 'multigame',
   '+set', 'cl_dlURL', '"http://local.games:8080/multigame"',
-  '+set', 'r_ext_multitexture', '0',
-  '+set', 'r_ext_framebuffer_multisample', '0',
   '+set', 'r_ext_framebuffer_object', '0',
+
+  //'+set', 'r_ext_multitexture', '0',
+  //'+set', 'r_ext_framebuffer_multisample', '0',
+  //'+set', 'r_ext_framebuffer_object', '0',
   // this prevents lightmap from being wrong when switching maps
   //   renderer doesn't restart between maps, but BSP loading updates
   //   textures with lightmap by default, so this keeps them separate
-  '+set', 'r_mergeLightmaps', '0',
-  '+set', 'r_deluxeMapping', '0',
-  '+set', 'r_normalMapping', '0',
-  '+set', 'r_specularMapping', '0',
+  //'+set', 'r_mergeLightmaps', '0',
+  //'+set', 'r_deluxeMapping', '0',
+  //'+set', 'r_normalMapping', '0',
+  //'+set', 'r_specularMapping', '0',
 
 
 ];
@@ -57,6 +59,9 @@ window.BG_sprintf = _BG_sprintf
 window.Cvar_SetIntegerValue = _Cvar_SetIntegerValue
 window.Key_GetCatcher = _Key_GetCatcher
 window.Key_SetCatcher = _Key_SetCatcher
+window.Cbuf_AddText = _Cbuf_AddText
+window.Cvar_Set = _Cvar_Set
+window.FS_CopyString = _FS_CopyString
 
 var _emscripten_glDrawArrays = null
 var _emscripten_glDrawElements = null
@@ -102,10 +107,22 @@ Module['onRuntimeInitialized'] = function () {
     //   something isn't cleared out, crash
     Q3e['sharedMemory'] = malloc(1024 * 1024) // store some strings and crap
     Q3e['sharedCounter'] = 0
-
+    if(HEAP32[g_bigcharsSize >> 2] == 0) {
+      let bigchars = atob(document.getElementById('bigchars').src.substring(22))
+        .split("").map(function(c) { return c.charCodeAt(0); })
+      let startPos = HEAP32[g_bigcharsData >> 2] = malloc(bigchars.length)
+      HEAP32[g_bigcharsSize >> 2] = bigchars.length
+      for(let i = 0; i < bigchars.length; i++) {
+        HEAP8[startPos] = bigchars[i]
+        startPos++
+      }
+    }
+  
     // Startup args is expecting a char **
     _RunGame(startup.length, stringsToMemory(startup))
-    setInterval(function () {
+    // should have Cvar system by now
+    let fps = Cvar_VariableIntegerValue(stringToAddress('com_maxfps'))
+    Q3e.frameInterval = setInterval(function () {
       requestAnimationFrame(function () {
         try {
           _Sys_Frame()
@@ -113,7 +130,7 @@ Module['onRuntimeInitialized'] = function () {
           console.log(e)
         }
       })
-    }, 1000 / 30);
+    }, 1000 / fps);
   } catch (e) {
     console.log(e)
   }

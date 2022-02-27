@@ -3311,6 +3311,10 @@ shader_t *R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImag
 		}
 	}
 
+	if(Q_stristr(strippedName, "white")) {
+		return tr.whiteShader;
+	}
+
 	InitShader( strippedName, lightmapIndex );
   shader.lastTimeUsed = tr.lastRegistrationTime;
 
@@ -3319,10 +3323,6 @@ shader_t *R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImag
 	//shader.needsST1 = qtrue;
 	//shader.needsST2 = qtrue;
 	//shader.needsColor = qtrue;
-
-	if(Q_stristr(strippedName, "white")) {
-		return tr.whiteShader;
-	}
 
 #ifdef USE_LAZY_LOAD
   ri.Cvar_Set( "r_loadingShader", va("%12i;%s", lightmapIndex, name) );

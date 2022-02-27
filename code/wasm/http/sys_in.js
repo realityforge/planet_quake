@@ -12,21 +12,15 @@ function GLimp_StartDriverAndSetMode(mode, modeFS, fullscreen, fallback) {
     flags: flags,
   }
   */
-  Q3e['canvas'] = document.createElement('canvas')
-  Q3e.canvas.setAttribute('width', document.body.clientWidth)
-  Q3e.canvas.setAttribute('height', document.body.clientHeight)
-  Q3e.canvas.width = document.body.clientWidth
-  Q3e.canvas.height = document.body.clientHeight
-  document.getElementById('viewport-frame').appendChild(Q3e.canvas)
-  let bigchars = atob(document.getElementById('bigchars').src.substring(22))
-    .split("").map(function(c) { return c.charCodeAt(0); })
-  let startPos = HEAP32[g_bigcharsData >> 2] = malloc(bigchars.length)
-  g_bigcharsSize = bigchars.length
-  for(let i = 0; i < bigchars.length; i++) {
-    HEAP8[startPos] = bigchars[i]
-    startPos++
+  if(!Q3e.canvas) {
+    Q3e['canvas'] = document.createElement('canvas')
+    Q3e.canvas.setAttribute('width', document.body.clientWidth)
+    Q3e.canvas.setAttribute('height', document.body.clientHeight)
+    Q3e.canvas.width = document.body.clientWidth
+    Q3e.canvas.height = document.body.clientHeight
+    document.getElementById('viewport-frame').appendChild(Q3e.canvas)
   }
- 
+
   //HEAP32[win>>2] = 1
   //window.title = addressToString(title)
   //return 1 //win;

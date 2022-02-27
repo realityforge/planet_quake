@@ -205,7 +205,11 @@ void R_ImageList_f( void ) {
 				// same as DXT1?
 				estSize /= 2;
 				break;
+#ifdef __WASM__
+			case GL_RGBA16F:
+#else
 			case GL_RGBA16F_ARB:
+#endif
 				format = "RGBA16F";
 				// 8 bytes per pixel
 				estSize *= 8;
@@ -1962,7 +1966,7 @@ static void RawImage_UploadTexture(GLuint texture, byte *data, int x, int y, int
 	dataFormat = PixelDataFormatFromInternalFormat(internalFormat);
 	dataType = picFormat == GL_RGBA16 ? GL_UNSIGNED_SHORT : GL_UNSIGNED_BYTE;
 
-#ifdef __WASM__
+#ifdef EMSCRIPTEN
 	// HULK-SMASH! GLES requires that the internal format matches the data format.
 	internalFormat = dataFormat;
 #endif
@@ -2628,7 +2632,21 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, imgFlags_t flags )
 #else
   R_LoadImage( name, &pic, &width, &height, &picFormat, &picNumMips );
 #endif
+
+#ifdef USE_ASYNCHRONOUS
+	// use built in font
+	if(pic == NULL && (!Q_stricmp(name, "gfx/2d/bigchars")
+		|| !Q_stricmp(name, "gfx/2d/bigchars.tga"))) {
+		picFormat = GL_RGBA8;
+		picNumMips = 0;
+		R_LoadPNG("gfx/2d/bigchars_backup", &pic, &width, &height);
+		name = "gfx/2d/bigchars.png";
+	}
+#endif
+
+
 	if ( pic == NULL ) {
+
 		return NULL;
 	}
 

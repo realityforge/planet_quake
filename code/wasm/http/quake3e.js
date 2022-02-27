@@ -95,7 +95,11 @@ var SYS = {
   Sys_RandomBytes: Sys_RandomBytes,
   Sys_Milliseconds: Sys_Milliseconds,
   Sys_Microseconds: Sys_Microseconds,
-  Sys_Exit: function () {}, // TODO: redirect to lvlworld, was Sys_Main_PlatformExit
+  Sys_Exit: function () {
+    if(Q3e.frameInterval) {
+      clearInterval(Q3e.frameInterval)
+    }
+  }, // TODO: redirect to lvlworld, was Sys_Main_PlatformExit
   Sys_Error: Sys_Error,
   Sys_UnloadLibrary: Sys_UnloadLibrary,
   Sys_LoadLibrary: Sys_LoadLibrary,

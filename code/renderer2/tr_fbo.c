@@ -130,11 +130,16 @@ void FBO_CreateBuffer(FBO_t *fbo, int format, int index, int multisample)
 #ifndef __WASM__ // because these are the same in EM
 		case GL_RGB8:
 		case GL_RGBA8:
-#endif
 		case GL_RGB16F_ARB:
 		case GL_RGBA16F_ARB:
 		case GL_RGB32F_ARB:
 		case GL_RGBA32F_ARB:
+#else
+		case GL_RGB16F:
+		case GL_RGBA16F:
+		case GL_RGB32F:
+		case GL_RGBA32F:
+#endif
 			fbo->colorFormat = format;
 			pRenderBuffer = &fbo->colorBuffers[index];
 			attachment = GL_COLOR_ATTACHMENT0 + index;

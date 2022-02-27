@@ -3953,7 +3953,6 @@ void CL_CheckLazyUpdates( void ) {
 			if(Q_stristr(&ready[MAX_QPATH], "/scripts/")
 				&& Q_stristr(&ready[MAX_QPATH], ".shader")) {
 				re.ReloadShaders(qfalse);
-				//Cbuf_AddText("wait; vid_restart;");;
 			} else {
 				ready[MAX_QPATH - 1] = '\0';
 				FS_UpdateFiles(ready, &ready[MAX_QPATH]);
@@ -3963,8 +3962,8 @@ void CL_CheckLazyUpdates( void ) {
 //#if defined(USE_LAZY_LOAD) || defined(USE_ASYNCHRONOUS)
 
 		// multigame has a special feature to reload an missing assets when INIT is called
-		if(!Q_stricmp(FS_GetCurrentGameDir(), "multigame") && cls.uiStarted) {
-			VM_Call( uivm, UI_INIT, (cls.state >= CA_AUTHORIZING && cls.state < CA_ACTIVE) );
+		if(cls.uiStarted && !Q_stricmp(FS_GetCurrentGameDir(), "multigame")) {
+			//VM_Call( uivm, UI_INIT, (cls.state >= CA_AUTHORIZING && cls.state < CA_ACTIVE) );
 		}
 		break; // something updated, that's good for this frame
 	}
