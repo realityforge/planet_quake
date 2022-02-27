@@ -99,7 +99,12 @@ var SYS = {
     if(Q3e.frameInterval) {
       clearInterval(Q3e.frameInterval)
     }
-  }, // TODO: redirect to lvlworld, was Sys_Main_PlatformExit
+    // redirect to lvlworld
+    let returnUrl = addressToString(Cvar_VariableString('cl_returnURL'))
+    if(returnUrl) {
+      window.location = returnUrl
+    }
+  },
   Sys_Error: Sys_Error,
   Sys_UnloadLibrary: Sys_UnloadLibrary,
   Sys_LoadLibrary: Sys_LoadLibrary,

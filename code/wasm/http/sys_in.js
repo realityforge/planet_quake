@@ -400,13 +400,13 @@ function SDL_ShowCursor() {
 
 function GLimp_Shutdown() {
   window.removeEventListener('resize', resizeViewport)
-  //window.removeEventListener('keydown', SYSI.InputPushKeyEvent)
-  //window.removeEventListener('keyup', SYSI.InputPushKeyEvent)
+  window.removeEventListener('keydown', InputPushKeyEvent)
+  window.removeEventListener('keyup', InputPushKeyEvent)
   window.removeEventListener('keypress', InputPushTextEvent)
 
-  //document.removeEventListener('mousewheel', SYSI.InputPushWheelEvent)
+  document.removeEventListener('mousewheel', InputPushWheelEvent)
   document.removeEventListener('visibilitychange', InputPushFocusEvent)
-  //document.removeEventListener('drop', SYSI.dropHandler)
+  //document.removeEventListener('drop', dropHandler)
   //document.removeEventListener('dragenter', SYSI.dragEnterHandler)
   //document.removeEventListener('dragover', SYSI.dragOverHandler)
 
@@ -414,12 +414,9 @@ function GLimp_Shutdown() {
     Q3e.canvas.removeEventListener('mousemove', InputPushMouseEvent)
     Q3e.canvas.removeEventListener('mousedown', InputPushMouseEvent)
     Q3e.canvas.removeEventListener('mouseup', InputPushMouseEvent)
+    GL.deleteContext(Q3e.webgl);
     Q3e.canvas.remove()
     delete Q3e['canvas']
-  }
-  let returnUrl = addressToString(Cvar_VariableString('cl_returnURL'))
-  if(returnUrl) {
-    window.location = returnUrl
   }
 }
 

@@ -270,7 +270,7 @@ typedef struct fileInPack_s {
 	char					*name;		// name of the file
 	unsigned long			pos;		// file info position in zip
 	unsigned long			size;		// file size
-#ifdef USE_LIVE_RELOAD
+#if defined(USE_LIVE_RELOAD) || defined(__WASM__)
 	fileTime_t     mtime;
 #endif
 	struct	fileInPack_s*	next;		// next file in the hash
@@ -589,7 +589,7 @@ downloadLazy_t* *downloadTables[4] = {
 	filesCallback,
 };
 
-#ifdef USE_LIVE_RELOAD
+#if defined(USE_LIVE_RELOAD) || defined(__WASM__)
 static int lastVersionTime = 0;
 #endif
 
@@ -715,7 +715,7 @@ void Sys_FileNeeded(const char *needs, qboolean isDirectoryIndex) {
 		downloadTable[hash] = download;
 		download->lastRequested = 0; // request immediately, updated after first request
 	} else {
-#ifdef USE_LIVE_RELOAD
+#if defined(USE_LIVE_RELOAD) || defined(__WASM__)
 		// allow redownloading of this file because when it's received the game updates
 		if(/* !download->failed && */ Q_stristr(filename, "version.json")) {
 			download->downloaded = qfalse;
@@ -744,7 +744,7 @@ void Sys_FileNeeded(const char *needs, qboolean isDirectoryIndex) {
 	}
 
 	assert(!Q_stristr(filename, stupidPathError));
-	//Com_Printf("file needed! %s %s %i\n", filename, loading, hash);
+	Com_Printf("file needed! %s %s %i\n", filename, loading, hash);
 }
 
 
@@ -899,6 +899,7 @@ void MakeDirectoryBuffer(char *paths, int count, int length, const char *localna
 			Sys_GetFileStats(FS_BuildOSPath(fs_homepath->string, FS_GetCurrentGameDir(), curFile->name),
 				&_s, &curFile->mtime, &_c);
 		} else {
+			// set mtime to at least when the engine starts up
 			curFile->mtime = lastVersionTime;
 		}
 #endif
@@ -944,7 +945,7 @@ fileInPack_t *FindFileInIndex(long hash, const char *filename, fileInPack_t* *ha
 	if(hashTable[hash]) {
 		pakFile = hashTable[hash];
 		do {
-			//printf("comparing: %li,  %s != %s\n", hash, pakFile->name, filename);
+			//Com_Printf("comparing: %i,  %s != %s\n", hash, pakFile->name, filename);
 			if ( !FS_FilenameCompare( pakFile->name, filename ) ) {
 				return pakFile;
 			}
@@ -1036,7 +1037,7 @@ void FS_UpdateFiles(const char *filename, const char *tempname) {
 
 Com_Printf("updating files: %s -> %s\n", filename, tempname);
 
-#ifdef USE_LIVE_RELOAD
+#if defined(USE_LIVE_RELOAD) || defined(__WASM__)
 	if(Q_stristr(tempname, "version.json")) {
 		int y, mo, d, h, m, s;
 		struct tm tmi;
@@ -1062,7 +1063,11 @@ Com_Printf("updating files: %s -> %s\n", filename, tempname);
 				lastVersionTime = approxTime;
 				// version was supposed to describe what changed in each index, 
 				//   0 - main program, 1 - asset files, 2 - scripts, 3 - sounds, 4 - qvms?
+#ifndef __WASM__
 				Cbuf_AddText("wait; vid_restart;");
+#else
+				CL_StartHunkUsers();
+#endif
 			}
 		}
 	} else
@@ -1073,6 +1078,7 @@ Com_Printf("updating files: %s -> %s\n", filename, tempname);
 		// refresh mod list
 	} else 
 
+#ifndef DEDICATED
 	// try to reload UI with current game if needed
 	if(Q_stristr(tempname, "vm/ui.qvm")) {
     Cvar_Set("com_skipLoadUI", "0");
@@ -1081,6 +1087,7 @@ Com_Printf("updating files: %s -> %s\n", filename, tempname);
 		Cbuf_AddText("wait; vid_restart;");
 #endif
 	} else 
+#endif
 
 	// do some extra processing, restart UI if default.cfg is found
 	if(Q_stristr(tempname, "default.cfg")) {
@@ -1161,7 +1168,7 @@ Com_Printf("searching index for %s\n", filename);
 			// test if the file exists once anyways if we havent received a
 			//   real index from the server and are working off HTTP
 			if((!isInIndex && isNotFound)
-#ifdef USE_LIVE_RELOAD
+#if defined(USE_LIVE_RELOAD) || defined(__WASM__)
 				|| (isInIndex && file->mtime < lastVersionTime)
 #endif
 			) {
@@ -6701,6 +6708,11 @@ void FS_Restart( int checksumFeed ) {
 	if(!FS_SV_FileExists(downloadFile)) {
 		Sys_FileNeeded(downloadFile, qfalse);
 	}
+
+#ifdef __WASM__
+	Sys_FileNeeded("version.json", qfalse);
+#endif
+
 	// snoop on directory index
 	if(!Cvar_VariableIntegerValue("sv_pure")) {
 		Sys_FileNeeded(FS_GetCurrentGameDir(), qtrue);
