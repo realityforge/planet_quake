@@ -293,7 +293,7 @@ function InputPushMouseEvent (evt) {
       }
     }
     Sys_QueEvent( Sys_Milliseconds(), SE_KEY, 
-      evt.button, down, 0, null );
+      INPUT.keystrings['MOUSE1'] + evt.button, down, 0, null );
   } else {
 		Sys_QueEvent( Sys_Milliseconds(), SE_MOUSE, 
       getMovementX(evt), getMovementY(evt), 0, null );

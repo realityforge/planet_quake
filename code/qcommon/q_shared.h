@@ -128,7 +128,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 // allow touch events to set exact cursor position using "cursor spy"
 #define USE_ABS_MOUSE 1
 // start a dedicated server even for single player mode, automatically join a match
-#define USE_LOCAL_DED 1
+//#define USE_LOCAL_DED 1
 // allow loading graphics after the BSP and world has been entered
 #define USE_LAZY_LOAD 1
 // minimize the number of times the renderer restarts

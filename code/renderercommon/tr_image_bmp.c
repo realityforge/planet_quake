@@ -59,6 +59,10 @@ void R_LoadBMP( const char *name, byte **pic, int *width, int *height )
 	BMPHeader_t bmpHeader;
 	byte		*bmpRGBA;
 
+#ifdef __WASM__
+return;
+#endif
+
 	*pic = NULL;
 
 	if(width)
