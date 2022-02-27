@@ -1373,6 +1373,7 @@ void Menu_AddItem( menuframework_s *menu, void *item )
 				break;
 
 			case MTYPE_BTEXT:
+				trap_Cvar_Set("ui_breadCrumb", ((menutext_s*)item)->string);
 				BText_Init((menutext_s*)item);
 				break;
 

@@ -5,6 +5,7 @@ USE_CURL            := 0
 USE_OPENGL2         := 1
 USE_VULKAN          := 0
 NO_MAKE_LOCAL       := 1
+BUILD_STANDALONE    := 1
 
 include make/configure.make
 
@@ -97,7 +98,7 @@ LDEXPORTS := '_free', '_BG_sprintf', '_malloc', '_RunGame', '_Z_Free', \
   '_Key_KeynumToString', '_Sys_QueEvent', '_Sys_Milliseconds', \
   '_Key_ClearStates', '_gw_minimized', '_gw_active', '_g_bigcharsData', \
   '_g_bigcharsSize', '_glGetStringi', '_Cvar_SetIntegerValue', '_Key_GetCatcher', \
-  '_Key_SetCatcher', '_FS_CopyString'
+  '_Key_SetCatcher', '_FS_CopyString', '_Sys_Exit'
 
 DEBUG_LDFLAGS    += -O0 -g -gsource-map \
                     -s WASM=1 \

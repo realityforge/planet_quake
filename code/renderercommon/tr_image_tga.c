@@ -55,6 +55,10 @@ void R_LoadTGA ( const char *name, byte **pic, int *width, int *height)
 	byte		*targa_rgba;
 	int length;
 
+#ifdef __WASM__
+return;
+#endif
+
 	*pic = NULL;
 
 	if(width)

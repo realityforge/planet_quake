@@ -136,6 +136,8 @@ cvar_t  *cl_lnInvoice;
 
 #ifdef __WASM__
 cvar_t  *cl_returnURL;
+
+extern void CL_MenuModified(char *oldValue, char *newValue, cvar_t *cv);
 #endif
 
 #ifdef USE_LAZY_LOAD
@@ -5421,8 +5423,8 @@ void CL_Init( void ) {
 #endif
 
 	// get the menu path from multigame VM so we can start on a specific screen
-	Cvar_Get("ui_breadCrumb", "", CVAR_TEMP);
 #ifdef __WASM__
+	Cvar_SetModifiedFunc(Cvar_Get("ui_breadCrumb", "", CVAR_TEMP), CL_MenuModified);
 	cl_returnURL = Cvar_Get("cl_returnURL", "", CVAR_TEMP);
 #endif
 

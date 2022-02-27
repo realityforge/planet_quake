@@ -1246,7 +1246,7 @@ void UI_Refresh( int realtime )
 			*/
 			if(realtime - goddamnit > 1000) {
 				goddamnit = realtime;
-Com_Printf("wtf 6? %i\n", uis.menuBackShader);
+Com_Printf("wtf 7? %i\n", uis.menuBackShader);
 			}
 
 			// draw the background

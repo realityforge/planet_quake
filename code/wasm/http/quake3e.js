@@ -64,19 +64,20 @@ function Sys_Error(fmt, args) {
   let len = BG_sprintf(Q3e.sharedMemory + Q3e.sharedCounter, fmt, args)
   if(len > 0)
     console.log('Sys_Error: ', addressToString(Q3e.sharedMemory + Q3e.sharedCounter))
+  _Sys_Exit( 1 )
   throw new Error(addressToString(fmt))
 }
 
 function Sys_SetStatus(status, replacementStr) {
   // TODO: something like  window.title = , then setTimeout( window.title = 'Q3e' again)
+  /*
   let desc = addressToString(status)
   if(desc.includes('Main menu')) {
     if(!Q3e.initialized) {
       Q3e.initialized = true
+      document.body.className += ' done-loading '
     }
-
   }
-  /*
   let description = document.querySelector('#loading-progress .description')
   let div = document.createElement('div')
   // TODO: use BG_sprintf like above?
@@ -112,5 +113,18 @@ var SYS = {
   popen: function popen() {},
   Sys_Print: Sys_Print,
   Sys_SetStatus: Sys_SetStatus,
-  
+  CL_MenuModified: function (oldValue, newValue, cvar) {
+    let desc = addressToString(newValue)
+    if(desc.includes('MAIN MENU')) {
+      if(!Q3e.initialized) {
+        Q3e.initialized = true
+        document.body.className += ' done-loading '
+      }
+    }
+    window.title = 'Quake III Arena: ' + desc
+    history.pushState(
+      {location: window.location.toString()}, 
+      window.title, 
+      './' + desc.replace(/[^a-z0-9]/gi, ''))
+  }
 }

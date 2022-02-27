@@ -38,8 +38,6 @@ function GLimp_StartDriverAndSetMode(mode, modeFS, fullscreen, fallback) {
     : (Q3e.canvas.getContext('webgl', webGLContextAttributes)
       || Q3e.canvas.getContext('experimental-webgl'))
 
-  document.body.className += ' done-loading '
-
   Q3e.webgl.viewport(0, 0, Q3e.canvas.width, Q3e.canvas.height);
   if (!Q3e.webgl) return 2
   //let handle = malloc(8);

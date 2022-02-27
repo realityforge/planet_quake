@@ -38,6 +38,10 @@ app.use('/multigame/vm/', express.static(BUILD_DIRECTORY + 'debug-win-x86_64/mul
 app.use('/multigame/', serveIndex(__dirname + '/../../../games/multigame/assets/'));
 app.use('/multigame/', express.static(__dirname + '/../../../games/multigame/assets/'));
 app.use('/', express.static(__dirname + '/../http/'));
+// show index file for all request paths, in case UI is loading fancy breadcrumb menu
+app.get('*', function(request, response){
+  response.sendFile(path.resolve(__dirname + '/../http/index.html'));
+});
 
 
 var fileTimeout
