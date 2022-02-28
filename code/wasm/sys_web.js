@@ -38,6 +38,8 @@ window.Key_SetCatcher = _Key_SetCatcher
 window.Cbuf_AddText = _Cbuf_AddText
 window.Cvar_Set = _Cvar_Set
 window.FS_CopyString = _FS_CopyString
+window.Com_Frame = _Com_Frame
+window.RunGame = _RunGame
 
 var _emscripten_glDrawArrays = null
 var _emscripten_glDrawElements = null
@@ -96,18 +98,13 @@ Module['onRuntimeInitialized'] = function () {
   
     // Startup args is expecting a char **
     let startup = getQueryCommands()
-    _RunGame(startup.length, stringsToMemory(startup))
+    RunGame(startup.length, stringsToMemory(startup))
     // should have Cvar system by now
-    let fps = Cvar_VariableIntegerValue(stringToAddress('com_maxfps'))
-    Q3e.frameInterval = setInterval(function () {
-      requestAnimationFrame(function () {
-        try {
-          _Sys_Frame()
-        } catch (e) {
-          console.log(e)
-        }
-      })
-    }, 1000 / fps);
+    INPUT.fpsUnfocused = Cvar_VariableIntegerValue(stringToAddress('com_maxfpsUnfocused'));
+    INPUT.fps = Cvar_VariableIntegerValue(stringToAddress('com_maxfps'))
+    // this might help prevent this thing that krunker.io does where it lags when it first starts up
+    Q3e.frameInterval = setInterval(Sys_Frame, 
+      1000 / (HEAP32[gw_active >> 2] ? INPUT.fps : INPUT.fpsUnfocused));
   } catch (e) {
     console.log(e)
   }

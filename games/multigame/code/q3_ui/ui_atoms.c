@@ -1237,7 +1237,6 @@ UI_Refresh
 =================
 */
 static int breadcrumbModificationCount = 0;
-static int goddamnit;
 void UI_Refresh( int realtime )
 {
 	int amount;
@@ -1273,10 +1272,6 @@ void UI_Refresh( int realtime )
 				//trap_R_ClearScene();
 			}
 			*/
-			if(realtime - goddamnit > 1000) {
-				goddamnit = realtime;
-Com_Printf("wtf 8? %i\n", uis.menuBackShader);
-			}
 
 			// draw the background
 			trap_R_DrawStretchPic( 0, 0, uis.glconfig.vidWidth, uis.glconfig.vidHeight, 0, 0, 1, 1, uis.menuBackNoLogoShader );

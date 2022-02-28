@@ -2357,21 +2357,21 @@ void R_LoadDDS(const char *filename, byte **pic, int *width, int *height, GLenum
 
 typedef struct
 {
-	char *ext;
+	const char *ext;
 	void (*ImageLoader)( const char *, unsigned char **, int *, int * );
 } imageExtToLoaderMap_t;
 
 // Note that the ordering indicates the order of preference used
 // when there are multiple images of different formats available
-static imageExtToLoaderMap_t imageLoaders[ ] =
+static const imageExtToLoaderMap_t imageLoaders[ ] =
 {
 	{ "png",  R_LoadPNG },
-	{ "tga",  R_LoadTGA },
 	{ "jpg",  R_LoadJPG },
-	{ "jpeg", R_LoadJPG },
+	{ "jpeg", R_LoadJPG }
 #ifndef __WASM__
-	{ "pcx",  R_LoadPCX },
-	{ "bmp",  R_LoadBMP },
+	,{ "tga",  R_LoadTGA }
+	,{ "pcx",  R_LoadPCX }
+	,{ "bmp",  R_LoadBMP }
 #endif
 };
 
@@ -2409,7 +2409,6 @@ void R_LoadImage( const char *name, byte **pic, int *width, int *height, GLenum 
 
 	Q_strncpyz( localName, name, sizeof( localName ) );
 
-	ext = COM_GetExtension( localName );
 
 	// If compressed textures are enabled, try loading a DDS first, it'll load fastest
 	if (r_ext_compressed_textures->integer)
@@ -2450,6 +2449,7 @@ void R_LoadImage( const char *name, byte **pic, int *width, int *height, GLenum 
   	}
 	}
 
+	ext = COM_GetExtension( localName );
 	if( *ext )
 	{
 		// Look for the correct loader and use it
@@ -2473,8 +2473,8 @@ void R_LoadImage( const char *name, byte **pic, int *width, int *height, GLenum 
 		}
 
 		// A loader was found
-		if( i < numImageLoaders )
-		{
+		//if( i < numImageLoaders )
+		//{
 			if( *pic == NULL )
 			{
 				// Loader failed, most likely because the file isn't there;
@@ -2488,7 +2488,7 @@ void R_LoadImage( const char *name, byte **pic, int *width, int *height, GLenum 
 				// Something loaded
 				return;
 			}
-		}
+		//}
 	}
 
 	// Try and find a suitable match using all

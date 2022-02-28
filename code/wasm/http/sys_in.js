@@ -132,11 +132,11 @@ function InputPushFocusEvent (evt) {
 function InputPushMovedEvent (evt) {
   if (evt.toElement === null && evt.relatedTarget === null) {
     INPUT.firstClick = false
-    //if outside the window...
-    //if(!SYSI.interval)
-    //SYSI.interval = setInterval(function () {
-      //do something with evt.screenX/evt.screenY
-    //}, 250);
+    HEAP32[gw_active >> 2] = false;
+    if(Q3e.frameInterval) {
+      clearInterval(Q3e.frameInterval)
+    }
+    Q3e.frameInterval = setInterval(Sys_Frame, 1000 / INPUT.fpsUnfocused);
     return
   }
 
@@ -305,11 +305,13 @@ function InputPushMouseEvent (evt) {
     //}
     if(down && !HEAP32[gw_active >> 2]) {
       // TODO: start sound, capture mouse
-      //if(INPUT.firstClick) {
-        HEAP32[gw_active >> 2] = true
-        Q3e.canvas.requestPointerLock();
-        INPUT.firstClick = false
-      //}
+      HEAP32[gw_active >> 2] = true
+      Q3e.canvas.requestPointerLock();
+      INPUT.firstClick = false
+      if(Q3e.frameInterval) {
+        clearInterval(Q3e.frameInterval)
+      }
+      Q3e.frameInterval = setInterval(Sys_Frame, 1000 / INPUT.fps);
     }
     Sys_QueEvent( Sys_Milliseconds(), SE_KEY, 
       INPUT.keystrings['MOUSE1'] + evt.button, down, 0, null );

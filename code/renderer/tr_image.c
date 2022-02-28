@@ -894,11 +894,13 @@ typedef struct
 static const imageExtToLoaderMap_t imageLoaders[] =
 {
 	{ "png",  R_LoadPNG },
-	{ "tga",  R_LoadTGA },
 	{ "jpg",  R_LoadJPG },
 	{ "jpeg", R_LoadJPG },
+#ifndef __WASM__
+	{ "tga",  R_LoadTGA },
 	{ "pcx",  R_LoadPCX },
 	{ "bmp",  R_LoadBMP },
+#endif
 //  { "dds",  R_LoadDDS },
 };
 
@@ -954,8 +956,8 @@ static const char *R_LoadImage( const char *name, byte **pic, int *width, int *h
 		}
 
 		// A loader was found
-		if ( i < numImageLoaders )
-		{
+		//if ( i < numImageLoaders )
+		//{
 			if ( *pic == NULL )
 			{
 				// Loader failed, most likely because the file isn't there;
@@ -969,7 +971,7 @@ static const char *R_LoadImage( const char *name, byte **pic, int *width, int *h
 				// Something loaded
 				return localName;
 			}
-		}
+		//}
 	}
 
 	// Try and find a suitable match using all

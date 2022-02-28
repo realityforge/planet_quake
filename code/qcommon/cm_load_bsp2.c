@@ -24,6 +24,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "cm_local.h"
 #include "cm_load_bsp2.h"
 
+#ifdef USE_BSP2
+
 /*
 ===============================================================================
 
@@ -751,3 +753,5 @@ void LoadQ2Map(const char *name) {
 	CMod_LoadPatches2( &header.lumps[LUMP_Q2_FACES], &header.lumps[LUMP_Q2_VERTEXES] );
 
 }
+
+#endif

@@ -2003,6 +2003,10 @@ static qboolean ParseShader( const char **text )
 	branchType branch;
 	const char *token;
 	int s;
+#ifdef USE_LAZY_LOAD
+	qboolean failed = qfalse;
+#endif
+
 
 	s = 0;
 
@@ -2041,7 +2045,15 @@ static qboolean ParseShader( const char **text )
 
 			if ( !ParseStage( &stages[s], text ) )
 			{
+#ifdef USE_LAZY_LOAD
+				failed = qtrue;
+				// continue parsing stages to look for more missing images, then fail later
+				stages[s].active = qfalse;
+				s++;
+				continue;
+#else
 				return qfalse;
+#endif
 			}
 			stages[s].active = qtrue;
 			s++;
@@ -2423,6 +2435,12 @@ static qboolean ParseShader( const char **text )
 			return qfalse;
 		}
 	}
+
+#ifdef USE_LAZY_LOAD
+	if(failed) {
+		return qfalse;
+	}
+#endif
 
 	//
 	// ignore shaders that don't have any stages, unless it is a sky or fog

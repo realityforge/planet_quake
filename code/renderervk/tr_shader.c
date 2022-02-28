@@ -1666,9 +1666,6 @@ static qboolean ParseShader( const char **text )
 	branchType branch;
 	const char *token;
 	int s;
-#ifdef USE_LAZY_LOAD
-	qboolean failed = qfalse;
-#endif
 
 	s = 0;
 
@@ -1707,15 +1704,7 @@ static qboolean ParseShader( const char **text )
 
 			if ( !ParseStage( &stages[s], text ) )
 			{
-#ifdef USE_LAZY_LOAD
-				failed = qtrue;
-				// continue parsing stages to look for more missing images, then fail later
-				stages[s].active = qfalse;
-				s++;
-				continue;
-#else
 				return qfalse;
-#endif
 			}
 			stages[s].active = qtrue;
 			s++;
@@ -1939,11 +1928,6 @@ static qboolean ParseShader( const char **text )
 			ri.Printf( PRINT_WARNING, "WARNING: unknown general shader parameter '%s' in '%s'\n", token, shader.name );
 			return qfalse;
 		}
-	}
-
-#ifdef USE_LAZY_LOAD
-	if(failed) {
-		return qfalse;
 	}
 
 	//
@@ -3289,11 +3273,11 @@ static shader_t *FinishShader( void ) {
 		for ( n = 0; n < stages[i].numTexBundles; n++ ) {
 			for ( m = 0; m < stages[i].bundle[n].numTexMods; m++ ) {
 				if ( stages[i].bundle[n].texMods[m].type == TMOD_STRETCH ) {
-					if ( fabsf( stages[i].bundle[n].texMods[m].wave.amplitude ) < 1e-6 ) {
+					if ( fabsf( stages[i].bundle[n].texMods[m].wave.amplitude ) < 1e-6f ) {
 						if ( stages[i].bundle[n].texMods[m].wave.amplitude >= 0.0f ) {
-							stages[i].bundle[n].texMods[m].wave.amplitude = 1e-6;
+							stages[i].bundle[n].texMods[m].wave.amplitude = 1e-6f;
 						} else {
-							stages[i].bundle[n].texMods[m].wave.amplitude = -1e-6;
+							stages[i].bundle[n].texMods[m].wave.amplitude = -1e-6f;
 						}
 					}
 				}

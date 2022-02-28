@@ -30,7 +30,6 @@ BUILD_CLIENT     := 1
 
 # curious if it combines then executes module linker
 CLIENT_SYSTEM    := quake3e.js \
-                    sys_std.js \
                     sys_fs.js \
                     sys_net.js \
                     sys_in.js \
@@ -94,7 +93,7 @@ endif
 
 LDEXPORTS := '_free', '_BG_sprintf', '_malloc', '_RunGame', '_Z_Free', \
   '_Cvar_Set', '_Cvar_SetValue', '_Cvar_Get', '_Cbuf_AddText', \
-  '_Cvar_VariableIntegerValue', '_FS_AllowedExtension', '_Sys_Frame', \
+  '_Cvar_VariableIntegerValue', '_FS_AllowedExtension', '_Com_Frame', \
   '_Cvar_VariableString', '_FS_GetCurrentGameDir', '_Sys_FileReady', \
   '_Key_KeynumToString', '_Sys_QueEvent', '_Sys_Milliseconds', \
   '_Key_ClearStates', '_gw_minimized', '_gw_active', '_g_bigcharsData', \

@@ -94,6 +94,7 @@ let LibrarySys = {
     InputPushWheelEvent: InputPushWheelEvent,
     InputPushFocusEvent: InputPushFocusEvent,
     CL_ModifyMenu: CL_ModifyMenu,
+    Sys_Frame: Sys_Frame,
     DB_STORE_NAME: DB_STORE_NAME,
     stringToAddress: stringToAddress,
     addressToString: addressToString,

@@ -48,6 +48,71 @@ function getQueryCommands() {
   return startup
 }
 
+function addressToString(addr, length) {
+  let newString = ''
+  if(!addr) return newString
+  if(!length) length = 1024
+  for(let i = 0; i < length; i++) {
+    if(HEAP8[addr + i] == '0') {
+      break;
+    }
+    newString += String.fromCharCode(HEAP8[addr + i])
+  }
+  return newString
+}
+
+function stringToAddress(str, addr) {
+  let start = Q3e.sharedMemory + Q3e.sharedCounter
+  if(addr) start = addr
+  for(let j = 0; j < str.length; j++) {
+    HEAP8[start+j] = str.charCodeAt(j)
+  }
+  HEAP8[start+str.length] = 0
+  if(!addr) {
+    Q3e.sharedCounter += str.length + 1
+    Q3e.sharedCounter += 4 - (Q3e.sharedCounter % 4)
+    if(Q3e.sharedCounter > 1024 * 512) {
+      Q3e.sharedCounter = 0
+    }
+  }
+  return start
+}
+
+function Com_RealTime(outAddress) {
+  let now = new Date()
+  let t = t.now() / 1000
+  HEAP32[(tm >> 2) + 5] = now.getFullYear() - 1900
+  HEAP32[(tm >> 2) + 4] = now.getMonth() // already subtracted by 1
+  HEAP32[(tm >> 2) + 3] = now.getDate() 
+  HEAP32[(tm >> 2) + 2] = (t / 60 / 60) % 24
+  HEAP32[(tm >> 2) + 1] = (t / 60) % 60
+  HEAP32[(tm >> 2) + 0] = t % 60
+  return t
+}
+
+// here's the thing, I know for a fact that all the callers copy this stuff
+//   so I don't need to increase my temporary storage because by the time it's
+//   overwritten the data won't be needed, should only keep shared storage around
+//   for events and stuff that might take more than 1 frame
+function stringsToMemory(list, length) {
+  // add list length so we can return addresses like char **
+  let start = Q3e.sharedMemory + Q3e.sharedCounter
+  let posInSeries = start + list.length * 4
+  for (let i = 0; i < list.length; i++) {
+    HEAP32[(start+i*4)>>2] = posInSeries // save the starting address in the list
+    stringToAddress(list[i], posInSeries)
+    posInSeries += list[i].length + 1
+  }
+  if(length) HEAP32[length >> 2] = posInSeries - start
+  Q3e.sharedCounter = posInSeries - Q3e.sharedMemory
+  Q3e.sharedCounter += 4 - (Q3e.sharedCounter % 4)
+  if(Q3e.sharedCounter > 1024 * 512) {
+    Q3e.sharedCounter = 0
+  }
+  return start
+}
+
+
 function Sys_UnloadLibrary() {
 
 }
@@ -160,22 +225,34 @@ function CL_ModifyMenu(event) {
   Cbuf_AddText( stringToAddress(`set ui_breadCrumb "${oldLocation}"\n`) );
 }
 
+function Sys_Frame() {
+  requestAnimationFrame(function () {
+    try {
+      Com_Frame(true)
+    } catch (e) {
+      console.log(e)
+    }
+  })
+}
+
+function Sys_Exit() {
+  if(Q3e.frameInterval) {
+    clearInterval(Q3e.frameInterval)
+  }
+  // redirect to lvlworld
+  let returnUrl = addressToString(Cvar_VariableString('cl_returnURL'))
+  if(returnUrl) {
+    window.location = returnUrl
+  }
+}
 
 var SYS = {
-  DebugBreak: function () { debugger; },
+  DebugBreak: function () { debugger },
   Sys_RandomBytes: Sys_RandomBytes,
   Sys_Milliseconds: Sys_Milliseconds,
   Sys_Microseconds: Sys_Microseconds,
-  Sys_Exit: function () {
-    if(Q3e.frameInterval) {
-      clearInterval(Q3e.frameInterval)
-    }
-    // redirect to lvlworld
-    let returnUrl = addressToString(Cvar_VariableString('cl_returnURL'))
-    if(returnUrl) {
-      window.location = returnUrl
-    }
-  },
+  Sys_Exit: Sys_Exit,
+  Sys_Frame: Sys_Frame,
   Sys_Error: Sys_Error,
   Sys_UnloadLibrary: Sys_UnloadLibrary,
   Sys_LoadLibrary: Sys_LoadLibrary,

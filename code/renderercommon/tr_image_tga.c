@@ -39,7 +39,6 @@ typedef struct _TargaHeader {
 	unsigned char	pixel_size, attributes;
 } TargaHeader;
 
-
 void R_LoadTGA ( const char *name, byte **pic, int *width, int *height)
 {
 	unsigned	columns, rows, numPixels;
@@ -54,10 +53,6 @@ void R_LoadTGA ( const char *name, byte **pic, int *width, int *height)
 	TargaHeader	targa_header;
 	byte		*targa_rgba;
 	int length;
-
-#ifdef __WASM__
-return;
-#endif
 
 	*pic = NULL;
 

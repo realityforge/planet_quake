@@ -4096,7 +4096,12 @@ void Com_Init( char *commandLine ) {
 #else
   com_maxfps = Cvar_Get( "com_maxfps", "300", 0 ); // try to force that in some light way
 #endif
+#ifdef __WASM__
+	// because request animation frame isn't called when the window is out of focus
+	com_maxfpsUnfocused = Cvar_Get( "com_maxfpsUnfocused", "10", CVAR_ARCHIVE_ND );
+#else
 	com_maxfpsUnfocused = Cvar_Get( "com_maxfpsUnfocused", "60", CVAR_ARCHIVE_ND );
+#endif
 	Cvar_CheckRange( com_maxfps, "0", "1000", CV_INTEGER );
 	Cvar_CheckRange( com_maxfpsUnfocused, "0", "1000", CV_INTEGER );
 	com_yieldCPU = Cvar_Get( "com_yieldCPU", "1", CVAR_ARCHIVE_ND );
@@ -4500,6 +4505,9 @@ static int Com_TimeVal( int minMsec )
 Com_Frame
 =================
 */
+#ifdef __WASM__
+Q_EXPORT
+#endif
 void Com_Frame( qboolean noDelay ) {
 
 #ifndef DEDICATED
@@ -4596,6 +4604,7 @@ void Com_Frame( qboolean noDelay ) {
 #endif
 	}
 
+#ifndef __WASM__
 	// waiting for incoming packets
 	if ( noDelay == qfalse )
 	do {
@@ -4624,13 +4633,9 @@ void Com_Frame( qboolean noDelay ) {
 		if ( timeVal > sleepMsec )
 			Com_EventLoop();
 #endif
-#ifdef __WASM__
-		// break out of frame here because requestAnimationFrame sleeps enough
-    break;
-#else
 		NET_Sleep( sleepMsec * 1000 - 500 );
-#endif
 	} while( Com_TimeVal( minMsec ) );
+#endif
 
 
 	lastTime = com_frameTime;

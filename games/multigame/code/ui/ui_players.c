@@ -1138,7 +1138,6 @@ qboolean UI_RegisterClientModelname( playerInfo_t *pi, const char *modelSkinName
 		return qfalse;
 	}
 
-Com_Printf("goddamnit 2: %s\n",  modelSkinName);
 	Q_strncpyz( modelName, modelSkinName, sizeof( modelName ) );
 
 	slash = strchr( modelName, '/' );

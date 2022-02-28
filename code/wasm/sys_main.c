@@ -157,18 +157,6 @@ int Sys_ParseArgs( int argc, char* argv[] )
 	return 0;
 }
 
-/*
-=================
-Sys_Frame
-=================
-*/
-#ifdef __WASM__
-Q_EXPORT
-#endif
-void Sys_Frame( void ) {
-	Com_Frame( CL_NoDelay() );
-}
-
 
 Q_EXPORT int RunGame( int argc, char* argv[] )
 {
