@@ -908,6 +908,7 @@ static void UI_SPLevelMenu_Init( void ) {
 	UI_SPLevelMenu_SetMenuItems();
 }
 
+void UI_LoadArenas(void);
 
 /*
 =================
@@ -918,6 +919,8 @@ void UI_SPLevelMenu( void ) {
 	int			level;
 	int			trainingLevel;
 	const char	*arenaInfo;
+
+	UI_LoadArenas();
 
 	trainingTier = -1;
 	arenaInfo = UI_GetSpecialArenaInfo( "training" );

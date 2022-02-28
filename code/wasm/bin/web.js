@@ -111,6 +111,7 @@ app.get('/CHOOSELEVEL', sendIndex);
 app.get('/ARENASERVERS', sendIndex);
 app.get('/DIFFICULTY', sendIndex);
 app.get('/PLAYERMODEL', sendIndex);
+app.get('/PLAYERSETTINGS', sendIndex);
 
 
 var fileTimeout

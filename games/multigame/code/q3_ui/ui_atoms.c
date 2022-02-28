@@ -1257,7 +1257,6 @@ void UI_Refresh( int realtime )
 	{
 		if(ui_breadCrumb.modificationCount > breadcrumbModificationCount)
 		{
-			Com_Printf("changing breadcrumb %s\n", ui_breadCrumb.string);
 			breadcrumbModificationCount = ui_breadCrumb.modificationCount;
 			UI_SetActiveMenu(UIMENU_NONE, ui_breadCrumb.string);
 		}

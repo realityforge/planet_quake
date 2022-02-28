@@ -1138,6 +1138,7 @@ qboolean UI_RegisterClientModelname( playerInfo_t *pi, const char *modelSkinName
 		return qfalse;
 	}
 
+Com_Printf("goddamnit 2: %s\n",  modelSkinName);
 	Q_strncpyz( modelName, modelSkinName, sizeof( modelName ) );
 
 	slash = strchr( modelName, '/' );
@@ -1228,6 +1229,7 @@ UI_PlayerInfo_SetModel
 ===============
 */
 void UI_PlayerInfo_SetModel( playerInfo_t *pi, const char *model, const char *headmodel, char *teamName ) {
+	Com_Printf("how is this possible?\n");
 	memset( pi, 0, sizeof(*pi) );
 	UI_RegisterClientModelname( pi, model, headmodel, teamName );
 	pi->weapon = WP_MACHINEGUN;
