@@ -1373,7 +1373,6 @@ void Menu_AddItem( menuframework_s *menu, void *item )
 				break;
 
 			case MTYPE_BTEXT:
-				trap_Cvar_Set("ui_breadCrumb", ((menutext_s*)item)->string);
 				BText_Init((menutext_s*)item);
 				break;
 
@@ -1570,7 +1569,8 @@ void Menu_Draw( menuframework_s *menu )
 					break;
 
 				default:
-					trap_Error( va("Menu_Draw: unknown type %d", itemptr->type) );
+					Com_Printf( "Menu_Draw: unknown type %d - %s\n", itemptr->type, (menutext_s*)itemptr->name );
+					break;
 			}
 		}
 #ifndef NDEBUG

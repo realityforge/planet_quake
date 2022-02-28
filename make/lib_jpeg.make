@@ -1,13 +1,14 @@
-MKFILE        := $(lastword $(MAKEFILE_LIST)) 
-WORKDIR       := libjpeg
+JPEG_WORKDIR       := libjpeg
 
 BUILD_LIBJPEG := 1
+ifneq ($(BUILD_CLIENT),1)
+JPEG_MKFILE        := $(lastword $(MAKEFILE_LIST)) 
 include make/platform.make
+endif
 
-TARGET	      := libjpeg_$(SHLIBNAME)
-SOURCES       := libs/jpeg-9d
-INCLUDES      := 
-LIBS          :=
+JPEG_TARGET	       := libjpeg_$(SHLIBNAME)
+JPEG_SOURCES       := libs/jpeg-9d
+JPEG_INCLUDES      := 
 
 COMOBJECTS   := jaricom.o jcomapi.o jutils.o jerror.o jmemmgr.o jmemnobs.o $(SYSDEPMEM)
 # compression library object files
@@ -23,39 +24,47 @@ DLIBOBJECTS  := jdapimin.o jdapistd.o jdarith.o jdtrans.o jdatasrc.o \
 # These objectfiles are included in libjpeg.a
 LIBOBJECTS   := $(CLIBOBJECTS) $(DLIBOBJECTS) $(COMOBJECTS)
 
-Q3OBJ        := $(addprefix $(B)/$(WORKDIR)/,$(notdir $(LIBOBJECTS)))
+JPEGOBJS     := $(addprefix $(B)/$(JPEG_WORKDIR)/,$(notdir $(LIBOBJECTS)))
 
-export INCLUDE	:= $(foreach dir,$(INCLUDES),-I$(dir))
+export JPEG_INCLUDE	:= $(foreach dir,$(JPEG_INCLUDES),-I$(dir))
 
-CFLAGS       := $(INCLUDE) -fsigned-char -MMD \
+JPEG_CFLAGS       := $(JPEG_INCLUDE) -fsigned-char -MMD \
                 -O2 -ftree-vectorize -g -ffast-math -fno-short-enums
+
 
 define DO_JPEG_CC
   @echo "JPEG_CC $<"
-  @$(CC) -o $@ $(SHLIBCFLAGS) $(CFLAGS) -c $<
+  @$(CC) -o $@ $(SHLIBCFLAGS) $(JPEG_CFLAGS) -c $<
 endef
 
+ifneq ($(BUILD_CLIENT),1)
+
 debug:
-	$(echo_cmd) "MAKE $(TARGET)"
-	@$(MAKE) -f $(MKFILE) B=$(BD) WORKDIRS=$(WORKDIR) mkdirs
-	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) pre-build
-	@$(MAKE) -f $(MKFILE) B=$(BD) CFLAGS="$(CFLAGS) $(DEBUG_CFLAGS)" LDFLAGS="$(LDFLAGS) $(DEBUG_LDFLAGS)" $(BD)/$(TARGET)
+	$(echo_cmd) "MAKE $(JPEG_TARGET)"
+	@$(MAKE) -f $(JPEG_MKFILE) B=$(BD) WORKDIRS=$(JPEG_WORKDIR) mkdirs
+	@$(MAKE) -f $(JPEG_MKFILE) B=$(BD) V=$(V) pre-build
+	@$(MAKE) -f $(JPEG_MKFILE) B=$(BD) CFLAGS="$(JPEG_CFLAGS) $(DEBUG_CFLAGS)" LDFLAGS="$(LDFLAGS) $(DEBUG_LDFLAGS)" $(BD)/$(JPEG_TARGET)
 
 release:
-	$(echo_cmd) "MAKE $(TARGET)"
-	@$(MAKE) -f $(MKFILE) B=$(BR) WORKDIRS=$(WORKDIR) mkdirs
-	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) pre-build
-	@$(MAKE) -f $(MKFILE) B=$(BR) CFLAGS="$(CFLAGS) $(RELEASE_CFLAGS)" LDFLAGS="$(LDFLAGS) $(RELEASE_LDFLAGS)" $(BR)/$(TARGET)
+	$(echo_cmd) "MAKE $(JPEG_TARGET)"
+	@$(MAKE) -f $(JPEG_MKFILE) B=$(BR) WORKDIRS=$(JPEG_WORKDIR) mkdirs
+	@$(MAKE) -f $(JPEG_MKFILE) B=$(BR) V=$(V) pre-build
+	@$(MAKE) -f $(JPEG_MKFILE) B=$(BR) CFLAGS="$(JPEG_CFLAGS) $(RELEASE_CFLAGS)" LDFLAGS="$(LDFLAGS) $(RELEASE_LDFLAGS)" $(BR)/$(JPEG_TARGET)
 
 clean:
-	@rm -rf ./$(BD)/$(WORKDIR) ./$(BD)/$(TARGET)
-	@rm -rf ./$(BR)/$(WORKDIR) ./$(BR)/$(TARGET)
+	@rm -rf ./$(BD)/$(JPEG_WORKDIR) ./$(BD)/$(JPEG_TARGET)
+	@rm -rf ./$(BR)/$(JPEG_WORKDIR) ./$(BR)/$(JPEG_TARGET)
+
+WORKDIRS += $(JPEG_WORKDIR)
+CLEANS 	 += $(JPEG_WORKDIR) $(JPEG_TARGET)
+endif
+
 
 ifdef B
-$(B)/$(WORKDIR)/%.o: libs/jpeg-9d/%.c
+$(B)/$(JPEG_WORKDIR)/%.o: $(JPEG_SOURCES)/%.c
 	$(DO_JPEG_CC)
 
-$(B)/$(TARGET): $(Q3OBJ) 
+$(B)/$(JPEG_TARGET): $(JPEGOBJS) 
 	$(echo_cmd) "LD $@"
-	$(Q)$(CC) -o $@ $(Q3OBJ) $(LIBS) $(SHLIBLDFLAGS) 
+	$(Q)$(CC) -o $@ $(JPEGOBJS) $(SHLIBLDFLAGS) 
 endif

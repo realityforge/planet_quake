@@ -40,22 +40,18 @@ extern void Cvar_SetNetDescriptions( void );
 
 #ifdef __WASM__
 
-#ifdef __WASM__
 int NET_OpenIP(void);
 uint16_t ntohs(uint16_t n);
-
 int NET_Close(void);
+void Sys_SendPacket( int length, const void *data, const netadr_t *to );
+static void	NET_Restart_f( void );
+void Sys_SockaddrToString(char *dest, int destlen, const void *input);
 
 #ifdef USE_MULTIVM_SERVER
 int NET_GetPacket( netadr_t *net_from, msg_t *net_message, const fd_set *fdr, int igvm );
 #else
 int NET_GetPacket( netadr_t *net_from, msg_t *net_message, const fd_set *fdr );
 #endif
-
-void Sys_SendPacket( int length, const void *data, const netadr_t *to );
-
-static void	NET_Restart_f( void );
-void Sys_SockaddrToString(char *dest, int destlen, const void *input);
 
 #else
 
@@ -2157,8 +2153,6 @@ qboolean NET_Sleep( int timeout )
 
 #endif
 
-
-#endif
 
 /*
 ====================

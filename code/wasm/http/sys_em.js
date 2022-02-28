@@ -77,6 +77,7 @@ let LibrarySys = {
   },
 	$SYS__deps: ['$GL'],
 	$SYS: {
+    getQueryCommands: getQueryCommands,
     updateVideoCmd: updateVideoCmd,
     checkPasteEvent: checkPasteEvent,
     getMovementX: getMovementX,
@@ -92,6 +93,7 @@ let LibrarySys = {
     InputPushMouseEvent: InputPushMouseEvent,
     InputPushWheelEvent: InputPushWheelEvent,
     InputPushFocusEvent: InputPushFocusEvent,
+    CL_ModifyMenu: CL_ModifyMenu,
     DB_STORE_NAME: DB_STORE_NAME,
     stringToAddress: stringToAddress,
     addressToString: addressToString,

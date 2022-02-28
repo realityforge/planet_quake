@@ -111,7 +111,7 @@ extern vmCvar_t	ui_smallFont;
 extern vmCvar_t	ui_bigFont;
 extern vmCvar_t ui_serverStatusTimeOut;
 
-
+extern vmCvar_t ui_breadCrumb;
 
 //
 // ui_qmenu.c

@@ -396,6 +396,12 @@ static size_t Com_DL_HeaderCallback( void *ptr, size_t size, size_t nmemb, void 
 		//dl->Cancelled = qtrue;
 		//return (size_t)-1;
 	}
+
+	//s = (char*)Q_stristr( header, "content-type:" );
+	//if(Q_stristr(dl->TempName, "/.")) {
+		
+	//}
+
 #endif
 
 	s = (char*)Q_stristr( header, "content-disposition:" );

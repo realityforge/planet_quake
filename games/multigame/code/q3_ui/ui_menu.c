@@ -182,7 +182,7 @@ static void Main_MenuDraw( void ) {
 	adjust = 5.0 * sin( (float)uis.realtime / 5000 );
 	VectorSet( angles, 0, 180 + adjust, 0 );
 	AnglesToAxis( angles, ent.axis );
-	ent.hModel = s_main.bannerModel;
+	ent.hModel = trap_R_RegisterModel( MAIN_BANNER_MODEL );
 	VectorCopy( origin, ent.origin );
 	VectorCopy( origin, ent.lightingOrigin );
 	ent.renderfx = RF_LIGHTING_ORIGIN | RF_NOSHADOW;
@@ -269,7 +269,7 @@ void UI_MainMenu( void ) {
 
 	// com_errorMessage would need that too
 	MainMenu_Cache();
-	
+
 	trap_Cvar_VariableStringBuffer( "com_errorMessage", s_errorMessage.errorMessage, sizeof(s_errorMessage.errorMessage) );
 	if ( s_errorMessage.errorMessage[0] )
 	{	
@@ -396,6 +396,5 @@ void UI_MainMenu( void ) {
 	trap_Key_SetCatcher( KEYCATCH_UI );
 	uis.menusp = 0;
 	UI_PushMenu ( &s_main.menu );
-	trap_Cvar_Set("ui_breadCrumb", "MAIN MENU");
 		
 }

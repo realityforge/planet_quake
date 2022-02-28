@@ -285,7 +285,11 @@ qhandle_t RE_RegisterModel( const char *name )
 	//
 	for ( hModel = 1 ; hModel < tr.numModels; hModel++ ) {
 		mod = tr.models[hModel];
-		if ( !strcmp( mod->name, name ) ) {
+		if ( !strcmp( mod->name, name ) 
+#if defined(USE_MULTIVM_CLIENT) || defined(USE_LAZY_LOAD)
+			&& mod->lastTimeUsed == tr.lastRegistrationTime
+#endif
+		) {
 #ifdef USE_LAZY_LOAD
 			found = qtrue;
 			// break instead in-case its time to re-load the model after download
@@ -313,6 +317,7 @@ qhandle_t RE_RegisterModel( const char *name )
 		ri.Printf( PRINT_WARNING, "RE_RegisterModel: R_AllocModel() failed for '%s'\n", name);
 		return 0;
 	}
+	mod->lastTimeUsed = tr.lastRegistrationTime;
 
 	// only set the name after the model has been successfully loaded
 	Q_strncpyz( mod->name, name, sizeof( mod->name ) );

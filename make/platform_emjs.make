@@ -1,6 +1,7 @@
 USE_RENDERER_DLOPEN := 0
 USE_BOTLIB_DLOPEN   := 0
 USE_SYSTEM_JPEG     := 0
+USE_INTERNAL_JPEG   := 1
 USE_CURL            := 0
 USE_OPENGL2         := 1
 USE_VULKAN          := 0

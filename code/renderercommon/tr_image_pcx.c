@@ -66,10 +66,6 @@ void R_LoadPCX ( const char *filename, byte **pic, int *width, int *height)
 	int	i;
 	unsigned size = 0;
 
-#ifdef __WASM__
-return;
-#endif
-
 	if (width)
 		*width = 0;
 	if (height)

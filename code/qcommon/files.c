@@ -595,6 +595,7 @@ static int lastVersionTime = 0;
 
 void Sys_UpdateNeeded( int tableId, char *ready, char *downloadNeeded ) {
 	downloadLazy_t* *downloadTable = downloadTables[tableId];
+	downloadLazy_t *download;
 	int time = Sys_Milliseconds();
 	ready[0] = 0;
 	if(downloadNeeded) {
@@ -604,34 +605,30 @@ void Sys_UpdateNeeded( int tableId, char *ready, char *downloadNeeded ) {
 	// TODO: loop over readyFiles instead?
 	for(int i = 0; i < PK3_HASH_SIZE; i++) {
     if(downloadTable[i] != NULL) {
-			if(downloadTable[i]->downloaded) {
-				continue;
-			}
-			if(!downloadTable[i]->ready) {
-				if(!downloadNeeded) {
-					// NULL when alread set but still looking for a ready file on a different table
-				} else
-				if(downloadNeeded[0] == '\0') {
-					if(time - downloadTable[i]->lastRequested > 1500) {
-						downloadTable[i]->lastRequested = time;
-						// copy name in case it gets deleted somehow
-						strcpy(downloadNeeded, downloadTable[i]->downloadName);
-					} else {
-						//Com_Printf("delayed: %i\n", time - downloadTable[i]->lastRequested );
+			download = downloadTable[i];
+			do {
+				if(download->downloaded) {
+					continue;
+				}
+				if(download->ready && ready[0] == '\0') {
+					memcpy(ready, download->loadingName, MAX_OSPATH);
+					download->downloaded = qtrue; // incase its not cleared right away
+					continue;
+				}
+				if(!download->ready && downloadNeeded && downloadNeeded[0] == '\0') {
+					if(time - download->lastRequested > 1500) {
+						download->lastRequested = time;
+						strcpy(downloadNeeded, download->downloadName);
 					}
 				}
-				continue;
-			} else if (ready[0] != 0) {
-				if(!downloadNeeded || (*downloadNeeded))
-					break; // we have both set
-				continue; // only set once
+				if((!downloadNeeded || downloadNeeded[0] != '\0') && ready[0] != '\0') {
+					// we have both set
+					break;
+				}
+			} while((download = download->next) != NULL);
+			if((!downloadNeeded || downloadNeeded[0] != '\0') && ready[0] != '\0') {
+				break;
 			}
-      //downloadLazy_t *next = downloadTable[i]->next;
-			// don't memcpy because it has 2 paths in 1 string
-			memcpy(ready, downloadTable[i]->loadingName, MAX_OSPATH);
-			downloadTable[i]->downloaded = qtrue; // incase its not cleared right away
-      //Z_Free(downloadTable[i]);
-      //downloadTable[i] = next;
     }
   }
 }
@@ -649,7 +646,7 @@ void Sys_FileNeeded(const char *needs, qboolean isDirectoryIndex) {
 	filename[0] = '\0';
 
 	// skip leading slashes
-	while ( *filename == '/' || *filename == '\\' )
+	while ( *needs == '/' || *needs == '\\' )
 		needs++;
 
 	if(!Q_stristr(needs, FS_GetCurrentGameDir())) {
@@ -744,7 +741,7 @@ void Sys_FileNeeded(const char *needs, qboolean isDirectoryIndex) {
 	}
 
 	assert(!Q_stristr(filename, stupidPathError));
-	Com_Printf("file needed! %s %s %i\n", filename, loading, hash);
+	//Com_Printf("file needed! %s %s %i\n", filename, loading, hash);
 }
 
 
@@ -917,8 +914,11 @@ void MakeDirectoryBuffer(char *paths, int count, int length, const char *localna
 			//!strrchr(currentPath, '.')
 			//&& (Q_stristr(currentPath, "/maps")
 			//|| Q_stristr(currentPath, "/vm")
+			|| Q_stristr(currentPath, ".cfg")
 			|| (Q_stristr(currentPath, "/scripts/")
-			&& Q_stristr(currentPath, ".shader"))
+			&& (Q_stristr(currentPath, ".shader") 
+				|| Q_stristr(currentPath, "arenas.txt")
+				|| Q_stristr(currentPath, ".arena")))
 		) {
 			// TODO: fix this, only works if directory listing allows slashes at the end?
 			// TODO: right thing to do would be test the content-type and duck out early 
@@ -1035,7 +1035,7 @@ void Sys_FileReady(const char *filename, const char* tempname) {
 
 void FS_UpdateFiles(const char *filename, const char *tempname) {
 
-Com_Printf("updating files: %s -> %s\n", filename, tempname);
+//Com_Printf("updating files: %s -> %s\n", filename, tempname);
 
 #if defined(USE_LIVE_RELOAD) || defined(__WASM__)
 	if(Q_stristr(tempname, "version.json")) {
@@ -1149,9 +1149,14 @@ static void FS_CheckIndex(long fullHash, const char *filename, qboolean isNotFou
 	const char *s;
 	int hash;
 	fileInPack_t *file;
+	qboolean isDirectoryInIndex = qfalse;
 	qboolean isInIndex = qfalse;
 
-Com_Printf("searching index for %s\n", filename);
+	firstDirectory[0] = '\0';
+	lastDirectory[0] = '\0';
+
+
+//Com_Printf("searching index for %s\n", filename);
 
 	if(!fullHash) {
 		fullHash = FS_HashFileName( filename, 0U );
@@ -1159,6 +1164,41 @@ Com_Printf("searching index for %s\n", filename);
 
 	for ( search = fs_searchpaths ; search ; search = search->next ) {
 		if(search->dir && search->dir->hashTable) {
+
+			// search the index again but for the first folder name, if it exists
+			//   then make the needed request for the parent directory and the file
+			// only look recursively when a file is not found
+			if(isNotFound && (s = strchr(filename, '/'))) {
+				Q_strncpyz(firstDirectory, filename, (s-filename)+1);
+				firstDirectory[(s-filename)] = '/';
+				firstDirectory[(s-filename)+1] = '\0';
+				Q_strncpyz(lastDirectory, filename, sizeof(lastDirectory));
+				s = strrchr(lastDirectory, '/');
+				if(s) {
+					lastDirectory[s-lastDirectory] = '/';
+					lastDirectory[s-lastDirectory+1] = '\0';
+				} else {
+					lastDirectory[0] = '\0';
+				}
+
+				// try to reduce the number of mis-fires once a directory has been received
+				hash = FS_HashPK3(firstDirectory);
+				if((file = FindFileInIndex(hash, firstDirectory, search->dir->hashTable))) {
+					isDirectoryInIndex = qtrue;
+				} else {
+					Sys_FileNeeded(filename, filename[strlen(filename)-1] == '/');
+				}
+
+				if(lastDirectory[0]) {
+					hash = FS_HashPK3(lastDirectory);
+					if((file = FindFileInIndex(hash, lastDirectory, search->dir->hashTable))) {
+						isDirectoryInIndex = qtrue;
+					} else {
+						Sys_FileNeeded(filename, filename[strlen(filename)-1] == '/');
+					}
+				}
+			}
+
 			// check the current index for the requested file
 			hash = fullHash & (search->dir->hashSize-1);
 			if((file = FindFileInIndex(hash, filename, search->dir->hashTable))) {
@@ -1167,45 +1207,18 @@ Com_Printf("searching index for %s\n", filename);
 
 			// test if the file exists once anyways if we havent received a
 			//   real index from the server and are working off HTTP
-			if((!isInIndex && isNotFound)
+			if((!isInIndex || !isDirectoryInIndex)
 #if defined(USE_LIVE_RELOAD) || defined(__WASM__)
-				|| (isInIndex && file->mtime < lastVersionTime)
+				|| (file && file->mtime < lastVersionTime)
 #endif
 			) {
-					Sys_FileNeeded(filename, qfalse);
+				Sys_FileNeeded(filename, filename[strlen(filename)-1] == '/');
+				// found something!
+				break;
 			} else {
 				continue;
 			}
-
-			// search the index again but for the first folder name, if it exists
-			//   then make the needed request for the parent directory and the file
-			if(!(s = strchr(filename, '/'))) {
-				break;
-			}
-
-			firstDirectory[0] = '\0';
-			lastDirectory[0] = '\0';
-
-			Q_strncpyz(firstDirectory, filename, (s-filename)+1);
-			firstDirectory[(s-filename)] = '\0';
-			Q_strncpyz(lastDirectory, s+1, sizeof(lastDirectory));
-			lastDirectory[strlen(s+1)] = '\0';
-			s = strrchr(lastDirectory, '/');
-			if(s) {
-				lastDirectory[s-lastDirectory] = '\0';
-			} else {
-				lastDirectory[0] = '\0';
-			}
-
-			FS_CheckIndex(0, firstDirectory, qfalse);
-			if(lastDirectory[0]) {
-				FS_CheckIndex(0, lastDirectory, qfalse);
-			}
-
-			// found something!
-			break;
 		}
-
 	}
 
 }

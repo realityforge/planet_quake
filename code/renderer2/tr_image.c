@@ -2369,8 +2369,10 @@ static imageExtToLoaderMap_t imageLoaders[ ] =
 	{ "tga",  R_LoadTGA },
 	{ "jpg",  R_LoadJPG },
 	{ "jpeg", R_LoadJPG },
+#ifndef __WASM__
 	{ "pcx",  R_LoadPCX },
-	{ "bmp",  R_LoadBMP }
+	{ "bmp",  R_LoadBMP },
+#endif
 };
 
 static int numImageLoaders = ARRAY_LEN( imageLoaders );
@@ -2595,6 +2597,7 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, imgFlags_t flags )
 		return NULL;
 	}
 
+// TODO: skip this entirely and upload directly to openGL then insert the image handle here for future use
 
 #ifdef USE_LAZY_LOAD
 	if((flags & IMGFLAG_FORCELAZY) && name[0] != '*') {

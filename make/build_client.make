@@ -26,6 +26,9 @@ include make/game_baseq3a.make
 endif
 endif
 
+ifeq ($(USE_INTERNAL_JPEG),1)
+include make/lib_jpeg.make
+endif
 
 ifneq ($(USE_RENDERER_DLOPEN),1)
 ifneq ($(USE_OPENGL2),1)
@@ -215,6 +218,10 @@ else
 
 endif
 endif
+endif
+
+ifeq ($(USE_INTERNAL_JPEG),1)
+Q3OBJ            += $(JPEGOBJS)
 endif
 
 export INCLUDE   := $(foreach dir,$(INCLUDES),-I$(dir))

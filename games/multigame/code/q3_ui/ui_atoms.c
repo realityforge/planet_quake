@@ -60,6 +60,23 @@ void UI_StartDemoLoop( void ) {
 }
 #endif
 
+void UI_SetBreadCrumb( void ) {
+	int i;
+	menucommon_s	*itemptr;
+	menuframework_s *menu = uis.activemenu;
+	for (i=0; i<menu->nitems; i++) {
+		itemptr = (menucommon_s*)menu->items[i];
+		if(itemptr->type == MTYPE_BTEXT) {
+			trap_Cvar_Set("ui_breadCrumb", ((menutext_s*)itemptr)->string);
+			return;
+		}
+	}
+	if(uis.menusp == 1) {
+		trap_Cvar_Set("ui_breadCrumb", "MAIN MENU");
+	}
+	Menu_Cache();
+}
+
 /*
 =================
 UI_PushMenu
@@ -89,6 +106,7 @@ void UI_PushMenu( menuframework_s *menu )
 	}
 
 	uis.activemenu = menu;
+	UI_SetBreadCrumb();
 
 	// default cursor position
 	menu->cursor      = 0;
@@ -130,6 +148,7 @@ void UI_PopMenu (void)
 	if (uis.menusp) {
 		uis.activemenu = uis.stack[uis.menusp-1];
 		uis.firstdraw = qtrue;
+		UI_SetBreadCrumb();
 	}
 	else {
 		UI_ForceMenuOff ();
@@ -803,9 +822,13 @@ void UI_SetActiveMenu( uiMenuCommand_t menu, const char *breadcrumb ) {
 	switch ( menu ) {
 	case UIMENU_NONE:
 		if(breadcrumb) {
-			if(Q_stristr(breadcrumb, "main")) {
+			if(Q_stristr(breadcrumb, "chooselevel")) {
+				UI_SPLevelMenu();
+			} else
+			if(Q_stristr(breadcrumb, "mainmenu")) {
 				UI_SetActiveMenu(UIMENU_MAIN, NULL);
-			} else if (Q_stristr(breadcrumb, "multiplayer")) {
+			} else 
+			if (Q_stristr(breadcrumb, "multiplayer")) {
 				UI_ArenaServersMenu();
 				return;
 			}
@@ -1087,7 +1110,7 @@ void UI_Init( void ) {
 	UI_VideoCheck( -99999 );
 
 	// initialize the menu system
-	Menu_Cache();
+	UI_Cache_f();
 
 	uis.activemenu = NULL;
 	uis.menusp     = 0;
@@ -1213,6 +1236,7 @@ void UI_UpdateScreen( void ) {
 UI_Refresh
 =================
 */
+static int breadcrumbModificationCount = 0;
 static int goddamnit;
 void UI_Refresh( int realtime )
 {
@@ -1231,6 +1255,12 @@ void UI_Refresh( int realtime )
 	
 	if ( uis.activemenu )
 	{
+		if(ui_breadCrumb.modificationCount > breadcrumbModificationCount)
+		{
+			Com_Printf("changing breadcrumb %s\n", ui_breadCrumb.string);
+			breadcrumbModificationCount = ui_breadCrumb.modificationCount;
+			UI_SetActiveMenu(UIMENU_NONE, ui_breadCrumb.string);
+		}
 		if (uis.activemenu->fullscreen)
 		{
 
@@ -1246,7 +1276,7 @@ void UI_Refresh( int realtime )
 			*/
 			if(realtime - goddamnit > 1000) {
 				goddamnit = realtime;
-Com_Printf("wtf 7? %i\n", uis.menuBackShader);
+Com_Printf("wtf 8? %i\n", uis.menuBackShader);
 			}
 
 			// draw the background

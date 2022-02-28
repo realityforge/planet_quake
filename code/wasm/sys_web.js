@@ -6,30 +6,6 @@ if(typeof global != 'undefined' && typeof global.window == 'undefined') {
 var Q3e = {}
 window.Q3e = Q3e
 
-let startup = [
-  'quake3e_web',
-  '+set', 'developer', '0',
-  '+set', 'fs_basepath', '/base',
-  '+set', 'fs_homepath', '/home',
-  '+set', 'sv_pure', '0', // require for now, TODO: server side zips
-  '+set', 'fs_basegame', 'multigame',
-  '+set', 'cl_dlURL', '"http://local.games:8080/multigame"',
-  '+set', 'r_ext_framebuffer_object', '0',
-
-  //'+set', 'r_ext_multitexture', '0',
-  //'+set', 'r_ext_framebuffer_multisample', '0',
-  //'+set', 'r_ext_framebuffer_object', '0',
-  // this prevents lightmap from being wrong when switching maps
-  //   renderer doesn't restart between maps, but BSP loading updates
-  //   textures with lightmap by default, so this keeps them separate
-  //'+set', 'r_mergeLightmaps', '0',
-  //'+set', 'r_deluxeMapping', '0',
-  //'+set', 'r_normalMapping', '0',
-  //'+set', 'r_specularMapping', '0',
-
-
-];
-
 // unfuck some window variables because emscripten has to interfere with everything and rename
 //   everything to match some atiquated compiler output that adds underscores to all names
 Object.assign(window, SYS)
@@ -119,6 +95,7 @@ Module['onRuntimeInitialized'] = function () {
     }
   
     // Startup args is expecting a char **
+    let startup = getQueryCommands()
     _RunGame(startup.length, stringsToMemory(startup))
     // should have Cvar system by now
     let fps = Cvar_VariableIntegerValue(stringToAddress('com_maxfps'))

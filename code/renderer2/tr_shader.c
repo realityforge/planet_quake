@@ -3648,7 +3648,7 @@ shader_t *R_FindShaderByName( const char *name )
 #ifdef USE_LAZY_LOAD
       && sh->defaultShader == isDefault
 #endif
-#ifdef USE_MULTIVM_CLIENT
+#if defined(USE_MULTIVM_CLIENT) || defined(USE_LAZY_LOAD)
 			&& sh->lastTimeUsed == tr.lastRegistrationTime
 #endif
     ) {
@@ -3733,11 +3733,11 @@ shader_t *R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImag
 		// with that same strippedName a new default shader is created.
     if ( (sh->lightmapSearchIndex == lightmapIndex || sh->defaultShader)
       && !Q_stricmp(sh->name, strippedName)
+#if defined(USE_MULTIVM_CLIENT) || defined(USE_LAZY_LOAD)
+			&& sh->lastTimeUsed == tr.lastRegistrationTime
+#endif
 #ifdef USE_LAZY_LOAD
       && (!mapShaders && sh->lightmapSearchIndex == lightmapIndex)
-#endif
-#ifdef USE_MULTIVM_CLIENT
-			&& sh->lastTimeUsed == tr.lastRegistrationTime
 #endif
     ) {
 			// match found
@@ -3889,7 +3889,7 @@ qhandle_t RE_RegisterShaderFromImage(const char *name, int lightmapIndex, image_
 		// have to check all default shaders otherwise for every call to R_FindShader
 		// with that same strippedName a new default shader is created.
 		if ( (sh->lightmapSearchIndex == lightmapIndex || sh->defaultShader) && !Q_stricmp(sh->name, name)
-#ifdef USE_MULTIVM_CLIENT
+#if defined(USE_MULTIVM_CLIENT) || defined(USE_LAZY_LOAD)
 			&& sh->lastTimeUsed == tr.lastRegistrationTime
 #endif
 		) {
@@ -4524,31 +4524,46 @@ void RE_ReloadShaders( qboolean createNew ) {
   int i;
   tr.lastRegistrationTime = ri.Milliseconds();
 
-  R_IssuePendingRenderCommands();
-  tr.visIndex = 0;
-  RE_ClearScene();
-  
-  GLSL_InitGPUShaders();
+#ifdef USE_MULTIVM_CLIENT
+	if(createNew) {
+		int i;
+		for(i = 0; i < MAX_NUM_WORLDS; i++) {
+			if(!trWorlds[i].world) {
+				break;
+			}
+		}
+		rwi = i;
+		//printf("starting world: %i -> %i\n", rwi, tr.numShaders);
+	}
+	if(rwi != 0) {
+		memcpy(&trWorlds[rwi], &trWorlds[0], sizeof(trGlobals_t));
+		//tr.numSkins = 0;
+		//tr.numShaders = 0;
+		//tr.numLightmaps = 0;
+		//tr.numModels = 0;
+		trWorlds[rwi].world = NULL;
+  	tr.visIndex = 0;
+	}
+#endif
 
-  // remove lightmaps
-  if(!createNew) {
-    // Gets reassigned on subsequent loads
-    for(i=0;i<tr.numLightmaps;i++) {
-      image_t *img = tr.lightmaps[i];
-      if(img->texnum)
-        qglDeleteTextures( 1, &img->texnum );
-      Com_Memset(img, 0, sizeof( *img ));
-    }
-    tr.lightmaps = NULL;
-    tr.numLightmaps = 0;
-  }
-  
   // TODO: keep separate lists of images in case they have the same name
   //   but from different gamedir sources
 
   ScanAndLoadShaderFiles();
 
   GL_SetDefaultState();
+
+	// quickly recheck any missing
+#ifdef USE_LAZY_LOAD
+	if(r_lazyLoad->integer != 2) // TODO: _lazyLoad->integer != 4
+#endif
+	for(int i = 0; i < tr.numShaders; i++) {
+		//RE_RegisterShader(tr.shaders[i]->name);
+	}
+	for(int i = 0; i < tr.numModels; i++) {
+		//RE_RegisterModel(tr.models[i]->name);
+	}
+
 }
 #endif
 

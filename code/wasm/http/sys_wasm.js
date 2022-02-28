@@ -20,22 +20,10 @@ function startProgram(program) {
   Q3e['sharedMemory'] = malloc(1024 * 1024) // store some strings and crap
   Q3e['sharedCounter'] = 0
 
-  // Wow, look at all the unfuckery I don't have to do with startup options because
-  //   I'm not using emscripten anymore.
-  let startup = [
-    'quake3e_web',
-    '+set', 'developer', '1',
-    '+set', 'fs_basepath', '/base',
-    '+set', 'fs_homepath', '/home',
-    '+set', 'sv_pure', '0', // require for now, TODO: server side zips
-    '+set', 'fs_basegame', 'multigame',
-    '+set', 'cl_dlURL', '"http://local.games:8080/multigame"',
-
-  ];
-
   // start a brand new call frame, in-case error bubbles up
   setTimeout(function () {
     try {
+      let startup = getQueryCommands()
       // Startup args is expecting a char **
       RunGame(startup.length, stringsToMemory(startup))
       Q3e.frameInterval = setInterval(function () {

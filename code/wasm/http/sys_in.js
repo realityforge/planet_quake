@@ -53,7 +53,7 @@ function GLimp_StartDriverAndSetMode(mode, modeFS, fullscreen, fallback) {
 
   // set the window to do the grabbing, when ungrabbing this doesn't really matter
   if(!INPUT.firstClick) {
-    Q3e.canvas.requestPointerLock();
+    //Q3e.canvas.requestPointerLock();
   } else {
     SDL_ShowCursor()
   }
@@ -114,14 +114,17 @@ const KEYCATCH_MESSAGE =  0x0004
 const KEYCATCH_CGAME   =  0x0008
 
 function InputPushFocusEvent (evt) {
-  if (document.visibilityState === 'visible'
-    & (typeof evt.visible === 'undefined' || evt.visible !== false)) {
+  if(evt.type == 'pointerlockchange') {
+    HEAP32[gw_active >> 2] = (document.pointerLockElement === Q3e.canvas)
+    return
+  }
+  if (document.visibilityState != 'visible' || evt.type == 'blur') {
     Key_ClearStates();
-    gw_active = false;
+    HEAP32[gw_active >> 2] = false;
   } else {
     Key_ClearStates();
-    gw_active = true;
-    gw_minimized = false;
+    HEAP32[gw_active >> 2] = true;
+    HEAP32[gw_minimized >> 2] = false;
   }
 }
 
@@ -193,7 +196,8 @@ function InputPushKeyEvent(evt) {
   }
   if(evt.keyCode === 27) {
     INPUT.cancelBackspace = true;
-    InputPushFocusEvent({visible: false})
+    SDL_ShowCursor()
+    HEAP32[gw_active >> 2] = false
   }
 
   checkPasteEvent(evt)
@@ -213,39 +217,45 @@ function InputPushKeyEvent(evt) {
 
     if ( evt.keyCode == 8 /* BAKCSPACE */ )
       Sys_QueEvent( Sys_Milliseconds(), SE_CHAR, 8, 0, 0, null );
-
-    if ( evt.keyCode ) {
-      if(evt.keyCode >= 65 && evt.keyCode <= 90) {
-
-      }
-      Sys_QueEvent( Sys_Milliseconds(), SE_KEY, evt.keyCode, true, 0, null );
-
-      if( evt.ctrlKey && key >= 'a' && evt.keyCode <= 'z' ) {
-        Sys_QueEvent( Sys_Milliseconds(), SE_CHAR, evt.keyCode-'a'+1, 0, 0, null );
-      }
-    }
-  } else if (evt.type == 'keyup') {
-    Sys_QueEvent( Sys_Milliseconds(), SE_KEY, evt.keyCode, false, 0, null );
   }
 
+  if( evt.ctrlKey && key >= 'a' && evt.keyCode <= 'z' ) {
+    Sys_QueEvent( Sys_Milliseconds(), SE_CHAR, evt.charCode-('a'.charCodeAt(0))+1, 0, 0, null );
+  } else
+
+  if(evt.keyCode >= 65 && evt.keyCode <= 90) {
+    Sys_QueEvent( Sys_Milliseconds(), SE_KEY, 
+      INPUT.keystrings['a'] + (evt.keyCode - 65), evt.type == 'keydown', 0, null );
+  } else 
+
+  if(evt.keyCode == 13) {
+    Sys_QueEvent( Sys_Milliseconds(), SE_KEY, 
+      INPUT.keystrings['ENTER'], evt.type == 'keydown', 0, null );
+  }
+
+  if(evt.keyCode == 27) {
+    Sys_QueEvent( Sys_Milliseconds(), SE_KEY, 
+      INPUT.keystrings['ESC'], evt.type == 'keydown', 0, null );
+  }
 }
 
 function InputPushTextEvent (evt) {
   if(!INPUT.consoleKeys) {
     INPUT.consoleKeys = addressToString(Cvar_VariableString(stringToAddress('cl_consoleKeys')))
+      .split(' ').map(c => c[0] == '0' && c[1] == 'x' ? String.fromCharCode(parseInt(c.substr(2), 16)) : c)
   }
-  // quick and dirty utf conversion?
-  if ( INPUT.consoleKeys.includes(evt.key) )
+  if ( INPUT.consoleKeys.includes(String.fromCharCode(evt.charCode)) )
   {
     Sys_QueEvent( Sys_Milliseconds(), SE_KEY, INPUT.keystrings['CONSOLE'], true, 0, null )
     Sys_QueEvent( Sys_Milliseconds(), SE_KEY, INPUT.keystrings['CONSOLE'], false, 0, null )
     setTimeout(function () {
       if(Key_GetCatcher() & KEYCATCH_CONSOLE) {
         SDL_ShowCursor()
-      } else {
+        HEAP32[gw_active >> 2] = false
+      } /* else {
         if(!INPUT.firstClick)
           Q3e.canvas.requestPointerLock();      
-      }
+      } */
     }, 100)
   } else {
     Sys_QueEvent( Sys_Milliseconds(), SE_CHAR, evt.charCode, 0, 0, null )
@@ -279,18 +289,27 @@ function InputPushWheelEvent(evt) {
 
 
 function InputPushMouseEvent (evt) {
+  let down = evt.type == 'mousedown'
+	if ( Key_GetCatcher() & KEYCATCH_CONSOLE ) {
+    if(HEAP32[gw_active >> 2]) {
+      SDL_ShowCursor()
+      HEAP32[gw_active >> 2] = false
+    }
+    //INPUT.firstClick = true
+    return;
+  }
   if (evt.type != 'mousemove') {
-    let down = evt.type == 'mousedown'
     // TODO: fix this maybe?
     //if(!mouseActive || in_joystick->integer) {
     //  return;
     //}
-    if(down) {
+    if(down && !HEAP32[gw_active >> 2]) {
       // TODO: start sound, capture mouse
-      if(INPUT.firstClick && !(Key_GetCatcher() & KEYCATCH_CONSOLE)) {
+      //if(INPUT.firstClick) {
+        HEAP32[gw_active >> 2] = true
         Q3e.canvas.requestPointerLock();
         INPUT.firstClick = false
-      }
+      //}
     }
     Sys_QueEvent( Sys_Milliseconds(), SE_KEY, 
       INPUT.keystrings['MOUSE1'] + evt.button, down, 0, null );
@@ -311,6 +330,7 @@ function InputInit () {
   window.addEventListener('keypress', InputPushTextEvent, false)
   window.addEventListener('mouseout', InputPushMovedEvent, false)
   window.addEventListener('resize', resizeViewport, false)
+  window.addEventListener('popstate', CL_ModifyMenu, false)
 
   Q3e.canvas.addEventListener('mousemove', InputPushMouseEvent, false)
   Q3e.canvas.addEventListener('mousedown', InputPushMouseEvent, false)
@@ -318,6 +338,8 @@ function InputInit () {
   
   document.addEventListener('mousewheel', InputPushWheelEvent, {capture: false, passive: true})
   document.addEventListener('visibilitychange', InputPushFocusEvent, false)
+  document.addEventListener('focus', InputPushFocusEvent, false)
+  document.addEventListener('blur', InputPushFocusEvent, false)
   //document.addEventListener('drop', SYSI.dropHandler, false)
   //document.addEventListener('dragenter', SYSI.dragEnterHandler, false)
   //document.addEventListener('dragover', SYSI.dragOverHandler, false)
@@ -401,12 +423,16 @@ function GLimp_Shutdown(destroy) {
   window.removeEventListener('keydown', InputPushKeyEvent)
   window.removeEventListener('keyup', InputPushKeyEvent)
   window.removeEventListener('keypress', InputPushTextEvent)
+  window.removeEventListener('popstate', CL_ModifyMenu)
 
   document.removeEventListener('mousewheel', InputPushWheelEvent)
   document.removeEventListener('visibilitychange', InputPushFocusEvent)
+  document.removeEventListener('focus', InputPushFocusEvent)
+  document.removeEventListener('blur', InputPushFocusEvent)
   //document.removeEventListener('drop', dropHandler)
   //document.removeEventListener('dragenter', SYSI.dragEnterHandler)
   //document.removeEventListener('dragover', SYSI.dragOverHandler)
+  document.removeEventListener('pointerlockchange', InputPushFocusEvent);
 
   if (destroy && Q3e.canvas) {
     Q3e.canvas.removeEventListener('mousemove', InputPushMouseEvent)

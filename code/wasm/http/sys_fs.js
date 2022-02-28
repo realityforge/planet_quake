@@ -2,19 +2,15 @@
 var DB_STORE_NAME = 'FILE_DATA';
 
 function openDatabase() {
-  if(!FS.open || Date.now() - FS.openTime > 1000) {
+  if(!FS.open || Date.now() - FS.openTime > 3000) {
     FS.openTime = Date.now()
     FS.open = indexedDB.open('/base', 22)
-    FS.promise = new Promise(function (resolve) {
-      FS.resolve = resolve
-    })
   }
-  FS.open.onsuccess = function () {
-    FS.database = FS.open.result
+  FS.open.onsuccess = function (evt) {
+    FS.database = evt.target.result
     //if(!Array.from(FS.database.objectStoreNames).includes(DB_STORE_NAME)) {
     //  FS.database.createObjectStore(DB_STORE_NAME)
     //}
-    FS.resolve()
   }
   FS.open.onupgradeneeded = function () {
     let fileStore = FS.open.result.createObjectStore(DB_STORE_NAME)
@@ -30,14 +26,6 @@ function openDatabase() {
 function writeStore(value, key) {
   if(!FS.database) {
     openDatabase()
-    new Promise(function (resolve2) {
-      let oldResolve = FS.resolve
-      FS.resolve = function () {
-        oldResolve()
-        writeStore(value, key)
-        resolve2()
-      }
-    })
     return
   }
   let transaction = FS.database.transaction([DB_STORE_NAME], 'readwrite');
@@ -62,17 +50,20 @@ function writeStore(value, key) {
 
 
 function Sys_Mkdir(filename) {
-  let nameStr = addressToString(filename)
+  let fileStr = addressToString(filename)
+  let localName = fileStr
+  if(localName[0] == '/')
+    localName = localName.substring(1)
   if(!FS.database) {
     openDatabase()
   }
-  FS.virtual[nameStr] = {
+  FS.virtual[localName] = {
     timestamp: new Date(),
     mode: 16895,
   }
   // async to filesystem
   // does it REALLY matter if it makes it? wont it just redownload?
-  writeStore(FS.virtual[nameStr], nameStr)
+  writeStore(FS.virtual[localName], localName)
 
 }
 
@@ -200,18 +191,33 @@ function Sys_ListFiles (directory, extension, filter, numfiles, wantsubs) {
       size: 1024,
     }
   }
+  // TODO: don't combine /home and /base?
+  let localName = addressToString(directory)
+  if(localName.startsWith('/base')
+    || localName.startsWith('/home'))
+    localName = localName.substring('/base'.length)
+  if(localName[0] == '/')
+    localName = localName.substring(1)
+  let extensionStr = addressToString(extension)
   //let matches = []
   // can't use utility because FS_* frees and moves stuff around
   let matches = Object.keys(FS.virtual).filter(function (key) { 
-    return (!extension || key.endsWith(extension))
+    return (!extensionStr || key.endsWith(extensionStr))
       // TODO: match directory 
+      && (!localName || key.startsWith(localName))
       && (!wantsubs || FS.virtual[key].mode == 16895)
   })
   // return a copy!
   let listInMemory = Z_Malloc( ( matches.length + 1 ) * 4 )
   for(let i = 0; i < matches.length; i++) {
+    let relativeName = matches[i]
+    if(localName && relativeName.startsWith(localName)) {
+      relativeName = relativeName.substring(localName.length)
+    }
+    if(relativeName[0] == '/')
+      relativeName = relativeName.substring(1)
     //matches.push(files[i])
-    HEAP32[(listInMemory + i*4)>>2] = FS_CopyString(stringToAddress(matches[i]));
+    HEAP32[(listInMemory + i*4)>>2] = FS_CopyString(stringToAddress(relativeName));
   }
   HEAP32[numfiles >> 2] = matches.length
   // skip address-list because for-loop counts \0 with numfiles

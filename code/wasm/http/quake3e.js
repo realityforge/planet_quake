@@ -5,6 +5,49 @@ if(typeof global != 'undefined' && typeof global.window == 'undefined') {
 var Q3e = {}
 window.Q3e = Q3e
 
+function getQueryCommands() {
+  // Wow, look at all the unfuckery I don't have to do with startup options because
+  //   I'm not using emscripten anymore.
+  let startup = [
+    'quake3e_web',
+    '+set', 'developer', '0',
+    '+set', 'fs_basepath', '/base',
+    '+set', 'fs_homepath', '/home',
+    '+set', 'sv_pure', '0', // require for now, TODO: server side zips
+    '+set', 'fs_basegame', 'multigame',
+    '+set', 'cl_dlURL', '"http://local.games:8080/multigame"',
+    '+set', 'r_mode', '-1',
+    '+set', 'r_ext_framebuffer_object', '0',
+
+    //'+set', 'r_ext_multitexture', '0',
+    //'+set', 'r_ext_framebuffer_multisample', '0',
+    // this prevents lightmap from being wrong when switching maps
+    //   renderer doesn't restart between maps, but BSP loading updates
+    //   textures with lightmap by default, so this keeps them separate
+    //'+set', 'r_mergeLightmaps', '0',
+    //'+set', 'r_deluxeMapping', '0',
+    //'+set', 'r_normalMapping', '0',
+    //'+set', 'r_specularMapping', '0',
+
+
+  ];
+  var search = /([^&=]+)/g
+  var query  = window.location.search.substring(1)
+  var match
+  while (match = search.exec(query)) {
+    var val = decodeURIComponent(match[1])
+    val = val.split(' ')
+    val[0] = (val[0][0] != '+' ? '+' : '') + val[0]
+    startup.push.apply(startup, val)
+  }
+  startup.unshift.apply(startup, [
+    '+set', 'r_fullscreen', window.fullscreen ? '1' : '0',
+    '+set', 'r_customHeight', '' + window.innerHeight || 0,
+    '+set', 'r_customWidth', '' + window.innerWidth || 0,
+  ])
+  return startup
+}
+
 function Sys_UnloadLibrary() {
 
 }
@@ -91,6 +134,33 @@ function Sys_SetStatus(status, replacementStr) {
   */
 }
 
+function CL_MenuModified(oldValue, newValue, cvar) {
+  if(INPUT.modifyingCrumb) {
+    return // called from ourselves below from a user action
+  }
+  let newValueStr = addressToString(newValue)
+  let newLocation = newValueStr.replace(/[^a-z0-9]/gi, '')
+  //if(newValueStr.includes('MAIN MENU')) {
+  if(!Q3e.initialized) {
+    Q3e.initialized = true
+    document.body.className += ' done-loading '
+  }
+  //}
+  if(window.location.pathname.toString().includes(newLocation)) {
+    return // don't add to stack because it creates a lot of annoying back pushes
+  }
+  history.pushState(
+    {location: window.location.pathname}, 
+    'Quake III Arena: ' + newValueStr, 
+    newLocation)
+}
+
+function CL_ModifyMenu(event) {
+  let oldLocation = window.location.pathname.toString().substring(1) || 'MAIN MENU'
+  Cbuf_AddText( stringToAddress(`set ui_breadCrumb "${oldLocation}"\n`) );
+}
+
+
 var SYS = {
   DebugBreak: function () { debugger; },
   Sys_RandomBytes: Sys_RandomBytes,
@@ -113,18 +183,6 @@ var SYS = {
   popen: function popen() {},
   Sys_Print: Sys_Print,
   Sys_SetStatus: Sys_SetStatus,
-  CL_MenuModified: function (oldValue, newValue, cvar) {
-    let desc = addressToString(newValue)
-    if(desc.includes('MAIN MENU')) {
-      if(!Q3e.initialized) {
-        Q3e.initialized = true
-        document.body.className += ' done-loading '
-      }
-    }
-    window.title = 'Quake III Arena: ' + desc
-    history.pushState(
-      {location: window.location.toString()}, 
-      window.title, 
-      './' + desc.replace(/[^a-z0-9]/gi, ''))
-  }
+  CL_MenuModified: CL_MenuModified,
+
 }

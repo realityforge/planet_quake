@@ -1,4 +1,6 @@
+const { execSync } = require('child_process');
 const express = require('express');
+const { sendFile } = require('express/lib/response');
 const fs = require('fs');
 const path = require('path')
 const serveIndex = require('serve-index');
@@ -37,11 +39,78 @@ app.use('/multigame/vm/', express.static(BUILD_DIRECTORY + 'debug-win-x86_64/mul
 
 app.use('/multigame/', serveIndex(__dirname + '/../../../games/multigame/assets/'));
 app.use('/multigame/', express.static(__dirname + '/../../../games/multigame/assets/'));
+app.use('/multigame/', function (request, response, next) {
+  // what makes this clever is it only converts when requested
+  let localName = request.originalUrl
+  // TODO: convert paths like *.pk3dir and *.pk3 to their zip counterparts and stream
+  if(localName[0] == '/')
+    localName = localName.substring(1)
+  if(localName.startsWith('multigame'))
+    localName = localName.substring('multigame'.length)
+  if(localName[0] == '/')
+  localName = localName.substring(1)
+  let ext = path.extname(localName)
+  let strippedName = localName
+  if(ext) {
+    strippedName = strippedName.substring(0, localName.length - ext.length)
+  }
+  let realBasePath = path.resolve(path.join(__dirname, '/../../../games/multigame/assets/'))
+  let parentDirectory = path.dirname(path.join(realBasePath, localName))
+  if(fs.existsSync(parentDirectory)) {
+    let otherFormatName
+    if(fs.existsSync(path.join(realBasePath, strippedName + '.tga'))) {
+      otherFormatName = strippedName + '.tga'
+    } else if (fs.existsSync(path.join(realBasePath, strippedName + '.pcx'))) {
+      otherFormatName = strippedName + '.pcx'
+    }
+    
+    let hasAlpha = true
+    if(otherFormatName) {
+      let alphaCmd
+      try {
+        alphaCmd = execSync(`identify -format '%[opaque]' "${path.join(realBasePath, otherFormatName)}"`, {stdio : 'pipe'}).toString('utf-8')
+      } catch (e) {
+        console.error(e.message, (e.output || '').toString('utf-8').substr(0, 1000))
+      }
+      // if it is alpha
+      if(/* true || TODO: allAlpha? */ alphaCmd.match(/false/ig)) {
+        hasAlpha = false
+      }
+    } else {
+      return next()
+    }
+
+    if((!hasAlpha && localName.includes('.jpeg'))
+      || (hasAlpha && localName.includes('.png'))) {
+      // try to convert the file and return it
+      try {
+        // TODO: allAlpha? execSync(`convert "${inFile}" -alpha set -background none -channel A -evaluate multiply 0.5 +channel -auto-orient "${outFile}"`, {stdio : 'pipe'})
+        execSync(`convert -strip -interlace Plane -sampling-factor 4:2:0 -quality 20% -auto-orient "${path.join(realBasePath, otherFormatName)}" "${path.join(realBasePath, localName)}"`, {stdio : 'pipe'})
+      } catch (e) {
+        console.error(e.message, (e.output || '').toString('utf-8').substr(0, 1000))
+      }
+    }
+  }
+  if(fs.existsSync(path.join(realBasePath, localName))) {
+    return response.sendFile(path.join(realBasePath, localName))
+  }
+  return next()
+});
+
+
+function sendIndex(request, response){
+  response.sendFile(path.resolve(__dirname + '/../http/index.html'));
+}
+
 app.use('/', express.static(__dirname + '/../http/'));
 // show index file for all request paths, in case UI is loading fancy breadcrumb menu
-app.get('*', function(request, response){
-  response.sendFile(path.resolve(__dirname + '/../http/index.html'));
-});
+app.get('/MAINMENU', sendIndex);
+app.get('/SETUP', sendIndex);
+app.get('/MULTIPLAYER', sendIndex);
+app.get('/CHOOSELEVEL', sendIndex);
+app.get('/ARENASERVERS', sendIndex);
+app.get('/DIFFICULTY', sendIndex);
+app.get('/PLAYERMODEL', sendIndex);
 
 
 var fileTimeout

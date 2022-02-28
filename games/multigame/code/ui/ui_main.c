@@ -5041,6 +5041,14 @@ void _UI_Init( qboolean inGameLoad ) {
 	int start;
 
 	//uiInfo.inGameLoad = inGameLoad;
+#ifdef USE_CLASSIC_MENU
+	if(uiInfo.startTime
+		&& *UI_Cvar_VariableString("ui_menuFiles") == '\0')
+	{
+		//UI_Init();
+		return;
+	}
+#endif
 
 	UI_RegisterCvars();
 	UI_InitMemory();
@@ -5741,6 +5749,7 @@ vmCvar_t	ui_recordSPDemo;
 vmCvar_t	ui_realCaptureLimit;
 vmCvar_t	ui_realWarmUp;
 vmCvar_t	ui_serverStatusTimeOut;
+vmCvar_t  ui_breadCrumb;
 
 
 // bk001129 - made static to avoid aliasing
@@ -5863,6 +5872,7 @@ static cvarTable_t		cvarTable[] = {
 	{ &ui_realWarmUp, "g_warmup", "20", CVAR_ARCHIVE},
 	{ &ui_realCaptureLimit, "capturelimit", "8", CVAR_SERVERINFO | CVAR_ARCHIVE | CVAR_NORESTART},
 	{ &ui_serverStatusTimeOut, "ui_serverStatusTimeOut", "7000", CVAR_ARCHIVE},
+	{ &ui_breadCrumb, "ui_breadCrumb", "", CVAR_ROM }
 
 };
 

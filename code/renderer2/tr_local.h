@@ -1243,6 +1243,7 @@ typedef enum {
 
 typedef struct model_s {
 	char		name[MAX_QPATH];
+	int     lastTimeUsed;
 	modtype_t	type;
 	int			index;		// model = tr.models[model->index]
 
