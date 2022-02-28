@@ -4,6 +4,7 @@ endif
 ifeq ($(BUILD_CLIENT),1)
 MOD           := baseq3a-static
 endif
+NO_MAKE_LOCAL := 1
 
 BUILD_GAME_QVM ?= 1
 BUILD_BASEQ3A := 1

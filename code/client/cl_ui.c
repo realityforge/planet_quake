@@ -1232,7 +1232,10 @@ static intptr_t CL_UISystemCalls( intptr_t *args ) {
 UI_DllSyscall
 ====================
 */
-static intptr_t QDECL UI_DllSyscall( intptr_t arg, ... ) {
+#ifndef BUILD_GAME_STATIC
+static 
+#endif
+intptr_t QDECL UI_DllSyscall( intptr_t arg, ... ) {
 #if !id386 || defined __clang__
 	intptr_t	args[10]; // max.count for UI
 	va_list	ap;

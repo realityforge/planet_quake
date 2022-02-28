@@ -915,6 +915,7 @@ void MakeDirectoryBuffer(char *paths, int count, int length, const char *localna
 			//&& (Q_stristr(currentPath, "/maps")
 			//|| Q_stristr(currentPath, "/vm")
 			|| Q_stristr(currentPath, ".cfg")
+			|| Q_stristr(currentPath, ".skin")
 			|| Q_stristr(currentPath, "ui/menus.txt")
 			|| (Q_stristr(currentPath, "/scripts/")
 				&& (Q_stristr(currentPath, ".shader") 

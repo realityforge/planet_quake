@@ -5068,7 +5068,8 @@ void CL_LoadVM_f( void ) {
 		}
 		count++;
 		CL_InitUI(qtrue);
-		VM_Call( uivm, 1, UI_SET_ACTIVE_MENU, UIMENU_NONE, "multiplayer" );
+		Cmd_ArgsFrom("multiplayer");
+		VM_Call( uivm, 1, UI_SET_ACTIVE_MENU, UIMENU_NONE, 1 );
 		uivmi = 0;
 		return;
   } else if (FS_SV_FOpenFileRead(va("maps/%s.bsp", name), NULL)) {

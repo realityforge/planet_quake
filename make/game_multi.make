@@ -1,6 +1,9 @@
 ifndef MOD
 MOD             := multigame
 endif
+WORKDIR   = $(MOD)
+WORKDIRS += $(MOD) $(MOD)/cgame $(MOD)/game $(MOD)/q3_ui $(MOD)/ui $(MOD)/vm
+NO_MAKE_LOCAL   := 1
 
 #USE_CLASSIC_MENU = 1
 #MISSIONPACK       = 1
@@ -97,13 +100,13 @@ ifneq ($(BUILD_GAME_QVM),0)
 debug:
 	$(echo_cmd) "MAKE $(MOD)"
 	@$(MAKE) -f make/lib_q3lcc.make release 
-	@$(MAKE) -f $(MKFILE) makegamedirs B=$(BD) 
+	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) WORKDIRS="$(WORKDIR) $(WORKDIRS)" mkdirs
 	@$(MAKE) -f $(MKFILE)  -j 8 \
 		$(BD)/$(MOD)/cgame$(SHLIBNAME) \
-		$(BD)/$(MOD)/qagame$(SHLIBNAME) \
+		$(BD)/$(MOD)/game$(SHLIBNAME) \
 		$(BD)/$(MOD)/ui$(SHLIBNAME) \
 		$(BD)/$(MOD)/vm/cgame.qvm \
-	  $(BD)/$(MOD)/vm/qagame.qvm \
+	  $(BD)/$(MOD)/vm/game.qvm \
 	  $(BD)/$(MOD)/vm/ui.qvm \
 	  B=$(BD) GAME_CFLAGS="$(GAME_CFLAGS)" \
 	  OPTIMIZE="$(DEBUG_CFLAGS)" V=$(V)
@@ -111,13 +114,13 @@ debug:
 release:
 	$(echo_cmd) "MAKE $(MOD)"
 	@$(MAKE) -f make/lib_q3lcc.make release 
-	@$(MAKE) -f $(MKFILE) makegamedirs B=$(BR) 
+	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) WORKDIRS="$(WORKDIR) $(WORKDIRS)" mkdirs
 	@$(MAKE) -f $(MKFILE)  -j 8 \
 	  $(BR)/$(MOD)/cgame$(SHLIBNAME) \
-	  $(BR)/$(MOD)/qagame$(SHLIBNAME) \
+	  $(BR)/$(MOD)/game$(SHLIBNAME) \
 	  $(BR)/$(MOD)/ui$(SHLIBNAME) \
 		$(BR)/$(MOD)/vm/cgame.qvm \
-	  $(BR)/$(MOD)/vm/qagame.qvm \
+	  $(BR)/$(MOD)/vm/game.qvm \
 	  $(BR)/$(MOD)/vm/ui.qvm \
 	  B=$(BR) GAME_CFLAGS="$(GAME_CFLAGS)" \
 	  OPTIMIZE="-DNDEBUG $(OPTIMIZE)" V=$(V)
@@ -125,37 +128,25 @@ release:
 else
 debug:
 	$(echo_cmd) "MAKE $(MOD)"
-	@$(MAKE) -f $(MKFILE) makegamedirs B=$(BD) 
+	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) WORKDIRS="$(WORKDIR) $(WORKDIRS)" mkdirs
 	@$(MAKE) -f $(MKFILE)  -j 8 \
 		$(BD)/$(MOD)/cgame$(SHLIBNAME) \
-		$(BD)/$(MOD)/qagame$(SHLIBNAME) \
+		$(BD)/$(MOD)/game$(SHLIBNAME) \
 		$(BD)/$(MOD)/ui$(SHLIBNAME) \
 	  B=$(BD) GAME_CFLAGS="$(GAME_CFLAGS)" \
 	  OPTIMIZE="$(DEBUG_CFLAGS)" V=$(V)
 
 release:
 	$(echo_cmd) "MAKE $(MOD)"
-	@$(MAKE) -f $(MKFILE) makegamedirs B=$(BR) 
+	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) WORKDIRS="$(WORKDIR) $(WORKDIRS)" mkdirs
 	@$(MAKE) -f $(MKFILE)  -j 8 \
 	  $(BR)/$(MOD)/cgame$(SHLIBNAME) \
-	  $(BR)/$(MOD)/qagame$(SHLIBNAME) \
+	  $(BR)/$(MOD)/game$(SHLIBNAME) \
 	  $(BR)/$(MOD)/ui$(SHLIBNAME) \
 	  B=$(BR) GAME_CFLAGS="$(GAME_CFLAGS)" \
 	  OPTIMIZE="-DNDEBUG $(OPTIMIZE)" V=$(V)
 
 endif
-
-makegamedirs:
-	@echo "MKDIRS $(B)/$(MOD)"
-	@if [ ! -d $(BUILD_DIR) ];then $(MKDIR) $(BUILD_DIR);fi
-	@if [ ! -d $(B) ];then $(MKDIR) $(B);fi
-	@if [ ! -d $(B)/$(MOD) ];then $(MKDIR) $(B)/$(MOD);fi
-	@if [ ! -d $(B)/$(MOD)/cgame ];then $(MKDIR) $(B)/$(MOD)/cgame;fi
-	@if [ ! -d $(B)/$(MOD)/game ];then $(MKDIR) $(B)/$(MOD)/game;fi
-	@if [ ! -d $(B)/$(MOD)/ui ];then $(MKDIR) $(B)/$(MOD)/ui;fi
-	@if [ ! -d $(B)/$(MOD)/q3_ui ];then $(MKDIR) $(B)/$(MOD)/q3_ui;fi
-	@if [ ! -d $(B)/$(MOD)/vm ];then $(MKDIR) $(B)/$(MOD)/vm;fi
-
 endif
 
 #############################################################################
@@ -351,7 +342,7 @@ $(B)/$(MOD)/cgame$(SHLIBNAME): $(CGOBJ)
 	$(echo_cmd) "LD $@"
 	$(Q)$(CC) $(GAME_CFLAGS) $(GAME_LDFLAGS) -o $@ $(CGOBJ)
 
-$(B)/$(MOD)/qagame$(SHLIBNAME): $(QAOBJ)
+$(B)/$(MOD)/game$(SHLIBNAME): $(QAOBJ)
 	$(echo_cmd) "LD $@"
 	$(Q)$(CC) $(GAME_CFLAGS) $(GAME_LDFLAGS) -o $@ $(QAOBJ)
 
@@ -367,7 +358,7 @@ $(B)/$(MOD)/vm/cgame.qvm: $(CGVMOBJ) $(Q3ASM)
 	$(echo_cmd) "Q3ASM $@"
 	$(Q)$(Q3ASM) -o $@ -m $(CGVMOBJ)
 
-$(B)/$(MOD)/vm/qagame.qvm: $(QAVMOBJ) $(Q3ASM)
+$(B)/$(MOD)/vm/game.qvm: $(QAVMOBJ) $(Q3ASM)
 	$(echo_cmd) "Q3ASM $@"
 	$(Q)$(Q3ASM) -o $@ -m $(QAVMOBJ)
 
@@ -450,7 +441,6 @@ endif
 #############################################################################
 # MISC
 #############################################################################
-WORKDIRS += $(MOD) $(MOD)/cgame $(MOD)/game $(MOD)/ui $(MOD)/vm
 
 ifneq ($(BUILD_CLIENT),1)
 clean:
@@ -463,15 +453,15 @@ clean:
 	@rm -rf ./$(BD)/$(MOD)/vm
 	@rm -rf ./$(BR)/$(MOD)/vm
 	@rm -f ./$(BD)/$(MOD)/cgame$(SHLIBNAME)
-	@rm -f ./$(BD)/$(MOD)/qagame$(SHLIBNAME)
+	@rm -f ./$(BD)/$(MOD)/game$(SHLIBNAME)
 	@rm -f ./$(BD)/$(MOD)/ui$(SHLIBNAME)
 	@rm -f ./$(BR)/$(MOD)/cgame$(SHLIBNAME)
-	@rm -f ./$(BR)/$(MOD)/qagame$(SHLIBNAME)
+	@rm -f ./$(BR)/$(MOD)/game$(SHLIBNAME)
 	@rm -f ./$(BR)/$(MOD)/ui$(SHLIBNAME)
 	@rm -rf ./$(BD)/$(MOD)
 	@rm -rf ./$(BR)/$(MOD)
 
 else
 GAME_OBJ  = $(QAOBJ) $(CGOBJ) $(UIOBJ)
-CLEANS 	 += $(MOD)/cgame $(MOD)/qagame $(MOD)/ui $(MOD)
+CLEANS 	 += $(MOD)/cgame $(MOD)/game $(MOD)/q3_ui $(MOD)/ui $(MOD)/vm $(MOD)
 endif

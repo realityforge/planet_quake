@@ -6,6 +6,7 @@
 
 #include "ui_local.h"
 
+#ifndef USE_CLASSIC_MENU
 
 //
 // arena and bot info
@@ -294,6 +295,7 @@ int UI_GetNumBots() {
 	return ui_numBots;
 }
 
+#endif
 
 char *UI_GetBotNameByNumber( int num ) {
 	char *info = UI_GetBotInfoByNumber(num);
@@ -302,3 +304,4 @@ char *UI_GetBotNameByNumber( int num ) {
 	}
 	return "Sarge";
 }
+

@@ -21,7 +21,6 @@
 #define COAST_TIME				1000
 
 
-#ifndef MISSIONPACK
 static int			dp_realtime;
 static float		jumpHeight;
 
@@ -627,7 +626,7 @@ static void UI_PlayerFloatSprite( playerInfo_t *pi, vec3_t origin, qhandle_t sha
 UI_MachinegunSpinAngle
 ======================
 */
-float	UI_MachinegunSpinAngle( playerInfo_t *pi ) {
+static float	UI_MachinegunSpinAngle( playerInfo_t *pi ) {
 	int		delta;
 	float	angle;
 	float	speed;
@@ -1245,4 +1244,3 @@ void UI_PlayerInfo_SetInfo( playerInfo_t *pi, int legsAnim, int torsoAnim, vec3_
 		UI_ForceTorsoAnim( pi, torsoAnim );
 	}
 }
-#endif

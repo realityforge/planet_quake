@@ -13,11 +13,7 @@
 
 #define POOLSIZE	128 * 1024
 
-#ifndef MISSIONPACK
 int				ui_numBots;
-#else
-extern int ui_numBots;
-#endif
 static char		*ui_botInfos[MAX_BOTS];
 
 static int		ui_numArenas;
@@ -65,6 +61,10 @@ void UI_InitMemory( void ) {
 	allocPoint = 0;
 	outOfMemory = qfalse;
 }
+#else
+void *UI_Alloc( int size );
+void UI_InitMemory( void );
+#endif
 
 
 /*
@@ -122,10 +122,6 @@ int UI_ParseInfos( char *buf, int max, char *infos[] ) {
 	}
 	return count;
 }
-#else
-void UI_InitMemory( void );
-int UI_ParseInfos( char *buf, int max, char *infos[] );
-#endif
 
 
 /*
@@ -162,7 +158,7 @@ static void UI_LoadArenasFromFile( const char *filename ) {
 UI_LoadArenas
 ===============
 */
-static void UI_LoadArenas( void ) {
+void UI_LoadArenas( void ) {
 	int			numdirs;
 	vmCvar_t	arenasFile;
 	char		filename[128];
@@ -259,6 +255,7 @@ static void UI_LoadArenas( void ) {
 	}
 }
 
+
 /*
 ===============
 UI_GetArenaInfoByNumber
@@ -354,7 +351,7 @@ static void UI_LoadBotsFromFile( const char *filename ) {
 UI_LoadBots
 ===============
 */
-static void UI_LoadBots( void ) {
+void UI_LoadBots( void ) {
 	vmCvar_t	botsFile;
 	int			numdirs;
 	char		filename[128];
@@ -385,7 +382,6 @@ static void UI_LoadBots( void ) {
 }
 
 
-#ifndef MISSIONPACK
 /*
 ===============
 UI_GetBotInfoByNumber
@@ -418,7 +414,6 @@ char *UI_GetBotInfoByName( const char *name ) {
 
 	return NULL;
 }
-#endif
 
 
 //
@@ -735,7 +730,6 @@ int UI_GetNumSPTiers( void ) {
 }
 
 
-#ifndef MISSIONPACK
 /*
 ===============
 UI_GetNumBots
@@ -744,7 +738,6 @@ UI_GetNumBots
 int UI_GetNumBots( void ) {
 	return ui_numBots;
 }
-#endif
 
 
 /*

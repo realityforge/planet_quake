@@ -1288,6 +1288,9 @@ static intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 CL_DllSyscall
 ====================
 */
+#ifndef BUILD_GAME_STATIC
+static 
+#endif
 intptr_t QDECL CL_DllSyscall( intptr_t arg, ... ) {
 #ifdef USE_MULTIVM_CLIENT
 	int prev = cgvmi;

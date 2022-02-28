@@ -626,7 +626,7 @@ void _UI_Refresh( int realtime )
 #endif
 
 #ifdef BUILD_GAME_STATIC
-  Init_Display(&uiInfo.uiDC);
+  //Init_Display(&uiInfo.uiDC);
 #endif
 
 	UI_UpdateCvars();
@@ -1311,13 +1311,13 @@ static void UI_DrawPlayerModel(rectDef_t *rect) {
   	viewangles[PITCH] = 0;
   	viewangles[ROLL]  = 0;
   	VectorClear( moveangles );
-    UI_PlayerInfo_SetModel( &info, model, head, team);
-    UI_PlayerInfo_SetInfo( &info, LEGS_IDLE, TORSO_STAND, viewangles, vec3_origin, WP_MACHINEGUN, qfalse );
-//		UI_RegisterClientModelname( &info, model, head, team);
+    UI_PlayerInfo_SetModel2( &info, model, head, team);
+    UI_PlayerInfo_SetInfo2( &info, LEGS_IDLE, TORSO_STAND, viewangles, vec3_origin, WP_MACHINEGUN, qfalse );
+//		UI_RegisterClientModelname2( &info, model, head, team);
     updateModel = qfalse;
   }
 
-  UI_DrawPlayer( rect->x, rect->y, rect->w, rect->h, &info, uiInfo.uiDC.realTime / 2);
+  UI_DrawPlayer2( rect->x, rect->y, rect->w, rect->h, &info, uiInfo.uiDC.realTime / 2);
 
 }
 
@@ -1507,13 +1507,13 @@ static void UI_DrawOpponent(rectDef_t *rect) {
   	viewangles[PITCH] = 0;
   	viewangles[ROLL]  = 0;
   	VectorClear( moveangles );
-    UI_PlayerInfo_SetModel( &info2, model, headmodel, "");
-    UI_PlayerInfo_SetInfo( &info2, LEGS_IDLE, TORSO_STAND, viewangles, vec3_origin, WP_MACHINEGUN, qfalse );
-		UI_RegisterClientModelname( &info2, model, headmodel, team);
+    UI_PlayerInfo_SetModel2( &info2, model, headmodel, "");
+    UI_PlayerInfo_SetInfo2( &info2, LEGS_IDLE, TORSO_STAND, viewangles, vec3_origin, WP_MACHINEGUN, qfalse );
+		UI_RegisterClientModelname2( &info2, model, headmodel, team);
     updateOpponentModel = qfalse;
   }
 
-  UI_DrawPlayer( rect->x, rect->y, rect->w, rect->h, &info2, uiInfo.uiDC.realTime / 2);
+  UI_DrawPlayer2( rect->x, rect->y, rect->w, rect->h, &info2, uiInfo.uiDC.realTime / 2);
 
 }
 

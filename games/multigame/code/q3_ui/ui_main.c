@@ -21,6 +21,7 @@ This is the only way control passes into the module.
 This must be the very first function compiled into the .qvm file
 ================
 */
+static char	breadcrumb[MAX_STRING_CHARS];
 #ifdef BUILD_GAME_STATIC
 intptr_t UI_Call( int command, int arg0, int arg1, int arg2 )
 #else
@@ -55,7 +56,10 @@ DLLEXPORT intptr_t vmMain( int command, int arg0, int arg1, int arg2 )
 		return UI_IsFullscreen();
 
 	case UI_SET_ACTIVE_MENU:
-		UI_SetActiveMenu( arg0, arg1 );
+		if(arg1 > 0) {
+			trap_Argv( 1, breadcrumb, sizeof( breadcrumb ) );
+		}
+		UI_SetActiveMenu( arg0, breadcrumb );
 		return 0;
 
 	case UI_CONSOLE_COMMAND:
