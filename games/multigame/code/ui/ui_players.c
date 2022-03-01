@@ -712,7 +712,7 @@ void UI_DrawPlayer2( float x, float y, float w, float h, playerInfo_t *pi, int t
 	xx = w / tan( refdef.fov_x / 360 * M_PI );
 	refdef.fov_y = atan2( h, xx );
 	refdef.fov_y *= ( 360 / M_PI );
-	UI_AdjustFrom640( &x, &y, &w, &h );
+	UI_AdjustFrom6402( &x, &y, &w, &h );
 	y -= jumpHeight;
 	refdef.rdflags = RDF_NOWORLDMODEL;
 

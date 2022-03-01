@@ -1118,7 +1118,6 @@ void UI_Init( void ) {
 }
 
 
-#ifndef MISSIONPACK
 /*
 ================
 UI_AdjustFrom640
@@ -1173,7 +1172,6 @@ void UI_DrawHandlePic( float x, float y, float w, float h, qhandle_t hShader ) {
 	UI_AdjustFrom640( &x, &y, &w, &h );
 	trap_R_DrawStretchPic( x, y, w, h, s0, t0, s1, t1, hShader );
 }
-#endif
 
 
 static void UI_DrawCursor( float x, float y, float w, float h ) {

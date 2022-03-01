@@ -382,12 +382,12 @@ void UI_Shutdown( void ) {
 
 /*
 ================
-UI_AdjustFrom640
+UI_AdjustFrom6402
 
 Adjusted for resolution and screen aspect ratio
 ================
 */
-void UI_AdjustFrom640( float *x, float *y, float *w, float *h ) {
+void UI_AdjustFrom6402( float *x, float *y, float *w, float *h ) {
 	// expect valid pointers
 #if 0
 	*x = *x * uiInfo.uiDC.scale + uiInfo.uiDC.bias;
@@ -403,15 +403,7 @@ void UI_AdjustFrom640( float *x, float *y, float *w, float *h ) {
 
 }
 
-void UI_DrawNamedPic( float x, float y, float width, float height, const char *picname ) {
-	qhandle_t	hShader;
-
-	hShader = trap_R_RegisterShaderNoMip( picname );
-	UI_AdjustFrom640( &x, &y, &width, &height );
-	trap_R_DrawStretchPic( x, y, width, height, 0, 0, 1, 1, hShader );
-}
-
-void UI_DrawHandlePic( float x, float y, float w, float h, qhandle_t hShader ) {
+void UI_DrawHandlePic2( float x, float y, float w, float h, qhandle_t hShader ) {
 	float	s0;
 	float	s1;
 	float	t0;
@@ -437,7 +429,7 @@ void UI_DrawHandlePic( float x, float y, float w, float h, qhandle_t hShader ) {
 		t1 = 1;
 	}
 	
-	UI_AdjustFrom640( &x, &y, &w, &h );
+	UI_AdjustFrom6402( &x, &y, &w, &h );
 	trap_R_DrawStretchPic( x, y, w, h, s0, t0, s1, t1, hShader );
 }
 
@@ -451,20 +443,20 @@ Coordinates are 640*480 virtual values
 void UI_FillRect( float x, float y, float width, float height, const float *color ) {
 	trap_R_SetColor( color );
 
-	UI_AdjustFrom640( &x, &y, &width, &height );
+	UI_AdjustFrom6402( &x, &y, &width, &height );
 	trap_R_DrawStretchPic( x, y, width, height, 0, 0, 0, 0, uiInfo.uiDC.whiteShader );
 
 	trap_R_SetColor( NULL );
 }
 
 void UI_DrawSides(float x, float y, float w, float h) {
-	UI_AdjustFrom640( &x, &y, &w, &h );
+	UI_AdjustFrom6402( &x, &y, &w, &h );
 	trap_R_DrawStretchPic( x, y, 1, h, 0, 0, 0, 0, uiInfo.uiDC.whiteShader );
 	trap_R_DrawStretchPic( x + w - 1, y, 1, h, 0, 0, 0, 0, uiInfo.uiDC.whiteShader );
 }
 
 void UI_DrawTopBottom(float x, float y, float w, float h) {
-	UI_AdjustFrom640( &x, &y, &w, &h );
+	UI_AdjustFrom6402( &x, &y, &w, &h );
 	trap_R_DrawStretchPic( x, y, w, 1, 0, 0, 0, 0, uiInfo.uiDC.whiteShader );
 	trap_R_DrawStretchPic( x, y + h - 1, w, 1, 0, 0, 0, 0, uiInfo.uiDC.whiteShader );
 }
