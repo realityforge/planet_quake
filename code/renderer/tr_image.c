@@ -1756,9 +1756,13 @@ qhandle_t RE_RegisterSkin( const char *name ) {
 	for ( hSkin = 1; hSkin < tr.numSkins ; hSkin++ ) {
 		skin = tr.skins[hSkin];
 		if ( !Q_stricmp( skin->name, name ) ) {
+#ifndef USE_LAZY_LOAD
 			if( skin->numSurfaces == 0 ) {
 				return 0;		// default skin
 			}
+#else
+			if( skin->numSurfaces > 0 )
+#endif
 			return hSkin;
 		}
 	}
@@ -1768,11 +1772,15 @@ qhandle_t RE_RegisterSkin( const char *name ) {
 		ri.Printf( PRINT_WARNING, "WARNING: RE_RegisterSkin( '%s' ) MAX_SKINS hit\n", name );
 		return 0;
 	}
-	tr.numSkins++;
-	skin = ri.Hunk_Alloc( sizeof( skin_t ), h_low );
-	tr.skins[hSkin] = skin;
-	Q_strncpyz( skin->name, name, sizeof( skin->name ) );
-	skin->numSurfaces = 0;
+	if(hSkin == tr.numSkins) {
+		tr.numSkins++;
+		skin = ri.Hunk_Alloc( sizeof( skin_t ), h_low );
+		tr.skins[hSkin] = skin;
+		Q_strncpyz( skin->name, name, sizeof( skin->name ) );
+		skin->numSurfaces = 0;
+	} else {
+		assert(skin->numSurfaces == 0);
+	}
 
 	// If not a .skin file, load as a single shader
 	if ( strcmp( name + strlen( name ) - 5, ".skin" ) ) {

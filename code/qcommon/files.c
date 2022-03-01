@@ -582,7 +582,9 @@ static downloadLazy_t *modelCallback[PK3_HASH_SIZE]; // MAX_MOD_KNOWN
 static downloadLazy_t *soundCallback[PK3_HASH_SIZE]; // 
 static downloadLazy_t *shaderCallback[PK3_HASH_SIZE]; // MAX_SHADERS
 static downloadLazy_t *filesCallback[PK3_HASH_SIZE]; // MAX_SHADERS
-downloadLazy_t* *downloadTables[4] = {
+static downloadLazy_t *indexesCallback[PK3_HASH_SIZE]; // MAX_SHADERS
+downloadLazy_t* *downloadTables[5] = {
+	indexesCallback,
 	modelCallback,
 	soundCallback,
 	shaderCallback,
@@ -658,26 +660,35 @@ void Sys_FileNeeded(const char *needs, qboolean isDirectoryIndex) {
 		strcat(filename, "/");
 	}
 
-
-	// check index need to download
-	loading = Cvar_VariableString("r_loadingShader");
-	if(!loading[0]) {
-		loading = Cvar_VariableString("snd_loadingSound");
+	// force indexes to get downloaded first in line
+#ifdef USE_LAZY_LOAD
+	if(isDirectoryIndex) {
+		downloadTable = indexesCallback;
+		loading = filename;
+	} else 
+#endif
+	{
+		// check index need to download
+		loading = Cvar_VariableString("r_loadingShader");
 		if(!loading[0]) {
-			loading = Cvar_VariableString("r_loadingModel");
-			if(loading[0]) {
-				downloadTable = modelCallback;
+			loading = Cvar_VariableString("snd_loadingSound");
+			if(!loading[0]) {
+				loading = Cvar_VariableString("r_loadingModel");
+				if(loading[0]) {
+					downloadTable = modelCallback;
+				} else {
+					// special files for calling just below
+					downloadTable = filesCallback;
+					loading = filename;
+				}
 			} else {
-				// special files for calling just below
-				downloadTable = filesCallback;
-				loading = filename;
+				downloadTable = soundCallback;
 			}
 		} else {
-			downloadTable = soundCallback;
+			downloadTable = shaderCallback;
 		}
-	} else {
-		downloadTable = shaderCallback;
 	}
+	//Com_Printf("file needed! %s %s\n", filename, loading);
 
   if(!filename[0]) {
 		return;
@@ -694,6 +705,7 @@ void Sys_FileNeeded(const char *needs, qboolean isDirectoryIndex) {
 			download = download->next;
 		}
 	}
+
 	if(!found) {
 		downloadSize = sizeof(downloadLazy_t)
 				+ MAX_OSPATH /* because it's replaced with temp download name strlen(loading) + 1 */ 
@@ -741,7 +753,6 @@ void Sys_FileNeeded(const char *needs, qboolean isDirectoryIndex) {
 	}
 
 	assert(!Q_stristr(filename, stupidPathError));
-	//Com_Printf("file needed! %s %s %i\n", filename, loading, hash);
 }
 
 
@@ -752,6 +763,7 @@ static void ParseHtmlFileList(char *buf, int len, char *list, int *count, int *m
 	//   provided q3cache.dat to checked at the same time.
 	char link[MAX_QPATH];
 	int lenLink = 0;
+	int length = strlen(FS_GetCurrentGameDir());
 	int c = 0;
 	qboolean insideAnchor = qfalse;
 	qboolean insideHref = qfalse;
@@ -790,7 +802,8 @@ static void ParseHtmlFileList(char *buf, int len, char *list, int *count, int *m
 			if(buf[c] == '"') {
 				insideHref = qfalse;
 				link[lenLink] = '\0';
-				if(Q_stristr(link, FS_GetCurrentGameDir())) {
+				if(Q_stristr(link, FS_GetCurrentGameDir())
+					&& lenLink > length + 2) {
 					// inject filepath into pk3cache.dat with some unknown information
 					if((*count) < 1024)
 						strcpy(list + (*max), link);
@@ -812,7 +825,7 @@ static void ParseHtmlFileList(char *buf, int len, char *list, int *count, int *m
 static void FS_CheckIndex(const long fullHash, const char *filename, qboolean isNotFound);
 
 
-void MakeDirectoryBuffer(char *paths, int count, int length, const char *localname) {
+void MakeDirectoryBuffer(char *paths, int count, int length, const char *parentDirectory) {
 	char localName[MAX_QPATH];
 	char *namePtr;
 	const char *s;
@@ -822,24 +835,23 @@ void MakeDirectoryBuffer(char *paths, int count, int length, const char *localna
 	int dirSize;
 	void *dirStorage;
 	searchpath_t	*search;
-	qboolean found = qfalse;
+	qboolean hasIndex = qfalse;
+// give us some room to expand with additional directory requests
 #define RESERVE_COUNT 1024 //count < 128 ? 128 : !fs_searchpaths ? 4096 : count;
 	hashSize = FS_PakHashSize( RESERVE_COUNT );
-
-	// give us some room to expand with additional directory requests
-	realPath = FS_BuildOSPath(fs_homepath->string, FS_GetCurrentGameDir(), localname);
 
 	for ( search = fs_searchpaths ; search ; search = search->next ) {
 		if(search->dir 
 			&& !Q_stricmp(search->dir->gamedir, FS_GetCurrentGameDir())
 			&& !Q_stricmp(search->dir->path, fs_homepath->string)) {
-			found = qtrue;
+			hasIndex = qtrue;
 			break;
 		}
 	}
 
-	if(!found) {
-		Com_DPrintf( S_COLOR_YELLOW "WARNING: Requested search path %s not found in search paths.\n", realPath);
+	if(!hasIndex) {
+		Com_DPrintf( S_COLOR_YELLOW "WARNING: Requested search path %s not found in search paths.\n", 
+			FS_BuildOSPath(fs_homepath->string, FS_GetCurrentGameDir(), parentDirectory));
 		FS_AddGameDirectory(fs_homepath->string, FS_GetCurrentGameDir(), 0);
 		return;
 	}
@@ -881,12 +893,19 @@ void MakeDirectoryBuffer(char *paths, int count, int length, const char *localna
 		}
 
 		// remove game dir
-		s = strchr( s, '/' );
-		if(!s) {
-			s = localName;
-		} else {
+		if(Q_stristr(s, FS_GetCurrentGameDir())) {
+			s += strlen(FS_GetCurrentGameDir()) + 1;
+		}
+
+		// remove trailing /
+		if(s[0] == '/') {
 			s++;
 		}
+
+		if(strlen(s) == 0) {
+			continue;
+		}
+
 		strcpy(curFile->name, s);
 		curFile->name[strlen(s)] = '\0';
 #ifdef USE_LIVE_RELOAD
@@ -902,7 +921,7 @@ void MakeDirectoryBuffer(char *paths, int count, int length, const char *localna
 #endif
 		FS_ConvertFilename( curFile->name );
 		hash = FS_HashFileName( curFile->name, hashSize );
-		//printf("adding %li, %s\n", hash, curFile->name);
+		//Com_Printf("adding %li, %s\n", hash, curFile->name);
 
 		// store the file position in the zip
 		// TODO: update this when Accept-Ranges is implemented
@@ -915,7 +934,7 @@ void MakeDirectoryBuffer(char *paths, int count, int length, const char *localna
 			//&& (Q_stristr(currentPath, "/maps")
 			//|| Q_stristr(currentPath, "/vm")
 			|| Q_stristr(currentPath, ".cfg")
-			|| Q_stristr(currentPath, ".skin")
+			//|| Q_stristr(currentPath, ".skin")
 			|| Q_stristr(currentPath, "ui/menus.txt")
 			|| (Q_stristr(currentPath, "/scripts/")
 				&& (Q_stristr(currentPath, ".shader") 
@@ -945,6 +964,7 @@ void MakeDirectoryBuffer(char *paths, int count, int length, const char *localna
 
 fileInPack_t *FindFileInIndex(long hash, const char *filename, fileInPack_t* *hashTable) {
 	fileInPack_t	*pakFile;
+	assert(hashTable);
 	if(hashTable[hash]) {
 		pakFile = hashTable[hash];
 		do {
@@ -970,6 +990,17 @@ void Sys_FileReady(const char *filename, const char* tempname) {
 	char localName[ MAX_OSPATH ];
 	//const char *s;
 	qboolean found = qfalse;
+	qboolean hasIndex = qfalse;
+	searchpath_t *search;
+
+	for ( search = fs_searchpaths ; search ; search = search->next ) {
+		if(search->dir 
+			&& !Q_stricmp(search->dir->gamedir, FS_GetCurrentGameDir())
+			&& !Q_stricmp(search->dir->path, fs_homepath->string)) {
+			hasIndex = qtrue;
+			break;
+		}
+	}
 
 	// skip leading slashes
 	while ( *filename == '/' || *filename == '\\' ) {
@@ -987,7 +1018,7 @@ void Sys_FileReady(const char *filename, const char* tempname) {
 	hash = FS_HashPK3( localName );
 
 	// mark the file as downloaded
-	for(int i = 0; i < 4; i++) {
+	for(int i = 0; i < 5; i++) {
     download = downloadTables[i][hash];
     while ( download )
     {
@@ -1000,14 +1031,11 @@ void Sys_FileReady(const char *filename, const char* tempname) {
 					download->downloaded = qfalse; // trigger client events
 					strcpy(&download->loadingName[MAX_QPATH], tempname);
 #ifdef USE_LIVE_RELOAD
-					searchpath_t *search;
 					// update file mtime so we know if it changed again
-					for ( search = fs_searchpaths ; search ; search = search->next ) {
-						if(search->dir && search->dir->hashTable) {
-							fileInPack_t *file;
-							if((file = FindFileInIndex(hash, filename, search->dir->hashTable))) {
-								file->mtime = lastVersionTime;
-							}
+					fileInPack_t *file;
+					if(hasIndex && search->dir->hashTable) {
+						if((file = FindFileInIndex(hash, filename, search->dir->hashTable))) {
+							file->mtime = lastVersionTime;
 						}
 					}
 #endif
@@ -1035,6 +1063,59 @@ void Sys_FileReady(const char *filename, const char* tempname) {
 
 }
 
+
+// really reduce misfires by removing missing download files once directory index is received
+//   we know we won't find shader images with alternate extensions, so those downloads are marked
+static void FixDownloadList( const char *parentDirectory ) {
+	qboolean hasIndex = qfalse;
+	searchpath_t *search;
+	int length;
+	int lengthGame;
+	long hash;
+
+	for ( search = fs_searchpaths ; search ; search = search->next ) {
+		if(search->dir 
+			&& !Q_stricmp(search->dir->gamedir, FS_GetCurrentGameDir())
+			&& !Q_stricmp(search->dir->path, fs_homepath->string)) {
+			hasIndex = qtrue;
+			break;
+		}
+	}
+
+	if(!hasIndex || !search->dir->hashTable) {
+		return;
+	}
+//Com_Printf("fixing downloads: %s\n", parentDirectory);
+	length = strlen(parentDirectory);
+	lengthGame = strlen(FS_GetCurrentGameDir());
+
+	for(int j = 0; j < 5; j++) {
+		downloadLazy_t* *downloadTable = downloadTables[j];
+		downloadLazy_t *download;
+		// when a directory index is received, remove any files from the download list
+		//   that aren't in the now "known" directory listing
+		for(int i = 0; i < PK3_HASH_SIZE; i++) {
+			if(downloadTable[i] != NULL) {
+				download = downloadTable[i];
+				do {
+					const char *s;
+					if((s = Q_stristr(download->downloadName, parentDirectory))
+						&& download->downloadName[length] != '\0'
+						&& !strchr(s + length + 1, '/') // make sure it's the last directory
+					) {
+						hash = FS_HashFileName( &download->downloadName[lengthGame+1], search->dir->hashSize );
+						if(!FindFileInIndex(hash, &download->downloadName[lengthGame+1], search->dir->hashTable)) 
+						{
+//Com_Printf("purging: %s\n", &download->downloadName[lengthGame+1]);
+							download->downloaded = qtrue;
+						}
+					}
+				} while((download = download->next) != NULL);
+			}
+		}
+	}
+
+}
 
 void FS_UpdateFiles(const char *filename, const char *tempname) {
 
@@ -1131,6 +1212,7 @@ void FS_UpdateFiles(const char *filename, const char *tempname) {
 			buf[len] = '\0';
 			ParseHtmlFileList(buf, len, paths, &count, &nameLength);
 			MakeDirectoryBuffer(paths, count, nameLength, filename);
+			FixDownloadList(filename);
 			Z_Free(buf);
 		}
 		fclose(indexFile);
@@ -1159,7 +1241,7 @@ static void FS_CheckIndex(long fullHash, const char *filename, qboolean isNotFou
 	lastDirectory[0] = '\0';
 
 
-//Com_Printf("searching index for %s\n", filename);
+//Com_Printf("searching index for (%s) %s\n", isNotFound ? "not found": "live", filename);
 
 	if(!fullHash) {
 		fullHash = FS_HashFileName( filename, 0U );
@@ -1186,25 +1268,25 @@ static void FS_CheckIndex(long fullHash, const char *filename, qboolean isNotFou
 
 				// try to reduce the number of mis-fires once a directory has been received
 				hash = FS_HashPK3(firstDirectory);
-				if((file = FindFileInIndex(hash, firstDirectory, search->dir->hashTable))) {
+				if(NULL != (file = FindFileInIndex(hash, firstDirectory, search->dir->hashTable))) {
 					isDirectoryInIndex = qtrue;
 				} else {
-					Sys_FileNeeded(filename, filename[strlen(filename)-1] == '/');
+					Sys_FileNeeded(firstDirectory, qtrue);
 				}
 
 				if(lastDirectory[0]) {
 					hash = FS_HashPK3(lastDirectory);
-					if((file = FindFileInIndex(hash, lastDirectory, search->dir->hashTable))) {
+					if(NULL != (file = FindFileInIndex(hash, lastDirectory, search->dir->hashTable))) {
 						isDirectoryInIndex = qtrue;
 					} else {
-						Sys_FileNeeded(filename, filename[strlen(filename)-1] == '/');
+						Sys_FileNeeded(lastDirectory, qtrue);
 					}
 				}
 			}
 
 			// check the current index for the requested file
 			hash = fullHash & (search->dir->hashSize-1);
-			if((file = FindFileInIndex(hash, filename, search->dir->hashTable))) {
+			if(NULL != (file = FindFileInIndex(hash, filename, search->dir->hashTable))) {
 				isInIndex = qtrue;
 			}
 
@@ -1215,7 +1297,7 @@ static void FS_CheckIndex(long fullHash, const char *filename, qboolean isNotFou
 				|| (file && file->mtime < lastVersionTime)
 #endif
 			) {
-				Sys_FileNeeded(filename, filename[strlen(filename)-1] == '/');
+				Sys_FileNeeded(filename, qfalse);
 				// found something!
 				break;
 			} else {

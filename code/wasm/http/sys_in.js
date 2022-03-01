@@ -303,7 +303,8 @@ function InputPushMouseEvent (evt) {
     //if(!mouseActive || in_joystick->integer) {
     //  return;
     //}
-    if(down && !HEAP32[gw_active >> 2]) {
+    if(down && (!HEAP32[gw_active >> 2]
+      || document.pointerLockElement != Q3e.canvas)) {
       // TODO: start sound, capture mouse
       HEAP32[gw_active >> 2] = true
       Q3e.canvas.requestPointerLock();

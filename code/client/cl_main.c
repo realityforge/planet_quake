@@ -3881,6 +3881,7 @@ void CL_ChangeNotifcations( void ) {
 
 #if defined(USE_LAZY_LOAD) || defined(USE_ASYNCHRONOUS)
 /*
+	indexesCallback,
 	modelCallback,
 	soundCallback,
 	shaderCallback
@@ -3908,7 +3909,7 @@ void CL_CheckLazyUpdates( void ) {
 #ifdef USE_LAZY_LOAD
 	if(cl_lazyLoad->integer <= 2 || cls.lazyLoading)
 #endif
-	for(int j = 0; j < 4; j++) {
+	for(int j = 0; j < 5; j++) {
 		// always returns the first download requested by FS_*
 		if(downloadNeeded[0] == '\0') {
 			Sys_UpdateNeeded(j, ready, downloadNeeded);
@@ -3937,18 +3938,18 @@ void CL_CheckLazyUpdates( void ) {
 		}
 
 #ifdef USE_LAZY_LOAD
-		if(j == 0) {
+		if(j == 1) {
 			if(cls.rendererStarted)
 				re.UpdateModel(ready);
-		} else if (j == 1) {
+		} else if (j == 2) {
 			if(cls.soundRegistered)
 				S_UpdateSound(ready, qtrue);
-		} else if (j == 2) {
+		} else if (j == 3) {
 			ready[12] = '\0';
 			if(cls.rendererStarted) {
 				re.UpdateShader(&ready[13], atoi(&ready[0]));
 			}
-		} else if (j == 3) 
+		} else if (j == 4 || j == 0)  // indexes and files
 #endif
 		{
 			// intercept this here because it's client only code
@@ -4339,6 +4340,10 @@ This is the only place that any of these functions are called from
 ============================
 */
 void CL_StartHunkUsers( void ) {
+#ifdef USE_ASYNCHRONOUS
+	qboolean firstStart = qfalse;
+#endif
+
 	if (!com_cl_running) {
 		return;
 	}
@@ -4388,6 +4393,10 @@ void CL_StartHunkUsers( void ) {
 		Sys_SetStatus("Loading UI...");
 		cls.uiStarted = qtrue;
 		CL_InitUI(qfalse);
+#ifdef USE_ASYNCHRONOUS
+		if(uivm && cls.uiStarted)
+			firstStart = qtrue;
+#endif
 	}
 
 	if(cls.uiStarted && Cvar_VariableString("ui_breadCrumb")[0]) {
@@ -4401,6 +4410,9 @@ void CL_StartHunkUsers( void ) {
 		Key_SetCatcher( Key_GetCatcher( ) | KEYCATCH_CONSOLE );
 		// not connecting?
 		Com_Printf( S_COLOR_RED "WARNING: Using asynchronous build without an early \\connect <address> command.\n");
+	} else if (firstStart && (Key_GetCatcher( ) & KEYCATCH_CONSOLE)) {
+		// close console if UI just started
+		Key_SetCatcher( Key_GetCatcher( ) & ~KEYCATCH_CONSOLE );
 	}
 
 #endif

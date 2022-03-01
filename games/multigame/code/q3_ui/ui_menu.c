@@ -182,7 +182,7 @@ static void Main_MenuDraw( void ) {
 	adjust = 5.0 * sin( (float)uis.realtime / 5000 );
 	VectorSet( angles, 0, 180 + adjust, 0 );
 	AnglesToAxis( angles, ent.axis );
-	ent.hModel = trap_R_RegisterModel( MAIN_BANNER_MODEL );
+	ent.hModel = s_main.bannerModel;
 	VectorCopy( origin, ent.origin );
 	VectorCopy( origin, ent.lightingOrigin );
 	ent.renderfx = RF_LIGHTING_ORIGIN | RF_NOSHADOW;
@@ -266,6 +266,7 @@ void UI_MainMenu( void ) {
 	
 	memset( &s_main, 0 ,sizeof(mainmenu_t) );
 	memset( &s_errorMessage, 0 ,sizeof(errorMessage_t) );
+
 
 	// com_errorMessage would need that too
 	MainMenu_Cache();
