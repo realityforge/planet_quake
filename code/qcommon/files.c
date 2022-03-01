@@ -688,6 +688,7 @@ void Sys_FileNeeded(const char *needs, qboolean isDirectoryIndex) {
 			downloadTable = shaderCallback;
 		}
 	}
+	
 	//Com_Printf("file needed! %s %s\n", filename, loading);
 
   if(!filename[0]) {
@@ -801,7 +802,6 @@ static void ParseJSONFileList(char *buf, int len, char *list, int *count, int *m
 				if((s = Q_stristr(link, FS_GetCurrentGameDir()))
 					&& lenLink > length + 2) {
 					// inject filepath into pk3cache.dat with some unknown information
-				Com_Printf("wtf? %s\n", s);
 					if((*count) < 1024)
 						strcpy(list + (*max), s);
 					if(count)
@@ -984,7 +984,7 @@ void MakeDirectoryBuffer(char *paths, int count, int length, const char *parentD
 #endif
 		FS_ConvertFilename( curFile->name );
 		hash = FS_HashFileName( curFile->name, hashSize );
-		Com_Printf("adding %li, %s\n", hash, curFile->name);
+		//Com_Printf("adding %li, %s\n", hash, curFile->name);
 
 		// store the file position in the zip
 		// TODO: update this when Accept-Ranges is implemented
@@ -1169,7 +1169,7 @@ static void FixDownloadList( const char *parentDirectory ) {
 						hash = FS_HashFileName( &download->downloadName[lengthGame+1], search->dir->hashSize );
 						if(!FindFileInIndex(hash, &download->downloadName[lengthGame+1], search->dir->hashTable)) 
 						{
-//Com_Printf("purging: %s\n", &download->downloadName[lengthGame+1]);
+Com_Printf("purging: %s\n", &download->downloadName[lengthGame+1]);
 							download->downloaded = qtrue;
 						}
 					}
@@ -1279,7 +1279,9 @@ void FS_UpdateFiles(const char *filename, const char *tempname) {
 				ParseHTMLFileList(buf, len, paths, &count, &nameLength);
 			}
 			MakeDirectoryBuffer(paths, count, nameLength, filename);
-			FixDownloadList(filename);
+			if(!Q_stristr(buf, "nextPageToken")) {
+				FixDownloadList(filename);
+			}
 			Z_Free(buf);
 		}
 		fclose(indexFile);
@@ -6869,9 +6871,6 @@ void FS_Restart( int checksumFeed ) {
 	FS_Startup();
 
 #ifdef USE_ASYNCHRONOUS
-	if(!FS_SV_FileExists("default.cfg")) {
-		Sys_FileNeeded("default.cfg", qfalse);
-	}
 
 #ifdef __WASM__
 	Sys_FileNeeded("version.json", qfalse);
@@ -6906,7 +6905,8 @@ void FS_Restart( int checksumFeed ) {
 			return;
 		}
 #ifdef USE_ASYNCHRONOUS
-		Com_Printf( S_COLOR_RED "Couldn't load default.cfg" );
+		Com_Printf( S_COLOR_RED "Couldn't load default.cfg\n" );
+		Sys_FileNeeded("default.cfg", qfalse);
 #else
 		Com_Error( ERR_FATAL, "Couldn't load default.cfg" );
 #endif

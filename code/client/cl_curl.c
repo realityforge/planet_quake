@@ -498,6 +498,7 @@ qboolean Com_DL_Begin( download_t *dl, const char *localName, const char *remote
   }
   segmentCount++;
   char escaped[MAX_OSPATH];
+  char pathed[MAX_OSPATH];
   memset(escaped, 0, sizeof(escaped));
   int escapedCount = 0;
   for(int i = 0; i < segmentCount; i++) {
@@ -516,22 +517,56 @@ qboolean Com_DL_Begin( download_t *dl, const char *localName, const char *remote
 		}
 #else
     if(i > 0) {
-      Q_strcat( escaped, sizeof( escaped ), "/" );
+      Q_strcat( escaped, sizeof( escaped ), "%2F" );
+      Q_strcat( pathed, sizeof( pathed ), "/" );
     }
 		Q_strcat( escaped, sizeof( escaped ), escapedName );
+		Q_strcat( pathed, sizeof( pathed ), escapedName );
 #endif
 		dl->func.free( escapedName );
     escapedCount += len + 1;
   }
 
 	{
+
+#ifdef USE_ASYNCHRONOUS
+		// changes the URL to a directory list request for google storage
+		if(Q_stristr(remoteURL, "storage.googleapis.com")) {
+			const char *o = Q_stristr(remoteURL, "/o/");
+			if(localName[strlen(localName)-1] == '/' && o) {
+				int length;
+				int lengthBucket;
+				const char *b = Q_stristr(remoteURL, "/b/");
+				// make a directory index.json out of the URL by taking the path after /o/ and appending
+				//  it to a new URL with the listing query parameters
+				// e.g. https://www.googleapis.com/storage/v1/b/quake.games/o/?maxResults=10&prefix=assets%2F
+				Q_strncpyz( dl->URL, "https://www.googleapis.com/storage/v1/b/", sizeof( dl->URL ) );
+				length = strlen(dl->URL);
+				lengthBucket = o - b;
+				for(int j = 0; j < lengthBucket; j++) {
+					dl->URL[length] = remoteURL[b - remoteURL + 3 + j];
+					length++;
+				}
+				dl->URL[length] = '\0';
+				Q_strcat( dl->URL, sizeof( dl->URL ), "?maxResults=10&prefix=" );
+				Q_strcat( dl->URL, sizeof( dl->URL ), o + 3 );
+			} else {
+				Q_strncpyz( dl->URL, remoteURL, sizeof( dl->URL ) );
+				if(!Q_stristr(dl->URL, "altmedia") && !strrchr(dl->URL, '?')) {
+					Q_strcat(dl->URL, sizeof(dl->URL), "?alt=media");
+				}
+			}
+		} else 
+		
+
+#endif
 		Q_strncpyz( dl->URL, remoteURL, sizeof( dl->URL ) );
 
 		if ( !Q_replace( "%1", escaped, dl->URL, sizeof( dl->URL ) ) )
 		{
 			if ( dl->URL[strlen(dl->URL)] != '/' )
 				Q_strcat( dl->URL, sizeof( dl->URL ), "/" );
-			Q_strcat( dl->URL, sizeof( dl->URL ), escaped );
+			Q_strcat( dl->URL, sizeof( dl->URL ), pathed );
 			dl->headerCheck = qfalse;
 		}
 		else
