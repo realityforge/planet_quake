@@ -756,7 +756,71 @@ void Sys_FileNeeded(const char *needs, qboolean isDirectoryIndex) {
 }
 
 
-static void ParseHtmlFileList(char *buf, int len, char *list, int *count, int *max) {
+static void ParseJSONFileList(char *buf, int len, char *list, int *count, int *max) {
+	// count <tr/<li/<td/<ol/<ul/<div/<h
+	//   until default.cfg is found, then add all the detected file names
+	//   to the pk3cache.dat file. This will make it easy for the server
+	//   provided q3cache.dat to checked at the same time.
+	char link[MAX_QPATH];
+	int lenLink = 0;
+	int length = strlen(FS_GetCurrentGameDir());
+	int c = 0;
+	qboolean insideAnchor = qfalse;
+	qboolean insideHref = qfalse;
+	if(max) *max = 0;
+	if(count) *count = 0;
+	while(c < len) {
+		if(!insideAnchor && buf[c] == '"') {
+			c++;
+
+			// tags
+			if(buf[c] == 'n' && buf[c+1] == 'a' && buf[c+2] == 'm' && buf[c+3] == 'e' && buf[c+4] == '"') {
+				insideAnchor = qtrue;
+				c += 5;
+			}
+		}
+
+		if(!insideHref && buf[c] == ',') {
+			insideAnchor = qfalse;
+			insideHref = qfalse;
+			// TODO: parse poorly formed links?
+		}
+
+		// attributes
+		if(insideAnchor && !insideHref && buf[c] == '"') {
+			c++;
+			insideHref = qtrue;
+			lenLink = 0;
+		}
+
+		if(insideHref) {
+			if(buf[c] == '"') {
+				const char *s;
+				insideHref = qfalse;
+				link[lenLink] = '\0';
+				if((s = Q_stristr(link, FS_GetCurrentGameDir()))
+					&& lenLink > length + 2) {
+					// inject filepath into pk3cache.dat with some unknown information
+				Com_Printf("wtf? %s\n", s);
+					if((*count) < 1024)
+						strcpy(list + (*max), s);
+					if(count)
+						(*count)++;
+					if(max)
+						(*max) += strlen(s) + 1;
+				}
+			} else {
+				link[lenLink] = buf[c];
+				lenLink++;
+			}
+		}
+
+		c++;
+	}
+}
+
+
+static void ParseHTMLFileList(char *buf, int len, char *list, int *count, int *max) {
 	// count <tr/<li/<td/<ol/<ul/<div/<h
 	//   until default.cfg is found, then add all the detected file names
 	//   to the pk3cache.dat file. This will make it easy for the server
@@ -829,7 +893,6 @@ void MakeDirectoryBuffer(char *paths, int count, int length, const char *parentD
 	char localName[MAX_QPATH];
 	char *namePtr;
 	const char *s;
-	const char *realPath;
 	long hash;
 	int hashSize;
 	int dirSize;
@@ -921,7 +984,7 @@ void MakeDirectoryBuffer(char *paths, int count, int length, const char *parentD
 #endif
 		FS_ConvertFilename( curFile->name );
 		hash = FS_HashFileName( curFile->name, hashSize );
-		//Com_Printf("adding %li, %s\n", hash, curFile->name);
+		Com_Printf("adding %li, %s\n", hash, curFile->name);
 
 		// store the file position in the zip
 		// TODO: update this when Accept-Ranges is implemented
@@ -1205,12 +1268,16 @@ void FS_UpdateFiles(const char *filename, const char *tempname) {
 		FILE *indexFile = Sys_FOpen(realPath, "rb");
 		int len = FS_FileLength(indexFile);
 		if(len < 1024 * 1024 * 50) {
-			char paths[1024 * MAX_QPATH];
+			char paths[1024 * MAX_OSPATH];
 			int count = 0, nameLength = 0;
 			char *buf = (char *)Z_TagMalloc(len + 1, TAG_GENERAL);
 			fread(buf, len, 1, indexFile);
 			buf[len] = '\0';
-			ParseHtmlFileList(buf, len, paths, &count, &nameLength);
+			if(buf[0] == '{') {
+				ParseJSONFileList(buf, len, paths, &count, &nameLength);
+			} else {
+				ParseHTMLFileList(buf, len, paths, &count, &nameLength);
+			}
 			MakeDirectoryBuffer(paths, count, nameLength, filename);
 			FixDownloadList(filename);
 			Z_Free(buf);
