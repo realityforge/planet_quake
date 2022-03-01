@@ -599,7 +599,9 @@ void Sys_UpdateNeeded( int tableId, char *ready, char *downloadNeeded ) {
 	downloadLazy_t* *downloadTable = downloadTables[tableId];
 	downloadLazy_t *download;
 	int time = Sys_Milliseconds();
-	ready[0] = 0;
+	if(ready) {
+		ready[0] = 0;
+	}
 	if(downloadNeeded) {
 		downloadNeeded[0] = 0;
 	}
@@ -612,7 +614,7 @@ void Sys_UpdateNeeded( int tableId, char *ready, char *downloadNeeded ) {
 				if(download->downloaded) {
 					continue;
 				}
-				if(download->ready && ready[0] == '\0') {
+				if(download->ready && ready && ready[0] == '\0') {
 					memcpy(ready, download->loadingName, MAX_OSPATH);
 					download->downloaded = qtrue; // incase its not cleared right away
 					continue;
@@ -623,12 +625,12 @@ void Sys_UpdateNeeded( int tableId, char *ready, char *downloadNeeded ) {
 						strcpy(downloadNeeded, download->downloadName);
 					}
 				}
-				if((!downloadNeeded || downloadNeeded[0] != '\0') && ready[0] != '\0') {
+				if((!downloadNeeded || downloadNeeded[0] != '\0') && (!ready || ready[0] != '\0')) {
 					// we have both set
 					break;
 				}
 			} while((download = download->next) != NULL);
-			if((!downloadNeeded || downloadNeeded[0] != '\0') && ready[0] != '\0') {
+			if((!downloadNeeded || downloadNeeded[0] != '\0') && (!ready || ready[0] != '\0')) {
 				break;
 			}
     }

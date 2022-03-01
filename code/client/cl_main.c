@@ -144,6 +144,13 @@ extern void CL_MenuModified(char *oldValue, char *newValue, cvar_t *cv);
 cvar_t  *cl_lazyLoad;
 #endif
 
+#ifdef USE_ASYNCHRONOUS
+cvar_t *cl_dlSimultaneous;
+#ifdef USE_CURL
+download_t *cl_downloads;
+#endif
+#endif
+
 clientActive_t		cl;
 clientConnection_t	clc;
 clientStatic_t		cls;
@@ -1387,6 +1394,11 @@ void CL_ShutdownAll( void ) {
 
 #ifdef USE_CURL
 	Com_DL_Cleanup(&download);
+#ifdef USE_ASYNCHRONOUS
+	for(int i = 0; i < cl_dlSimultaneous->integer; i++) {
+		Com_DL_Cleanup(&cl_downloads[i]);
+	}
+#endif
 #endif
 
 	// clear and mute all sounds until next registration
@@ -3891,17 +3903,24 @@ void Sys_UpdateNeeded( int tableId, char *ready, char *downloadNeeded);
 void FS_UpdateFiles(const char *filename, const char* tempname);
 
 static int secondTimer = 0;
+static int thirdTimer = 0;
 
 void CL_CheckLazyUpdates( void ) {
 	char downloadNeeded[MAX_OSPATH];
 	char ready[MAX_OSPATH];
 	int newTime = Sys_Milliseconds();
 
-	if(newTime - secondTimer < 50) {
-		return;
+	if(newTime - secondTimer > 1000) {
+		secondTimer = newTime;
 	}
 
-	secondTimer = newTime;
+	if(newTime - thirdTimer > 1000 / cl_dlSimultaneous->integer) {
+		thirdTimer = newTime;
+	}
+	
+	if(secondTimer < newTime && thirdTimer < newTime) {
+		return;
+	}
 
 	downloadNeeded[0] = '\0';
 	ready[0] = '\0';
@@ -3911,32 +3930,33 @@ void CL_CheckLazyUpdates( void ) {
 #endif
 	for(int j = 0; j < 5; j++) {
 		// always returns the first download requested by FS_*
-		if(downloadNeeded[0] == '\0') {
-			Sys_UpdateNeeded(j, ready, downloadNeeded);
-			// check for files that need to be downloaded, runs on separate thread!?
-			if(downloadNeeded[0] != '\0') {
-				if(qfalse
+		Sys_UpdateNeeded(j, 
+			secondTimer == newTime && ready[0] == '\0' ? ready : NULL, 
+			thirdTimer == newTime && downloadNeeded[0] == '\0' ? downloadNeeded : NULL);
+
+		// check for files that need to be downloaded, runs on separate thread!?
+		if(thirdTimer == newTime && downloadNeeded[0] != '\0') {
+			thirdTimer++; // so it doesn't trigger again
+			//if(
 #ifdef USE_CURL
-					|| !Com_DL_InProgress( &download )
+				// we don't care if the USE_ASYNCHRONOUS code in the call cancels 
+				//   because it is requeued 1.5 seconds later
+				//|| !Com_DL_InProgress( &download ) // never true because download isn't used by async anymore
 #endif
 #ifdef __WASM__
-					|| !clc.downloadTempName[0]
+				//|| !clc.downloadTempName[0]
 #endif
-				) {
-					CL_Download( "lazydl", downloadNeeded, qfalse );
-				}
-			}
-		} else {
-			Sys_UpdateNeeded(j, ready, NULL);
+			//) {
+			CL_Download( "lazydl", downloadNeeded, qfalse );
+			//}
 		}
 
-		if(strlen(ready) == 0) {
-			// if we break here, nothing will update while download is in progress
-			//if(downloadNeeded && downloadNeeded[0] != '\0')
-			//	break; 
+		// if we break here, nothing will update while download is in progress
+		if(secondTimer != newTime || ready[0] == '\0') {
 			continue;
 		}
 
+		secondTimer++; // so it doesn't trigger again
 #ifdef USE_LAZY_LOAD
 		if(j == 1) {
 			if(cls.rendererStarted)
@@ -3971,6 +3991,7 @@ void CL_CheckLazyUpdates( void ) {
 			//VM_Call( uivm, UI_INIT, (cls.state >= CA_AUTHORIZING && cls.state < CA_ACTIVE) );
 		}
 #endif
+
 		break; // something updated, that's good for this frame
 	}
 
@@ -3996,6 +4017,13 @@ void CL_Frame( int msec, int realMsec ) {
 	if ( download.cURL ) {
 		Com_DL_Perform( &download );
 	}
+#ifdef USE_ASYNCHRONOUS
+	for(int i = 0; i < cl_dlSimultaneous->integer; i++) {
+		if(cl_downloads[i].cURLM) {
+			Com_DL_Perform(&cl_downloads[i]);
+		}
+	}
+#endif
 #endif
 
 
@@ -5496,7 +5524,9 @@ void CL_Init( void ) {
 #endif
 
 #ifdef USE_ASYNCHRONOUS
+	cl_dlSimultaneous = Cvar_Get( "cl_dlSimultaneous", "20", CVAR_ARCHIVE_ND );
 	cl_dlURL = Cvar_Get( "cl_dlURL", "http://local.games:8080/multigame", CVAR_ARCHIVE_ND );
+	cl_downloads = Z_Malloc( sizeof(download_t) * cl_dlSimultaneous->integer );
 #else
 	cl_dlURL = Cvar_Get( "cl_dlURL", "http://ws.q3df.org/maps/download/%1", CVAR_ARCHIVE_ND );
 #endif
@@ -5660,6 +5690,14 @@ void CL_Shutdown( const char *finalmsg, qboolean quit ) {
 		return;
 
 	Com_Printf( "----- Client Shutdown (%s) -----\n", finalmsg );
+
+#ifdef USE_ASYNCHRONOUS
+#ifdef USE_CURL
+	if(cl_downloads) {
+		Z_Free(cl_downloads);
+	}
+#endif
+#endif
 
 	if ( recursive ) {
 		Com_Printf( "WARNING: Recursive CL_Shutdown()\n" );
@@ -6738,6 +6776,9 @@ qboolean CL_Download( const char *cmd, const char *pakname, qboolean autoDownloa
 	char url[MAX_OSPATH];
 	char name[MAX_CVAR_VALUE_STRING];
 	const char *s;
+#ifdef USE_ASYNCHRONOUS
+	int dli;
+#endif
 
 	if ( cl_dlURL->string[0] == '\0' )
 	{
@@ -6756,9 +6797,34 @@ qboolean CL_Download( const char *cmd, const char *pakname, qboolean autoDownloa
 		pakname = s+1;
 
 #else
+	
 	s = strchr( pakname, '/' );
 	if ( s )
 		pakname = s+1;
+
+	if(!autoDownload) {
+		int i;
+		int empty = -1;
+		for(i = 0; i < cl_dlSimultaneous->integer; i++) {
+			if(!Com_DL_InProgress(&cl_downloads[i])) {
+				empty = i;
+			} else if (!Q_stricmp(cl_downloads[i].Name, pakname)) {
+				// already found in current downloads
+				//Com_Printf("already in list: %i, %s != %s\n", i, cl_downloads[i].Name, pakname);
+				return qfalse;
+			} else {
+			}
+		}
+		if(empty == -1) {
+			// still downloading in all slots!
+			//Com_Printf("already downloading: %s\n", pakname);
+			return qfalse;
+		} else {
+			//Com_Printf("starting:%s\n", pakname);
+			dli = empty;
+		}
+	}
+
 
 	if( !Q_stricmp( cmd, "lazydl" ) ) {
 		// must be looking for a directory index
@@ -6784,6 +6850,10 @@ qboolean CL_Download( const char *cmd, const char *pakname, qboolean autoDownloa
 		}
 	}
 
+#ifdef USE_ASYNCHRONOUS
+	if(!autoDownload)
+		return Com_DL_Begin( &cl_downloads[dli], pakname, cl_dlURL->string, autoDownload );
+#endif	
 	return Com_DL_Begin( &download, pakname, cl_dlURL->string, autoDownload );
 }
 

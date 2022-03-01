@@ -35,7 +35,6 @@ void S_UpdateSound(char *name, qboolean compressed)
 {
 	updateSound = qtrue;
 
-Com_Printf("Updating sound: %s\n", name);
 	S_RegisterSound(name, compressed);
 	
 	updateSound = s_lazyLoad->integer < 2;

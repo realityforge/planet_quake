@@ -20,9 +20,13 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 ===========================================================================
 */
 
-#ifdef USE_CURL
 #include "client.h"
+#ifdef USE_CURL
 cvar_t *cl_cURLLib;
+
+#ifdef __WASM__
+#error this code shouldn't be used with WebAssembly
+#endif
 
 #define ALLOWED_PROTOCOLS ( CURLPROTO_HTTP | CURLPROTO_HTTPS | CURLPROTO_FTP | CURLPROTO_FTPS )
 
@@ -755,7 +759,7 @@ qboolean Com_DL_Perform( download_t *dl )
 				// send to files for a quick scanning and adding to directory index
 				Sys_FileReady( dl->Name, dl->TempName );
 			} else {
-				n = FS_GetZipChecksum( va("%s%c%s.pk3", dl->gameDir, PATH_SEP, dl->TempName) );
+				n = FS_GetZipChecksum( va("%s%c%s", dl->gameDir, PATH_SEP, dl->TempName) );
 				Com_sprintf( clc.downloadName, sizeof( clc.downloadName ), "%s/%s", dl->gameDir, dl->Name );
 				FS_SV_Rename( dl->TempName, clc.downloadName );
 				Sys_FileReady( dl->Name, clc.downloadName );
@@ -812,7 +816,7 @@ qboolean Com_DL_Perform( download_t *dl )
 #ifdef USE_ASYNCHRONOUS
 		Sys_FileReady(dl->Name, NULL);
 
-		if(!dl->Cancelled && code != 404)
+		if( !dl->Cancelled /* && code != 404 */ )
 #endif
 		Com_Printf( S_COLOR_RED "Download Error: %s Code: %ld URL: %s/%s\n",
 			dl->func.easy_strerror( msg->data.result ), 
