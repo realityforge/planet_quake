@@ -289,7 +289,6 @@ bool ApplySurfaceParm( const char *name, int *contentFlags, int *surfaceFlags, i
  */
 
 void BeginMapShaderFile( const char *mapFile ){
-	printf("hellO!");
 	/* dummy check */
 	mapName.clear();
 	mapShaderFile = "";

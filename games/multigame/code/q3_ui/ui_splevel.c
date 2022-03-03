@@ -920,7 +920,7 @@ void UI_SPLevelMenu( void ) {
 	int			trainingLevel;
 	const char	*arenaInfo;
 
-	UI_LoadArenas();
+	//UI_LoadArenas();
 
 	trainingTier = -1;
 	arenaInfo = UI_GetSpecialArenaInfo( "training" );

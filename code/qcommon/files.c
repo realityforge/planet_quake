@@ -691,7 +691,7 @@ void Sys_FileNeeded(const char *needs, qboolean isDirectoryIndex) {
 		}
 	}
 	
-	//Com_Printf("file needed! %s %s\n", filename, loading);
+//Com_Printf("file needed! %s %s\n", filename, loading);
 
   if(!filename[0]) {
 		return;
@@ -713,7 +713,7 @@ void Sys_FileNeeded(const char *needs, qboolean isDirectoryIndex) {
 		downloadSize = sizeof(downloadLazy_t)
 				+ MAX_OSPATH /* because it's replaced with temp download name strlen(loading) + 1 */ 
 				+ strlen(filename) + 1;
-		download = (downloadLazy_t *)Z_TagMalloc(downloadSize, TAG_SMALL);
+		download = (downloadLazy_t *)Z_Malloc(downloadSize);
 		memset(download, 0, downloadSize);
 		download->loadingName = &((void *)download)[sizeof(downloadLazy_t)];
 		download->downloadName = download->loadingName + MAX_OSPATH;
@@ -764,7 +764,7 @@ static void ParseJSONFileList(char *buf, int len, char *list, int *count, int *m
 	//   until default.cfg is found, then add all the detected file names
 	//   to the pk3cache.dat file. This will make it easy for the server
 	//   provided q3cache.dat to checked at the same time.
-	char link[MAX_QPATH];
+	char link[MAX_OSPATH];
 	int lenLink = 0;
 	int length = strlen(FS_GetCurrentGameDir());
 	int c = 0;
@@ -827,7 +827,7 @@ static void ParseHTMLFileList(char *buf, int len, char *list, int *count, int *m
 	//   until default.cfg is found, then add all the detected file names
 	//   to the pk3cache.dat file. This will make it easy for the server
 	//   provided q3cache.dat to checked at the same time.
-	char link[MAX_QPATH];
+	char link[MAX_OSPATH];
 	int lenLink = 0;
 	int length = strlen(FS_GetCurrentGameDir());
 	int c = 0;
@@ -892,18 +892,19 @@ static void FS_CheckIndex(const long fullHash, const char *filename, qboolean is
 
 
 void MakeDirectoryBuffer(char *paths, int count, int length, const char *parentDirectory) {
-	char localName[MAX_QPATH];
+	char localName[MAX_OSPATH];
 	char *namePtr;
 	const char *s;
 	long hash;
 	int hashSize;
 	int dirSize;
 	void *dirStorage;
-	searchpath_t	*search;
+	searchpath_t *search;
+	fileInPack_t *curFile;
 	qboolean hasIndex = qfalse;
-// give us some room to expand with additional directory requests
-#define RESERVE_COUNT 1024 //count < 128 ? 128 : !fs_searchpaths ? 4096 : count;
-	hashSize = FS_PakHashSize( RESERVE_COUNT );
+
+	// give us some room to expand with additional directory requests
+	hashSize = FS_PakHashSize( 4096 ); //count < 128 ? 128 : !fs_searchpaths ? 4096 : count;
 
 	for ( search = fs_searchpaths ; search ; search = search->next ) {
 		if(search->dir 
@@ -921,32 +922,33 @@ void MakeDirectoryBuffer(char *paths, int count, int length, const char *parentD
 		return;
 	}
 
+
 	if(!search->dir->hashTable) {
 		// laid out the same was as a pk3 buffer
-		dirSize = length + RESERVE_COUNT * MAX_OSPATH
+		dirSize = length
 			+ hashSize * sizeof(intptr_t)
-			+ RESERVE_COUNT * sizeof(fileInPack_t);
-		dirStorage = Z_TagMalloc( dirSize, TAG_PACK );
+			+ count * sizeof(fileInPack_t);
+		dirStorage = Z_Malloc( dirSize );
 		Com_Memset( dirStorage, 0, dirSize );
 		search->dir->numfiles = 0;
 		search->dir->hashSize = hashSize;
 		search->dir->hashTable = (fileInPack_t **)dirStorage;
 		search->dir->buildBuffer = (fileInPack_t*)( search->dir->hashTable + hashSize );
 		// TODO: BUG! putting names in wrong place variable reserve count?
-		namePtr = (char*)( search->dir->buildBuffer + RESERVE_COUNT );
+		namePtr = (char*)( search->dir->buildBuffer + count );
+		curFile = search->dir->buildBuffer;
 	} else {
-		namePtr = (char*)( search->dir->buildBuffer + RESERVE_COUNT );
-		for(int i = 0; i < search->dir->numfiles; i++) {
-			namePtr += strlen(namePtr) + 1;
-		}
+		dirSize = length + count * sizeof(fileInPack_t);
+		dirStorage = Z_Malloc( dirSize );
+		Com_Memset( dirStorage, 0, dirSize );
+		curFile = (fileInPack_t*)dirStorage;
+		namePtr = (char*)( curFile + count );
 	}
 	
 	// insert into the hash table
-	fileInPack_t* curFile = search->dir->buildBuffer + search->dir->numfiles;
 	char *currentPath = paths;
 	for ( int i = 0; i < count; i++ )
 	{
-		if(search->dir->numfiles >= RESERVE_COUNT) break;
 		curFile->name = namePtr;
 		// TODO: check if it matches current games?
 		strcpy( localName, currentPath );
@@ -986,7 +988,7 @@ void MakeDirectoryBuffer(char *paths, int count, int length, const char *parentD
 #endif
 		FS_ConvertFilename( curFile->name );
 		hash = FS_HashFileName( curFile->name, hashSize );
-		//Com_Printf("adding %li, %s\n", hash, curFile->name);
+//Com_Printf("adding %li, %s\n", hash, curFile->name);
 
 		// store the file position in the zip
 		// TODO: update this when Accept-Ranges is implemented
@@ -1033,7 +1035,7 @@ fileInPack_t *FindFileInIndex(long hash, const char *filename, fileInPack_t* *ha
 	if(hashTable[hash]) {
 		pakFile = hashTable[hash];
 		do {
-			//Com_Printf("comparing: %i,  %s != %s\n", hash, pakFile->name, filename);
+//Com_Printf("comparing: %i,  %s != %s\n", hash, pakFile->name, filename);
 			if ( !FS_FilenameCompare( pakFile->name, filename ) ) {
 				return pakFile;
 			}
@@ -1171,7 +1173,7 @@ static void FixDownloadList( const char *parentDirectory ) {
 						hash = FS_HashFileName( &download->downloadName[lengthGame+1], search->dir->hashSize );
 						if(!FindFileInIndex(hash, &download->downloadName[lengthGame+1], search->dir->hashTable)) 
 						{
-Com_Printf("purging: %s\n", &download->downloadName[lengthGame+1]);
+//Com_Printf("purging: %i, %s\n", hash, &download->downloadName[lengthGame+1]);
 							download->downloaded = qtrue;
 						}
 					}
@@ -1184,7 +1186,7 @@ Com_Printf("purging: %s\n", &download->downloadName[lengthGame+1]);
 
 void FS_UpdateFiles(const char *filename, const char *tempname) {
 
-//Com_Printf("updating files: %s -> %s\n", filename, tempname);
+Com_Printf("updating files: %s -> %s\n", filename, tempname);
 
 #if defined(USE_LIVE_RELOAD) || defined(__WASM__)
 	if(Q_stristr(tempname, "version.json")) {
@@ -1212,11 +1214,7 @@ void FS_UpdateFiles(const char *filename, const char *tempname) {
 				lastVersionTime = approxTime;
 				// version was supposed to describe what changed in each index, 
 				//   0 - main program, 1 - asset files, 2 - scripts, 3 - sounds, 4 - qvms?
-#ifndef __WASM__
-				Cbuf_AddText("wait; vid_restart;");
-#else
-				CL_StartHunkUsers();
-#endif
+				Cbuf_AddText("wait; vid_restart lazy;");
 			}
 		}
 	} else
@@ -1231,10 +1229,7 @@ void FS_UpdateFiles(const char *filename, const char *tempname) {
 	// try to reload UI with current game if needed
 	if(Q_stristr(tempname, "vm/ui.qvm")) {
     Cvar_Set("com_skipLoadUI", "0");
-		CL_StartHunkUsers();
-#ifdef USE_LIVE_RELOAD
-		Cbuf_AddText("wait; vid_restart;");
-#endif
+		Cbuf_AddText("wait; vid_restart lazy;");
 	} else 
 #endif
 
@@ -1246,9 +1241,7 @@ void FS_UpdateFiles(const char *filename, const char *tempname) {
 		// TODO: try to restart UI VM
 		// TODO: check on networking, shaderlist, anything else we skipped, etc again
 		com_fullyInitialized = qtrue;
-#ifndef DEDICATED
-		CL_StartHunkUsers();  // wait to start until index arrives
-#endif
+		Cbuf_AddText("wait; vid_restart lazy;");
 	} else 
 	
 	// scan index files for HTTP directories and add links to q3cache.dat
@@ -1272,7 +1265,8 @@ void FS_UpdateFiles(const char *filename, const char *tempname) {
 		if(len < 1024 * 1024 * 50) {
 			char paths[1024 * MAX_OSPATH];
 			int count = 0, nameLength = 0;
-			char *buf = (char *)Z_TagMalloc(len + 1, TAG_GENERAL);
+			memset(paths, 0, sizeof(paths));
+			char *buf = (char *)Z_TagMalloc(len + 1, TAG_PACK);
 			fread(buf, len, 1, indexFile);
 			buf[len] = '\0';
 			if(buf[0] == '{') {
@@ -1290,9 +1284,7 @@ void FS_UpdateFiles(const char *filename, const char *tempname) {
 		FS_HomeRemove( s );
 		// we should have a directory index by now to check for VMs and files we need
     Cvar_Set("com_skipLoadUI", "0");
-#ifndef DEDICATED
-		CL_StartHunkUsers();
-#endif
+		Cbuf_AddText("wait; vid_restart lazy;");
 	}
 }
 
@@ -1661,7 +1653,7 @@ void FS_CopyFile( const char *fromOSPath, const char *toOSPath ) {
 	size_t	len;
 	byte	*buf;
 
-	Com_Printf( "copy %s to %s\n", fromOSPath, toOSPath );
+	//Com_Printf( "copy %s to %s\n", fromOSPath, toOSPath );
 
 	if (strstr(fromOSPath, "journal.dat") || strstr(fromOSPath, "journaldata.dat")) {
 		Com_Printf( "Ignoring journal files\n");

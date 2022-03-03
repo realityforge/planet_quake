@@ -60,6 +60,7 @@ void UI_StartDemoLoop( void ) {
 }
 #endif
 
+/*
 void UI_SetBreadCrumb( void ) {
 	int i;
 	menucommon_s	*itemptr;
@@ -76,6 +77,7 @@ void UI_SetBreadCrumb( void ) {
 	}
 	Menu_Cache();
 }
+*/
 
 /*
 =================
@@ -106,7 +108,7 @@ void UI_PushMenu( menuframework_s *menu )
 	}
 
 	uis.activemenu = menu;
-	UI_SetBreadCrumb();
+	//UI_SetBreadCrumb();
 
 	// default cursor position
 	menu->cursor      = 0;
@@ -148,7 +150,10 @@ void UI_PopMenu (void)
 	if (uis.menusp) {
 		uis.activemenu = uis.stack[uis.menusp-1];
 		uis.firstdraw = qtrue;
-		UI_SetBreadCrumb();
+		//if(uis.activemenu->init) {
+		//	uis.activemenu->init();
+		//}
+		//UI_SetBreadCrumb();
 	}
 	else {
 		UI_ForceMenuOff ();
@@ -821,7 +826,9 @@ void UI_SetActiveMenu( uiMenuCommand_t menu, const char *breadcrumb ) {
 
 	switch ( menu ) {
 	case UIMENU_NONE:
+	/*
 		if(breadcrumb) {
+			return;
 			if(Q_stristr(breadcrumb, "chooselevel")) {
 				UI_SPLevelMenu();
 			} else
@@ -832,9 +839,9 @@ void UI_SetActiveMenu( uiMenuCommand_t menu, const char *breadcrumb ) {
 				UI_ArenaServersMenu();
 				return;
 			}
-		} else {
+		} else { */
 			UI_ForceMenuOff();
-		}
+		//}
 		return;
 	case UIMENU_MAIN:
 		UI_MainMenu();
@@ -1110,7 +1117,7 @@ void UI_Init( void ) {
 	UI_VideoCheck( -99999 );
 
 	// initialize the menu system
-	UI_Cache_f();
+	Menu_Cache();
 
 	uis.activemenu = NULL;
 	uis.menusp     = 0;
@@ -1254,8 +1261,8 @@ void UI_Refresh( int realtime )
 	{
 		if(ui_breadCrumb.modificationCount > breadcrumbModificationCount)
 		{
-			breadcrumbModificationCount = ui_breadCrumb.modificationCount;
-			UI_SetActiveMenu(UIMENU_NONE, ui_breadCrumb.string);
+			//breadcrumbModificationCount = ui_breadCrumb.modificationCount;
+			//UI_SetActiveMenu(UIMENU_NONE, ui_breadCrumb.string);
 		}
 		if (uis.activemenu->fullscreen)
 		{

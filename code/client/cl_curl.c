@@ -464,6 +464,12 @@ Start downloading file from remoteURL and save it under fs_game/localName
 */
 qboolean Com_DL_Begin( download_t *dl, const char *localName, const char *remoteURL, qboolean autoDownload )
 {
+  char escaped[MAX_OSPATH];
+  char pathed[MAX_OSPATH];
+  int escapedCount = 0;
+  int len = strlen(localName);
+  int segmentCount = 0;
+  char segment[MAX_OSPATH];
 	char *s;
 
 	if ( Com_DL_InProgress( dl ) )
@@ -488,9 +494,6 @@ qboolean Com_DL_Begin( download_t *dl, const char *localName, const char *remote
 		return qfalse;
 	}
 
-  int len = strlen(localName);
-  int segmentCount = 0;
-  char segment[MAX_OSPATH];
   memset(segment, 0, sizeof(segment));
   for(int i = 0; i < len; i++) {
     if(localName[i] == '/') {
@@ -501,10 +504,8 @@ qboolean Com_DL_Begin( download_t *dl, const char *localName, const char *remote
     }
   }
   segmentCount++;
-  char escaped[MAX_OSPATH];
-  char pathed[MAX_OSPATH];
   memset(escaped, 0, sizeof(escaped));
-  int escapedCount = 0;
+  memset(pathed, 0, sizeof(pathed));
   for(int i = 0; i < segmentCount; i++) {
     char *escapedName;
     len = strlen(&segment[escapedCount]);
@@ -552,7 +553,7 @@ qboolean Com_DL_Begin( download_t *dl, const char *localName, const char *remote
 					length++;
 				}
 				dl->URL[length] = '\0';
-				Q_strcat( dl->URL, sizeof( dl->URL ), "?maxResults=10&prefix=" );
+				Q_strcat( dl->URL, sizeof( dl->URL ), "?maxResults=100&delimiter=%2f&prefix=" );
 				Q_strcat( dl->URL, sizeof( dl->URL ), o + 3 );
 			} else {
 				Q_strncpyz( dl->URL, remoteURL, sizeof( dl->URL ) );
@@ -561,14 +562,13 @@ qboolean Com_DL_Begin( download_t *dl, const char *localName, const char *remote
 				}
 			}
 		} else 
-		
-
 #endif
+
 		Q_strncpyz( dl->URL, remoteURL, sizeof( dl->URL ) );
 
 		if ( !Q_replace( "%1", escaped, dl->URL, sizeof( dl->URL ) ) )
 		{
-			if ( dl->URL[strlen(dl->URL)] != '/' )
+			if ( dl->URL[strlen(dl->URL)-1] != '/' )
 				Q_strcat( dl->URL, sizeof( dl->URL ), "/" );
 			Q_strcat( dl->URL, sizeof( dl->URL ), pathed );
 			dl->headerCheck = qfalse;
@@ -815,8 +815,7 @@ qboolean Com_DL_Perform( download_t *dl )
 		dl->func.easy_getinfo( msg->easy_handle, CURLINFO_RESPONSE_CODE, &code );
 #ifdef USE_ASYNCHRONOUS
 		Sys_FileReady(dl->Name, NULL);
-
-		if( !dl->Cancelled /* && code != 404 */ )
+		if( !dl->Cancelled && code != 404 )
 #endif
 		Com_Printf( S_COLOR_RED "Download Error: %s Code: %ld URL: %s/%s\n",
 			dl->func.easy_strerror( msg->data.result ), 

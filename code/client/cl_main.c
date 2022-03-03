@@ -2607,6 +2607,11 @@ static void CL_Vid_Restart_f( void ) {
 		if ( abs( cls.lastVidRestart - Sys_Milliseconds() ) < 500 )
 			return;
 
+#ifdef USE_LAZY_LOAD
+	if ( Q_stricmp( Cmd_Argv(1), "lazy" ) == 0) {
+		CL_StartHunkUsers();
+	} else 
+#endif
 	if ( Q_stricmp( Cmd_Argv(1), "keep_window" ) == 0
  		|| Q_stricmp( Cmd_Argv(1), "fast" ) == 0)
 		CL_Vid_Restart( qtrue );
@@ -3910,11 +3915,11 @@ void CL_CheckLazyUpdates( void ) {
 	char ready[MAX_OSPATH];
 	int newTime = Sys_Milliseconds();
 
-	if(newTime - secondTimer > 1000) {
+	if(newTime - secondTimer > 100) {
 		secondTimer = newTime;
 	}
 
-	if(newTime - thirdTimer > 1000 / cl_dlSimultaneous->integer) {
+	if(newTime - thirdTimer > 100 / cl_dlSimultaneous->integer) {
 		thirdTimer = newTime;
 	}
 	
@@ -4432,7 +4437,7 @@ void CL_StartHunkUsers( void ) {
 		Cvar_Set("ui_breadCrumb", "");
 	}
 
-#ifdef USE_ASYNCHRONOUS
+#if 0 //def USE_ASYNCHRONOUS
 	// init with console down like Quake 1!
 	if(!uivm && !cls.uiStarted && cls.state == CA_DISCONNECTED) {
 		Key_SetCatcher( Key_GetCatcher( ) | KEYCATCH_CONSOLE );

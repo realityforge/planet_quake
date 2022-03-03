@@ -294,7 +294,6 @@ static void PlayerSettings_SetMenuItems( void ) {
 	viewangles[PITCH] = 0;
 	viewangles[ROLL]  = 0;
 
-	
 	UI_PlayerInfo_SetModel( &s_playersettings.playerinfo, UI_Cvar_VariableString( "model" ) );
 	UI_PlayerInfo_SetInfo( &s_playersettings.playerinfo, LEGS_IDLE, TORSO_STAND, viewangles, vec3_origin, WP_MACHINEGUN, qfalse );
 

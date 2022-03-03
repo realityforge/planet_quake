@@ -1367,6 +1367,10 @@ static qboolean R_MirrorViewBySurface( const drawSurf_t *drawSurf, int entityNum
 		return qtrue;
 		// TODO: fix multiplexing cmd table and replace the view angle in scene
 	}
+#else
+	//if(entity->e.oldframe >> 8) {
+		return qfalse;
+	//}
 #endif
 
 	// render the mirror view

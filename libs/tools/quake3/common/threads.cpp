@@ -39,13 +39,15 @@ bool pacifier;
 
 bool threaded;
 
+static void RunThreadsOn( int workcnt, bool showpacifier, void ( *func )( int ) );
+
 /*
    =============
    GetThreadWork
 
    =============
  */
-int GetThreadWork( void ){
+static int GetThreadWork( void ){
 	int r;
 	int f;
 
@@ -85,7 +87,7 @@ int GetThreadWork( void ){
 
 void ( *workfunction )( int );
 
-void ThreadWorkerFunction( int threadnum ){
+static void ThreadWorkerFunction( int threadnum ){
 	int work;
 
 	while ( 1 )
@@ -167,7 +169,7 @@ void ThreadUnlock( void ){
    RunThreadsOn
    =============
  */
-void RunThreadsOn( int workcnt, bool showpacifier, void ( *func )( int ) ){
+static void RunThreadsOn( int workcnt, bool showpacifier, void ( *func )( int ) ){
 	HANDLE threadhandle[MAX_THREADS];
 	int i;
 	int start, end;
@@ -261,7 +263,7 @@ void ThreadUnlock( void ){
    RunThreadsOn
    =============
  */
-void RunThreadsOn( int workcnt, bool showpacifier, void ( *func )( int ) ){
+static void RunThreadsOn( int workcnt, bool showpacifier, void ( *func )( int ) ){
 	int i;
 	pthread_t work_threads[MAX_THREADS];
 	pthread_addr_t status;
@@ -369,7 +371,7 @@ void ThreadUnlock( void ){
    RunThreadsOn
    =============
  */
-void RunThreadsOn( int workcnt, bool showpacifier, void ( *func )( int ) ){
+static void RunThreadsOn( int workcnt, bool showpacifier, void ( *func )( int ) ){
 	int i;
 	int pid[MAX_THREADS];
 	int start, end;
@@ -529,7 +531,7 @@ void recursive_mutex_init( pthread_mutexattr_t attribs ){
    RunThreadsOn
    =============
  */
-void RunThreadsOn( int workcnt, bool showpacifier, void ( *func )( int ) ){
+static void RunThreadsOn( int workcnt, bool showpacifier, void ( *func )( int ) ){
 	pthread_mutexattr_t mattrib;
 	pthread_attr_t attr;
 	pthread_t work_threads[MAX_THREADS];
@@ -578,6 +580,7 @@ void RunThreadsOn( int workcnt, bool showpacifier, void ( *func )( int ) ){
 				Error( "pthread_create failed" );
 			}
 		}
+
 		for ( i = 0 ; i < numthreads ; i++ )
 		{
 			if ( pthread_join( work_threads[i], NULL ) != 0 ) {
@@ -623,7 +626,7 @@ void ThreadUnlock( void ){
    RunThreadsOn
    =============
  */
-void RunThreadsOn( int workcnt, bool showpacifier, void ( *func )( int ) ){
+static void RunThreadsOn( int workcnt, bool showpacifier, void ( *func )( int ) ){
 	int i;
 	int start, end;
 

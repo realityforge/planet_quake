@@ -3906,6 +3906,7 @@ qboolean VM_Compile( vm_t *vm, vmHeader_t *header ) {
 	int num_compress;
 #endif
 
+Com_Printf("goddamnit: %i\n", header->instructionCount);
 	inst = (instruction_t*)Z_Malloc( (header->instructionCount + 8 ) * sizeof( instruction_t ) );
 	instructionOffsets = (int*)Z_Malloc( header->instructionCount * sizeof( int ) );
 
@@ -3918,6 +3919,7 @@ qboolean VM_Compile( vm_t *vm, vmHeader_t *header ) {
 		Com_Printf( "VM_CompileX86 error: %s\n", errMsg );
 		return qfalse;
 	}
+Com_Printf("goddamnit 2: %i\n", header->instructionCount);
 
 	VM_ReplaceInstructions( vm, inst );
 

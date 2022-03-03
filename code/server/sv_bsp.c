@@ -23,6 +23,18 @@ static jmp_buf q3map2done;	// an ERR_DROP occurred, exit the entire frame
 
 #include "../qcommon/cm_local.h"
 
+#ifdef USE_MEMORY_MAPS
+cvar_t *sv_memoryMaps;
+cvar_t *sv_bspLight;
+cvar_t *sv_bspMinimap;
+cvar_t *sv_bspAAS;
+cvar_t *sv_bspRebuild;
+cvar_t *sv_bspMap;
+cvar_t *sv_bspSplice;
+cvar_t *sv_bspMiniSize;
+cvar_t *sv_bspMiniGrid;
+#endif
+
 char stroke[MAX_QPATH] = "";
 
 char output[2 * 1024 * 1024] = ""; // 2MB TODO: make alloc and optional
@@ -185,7 +197,7 @@ void SV_LightMap(void) {
 		return;
 	}
 
-	if((length = FS_FOpenFileRead( va("maps/%s/lm_0000.tga", cm.name), NULL, qtrue )) != -1) {
+	if((length = FS_SV_FOpenFileRead( va("maps/%s/lm_0000.tga", cm.name), NULL )) != -1) {
 		return;
 	}
 	// then we can decide not to update LM?
@@ -226,7 +238,7 @@ void SV_MakeBSP(char *memoryMap) {
 	char mapName[MAX_QPATH];
 	strcpy(mapName, va("maps/%s.map", memoryMap));
 	// no bsp file exists, try to make one, check for .map file
-	if(!FS_FileExists( mapName )) {
+	if(!FS_SV_FOpenFileRead( mapName, NULL )) {
 		Com_Printf("Couldn\'t find map file %s\n", mapName);
 		return;
 	}
@@ -311,9 +323,11 @@ int SV_MakeMap( const char **map ) {
 
 	// early exit unless we force rebuilding
 	if(!sv_bspRebuild->integer 
-		&& FS_FileExists( va("maps/%s.bsp", memoryMap) )) {
+		&& FS_SV_FOpenFileRead( va("maps/%s.bsp", memoryMap), NULL )) {
 		return 1;
 	}
+
+	Cvar_Set("sv_pure", "0");
 
 	brushC = 0;
 	if(Q_stricmp(memoryMap, "megamaze") == 0) {
@@ -332,7 +346,7 @@ int SV_MakeMap( const char **map ) {
 	if(length) {
 		// TODO: overwrite if make-time is greater than 1 min?
 		// always writes to home directory
-		mapfile = FS_FOpenFileWrite( va("maps/%s.map", memoryMap) );
+		mapfile = FS_SV_FOpenFileWrite( va("maps/%s.map", memoryMap) );
 		FS_Write( output, length, mapfile );    // overwritten later
 		FS_FCloseFile( mapfile );
 		mapPath = FS_BuildOSPath( Cvar_VariableString("fs_homepath"), 
@@ -383,7 +397,7 @@ int SV_MakeMap( const char **map ) {
 
 	// TODO: generate AAS file for bots, missing, or updated maps
 	if(sv_bspAAS->integer
-		&& (length = FS_FOpenFileRead( va("maps/%s.aas", memoryMap), NULL, qtrue )) == -1) {
+		&& (length = FS_SV_FOpenFileRead( va("maps/%s.aas", memoryMap), NULL )) == -1) {
 		
 	}
 
