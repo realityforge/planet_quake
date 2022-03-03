@@ -331,6 +331,24 @@ static void PlayerSettings_MenuEvent( void* ptr, int event ) {
 }
 
 
+
+static void PlayerSettings_Reinit( void ) {
+
+	PlayerSettings_Cache();
+
+	if(s_playersettings.playerinfo.legsModel 
+		&& s_playersettings.playerinfo.torsoModel
+		&& s_playersettings.playerinfo.headModel
+		&& s_playersettings.playerinfo.weaponModel
+		&& s_playersettings.playerinfo.legsSkin
+		&& s_playersettings.playerinfo.torsoSkin
+		&& s_playersettings.playerinfo.headSkin) {
+		return;
+	}
+
+	PlayerSettings_SetMenuItems();
+}
+
 /*
 =================
 PlayerSettings_MenuInit
@@ -343,7 +361,7 @@ static void PlayerSettings_MenuInit( void ) {
 
 	PlayerSettings_Cache();
 
-	s_playersettings.menu.init = PlayerSettings_MenuInit;
+	s_playersettings.menu.init = PlayerSettings_Reinit;
 	s_playersettings.menu.key        = PlayerSettings_MenuKey;
 	s_playersettings.menu.wrapAround = qtrue;
 	s_playersettings.menu.fullscreen = qtrue;
