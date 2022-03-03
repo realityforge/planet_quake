@@ -291,7 +291,7 @@ void UI_MainMenu( void ) {
 	s_main.menu.fullscreen = qtrue;
 	s_main.menu.wrapAround = qtrue;
 	s_main.menu.showlogo = qtrue;
-	s_main.menu.init = UI_MainMenu;
+	s_main.menu.init = MainMenu_Cache;
 
 	y = 134;
 	s_main.singleplayer.generic.type		= MTYPE_PTEXT;

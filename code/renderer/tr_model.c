@@ -511,6 +511,10 @@ static qboolean R_LoadMD3( model_t *mod, int lod, void *buffer, int fileSize, co
 
 	mod->type = MOD_MESH;
 	mod->dataSize += size;
+	if(mod->md3[lod]
+	  && ((md3Header_t *)mod->md3[lod])->ofsEnd == size) {
+		// don't make new memory, just overwrite
+	} else
 	mod->md3[lod] = ri.Hunk_Alloc( size, h_low );
 
 	Com_Memcpy( mod->md3[lod], buffer, size );

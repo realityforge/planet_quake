@@ -60,24 +60,54 @@ void UI_StartDemoLoop( void ) {
 }
 #endif
 
-/*
-void UI_SetBreadCrumb( void ) {
+static char breadcrumb[MAX_QPATH];
+const char *FilterBreadCrumb( const char *menutitle ) {
+	int i, j;
+	int count = strlen(menutitle);
+	if(count > MAX_QPATH - 1) {
+		count = MAX_QPATH - 1;
+	}
+	j = 0;
+	breadcrumb[j] = 0;
+	for ( i = 0; i < count; i++ ) {
+		if( (menutitle[i] >= 'a' && menutitle[i] <= 'z')
+			|| (menutitle[i] >= 'A' && menutitle[i] <= 'Z')
+			|| (menutitle[i] >= '0' && menutitle[i] <= '9')
+		) {
+			breadcrumb[j] = menutitle[i];
+			j++;
+		}
+	}
+	breadcrumb[j] = 0;
+	return breadcrumb;
+}
+
+
+const char *UI_GetBreadCrumb( void ) {
 	int i;
 	menucommon_s	*itemptr;
 	menuframework_s *menu = uis.activemenu;
 	for (i=0; i<menu->nitems; i++) {
 		itemptr = (menucommon_s*)menu->items[i];
 		if(itemptr->type == MTYPE_BTEXT) {
-			trap_Cvar_Set("ui_breadCrumb", ((menutext_s*)itemptr)->string);
-			return;
+			return FilterBreadCrumb(((menutext_s*)itemptr)->string);
 		}
 	}
 	if(uis.menusp == 1) {
-		trap_Cvar_Set("ui_breadCrumb", "MAIN MENU");
+		return "MAINMENU";
 	}
-	Menu_Cache();
+	return NULL;
 }
-*/
+
+static int breadcrumbModificationCount = 0;
+
+void UI_SetBreadCrumb( void ) {
+	const char *breadcrumb = UI_GetBreadCrumb();
+	if(breadcrumb) {
+		trap_Cvar_Set("ui_breadCrumb", breadcrumb);
+		breadcrumbModificationCount++; // so we don't trigger again
+	}
+}
 
 /*
 =================
@@ -108,7 +138,7 @@ void UI_PushMenu( menuframework_s *menu )
 	}
 
 	uis.activemenu = menu;
-	//UI_SetBreadCrumb();
+	UI_SetBreadCrumb();
 
 	// default cursor position
 	menu->cursor      = 0;
@@ -150,10 +180,7 @@ void UI_PopMenu (void)
 	if (uis.menusp) {
 		uis.activemenu = uis.stack[uis.menusp-1];
 		uis.firstdraw = qtrue;
-		//if(uis.activemenu->init) {
-		//	uis.activemenu->init();
-		//}
-		//UI_SetBreadCrumb();
+		UI_SetBreadCrumb();
 	}
 	else {
 		UI_ForceMenuOff ();
@@ -819,29 +846,15 @@ static void NeedCDKeyAction( qboolean result ) {
 }
 
 
-void UI_SetActiveMenu( uiMenuCommand_t menu, const char *breadcrumb ) {
+void UI_SetActiveMenu( uiMenuCommand_t menu ) {
 	// this should be the ONLY way the menu system is brought up
 	// enusure minumum menu data is cached
 	Menu_Cache();
 
+
 	switch ( menu ) {
 	case UIMENU_NONE:
-	/*
-		if(breadcrumb) {
-			return;
-			if(Q_stristr(breadcrumb, "chooselevel")) {
-				UI_SPLevelMenu();
-			} else
-			if(Q_stristr(breadcrumb, "mainmenu")) {
-				UI_SetActiveMenu(UIMENU_MAIN, NULL);
-			} else 
-			if (Q_stristr(breadcrumb, "multiplayer")) {
-				UI_ArenaServersMenu();
-				return;
-			}
-		} else { */
-			UI_ForceMenuOff();
-		//}
+		UI_ForceMenuOff();
 		return;
 	case UIMENU_MAIN:
 		UI_MainMenu();
@@ -1241,7 +1254,6 @@ void UI_UpdateScreen( void ) {
 UI_Refresh
 =================
 */
-static int breadcrumbModificationCount = 0;
 void UI_Refresh( int realtime )
 {
 	int amount;
@@ -1255,15 +1267,34 @@ void UI_Refresh( int realtime )
 
 	UI_UpdateCvars();
 
+	if(ui_breadCrumb.modificationCount > breadcrumbModificationCount)
+	{
+		breadcrumbModificationCount = ui_breadCrumb.modificationCount;
+Com_Printf("hello!!!! %s != %s\n", ui_breadCrumb.string, UI_GetBreadCrumb());
+		if(!Q_stricmp(ui_breadCrumb.string, UI_GetBreadCrumb())) {
+			if(((menuframework_s *)uis.activemenu)->init) {
+				((menuframework_s *)uis.activemenu)->init();
+			}
+		} /* else 
+		if(Q_stristr(ui_breadCrumb.string, "chooselevel")) {
+			UI_SPLevelMenu();
+		} else
+		if(Q_stristr(ui_breadCrumb.string, "mainmenu")) {
+			if(uis.menusp == 1) {
+				MainMenu_Cache();
+			} else {
+				UI_SetActiveMenu(UIMENU_MAIN);
+			}
+		} else 
+		if (Q_stristr(ui_breadCrumb.string, "multiplayer")) {
+			UI_ArenaServersMenu();
+		} */
+	}
+
 	UI_VideoCheck( realtime );
 	
 	if ( uis.activemenu )
 	{
-		if(ui_breadCrumb.modificationCount > breadcrumbModificationCount)
-		{
-			//breadcrumbModificationCount = ui_breadCrumb.modificationCount;
-			//UI_SetActiveMenu(UIMENU_NONE, ui_breadCrumb.string);
-		}
 		if (uis.activemenu->fullscreen)
 		{
 

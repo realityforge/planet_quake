@@ -3991,9 +3991,7 @@ void CL_CheckLazyUpdates( void ) {
 #if defined(USE_ASYNCHRONOUS) || defined(__WASM__)
 		// multigame has a special feature to reload an missing assets when INIT is called
 		if(cls.uiStarted && uivm && !Q_stricmp(FS_GetCurrentGameDir(), "multigame")) {
-			//DebugBreak();
-			//Cvar_Get("ui_breadCrumb", "", CVAR_ROM)->modificationCount++;
-			//VM_Call( uivm, UI_INIT, (cls.state >= CA_AUTHORIZING && cls.state < CA_ACTIVE) );
+			Cvar_Get("ui_breadCrumb", "", CVAR_ROM)->modificationCount++;
 		}
 #endif
 
@@ -4432,12 +4430,7 @@ void CL_StartHunkUsers( void ) {
 #endif
 	}
 
-	if(cls.uiStarted && Cvar_VariableString("ui_breadCrumb")[0]) {
-		VM_Call( uivm, 2, UI_SET_ACTIVE_MENU, UIMENU_BREADCRUMB, Cvar_VariableString("ui_breadCrumb") );
-		Cvar_Set("ui_breadCrumb", "");
-	}
-
-#if 0 //def USE_ASYNCHRONOUS
+#ifdef USE_ASYNCHRONOUS
 	// init with console down like Quake 1!
 	if(!uivm && !cls.uiStarted && cls.state == CA_DISCONNECTED) {
 		Key_SetCatcher( Key_GetCatcher( ) | KEYCATCH_CONSOLE );
@@ -5113,8 +5106,6 @@ void CL_LoadVM_f( void ) {
 		}
 		count++;
 		CL_InitUI(qtrue);
-		Cmd_ArgsFrom("multiplayer");
-		VM_Call( uivm, 1, UI_SET_ACTIVE_MENU, UIMENU_NONE, 1 );
 		uivmi = 0;
 		return;
   } else if (FS_SV_FOpenFileRead(va("maps/%s.bsp", name), NULL)) {

@@ -343,6 +343,7 @@ static void PlayerSettings_MenuInit( void ) {
 
 	PlayerSettings_Cache();
 
+	s_playersettings.menu.init = PlayerSettings_MenuInit;
 	s_playersettings.menu.key        = PlayerSettings_MenuKey;
 	s_playersettings.menu.wrapAround = qtrue;
 	s_playersettings.menu.fullscreen = qtrue;

@@ -639,13 +639,8 @@ qboolean Com_DL_Begin( download_t *dl, const char *localName, const char *remote
 		return qfalse;
 	}
 
-#ifdef USE_ASYNCHRONOUS
-	Com_sprintf( dl->TempName, sizeof( dl->TempName ), 
-		"%s%c%s.%08x.tmp", dl->gameDir, PATH_SEP, s, rand() | (rand() << 16) );
-#else
 	Com_sprintf( dl->TempName, sizeof( dl->TempName ), 
 		"%s%c%s.%08x.tmp", dl->gameDir, PATH_SEP, dl->Name, rand() | (rand() << 16) );
-#endif
 
 	if ( com_developer->integer )
 		dl->func.easy_setopt( dl->cURL, CURLOPT_VERBOSE, 1 );
