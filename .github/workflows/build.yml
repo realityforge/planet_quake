@@ -255,7 +255,7 @@ jobs:
         mkdir libs/linux
         sudo apt-get -qq update
         sudo apt-get -y install libcurl4-openssl-dev mesa-common-dev libxxf86dga-dev libxrandr-dev libxxf86vm-dev libasound-dev libsdl2-dev wget binaryen git
-        git clone git clone https://github.com/emscripten-core/emsdk.git
+        git clone https://github.com/emscripten-core/emsdk.git
         cd emsdk
         ./emsdk install latest
         ./emsdk activate latest
@@ -340,7 +340,6 @@ jobs:
 
     - name: Build
       run: |
-        cd /home/runner/work/planet_quake
         mkdir bin
         make -f make/build_client.make clean ${{ matrix.rule }}      RENDERER_DEFAULT=vulkan USE_SDL=1 CNAME=quake3e-vulkan NO_MAKE_LOCAL=1
         make -f make/build_client.make clean ${{ matrix.rule }}      USE_VULKAN_API=0 USE_SDL=1 NO_MAKE_LOCAL=1
@@ -385,7 +384,8 @@ jobs:
 
       - name: Create binary archives
         run: |
-          pwd
+         cd /home/runner/work/planet_quake
+         pwd
           ls -lah
           ls -lah /
           7z a -r quake3e-linux-x86.zip      ./linux-x86/*
