@@ -103,10 +103,10 @@ debug:
 	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) WORKDIRS="$(WORKDIR) $(WORKDIRS)" mkdirs
 	@$(MAKE) -f $(MKFILE)  -j 8 \
 		$(BD)/$(MOD)/cgame$(SHLIBNAME) \
-		$(BD)/$(MOD)/game$(SHLIBNAME) \
+		$(BD)/$(MOD)/qagame$(SHLIBNAME) \
 		$(BD)/$(MOD)/ui$(SHLIBNAME) \
 		$(BD)/$(MOD)/vm/cgame.qvm \
-	  $(BD)/$(MOD)/vm/game.qvm \
+	  $(BD)/$(MOD)/vm/qagame.qvm \
 	  $(BD)/$(MOD)/vm/ui.qvm \
 	  B=$(BD) GAME_CFLAGS="$(GAME_CFLAGS)" \
 	  OPTIMIZE="$(DEBUG_CFLAGS)" V=$(V)
@@ -117,10 +117,10 @@ release:
 	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) WORKDIRS="$(WORKDIR) $(WORKDIRS)" mkdirs
 	@$(MAKE) -f $(MKFILE)  -j 8 \
 	  $(BR)/$(MOD)/cgame$(SHLIBNAME) \
-	  $(BR)/$(MOD)/game$(SHLIBNAME) \
+	  $(BR)/$(MOD)/qagame$(SHLIBNAME) \
 	  $(BR)/$(MOD)/ui$(SHLIBNAME) \
 		$(BR)/$(MOD)/vm/cgame.qvm \
-	  $(BR)/$(MOD)/vm/game.qvm \
+	  $(BR)/$(MOD)/vm/qagame.qvm \
 	  $(BR)/$(MOD)/vm/ui.qvm \
 	  B=$(BR) GAME_CFLAGS="$(GAME_CFLAGS)" \
 	  OPTIMIZE="-DNDEBUG $(OPTIMIZE)" V=$(V)
@@ -131,7 +131,7 @@ debug:
 	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) WORKDIRS="$(WORKDIR) $(WORKDIRS)" mkdirs
 	@$(MAKE) -f $(MKFILE)  -j 8 \
 		$(BD)/$(MOD)/cgame$(SHLIBNAME) \
-		$(BD)/$(MOD)/game$(SHLIBNAME) \
+		$(BD)/$(MOD)/qagame$(SHLIBNAME) \
 		$(BD)/$(MOD)/ui$(SHLIBNAME) \
 	  B=$(BD) GAME_CFLAGS="$(GAME_CFLAGS)" \
 	  OPTIMIZE="$(DEBUG_CFLAGS)" V=$(V)
@@ -141,7 +141,7 @@ release:
 	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) WORKDIRS="$(WORKDIR) $(WORKDIRS)" mkdirs
 	@$(MAKE) -f $(MKFILE)  -j 8 \
 	  $(BR)/$(MOD)/cgame$(SHLIBNAME) \
-	  $(BR)/$(MOD)/game$(SHLIBNAME) \
+	  $(BR)/$(MOD)/qagame$(SHLIBNAME) \
 	  $(BR)/$(MOD)/ui$(SHLIBNAME) \
 	  B=$(BR) GAME_CFLAGS="$(GAME_CFLAGS)" \
 	  OPTIMIZE="-DNDEBUG $(OPTIMIZE)" V=$(V)
@@ -342,7 +342,7 @@ $(B)/$(MOD)/cgame$(SHLIBNAME): $(CGOBJ)
 	$(echo_cmd) "LD $@"
 	$(Q)$(CC) $(GAME_CFLAGS) $(GAME_LDFLAGS) -o $@ $(CGOBJ)
 
-$(B)/$(MOD)/game$(SHLIBNAME): $(QAOBJ)
+$(B)/$(MOD)/qagame$(SHLIBNAME): $(QAOBJ)
 	$(echo_cmd) "LD $@"
 	$(Q)$(CC) $(GAME_CFLAGS) $(GAME_LDFLAGS) -o $@ $(QAOBJ)
 
@@ -358,7 +358,7 @@ $(B)/$(MOD)/vm/cgame.qvm: $(CGVMOBJ) $(Q3ASM)
 	$(echo_cmd) "Q3ASM $@"
 	$(Q)$(Q3ASM) -o $@ -m $(CGVMOBJ)
 
-$(B)/$(MOD)/vm/game.qvm: $(QAVMOBJ) $(Q3ASM)
+$(B)/$(MOD)/vm/qagame.qvm: $(QAVMOBJ) $(Q3ASM)
 	$(echo_cmd) "Q3ASM $@"
 	$(Q)$(Q3ASM) -o $@ -m $(QAVMOBJ)
 
