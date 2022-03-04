@@ -3943,17 +3943,15 @@ void CL_CheckLazyUpdates( void ) {
 		if(thirdTimer == newTime && downloadNeeded[0] != '\0') {
 			thirdTimer++; // so it doesn't trigger again
 			//if(
-#ifdef USE_CURL
+#if defined(USE_CURL) || defined(__WASM__)
 				// we don't care if the USE_ASYNCHRONOUS code in the call cancels 
 				//   because it is requeued 1.5 seconds later
 				//|| !Com_DL_InProgress( &download ) // never true because download isn't used by async anymore
-#endif
-#ifdef __WASM__
 				//|| !clc.downloadTempName[0]
-#endif
 			//) {
 			CL_Download( "lazydl", downloadNeeded, qfalse );
 			//}
+#endif
 		}
 
 		// if we break here, nothing will update while download is in progress
