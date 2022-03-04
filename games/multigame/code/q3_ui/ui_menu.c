@@ -118,6 +118,8 @@ MainMenu_Cache
 ===============
 */
 void MainMenu_Cache( void ) {
+	Menu_Cache();
+	
 	s_main.bannerModel = trap_R_RegisterModel( MAIN_BANNER_MODEL );
 }
 

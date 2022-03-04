@@ -322,7 +322,7 @@ qhandle_t RE_RegisterModel( const char *name )
 	// only set the name after the model has been successfully loaded
 	Q_strncpyz( mod->name, name, sizeof( mod->name ) );
 
-	R_IssuePendingRenderCommands();
+	//R_IssuePendingRenderCommands();
 
 	mod->type = MOD_BAD;
 	mod->numLods = 0;
@@ -475,9 +475,14 @@ static qboolean R_LoadMD3(model_t * mod, int lod, void *buffer, int bufferSize, 
 	mod->type = MOD_MESH;
 	size = LittleLong(md3Model->ofsEnd);
 	mod->dataSize += size;
+	if(mod->mdv[lod]
+	  && ((md3Header_t *)mod->mdv[lod])->ofsEnd == size) {
+		// don't make new memory, just overwrite
+		mdvModel = mod->mdv[lod];
+	} else
 	mdvModel = mod->mdv[lod] = ri.Hunk_Alloc(sizeof(mdvModel_t), h_low);
 
-//  Com_Memcpy(mod->md3[lod], buffer, LittleLong(md3Model->ofsEnd));
+  //Com_Memcpy(mod->mdv[lod], buffer, LittleLong(md3Model->ofsEnd));
 
 	LL(md3Model->ident);
 	LL(md3Model->version);

@@ -295,6 +295,10 @@ void R_AddMD3Surfaces( trRefEntity_t *ent ) {
 	personalModel = (ent->e.renderfx & RF_THIRD_PERSON) && !(tr.viewParms.isPortal 
 	                 || (tr.viewParms.flags & (VPF_SHADOWMAP | VPF_DEPTHSHADOW)));
 
+	if(!tr.currentModel->mdv[0]) {
+		return;
+	}
+
 	if ( ent->e.renderfx & RF_WRAP_FRAMES ) {
 		ent->e.frame %= tr.currentModel->mdv[0]->numFrames;
 		ent->e.oldframe %= tr.currentModel->mdv[0]->numFrames;
@@ -360,6 +364,10 @@ void R_AddMD3Surfaces( trRefEntity_t *ent ) {
 			int		j;
 
 			skin = R_GetSkinByHandle( ent->e.customSkin );
+		if(!skin) {
+			continue;
+		}
+
 
 			// match the surface name to something in the skin file
 			shader = tr.defaultShader;
@@ -383,6 +391,9 @@ void R_AddMD3Surfaces( trRefEntity_t *ent ) {
 		}
 
 		// we will add shadows even if the main object isn't visible in the view
+		if(!shader) {
+			continue;
+		}
 
 		// stencil shadows can't do personal models unless I polyhedron clip
 		if ( !personalModel

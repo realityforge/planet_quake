@@ -5522,7 +5522,9 @@ void CL_Init( void ) {
 #ifdef USE_ASYNCHRONOUS
 	cl_dlSimultaneous = Cvar_Get( "cl_dlSimultaneous", "20", CVAR_ARCHIVE_ND );
 	cl_dlURL = Cvar_Get( "cl_dlURL", "http://local.games:8080/multigame", CVAR_ARCHIVE_ND );
+#ifdef USE_CURL
 	cl_downloads = Z_Malloc( sizeof(download_t) * cl_dlSimultaneous->integer );
+#endif
 #else
 	cl_dlURL = Cvar_Get( "cl_dlURL", "http://ws.q3df.org/maps/download/%1", CVAR_ARCHIVE_ND );
 #endif

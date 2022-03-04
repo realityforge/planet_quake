@@ -331,29 +331,6 @@ qhandle_t RE_RegisterModel( const char *name )
 #endif
 		}
 	}
-#if 0 //def USE_MULTIVM_CLIENT
-	// check each world for a loaded model we can copy over
-	// TODO: reload the shaders for the model on each load
-	// TODO: make models out of BSPs (halves of CTF levels) 
-	//   and load shaders and lightmaps on the model
-	if(!found) {
-		for(int i = 0; i < MAX_NUM_WORLDS; i++) {
-			if(i == rwi) continue;
-			for ( hModel = 1 ; hModel < trWorlds[i].numModels; hModel++ ) {
-				if ( mod && !strcmp( mod->name, name ) ) {
-					found = qtrue;
-					tr.models[tr.numModels] = mod;
-					tr.numModels++;
-					if( mod->type != MOD_BAD || !updateModels ) {
-						return mod->index;
-					} else {
-						break;
-					}
-				}
-			}
-		}
-	}
-#endif
 
 	// allocate a new model_t
 
@@ -361,6 +338,7 @@ qhandle_t RE_RegisterModel( const char *name )
 		ri.Printf( PRINT_WARNING, "RE_RegisterModel: R_AllocModel() failed for '%s'\n", name);
 		return 0;
 	}
+	mod->lastTimeUsed = tr.lastRegistrationTime;
 
 	// only set the name after the model has been successfully loaded
 	Q_strncpyz( mod->name, name, sizeof( mod->name ) );

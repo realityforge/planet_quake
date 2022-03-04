@@ -300,6 +300,10 @@ void R_AddMD3Surfaces( trRefEntity_t *ent ) {
 	// don't add third_person objects if not in a portal
 	personalModel = (ent->e.renderfx & RF_THIRD_PERSON) && (tr.viewParms.portalView == PV_NONE);
 
+	if(!tr.currentModel->md3[0]) {
+		return;
+	}
+
 	if ( ent->e.renderfx & RF_WRAP_FRAMES ) {
 		ent->e.frame %= tr.currentModel->md3[0]->numFrames;
 		ent->e.oldframe %= tr.currentModel->md3[0]->numFrames;
@@ -375,6 +379,9 @@ void R_AddMD3Surfaces( trRefEntity_t *ent ) {
 			int		j;
 
 			skin = R_GetSkinByHandle( ent->e.customSkin );
+		if(!skin) {
+			continue;
+		}
 
 			// match the surface name to something in the skin file
 			shader = tr.defaultShader;
