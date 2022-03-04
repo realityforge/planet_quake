@@ -1280,7 +1280,7 @@ void SV_DemoAutoDemoRecord(void)
                         SV_CleanFilename((char *)tmp) ),
                         MAX_QPATH);
 
-	Com_Printf("DEMO: recording a server-side demo to: %s/svdemos/%s.%s%d\n",  strlen(sv_gamedir->string) ?  sv_gamedir->string : BASEGAME, demoname, SVDEMOEXT, PROTOCOL_VERSION);
+	Com_Printf("DEMO: recording a server-side demo to: %s/svdemos/%s.%s%d\n",  strlen(sv_gamedir->string) ?  sv_gamedir->string : BASEGAME, demoname, SVDEMOEXT, OLD_PROTOCOL_VERSION);
 
 	Cbuf_AddText( va("demo_record %s\n", demoname ) );
 
@@ -2016,7 +2016,7 @@ void SV_Demo_Record_f( void ) {
     int     number;
     // scan for a free demo name
     for (number = 0 ; number >= 0 ; number++) {
-            Com_sprintf(sv.demoName, sizeof(sv.demoName), "svdemos/%d.%s%d", number, SVDEMOEXT, PROTOCOL_VERSION);
+            Com_sprintf(sv.demoName, sizeof(sv.demoName), "svdemos/%d.%s%d", number, SVDEMOEXT, OLD_PROTOCOL_VERSION);
             if (!FS_FileExists(sv.demoName))
                     break;  // file doesn't exist
     }
@@ -2059,7 +2059,7 @@ void SV_Demo_Play_f( void ) {
 	if ( ext_test && !Q_stricmpn(ext_test + 1, SVDEMOEXT, ARRAY_LEN(SVDEMOEXT) - 1) )
 	  Com_sprintf(sv.demoName, sizeof(sv.demoName), "svdemos/%s", arg);
   else
-    Com_sprintf(sv.demoName, sizeof(sv.demoName), "svdemos/%s.%s%d", arg, SVDEMOEXT, PROTOCOL_VERSION);
+    Com_sprintf(sv.demoName, sizeof(sv.demoName), "svdemos/%s.%s%d", arg, SVDEMOEXT, OLD_PROTOCOL_VERSION);
 
 
   //FS_FileExists(sv.demoName);
@@ -2103,7 +2103,7 @@ void SV_CompleteDemoName( char *args, int argNum )
 	{
 		char demoExt[ 16 ];
 
-		Com_sprintf( demoExt, sizeof( demoExt ), ".%s%d", SVDEMOEXT, PROTOCOL_VERSION );
+		Com_sprintf( demoExt, sizeof( demoExt ), ".%s%d", SVDEMOEXT, OLD_PROTOCOL_VERSION );
 		Field_CompleteFilename( "svdemos", demoExt, qtrue, qtrue );
 	}
 }
