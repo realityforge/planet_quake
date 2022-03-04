@@ -2011,7 +2011,7 @@ void SV_Demo_Record_f( void ) {
   }
 
   if (Cmd_Argc() == 2)
-    sprintf(sv.demoName, "svdemos/%s.%s%d", Cmd_Argv(1), SVDEMOEXT, PROTOCOL_VERSION);
+    sprintf(sv.demoName, "svdemos/%s.%s%d", Cmd_Argv(1), SVDEMOEXT, OLD_PROTOCOL_VERSION);
   else {
     int     number;
     // scan for a free demo name
