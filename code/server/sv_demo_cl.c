@@ -159,7 +159,7 @@ void SV_Record( client_t	*cl, char *s ) {
 //	}
 
  	if ( s ) {
- 		Com_sprintf (name, sizeof(name), "demos/%s.dm_%d", s, PROTOCOL_VERSION );
+ 		Com_sprintf (name, sizeof(name), "demos/%s.dm_%d", s, OLD_PROTOCOL_VERSION );
  	} else {
  		int		number,n,a,b,c,d;
  		guid = Info_ValueForKey(cl->userinfo, "cl_guid");
@@ -181,8 +181,8 @@ void SV_Record( client_t	*cl, char *s ) {
  			n -= c*10;
  			d = n;
 
- 			Com_sprintf (name, sizeof(name), "demos/%s_%s_%i%i%i%i.dm_%d", prefix, sv_mapname->string, a, b, c, d, PROTOCOL_VERSION );
- 			Com_sprintf (name_zip, sizeof(name_zip), "demos/%s_%s_%i%i%i%i.dm_%d.zip", prefix, sv_mapname->string, a, b, c, d, PROTOCOL_VERSION );
+ 			Com_sprintf (name, sizeof(name), "demos/%s_%s_%i%i%i%i.dm_%d", prefix, sv_mapname->string, a, b, c, d, OLD_PROTOCOL_VERSION );
+ 			Com_sprintf (name_zip, sizeof(name_zip), "demos/%s_%s_%i%i%i%i.dm_%d.zip", prefix, sv_mapname->string, a, b, c, d, OLD_PROTOCOL_VERSION );
  			if (!FS_FileExists(name) && !FS_FileExists(name_zip)) {
  				break;	// file doesn't exist
  			}
@@ -287,7 +287,7 @@ void SV_Record_f( void ) {
 
  	if ( Cmd_Argc() == 3 ) {
  		s = Cmd_Argv(2);
-		// Com_sprintf (name, sizeof(name), "demos/%s.dm_%d", s, PROTOCOL_VERSION );
+		// Com_sprintf (name, sizeof(name), "demos/%s.dm_%d", s, OLD_PROTOCOL_VERSION );
  		SV_Record(cl,s);
  	} else {
  		SV_Record(cl,0);

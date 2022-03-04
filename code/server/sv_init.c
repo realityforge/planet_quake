@@ -956,7 +956,7 @@ void SV_Init( void )
 	Cvar_Get ("timelimit", "0", CVAR_SERVERINFO);
 	sv_gametype = Cvar_Get ("g_gametype", "0", CVAR_SERVERINFO | CVAR_LATCH );
 	Cvar_Get ("sv_keywords", "", CVAR_SERVERINFO);
-	//Cvar_Get ("protocol", va("%i", PROTOCOL_VERSION), CVAR_SERVERINFO | CVAR_ROM);
+	//Cvar_Get ("protocol", va("%i", OLD_PROTOCOL_VERSION), CVAR_SERVERINFO | CVAR_ROM);
 #ifdef USE_MULTIVM_SERVER
 	sv_mapname = Cvar_Get ("mapname", "nomap", CVAR_SERVERINFO | CVAR_ROM | CVAR_TAGGED_ORIGINAL);
 #else
