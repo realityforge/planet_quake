@@ -338,7 +338,9 @@ qhandle_t RE_RegisterModel( const char *name )
 		ri.Printf( PRINT_WARNING, "RE_RegisterModel: R_AllocModel() failed for '%s'\n", name);
 		return 0;
 	}
+#ifdef USE_LAZY_LOAD
 	mod->lastTimeUsed = tr.lastRegistrationTime;
+#endif
 
 	// only set the name after the model has been successfully loaded
 	Q_strncpyz( mod->name, name, sizeof( mod->name ) );

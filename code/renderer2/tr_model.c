@@ -475,8 +475,8 @@ static qboolean R_LoadMD3(model_t * mod, int lod, void *buffer, int bufferSize, 
 	mod->type = MOD_MESH;
 	size = LittleLong(md3Model->ofsEnd);
 	mod->dataSize += size;
-	if(mod->mdv[lod]
-	  && ((md3Header_t *)mod->mdv[lod])->ofsEnd == size) {
+	if(mod->mdv[0]
+	  && ((md3Header_t *)mod->mdv[0])->ofsEnd == size) {
 		// don't make new memory, just overwrite
 		mdvModel = mod->mdv[lod];
 	} else
