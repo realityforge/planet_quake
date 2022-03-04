@@ -81,7 +81,7 @@ ifeq ($(USE_OPENGL2),1)
 CLIENT_LDFLAGS   += -lGL \
                     -s MIN_WEBGL_VERSION=3 \
                     -s MAX_WEBGL_VERSION=3 \
-                    -s FULL_ES2=1
+                    -s FULL_ES2=1 \
                     -s FULL_ES3=1
 else
 CLIENT_LDFLAGS   += -lGL \
