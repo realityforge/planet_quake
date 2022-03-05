@@ -208,6 +208,9 @@ cvar_t	*r_marksOnTriangleMeshes;
 cvar_t	*r_aviMotionJpegQuality;
 cvar_t	*r_screenshotJpegQuality;
 
+cvar_t	*r_fogDepth;
+cvar_t	*r_fogColor;
+
 cvar_t	*r_maxpolys;
 cvar_t	*r_maxpolyverts;
 cvar_t	*r_maxpolybuffers;
@@ -1505,6 +1508,12 @@ void R_Register( void )
 
 	r_aviMotionJpegQuality = ri.Cvar_Get("r_aviMotionJpegQuality", "90", CVAR_ARCHIVE);
 	r_screenshotJpegQuality = ri.Cvar_Get("r_screenshotJpegQuality", "90", CVAR_ARCHIVE);
+
+	// TODO:
+	// Adds an additional textured stage on top of all tris in the fog 
+	//r_fogShader = ri.Cvar_Get("r_fogShader", "", CVAR_ARCHIVE_ND );
+	r_fogColor = ri.Cvar_Get("r_fogColor", "0x00000000", CVAR_ARCHIVE_ND );
+	r_fogDepth = ri.Cvar_Get("r_fogDepth", "", CVAR_ARCHIVE_ND );
 
 	r_maxpolys = ri.Cvar_Get( "r_maxpolys", va("%d", MAX_POLYS), 0);
 	r_maxpolyverts = ri.Cvar_Get( "r_maxpolyverts", va("%d", MAX_POLYVERTS), 0);
