@@ -261,12 +261,15 @@ jobs:
         ./emsdk install latest
         ./emsdk activate latest
         source ./emsdk_env.sh
+        ./upstream/emscripten/emcc --generate-config
+        cd ..
 #wget --no-check-certificate https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-14/wasi-sdk-14.0-linux.tar.gz
 #tar -zxvf wasi-sdk-14.0-linux.tar.gz -C libs/linux/
 #ls -lah libs/linux/
 
     - name: Build
       run: |
+        cd planet_quake
         mkdir bin
         make -f make/build_client.make clean ${{ matrix.rule }}  ARCH=${{ matrix.arch }}    ${{ matrix.use_sdl }} USE_VULKAN_API=0 CNAME=quake3e PLATFORM=js NO_MAKE_LOCAL=1 USE_ASYNCHRONOUS=1 USE_LAZY_LOAD=1 PLATFORM=js CC=/home/runner/work/planet_quake/emsdk/upstream/emscripten/emcc
         cp build/release-js-js/quake3e.wasm bin/

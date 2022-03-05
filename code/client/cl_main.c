@@ -5519,10 +5519,12 @@ void CL_Init( void ) {
 
 #ifdef USE_ASYNCHRONOUS
 	cl_dlSimultaneous = Cvar_Get( "cl_dlSimultaneous", "20", CVAR_ARCHIVE_ND );
-	cl_dlURL = Cvar_Get( "cl_dlURL", "http://local.games:8080/multigame", CVAR_ARCHIVE_ND );
 #ifdef USE_CURL
 	cl_downloads = Z_Malloc( sizeof(download_t) * cl_dlSimultaneous->integer );
 #endif
+#endif
+#ifdef _DEBUG
+	cl_dlURL = Cvar_Get( "cl_dlURL", "http://local.games:8080/multigame", CVAR_ARCHIVE_ND );
 #else
 	cl_dlURL = Cvar_Get( "cl_dlURL", "http://ws.q3df.org/maps/download/%1", CVAR_ARCHIVE_ND );
 #endif
@@ -6869,17 +6871,7 @@ static void CL_Download_f( void )
 		return;
 	}
 
-#ifdef __WASM__
-	// TODO: find out if web can cancel a download stream from JS, probably
-	//if ( !strcmp( Cmd_Argv(1), "-" ) )
-	//{
-	//	Com_DL_Cleanup( &download );
-	//	return;
-	//}
-	CL_Download( Cmd_Argv( 0 ), Cmd_Argv( 1 ), qfalse );
-#endif
-
-#ifdef USE_CURL
+#if defined(USE_CURL) || defined(__WASM__)
 	if ( !strcmp( Cmd_Argv(1), "-" ) )
 	{
 		Com_DL_Cleanup( &download );

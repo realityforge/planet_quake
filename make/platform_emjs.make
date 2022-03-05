@@ -35,7 +35,6 @@ CLIENT_SYSTEM    := quake3e.js \
 
 CLIENT_LIBS      := $(addprefix --js-library $(MOUNT_DIR)/wasm/http/,$(notdir $(CLIENT_SYSTEM)))
 
-
 BASE_CFLAGS      += -Wall -Wno-unused-variable -fno-strict-aliasing \
                     -Wimplicit -Wstrict-prototypes \
                     -DGL_GLEXT_PROTOTYPES=1 -DGL_ARB_ES2_compatibility=1\
