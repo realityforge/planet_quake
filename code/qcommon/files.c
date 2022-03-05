@@ -1122,7 +1122,7 @@ void Sys_FileReady(const char *filename, const char* tempname) {
 		//if(found) break;
 	}
 
-	if(!found) {
+	if(!found && tempname) {
 		// TODO: DPrintf
 		// should never happen!
 		Com_Error(ERR_FATAL, "WARNING: %i %s not found in download list.\n", hash, localName);

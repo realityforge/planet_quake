@@ -5523,11 +5523,11 @@ void CL_Init( void ) {
 	cl_downloads = Z_Malloc( sizeof(download_t) * cl_dlSimultaneous->integer );
 #endif
 #endif
-#ifdef _DEBUG
-	cl_dlURL = Cvar_Get( "cl_dlURL", "http://local.games:8080/multigame", CVAR_ARCHIVE_ND );
-#else
+//#ifdef _DEBUG
+//	cl_dlURL = Cvar_Get( "cl_dlURL", "http://local.games:8080/multigame", CVAR_ARCHIVE_ND );
+//#else
 	cl_dlURL = Cvar_Get( "cl_dlURL", "http://ws.q3df.org/maps/download/%1", CVAR_ARCHIVE_ND );
-#endif
+//#endif
 	
 	cl_dlDirectory = Cvar_Get( "cl_dlDirectory", "0", CVAR_ARCHIVE_ND );
 	Cvar_CheckRange( cl_dlDirectory, "0", "1", CV_INTEGER );
