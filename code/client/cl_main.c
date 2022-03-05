@@ -6874,7 +6874,9 @@ static void CL_Download_f( void )
 #if defined(USE_CURL) || defined(__WASM__)
 	if ( !strcmp( Cmd_Argv(1), "-" ) )
 	{
+#ifdef USE_CURL
 		Com_DL_Cleanup( &download );
+#endif
 		return;
 	}
 
