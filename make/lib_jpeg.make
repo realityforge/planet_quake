@@ -55,6 +55,7 @@ clean:
 	@rm -rf ./$(BD)/$(JPEG_WORKDIR) ./$(BD)/$(JPEG_TARGET)
 	@rm -rf ./$(BR)/$(JPEG_WORKDIR) ./$(BR)/$(JPEG_TARGET)
 
+else
 WORKDIRS += $(JPEG_WORKDIR)
 CLEANS 	 += $(JPEG_WORKDIR) $(JPEG_TARGET)
 endif
