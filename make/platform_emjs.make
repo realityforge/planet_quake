@@ -10,7 +10,6 @@ BUILD_STANDALONE    := 1
 
 include make/configure.make
 
-EMSDK            := $(ABSOLUTE_PATH)/libs/emsdk
 ifndef EM_CACHE_LOCATION
 EM_CACHE_LOCATION:= $(HOME)/.emscripten_cache
 endif
@@ -18,8 +17,8 @@ ifndef EMJS_CONFIG_PATH
 EMJS_CONFIG_PATH := $(HOME)/.emscripten
 endif
 
-CC               := $(EMSDK)/upstream/emscripten/emcc
-RANLIB           := $(EMSDK)/upstream/emscripten/emranlib
+CC               := emcc
+RANLIB           := emranlib
 BINEXT           := .js
 SHLIBEXT         := wasm
 
