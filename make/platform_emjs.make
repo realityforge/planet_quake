@@ -17,8 +17,7 @@ ifndef EMJS_CONFIG_PATH
 EMJS_CONFIG_PATH := $(HOME)/.emscripten
 endif
 
-CC               := emcc
-RANLIB           := emranlib
+CC               ?= emcc
 BINEXT           := .js
 SHLIBEXT         := wasm
 
