@@ -1,3 +1,16 @@
+const fs = require('fs')
+let maps = require('./lvlworld.json')
+
+let urls = Object.keys(maps)
+  .filter(k => maps[k].includes.filter(i => typeof i['bsp'] != 'undefined').length > 0)
+  .map(k => 'assets/baseq3-cc/' + k + '.pk3dir/maps/' 
+    + maps[k].includes.filter(i => typeof i['bsp'] != 'undefined')[0]['bsp'] + '.bsp')
+
+let json = '[\n' + urls.map(u => '{"name":"' + u + '"}').join(',\n') + '\n]\n'
+fs.writeFileSync(path.resolve(path.join(__dirname, 'maplist.json')), json)
+
+/*
+const { fs } = require('memfs')
 var https = require('https')
 var path = require('path')
 var Client = require('ftp')
@@ -178,9 +191,16 @@ async function doUpdate() {
   try {
     await unpackPk3s(UPDATE_DIRECTORY, outCombined, console.log, true, true)
     await loadDefaultDirectories()
-    var everything = glob.sync('**/*', { cwd: outCombined, nodir: true })
-      .map(f => path.join(outCombined, f))
-    var gs = {
+
+*/
+
+
+//    var everything = glob.sync('**/*', { cwd: outCombined, nodir: true })
+//      .map(f => path.join(outCombined, f))
+
+/*
+
+var gs = {
       ordered: everything.reduce((obj, f) => {
         if(f.match(/\.pk3dir/i)) {
           var pk3Path = path.basename(f.substr(0, f.match(/\.pk3dir/i).index))
@@ -228,3 +248,6 @@ async function doUpdate() {
 }
 
 doUpdate()
+
+*/
+

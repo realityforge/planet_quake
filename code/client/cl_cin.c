@@ -469,8 +469,7 @@ void CIN_UploadCinematic( int handle ) {
 			Hunk_FreeTempMemory(buf2);
 		} else {
 			// Upload video at normal resolution
-			re.UploadCinematic( cinTable[handle].CIN_WIDTH, cinTable[handle].CIN_HEIGHT, cinTable[handle].drawX, cinTable[handle].drawY,
-					cinTable[handle].buf, handle, cinTable[handle].dirty);
+			re.UploadCinematic( cinTable[handle].CIN_WIDTH, cinTable[handle].CIN_HEIGHT, cinTable[handle].drawX, cinTable[handle].drawY, cinTable[handle].buf, handle, cinTable[handle].dirty);
 			cinTable[handle].dirty = qfalse;
 		}
 

@@ -536,7 +536,7 @@ qboolean Com_DL_Begin( download_t *dl, const char *localName, const char *remote
 
 #ifdef USE_ASYNCHRONOUS
 		// changes the URL to a directory list request for google storage
-		if(Q_stristr(remoteURL, "storage.googleapis.com")) {
+		if(Q_stristr(remoteURL, ".googleapis.com")) {
 			const char *o = Q_stristr(remoteURL, "/o/");
 			if(localName[strlen(localName)-1] == '/' && o) {
 				int length;
@@ -553,7 +553,7 @@ qboolean Com_DL_Begin( download_t *dl, const char *localName, const char *remote
 					length++;
 				}
 				dl->URL[length] = '\0';
-				Q_strcat( dl->URL, sizeof( dl->URL ), "?maxResults=100&delimiter=%2f&prefix=" );
+				Q_strcat( dl->URL, sizeof( dl->URL ), "?includeTrailingDelimiter=true&maxResults=100&delimiter=%2f&prefix=" );
 				Q_strcat( dl->URL, sizeof( dl->URL ), o + 3 );
 			} else {
 				Q_strncpyz( dl->URL, remoteURL, sizeof( dl->URL ) );

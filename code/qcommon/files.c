@@ -691,7 +691,7 @@ void Sys_FileNeeded(const char *needs, qboolean isDirectoryIndex) {
 		}
 	}
 	
-//Com_Printf("file needed! %s %s\n", filename, loading);
+Com_Printf("file needed! %s %s\n", filename, loading);
 
   if(!filename[0]) {
 		return;
@@ -917,11 +917,10 @@ void MakeDirectoryBuffer(char *paths, int count, int length, const char *parentD
 
 	if(!hasIndex) {
 		Com_DPrintf( S_COLOR_YELLOW "WARNING: Requested search path %s not found in search paths.\n", 
-			FS_BuildOSPath(fs_homepath->string, FS_GetCurrentGameDir(), parentDirectory));
+		FS_BuildOSPath(fs_homepath->string, FS_GetCurrentGameDir(), parentDirectory));
 		FS_AddGameDirectory(fs_homepath->string, FS_GetCurrentGameDir(), 0);
 		return;
 	}
-
 
 	if(!search->dir->hashTable) {
 		// laid out the same was as a pk3 buffer
@@ -987,8 +986,13 @@ void MakeDirectoryBuffer(char *paths, int count, int length, const char *parentD
 		}
 #endif
 		FS_ConvertFilename( curFile->name );
-		hash = FS_HashFileName( curFile->name, hashSize );
-//Com_Printf("adding %li, %s\n", hash, curFile->name);
+		s = Q_stristr(curFile->name, ".pk3dir/");
+		if(s) {
+			hash = FS_HashFileName( s + 8, hashSize );
+		} else {
+			hash = FS_HashFileName( curFile->name, hashSize );
+		}
+Com_Printf("adding %li, %s\n", hash, curFile->name);
 
 		// store the file position in the zip
 		// TODO: update this when Accept-Ranges is implemented
@@ -1031,12 +1035,15 @@ void MakeDirectoryBuffer(char *paths, int count, int length, const char *parentD
 
 fileInPack_t *FindFileInIndex(long hash, const char *filename, fileInPack_t* *hashTable) {
 	fileInPack_t	*pakFile;
+	const char *s;
 	assert(hashTable);
 	if(hashTable[hash]) {
 		pakFile = hashTable[hash];
 		do {
+			s = Q_stristr(pakFile->name, ".pk3dir/");
 //Com_Printf("comparing: %i,  %s != %s\n", hash, pakFile->name, filename);
-			if ( !FS_FilenameCompare( pakFile->name, filename ) ) {
+			if ( (!s && !FS_FilenameCompare( pakFile->name, filename )) // trim pak name
+				|| (s && !FS_FilenameCompare( s + 8, filename )) ) {
 				return pakFile;
 			}
 			pakFile = pakFile->next;
@@ -1186,19 +1193,19 @@ static void FixDownloadList( const char *parentDirectory ) {
 
 void FS_UpdateFiles(const char *filename, const char *tempname) {
 
-//Com_Printf("updating files: %s -> %s\n", filename, tempname);
+Com_Printf("updating files: %s -> %s\n", filename, tempname);
 
 #if defined(USE_LIVE_RELOAD) || defined(__WASM__)
 	if(Q_stristr(tempname, "version.json")) {
 		int y, mo, d, h, m, s;
 		struct tm tmi;
 		int approxTime = 0;
-		int length;
+		int versionLength;
 		const char *versionFile;
-		length = FS_ReadFile("version.json", (void **)&versionFile);
-		if (length < 1)
+		versionLength = FS_ReadFile("version.json", (void **)&versionFile);
+		if (versionLength < 1)
 			return;
-		const char *serverTime = JSON_ArrayGetValue(versionFile, versionFile + length, 0);
+		const char *serverTime = JSON_ArrayGetValue(versionFile, versionFile + versionLength, 0);
 		// convert string to approx timestamp, skip quote
 		if ( sscanf(serverTime + 1, "%i-%i-%iT%i:%i:%i.", &y, &mo, &d, &h, &m, &s) ) {
 			tmi.tm_year = y - 1900;
@@ -1219,6 +1226,54 @@ void FS_UpdateFiles(const char *filename, const char *tempname) {
 		}
 	} else
 #endif
+
+	if(Q_stristr(tempname, ".bsp") && Q_stristr(tempname, "maps/")) {
+		const char *s;
+		const char *gamedir;
+		// load map if we just tried to start it
+		if((s = Q_stristr(tempname, ".pk3dir/"))) {
+			char pk3dir[MAX_OSPATH];
+			qboolean found = qfalse;
+			memcpy(pk3dir, tempname, s - tempname);
+			pk3dir[s - tempname] = '\0';
+			gamedir = strrchr(pk3dir, '/');
+			pk3dir[gamedir - pk3dir + 1] = '\0';
+			searchpath_t *search;
+			for ( search = fs_searchpaths ; search ; search = search->next ) {
+				if(search->dir && Q_stricmp(search->dir->gamedir, gamedir)) {
+					found = qtrue;
+					break;
+				}
+			}
+
+			if(!found) {
+				int path_len, dir_len, len;
+				const char *curpath = FS_BuildOSPath(fs_homepath->string, FS_GetCurrentGameDir(), "");
+				// check search paths for new pk3dir
+				path_len = PAD( strlen( curpath ) + 1, sizeof( int ) );
+				dir_len = PAD( strlen( gamedir ) + 1, sizeof( int ) );
+				len = sizeof( *search ) + sizeof( *search->dir ) + path_len + dir_len;
+
+				search = Z_TagMalloc( len, TAG_SEARCH_DIR );
+				Com_Memset( search, 0, len );
+				search->dir = (directory_t*)(search + 1);
+				search->dir->path = (char*)( search->dir + 1 );
+				search->dir->gamedir = (char*)( search->dir->path + path_len );
+				search->policy = DIR_ALLOW;
+
+				strcpy( search->dir->path, curpath ); // c:\quake3\baseq3
+				strcpy( search->dir->gamedir, gamedir ); // mypak.pk3dir
+
+				search->next = fs_searchpaths;
+				fs_searchpaths = search;
+				fs_pk3dirCount++;
+			}
+
+		}
+		if(Q_stristr(tempname, Cvar_VariableString("mapname"))) {
+			Cbuf_AddText(va("wait; map %s;", Cvar_VariableString("mapname")));
+		}
+	} else 
 
 	// TODO:
 	if(Q_stristr(tempname, "description.txt")) {
@@ -1245,7 +1300,8 @@ void FS_UpdateFiles(const char *filename, const char *tempname) {
 	} else 
 	
 	// scan index files for HTTP directories and add links to q3cache.dat
-	if (Q_stristr(tempname, ".tmp") && Q_stristr(tempname, "/.")) {
+	if ((Q_stristr(tempname, ".tmp") && Q_stristr(tempname, "/."))
+		|| Q_stristr(tempname, "maps/maplist.json")) {
 		// left in the temp directory, must be an index file
 		const char *realPath;
 		const char *s;
@@ -1258,7 +1314,7 @@ void FS_UpdateFiles(const char *filename, const char *tempname) {
 			realPath = FS_BuildOSPath(fs_homepath->string, FS_GetCurrentGameDir(), s);
 		}
 
-		Com_DPrintf("Adding %s (from: %s) to directory index.\n", filename, realPath);
+Com_DPrintf("Adding %s (from: %s) to directory index.\n", filename, realPath);
 
 		FILE *indexFile = Sys_FOpen(realPath, "rb");
 		int len = FS_FileLength(indexFile);
@@ -1269,7 +1325,7 @@ void FS_UpdateFiles(const char *filename, const char *tempname) {
 			char *buf = (char *)Z_TagMalloc(len + 1, TAG_PACK);
 			fread(buf, len, 1, indexFile);
 			buf[len] = '\0';
-			if(buf[0] == '{') {
+			if(buf[0] == '{' || buf[0] == '[') {
 				ParseJSONFileList(buf, len, paths, &count, &nameLength);
 			} else {
 				ParseHTMLFileList(buf, len, paths, &count, &nameLength);
@@ -1351,6 +1407,7 @@ static void FS_CheckIndex(long fullHash, const char *filename, qboolean isNotFou
 			hash = fullHash & (search->dir->hashSize-1);
 			if(NULL != (file = FindFileInIndex(hash, filename, search->dir->hashTable))) {
 				isInIndex = qtrue;
+				filename = file->name;
 			}
 
 			// test if the file exists once anyways if we havent received a
@@ -6874,7 +6931,7 @@ void FS_Restart( int checksumFeed ) {
 	if(!Cvar_VariableIntegerValue("sv_pure")) {
 		Sys_FileNeeded(FS_GetCurrentGameDir(), qtrue);
 		Sys_FileNeeded("vm/", qtrue);
-		Sys_FileNeeded("maps/", qtrue);
+		Sys_FileNeeded("maps/maplist.json", qfalse);
 		Sys_FileNeeded("scripts/", qtrue);
 	}
 

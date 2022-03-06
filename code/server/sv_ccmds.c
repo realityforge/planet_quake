@@ -170,6 +170,10 @@ static void SV_Map_f( void ) {
 	// bypass pure check so we can open downloaded map
 	FS_BypassPure();
 
+#ifdef USE_ASYNCHRONOUS
+	Cvar_Set( "mapname", map );
+#endif
+
 #ifdef USE_MEMORY_MAPS
   // TODO: make this asynchronous where the console and server waits for it to compile
   if(sv_memoryMaps->integer)
