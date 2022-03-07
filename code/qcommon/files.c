@@ -317,23 +317,6 @@ typedef struct pack_s {
 typedef struct {
 	char		*path;		// c:\quake3
 	char		*gamedir;	// baseq3
-#ifdef USE_ASYNCHRONOUS
-
-	// basically just storing a few zeros until allocated
-	//   append the base filesystem with a virtual path system
-	//   in addition to the file that are there
-	// when a valid but not yet existing file is request, queue it 
-	//   for download and indicate to the renderer/client that it is valid
-	//   and will be update when it arrives (i.e. returns 1 for a file length)
-
-	int				numfiles;					// number of files in pk3
-	int				hashSize;					// hash table size (power of 2)
-	fileInPack_t*	*hashTable;					// hash table
-	fileInPack_t*	buildBuffer;				// buffer with the filenames etc.
-
-	// TODO: add header longs for the new file-based checksum system
-
-#endif
 } directory_t;
 
 typedef enum {
@@ -890,13 +873,22 @@ static void ParseHTMLFileList(char *buf, int len, char *list, int *count, int *m
 
 static void FS_CheckIndex(const long fullHash, const char *filename, qboolean isNotFound);
 
+// basically just storing a few zeros until allocated
+//   append the base filesystem with a virtual path system
+//   in addition to the file that are there
+// when a valid but not yet existing file is request, queue it 
+//   for download and indicate to the renderer/client that it is valid
+//   and will be update when it arrives (i.e. returns 1 for a file length)
+
+static fileInPack_t **virtualFileIndex;
+static int virtualHashSize;
+// TODO: add header longs for the new file-based checksum system
 
 void MakeDirectoryBuffer(char *paths, int count, int length, const char *parentDirectory) {
 	char localName[MAX_OSPATH];
 	char *namePtr;
 	const char *s;
 	long hash;
-	int hashSize;
 	int dirSize;
 	void *dirStorage;
 	searchpath_t *search;
@@ -904,7 +896,7 @@ void MakeDirectoryBuffer(char *paths, int count, int length, const char *parentD
 	qboolean hasIndex = qfalse;
 
 	// give us some room to expand with additional directory requests
-	hashSize = FS_PakHashSize( 4096 ); //count < 128 ? 128 : !fs_searchpaths ? 4096 : count;
+	virtualHashSize = FS_PakHashSize( 4096 ); //count < 128 ? 128 : !fs_searchpaths ? 4096 : count;
 
 	for ( search = fs_searchpaths ; search ; search = search->next ) {
 		if(search->dir 
@@ -922,20 +914,17 @@ void MakeDirectoryBuffer(char *paths, int count, int length, const char *parentD
 		return;
 	}
 
-	if(!search->dir->hashTable) {
+	if(!virtualFileIndex) {
 		// laid out the same was as a pk3 buffer
 		dirSize = length
-			+ hashSize * sizeof(intptr_t)
+			+ virtualHashSize * sizeof(intptr_t)
 			+ count * sizeof(fileInPack_t);
 		dirStorage = Z_Malloc( dirSize );
 		Com_Memset( dirStorage, 0, dirSize );
-		search->dir->numfiles = 0;
-		search->dir->hashSize = hashSize;
-		search->dir->hashTable = (fileInPack_t **)dirStorage;
-		search->dir->buildBuffer = (fileInPack_t*)( search->dir->hashTable + hashSize );
+		virtualFileIndex = (fileInPack_t **)dirStorage;
 		// TODO: BUG! putting names in wrong place variable reserve count?
-		namePtr = (char*)( search->dir->buildBuffer + count );
-		curFile = search->dir->buildBuffer;
+		curFile = (fileInPack_t*)( virtualFileIndex + virtualHashSize );
+		namePtr = (char*)( curFile + count );
 	} else {
 		dirSize = length + count * sizeof(fileInPack_t);
 		dirStorage = Z_Malloc( dirSize );
@@ -982,15 +971,15 @@ void MakeDirectoryBuffer(char *paths, int count, int length, const char *parentD
 				&_s, &curFile->mtime, &_c);
 		} else {
 			// set mtime to at least when the engine starts up
-			curFile->mtime = lastVersionTime;
+			curFile->mtime = 0;
 		}
 #endif
 		FS_ConvertFilename( curFile->name );
 		s = Q_stristr(curFile->name, ".pk3dir/");
 		if(s) {
-			hash = FS_HashFileName( s + 8, hashSize );
+			hash = FS_HashFileName( s + 8, virtualHashSize );
 		} else {
-			hash = FS_HashFileName( curFile->name, hashSize );
+			hash = FS_HashFileName( curFile->name, virtualHashSize );
 		}
 Com_Printf("adding %li, %s\n", hash, curFile->name);
 
@@ -1023,9 +1012,8 @@ Com_Printf("adding %li, %s\n", hash, curFile->name);
 		// update hash table
 		namePtr += strlen( curFile->name ) + 1;
 		currentPath += strlen( currentPath ) + 1;
-		curFile->next = search->dir->hashTable[ hash ];
-		search->dir->hashTable[ hash ] = curFile;
-		search->dir->numfiles++;
+		curFile->next = virtualFileIndex[ hash ];
+		virtualFileIndex[ hash ] = curFile;
 		curFile++;
 	}
 
@@ -1064,17 +1052,6 @@ void Sys_FileReady(const char *filename, const char* tempname) {
 	char localName[ MAX_OSPATH ];
 	//const char *s;
 	qboolean found = qfalse;
-	qboolean hasIndex = qfalse;
-	searchpath_t *search;
-
-	for ( search = fs_searchpaths ; search ; search = search->next ) {
-		if(search->dir 
-			&& !Q_stricmp(search->dir->gamedir, FS_GetCurrentGameDir())
-			&& !Q_stricmp(search->dir->path, fs_homepath->string)) {
-			hasIndex = qtrue;
-			break;
-		}
-	}
 
 	// skip leading slashes
 	while ( *filename == '/' || *filename == '\\' ) {
@@ -1107,8 +1084,8 @@ void Sys_FileReady(const char *filename, const char* tempname) {
 #ifdef USE_LIVE_RELOAD
 					// update file mtime so we know if it changed again
 					fileInPack_t *file;
-					if(hasIndex && search->dir->hashTable) {
-						if((file = FindFileInIndex(hash, filename, search->dir->hashTable))) {
+					if(virtualFileIndex) {
+						if((file = FindFileInIndex(hash, filename, virtualFileIndex))) {
 							file->mtime = lastVersionTime;
 						}
 					}
@@ -1141,22 +1118,11 @@ void Sys_FileReady(const char *filename, const char* tempname) {
 // really reduce misfires by removing missing download files once directory index is received
 //   we know we won't find shader images with alternate extensions, so those downloads are marked
 static void FixDownloadList( const char *parentDirectory ) {
-	qboolean hasIndex = qfalse;
-	searchpath_t *search;
 	int length;
 	int lengthGame;
 	long hash;
 
-	for ( search = fs_searchpaths ; search ; search = search->next ) {
-		if(search->dir 
-			&& !Q_stricmp(search->dir->gamedir, FS_GetCurrentGameDir())
-			&& !Q_stricmp(search->dir->path, fs_homepath->string)) {
-			hasIndex = qtrue;
-			break;
-		}
-	}
-
-	if(!hasIndex || !search->dir->hashTable) {
+	if(!virtualFileIndex) {
 		return;
 	}
 //Com_Printf("fixing downloads: %s\n", parentDirectory);
@@ -1177,8 +1143,8 @@ static void FixDownloadList( const char *parentDirectory ) {
 						&& download->downloadName[length] != '\0'
 						&& !strchr(s + length + 1, '/') // make sure it's the last directory
 					) {
-						hash = FS_HashFileName( &download->downloadName[lengthGame+1], search->dir->hashSize );
-						if(!FindFileInIndex(hash, &download->downloadName[lengthGame+1], search->dir->hashTable)) 
+						hash = FS_HashFileName( &download->downloadName[lengthGame+1], virtualHashSize );
+						if(!FindFileInIndex(hash, &download->downloadName[lengthGame+1], virtualFileIndex)) 
 						{
 //Com_Printf("purging: %i, %s\n", hash, &download->downloadName[lengthGame+1]);
 							download->downloaded = qtrue;
@@ -1288,6 +1254,13 @@ Com_Printf("updating files: %s -> %s\n", filename, tempname);
 	} else 
 #endif
 
+#ifndef BUILD_SLIM_CLIENT
+	// try to reload UI with current game if needed
+	if(Q_stristr(tempname, "vm/qagame.qvm")) {
+		Cbuf_AddText(va("wait; map %s;", Cvar_VariableString("mapname")));
+	} else 
+#endif
+
 	// do some extra processing, restart UI if default.cfg is found
 	if(Q_stristr(tempname, "default.cfg")) {
 		// will restart automatically from NextDownload()
@@ -1346,7 +1319,6 @@ Com_DPrintf("Adding %s (from: %s) to directory index.\n", filename, realPath);
 
 
 static void FS_CheckIndex(long fullHash, const char *filename, qboolean isNotFound) {
-	searchpath_t	*search;
 	char firstDirectory[MAX_QPATH];
 	char lastDirectory[MAX_QPATH];
 	//char localName[MAX_OSPATH];
@@ -1359,71 +1331,69 @@ static void FS_CheckIndex(long fullHash, const char *filename, qboolean isNotFou
 	firstDirectory[0] = '\0';
 	lastDirectory[0] = '\0';
 
+	if(!virtualFileIndex) {
+		return;
+	}
 
-//Com_Printf("searching index for (%s) %s\n", isNotFound ? "not found": "live", filename);
+Com_Printf("searching index for (%s) %s\n", isNotFound ? "not found": "live", filename);
 
 	if(!fullHash) {
 		fullHash = FS_HashFileName( filename, 0U );
 	}
 
-	for ( search = fs_searchpaths ; search ; search = search->next ) {
-		if(search->dir && search->dir->hashTable) {
+	// search the index again but for the first folder name, if it exists
+	//   then make the needed request for the parent directory and the file
+	// only look recursively when a file is not found
+	if(isNotFound && (s = strchr(filename, '/'))) {
+		Q_strncpyz(firstDirectory, filename, (s-filename)+1);
+		firstDirectory[(s-filename)] = '/';
+		firstDirectory[(s-filename)+1] = '\0';
+		Q_strncpyz(lastDirectory, filename, sizeof(lastDirectory));
+		s = strrchr(lastDirectory, '/');
+		if(s) {
+			lastDirectory[s-lastDirectory] = '/';
+			lastDirectory[s-lastDirectory+1] = '\0';
+		} else {
+			lastDirectory[0] = '\0';
+		}
 
-			// search the index again but for the first folder name, if it exists
-			//   then make the needed request for the parent directory and the file
-			// only look recursively when a file is not found
-			if(isNotFound && (s = strchr(filename, '/'))) {
-				Q_strncpyz(firstDirectory, filename, (s-filename)+1);
-				firstDirectory[(s-filename)] = '/';
-				firstDirectory[(s-filename)+1] = '\0';
-				Q_strncpyz(lastDirectory, filename, sizeof(lastDirectory));
-				s = strrchr(lastDirectory, '/');
-				if(s) {
-					lastDirectory[s-lastDirectory] = '/';
-					lastDirectory[s-lastDirectory+1] = '\0';
-				} else {
-					lastDirectory[0] = '\0';
-				}
+		// try to reduce the number of mis-fires once a directory has been received
+		hash = FS_HashPK3(firstDirectory);
+		if(NULL != (file = FindFileInIndex(hash, firstDirectory, virtualFileIndex))) {
+			isDirectoryInIndex = qtrue;
+		} else {
+			Sys_FileNeeded(firstDirectory, qtrue);
+		}
 
-				// try to reduce the number of mis-fires once a directory has been received
-				hash = FS_HashPK3(firstDirectory);
-				if(NULL != (file = FindFileInIndex(hash, firstDirectory, search->dir->hashTable))) {
-					isDirectoryInIndex = qtrue;
-				} else {
-					Sys_FileNeeded(firstDirectory, qtrue);
-				}
-
-				if(lastDirectory[0]) {
-					hash = FS_HashPK3(lastDirectory);
-					if(NULL != (file = FindFileInIndex(hash, lastDirectory, search->dir->hashTable))) {
-						isDirectoryInIndex = qtrue;
-					} else {
-						Sys_FileNeeded(lastDirectory, qtrue);
-					}
-				}
-			}
-
-			// check the current index for the requested file
-			hash = fullHash & (search->dir->hashSize-1);
-			if(NULL != (file = FindFileInIndex(hash, filename, search->dir->hashTable))) {
-				isInIndex = qtrue;
-				filename = file->name;
-			}
-
-			// test if the file exists once anyways if we havent received a
-			//   real index from the server and are working off HTTP
-			if((!isInIndex || !isDirectoryInIndex)
-#if defined(USE_LIVE_RELOAD) || defined(__WASM__)
-				|| (file && file->mtime < lastVersionTime)
-#endif
-			) {
-				Sys_FileNeeded(filename, qfalse);
-				// found something!
-				break;
+		if(lastDirectory[0]) {
+			hash = FS_HashPK3(lastDirectory);
+			if(NULL != (file = FindFileInIndex(hash, lastDirectory, virtualFileIndex))) {
+				isDirectoryInIndex = qtrue;
 			} else {
-				continue;
+				Sys_FileNeeded(lastDirectory, qtrue);
 			}
 		}
+	}
+
+	// check the current index for the requested file
+	hash = fullHash & (virtualHashSize-1);
+	if(NULL != (file = FindFileInIndex(hash, filename, virtualFileIndex))) {
+		isInIndex = qtrue;
+		filename = file->name;
+	}
+
+	// test if the file exists once anyways if we havent received a
+	//   real index from the server and are working off HTTP
+	Com_Printf("goddamnit: %i\n", file && isNotFound);
+	if((!isInIndex || !isDirectoryInIndex)
+#if defined(USE_LIVE_RELOAD) || defined(__WASM__)
+		|| (file && file->mtime < lastVersionTime)
+#else
+		|| (file && isNotFound)
+#endif
+	) {
+		Sys_FileNeeded(filename, qfalse);
+		// found something!
 	}
 
 }
@@ -2696,7 +2666,9 @@ int FS_FOpenFileRead( const char *filename, fileHandle_t *file, qboolean uniqueF
 		// just wants to see if file is there
 		for ( search = fs_searchpaths ; search ; search = search->next ) {
 			// is the element a pak file?
-			if ( search->pack && search->pack->hashTable[ (hash = fullHash & (search->pack->hashSize-1)) ] ) {
+			if ( search->pack 
+				&& search->pack->hashTable[ (hash = fullHash & (search->pack->hashSize-1)) ] 
+			) {
 				// skip non-pure files
 				if ( !FS_PakIsPure( search->pack ) )
 					continue;

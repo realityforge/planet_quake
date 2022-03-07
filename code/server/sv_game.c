@@ -1272,7 +1272,12 @@ void SV_InitGameProgs( qboolean createNew ) {
 	// load the dll or bytecode
 	gvm = VM_Create( VM_GAME, SV_GameSystemCalls, SV_DllSyscall, Cvar_VariableIntegerValue( "vm_game" ) );
 	if ( !gvm ) {
+#ifdef USE_ASYNCHRONOUS
+		Com_Printf( S_COLOR_RED "VM_Create on game failed\n" );
+		return;
+#else
 		Com_Error( ERR_DROP, "VM_Create on game failed" );
+#endif
 	}
 
 	if(createNew) {

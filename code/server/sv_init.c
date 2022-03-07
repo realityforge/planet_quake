@@ -646,6 +646,15 @@ void SV_SpawnServer( const char *mapname, qboolean killBots ) {
 
 	// load and spawn all other entities
 	SV_InitGameProgs( qfalse );
+#ifdef USE_ASYNCHRONOUS
+	if(!gvm) {
+		svs.initialized = qfalse;
+		startingServer = qfalse;
+		sv.state = SS_DEAD;
+		Cvar_Set( "sv_running", "0" );
+		return;
+	}
+#endif
 
 	// don't allow a map_restart if game is modified
 	sv_gametype->modified = qfalse;
