@@ -746,7 +746,7 @@ qboolean Com_DL_Perform( download_t *dl )
 
 #ifdef USE_ASYNCHRONOUS
 		// only take commands from server after valid connect
-		if(!dl->mapAutoDownload && cls.state < CA_CONNECTED) {
+		if(!dl->mapAutoDownload) {
 			// use this as a marker for files not meant to be kept around
 			// remove it below, don't even bother moving it to HOME dir
 			// TODO: fix this stuff with slashes and use a variable if requesting an index
@@ -769,7 +769,7 @@ qboolean Com_DL_Perform( download_t *dl )
 		}
 		else
 		{
-			Com_sprintf( name, sizeof( name ), "%s%c%s.pk3", dl->gameDir, PATH_SEP, dl->TempName );
+			// TODO: reset this here
 			n = FS_GetZipChecksum( name );
 			Com_sprintf( name, sizeof( name ), "%s%c%s.%08x.pk3", dl->gameDir, PATH_SEP, dl->Name, n );
 

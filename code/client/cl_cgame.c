@@ -1374,15 +1374,20 @@ void CL_InitCGame( int inVM ) {
 	}
 
 #ifndef BUILD_GAME_STATIC
-#ifdef USE_LAZY_MEMORY
+#if defined(USE_LIVE_RELOAD) || defined(USE_LAZY_MEMORY)
   if(cgvm) {
     cgvm = VM_Restart(cgvm);
   } else
 #endif
 #endif
-		cgvm = VM_Create( VM_CGAME, CL_CgameSystemCalls, CL_DllSyscall, interpret );
+	cgvm = VM_Create( VM_CGAME, CL_CgameSystemCalls, CL_DllSyscall, interpret );
 	if ( !cgvm ) {
+#ifdef USE_ASYNCHRONOUS
+		Com_Printf( S_COLOR_RED "VM_Create on cgame failed\n" );
+		return;
+#else
 		Com_Error( ERR_DROP, "VM_Create on cgame failed" );
+#endif
 	}
 	cls.state = CA_LOADING;
 

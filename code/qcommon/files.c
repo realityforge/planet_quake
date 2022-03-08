@@ -647,7 +647,7 @@ void Sys_FileNeeded(const char *needs, qboolean isDirectoryIndex) {
 
 	// force indexes to get downloaded first in line
 #ifdef USE_LAZY_LOAD
-	if(isDirectoryIndex) {
+	if(isDirectoryIndex || Q_stristr(filename, "maplist.json")) {
 		downloadTable = indexesCallback;
 		loading = filename;
 	} else 
@@ -674,7 +674,7 @@ void Sys_FileNeeded(const char *needs, qboolean isDirectoryIndex) {
 		}
 	}
 	
-Com_Printf("file needed! %s %s\n", filename, loading);
+//Com_Printf("file needed! %s %s\n", filename, loading);
 
   if(!filename[0]) {
 		return;
@@ -981,7 +981,7 @@ void MakeDirectoryBuffer(char *paths, int count, int length, const char *parentD
 		} else {
 			hash = FS_HashFileName( curFile->name, virtualHashSize );
 		}
-Com_Printf("adding %li, %s\n", hash, curFile->name);
+//Com_Printf("adding %li, %s\n", hash, curFile->name);
 
 		// store the file position in the zip
 		// TODO: update this when Accept-Ranges is implemented
@@ -993,6 +993,7 @@ Com_Printf("adding %li, %s\n", hash, curFile->name);
 			//!strrchr(currentPath, '.')
 			//&& (Q_stristr(currentPath, "/maps")
 			//|| Q_stristr(currentPath, "/vm")
+			|| Q_stristr(currentPath, "botfiles/")
 			|| Q_stristr(currentPath, ".cfg")
 			//|| Q_stristr(currentPath, ".skin")
 			|| Q_stristr(currentPath, "ui/menus.txt")
@@ -1200,13 +1201,14 @@ Com_Printf("updating files: %s -> %s\n", filename, tempname);
 		if((s = Q_stristr(tempname, ".pk3dir/"))) {
 			char pk3dir[MAX_OSPATH];
 			qboolean found = qfalse;
-			memcpy(pk3dir, tempname, s - tempname);
-			pk3dir[s - tempname] = '\0';
+			memcpy(pk3dir, tempname, s - tempname + 7);
+			pk3dir[s - tempname + 7] = '\0';
 			gamedir = strrchr(pk3dir, '/');
-			pk3dir[gamedir - pk3dir + 1] = '\0';
+			pk3dir[gamedir - pk3dir] = '\0';
+			gamedir++;
 			searchpath_t *search;
 			for ( search = fs_searchpaths ; search ; search = search->next ) {
-				if(search->dir && Q_stricmp(search->dir->gamedir, gamedir)) {
+				if(search->dir && !Q_stricmp(search->dir->gamedir, gamedir)) {
 					found = qtrue;
 					break;
 				}
@@ -1230,6 +1232,8 @@ Com_Printf("updating files: %s -> %s\n", filename, tempname);
 				strcpy( search->dir->path, curpath ); // c:\quake3\baseq3
 				strcpy( search->dir->gamedir, gamedir ); // mypak.pk3dir
 
+Com_Printf("goddamnit: %s, %s\n", curpath, gamedir);
+
 				search->next = fs_searchpaths;
 				fs_searchpaths = search;
 				fs_pk3dirCount++;
@@ -1252,6 +1256,13 @@ Com_Printf("updating files: %s -> %s\n", filename, tempname);
     Cvar_Set("com_skipLoadUI", "0");
 		Cbuf_AddText("wait; vid_restart lazy;");
 	} else 
+
+	// TODO: load default model and current player model
+	if(Q_stristr(tempname, "vm/cgame.qvm")) {
+    Cvar_Set("com_skipLoadUI", "0");
+		Cbuf_AddText("wait; vid_restart lazy;");
+	} else 
+
 #endif
 
 #ifndef BUILD_SLIM_CLIENT
@@ -1312,8 +1323,14 @@ Com_DPrintf("Adding %s (from: %s) to directory index.\n", filename, realPath);
 		fclose(indexFile);
 		FS_HomeRemove( s );
 		// we should have a directory index by now to check for VMs and files we need
-    Cvar_Set("com_skipLoadUI", "0");
-		Cbuf_AddText("wait; vid_restart lazy;");
+		if(Q_stristr(tempname, "maps/maplist.json")) {
+			if(Cvar_VariableString("mapname")[0] != '\0') {
+				Cbuf_AddText(va("wait; map %s;", Cvar_VariableString("mapname")));
+			}
+		} else {
+			Cvar_Set("com_skipLoadUI", "0");
+			Cbuf_AddText("wait; vid_restart lazy;");
+		}
 	}
 }
 
@@ -1384,7 +1401,6 @@ Com_Printf("searching index for (%s) %s\n", isNotFound ? "not found": "live", fi
 
 	// test if the file exists once anyways if we havent received a
 	//   real index from the server and are working off HTTP
-	Com_Printf("goddamnit: %i\n", file && isNotFound);
 	if((!isInIndex || !isDirectoryInIndex)
 #if defined(USE_LIVE_RELOAD) || defined(__WASM__)
 		|| (file && file->mtime < lastVersionTime)
