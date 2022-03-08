@@ -581,7 +581,7 @@ qboolean Com_DL_Begin( download_t *dl, const char *localName, const char *remote
 
 #ifdef USE_ASYNCHRONOUS
 	dl->headerCheck = qtrue;
-	Com_DPrintf( "URL: %s\n", dl->URL );
+	Com_Printf( "URL: %s\n", dl->URL );
 #else
 	Com_Printf( "URL: %s\n", dl->URL );
 #endif

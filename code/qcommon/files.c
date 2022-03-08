@@ -648,7 +648,8 @@ void Sys_FileNeeded(const char *needs, qboolean isDirectoryIndex) {
 
 	// force indexes to get downloaded first in line
 #ifdef USE_LAZY_LOAD
-	if(isDirectoryIndex || Q_stristr(filename, "maplist.json")) {
+	if(isDirectoryIndex || Q_stristr(filename, "maplist.json")
+		|| Q_stristr(filename, "default.cfg")) {
 		downloadTable = indexesCallback;
 		loading = filename;
 	} else 
@@ -1027,6 +1028,7 @@ void MakeDirectoryBuffer(char *paths, int count, int length, const char *parentD
 
 }
 
+static void FixDownloadList( const char *parentDirectory );
 
 
 fileInPack_t *FindFileInIndex(long hash, const char *filename, fileInPack_t* *hashTable) {
@@ -1122,6 +1124,9 @@ void Sys_FileReady(const char *filename, const char* tempname) {
 					download->ready = qfalse;
 					download->downloaded = qtrue;
 					Com_DPrintf("WARNING: %i %s download failed.\n", hash, localName);
+					if(localName[strlen(localName) - 1] == '/') {
+						FixDownloadList(localName);
+					}
 				}
 				found = qtrue;
 				// break; // used to stop here, but now this will cover .pk3dir paths
@@ -1144,7 +1149,7 @@ void Sys_FileReady(const char *filename, const char* tempname) {
 //   we know we won't find shader images with alternate extensions, so those downloads are marked
 static void FixDownloadList( const char *parentDirectory ) {
 	int length;
-	int lengthGame;
+	int lengthGame, lengthPk3;
 	long hash;
 	const char *s;
 
@@ -1155,7 +1160,7 @@ static void FixDownloadList( const char *parentDirectory ) {
 	length = strlen(parentDirectory);
 	lengthGame = strlen(FS_GetCurrentGameDir());
 	if((s = Q_stristr(parentDirectory, ".pk3dir/"))) {
-		lengthGame = (s - parentDirectory) + 7;
+		lengthPk3 = (s - parentDirectory) + 7;
 	}
 
 	for(int j = 0; j < 5; j++) {
@@ -1173,7 +1178,7 @@ static void FixDownloadList( const char *parentDirectory ) {
 						&& !strchr(s + length + 1, '/') // make sure it's the last directory
 					) {
 						hash = FS_HashFileName( &download->downloadName[lengthGame+1], virtualHashSize );
-						if(!FindFileInIndex(hash, &download->downloadName[lengthGame+1], virtualFileIndex)) 
+						if(!FindFileInIndex(hash, &download->downloadName[lengthPk3+1], virtualFileIndex)) 
 						{
 Com_Printf("purging: %i, %s\n", hash, &download->downloadName[lengthGame+1]);
 							download->downloaded = qtrue;
@@ -1415,6 +1420,7 @@ static void FS_CheckIndex(const char *needs, qboolean isNotFound) {
 
 		// only look recursively when a file is not found
 		if(isNotFound && (s = strchr(needs, '/'))) {
+			int lengthFirst = 0;
 			char firstDirectory[MAX_OSPATH];
 			char lastDirectory[MAX_OSPATH];
 			firstDirectory[0] = '\0';
@@ -1422,14 +1428,16 @@ static void FS_CheckIndex(const char *needs, qboolean isNotFound) {
 
 			// look for directory listings in paths like baseq3/models/ and baseq3/models/players/sarge/
 			Q_strncpyz(firstDirectory, search->dir->gamedir, lengthGame + 1);
-			Q_strncpyz(lastDirectory, search->dir->gamedir, lengthGame + 1);
 			firstDirectory[lengthGame] = '/';
-			lastDirectory[lengthGame] = '/';
 			firstDirectory[lengthGame+1] = '\0';
-			lastDirectory[lengthGame+1] = '\0';
 			Q_strncpyz(&firstDirectory[lengthGame+1], needs, (s - needs) + 1);
-			firstDirectory[lengthGame+lengthFile+1] = '/';
-			firstDirectory[lengthGame+lengthFile+2] = '\0';
+			lengthFirst = strlen(firstDirectory);
+			firstDirectory[lengthFirst] = '/';
+			firstDirectory[lengthFirst+1] = '\0';
+
+			Q_strncpyz(lastDirectory, search->dir->gamedir, lengthGame + 1);
+			lastDirectory[lengthGame] = '/';
+			lastDirectory[lengthGame+1] = '\0';
 			Q_strncpyz(&lastDirectory[lengthGame+1], needs, lengthFile + 1);
 			s = strrchr(lastDirectory, '/');
 			if(s) {
@@ -1455,6 +1463,8 @@ static void FS_CheckIndex(const char *needs, qboolean isNotFound) {
 					Sys_FileNeeded(lastDirectory, qtrue);
 				}
 			}
+
+			Com_Printf("god fucking damnit: %s - %s\n", firstDirectory, lastDirectory);
 		}
 
 		// check the current index for the requested file

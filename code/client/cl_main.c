@@ -2610,11 +2610,6 @@ static void CL_Vid_Restart_f( void ) {
 #ifdef USE_LAZY_LOAD
 	if ( Q_stricmp( Cmd_Argv(1), "lazy" ) == 0) {
 		CL_StartHunkUsers();
-		if ( ( cls.state > CA_CONNECTED && cls.state != CA_CINEMATIC ) && !cls.cgameStarted ) {
-			cls.cgameStarted = qtrue;
-			CL_InitCGame(-1);
-			CL_SendPureChecksums();
-		}
 	} else 
 #endif
 	if ( Q_stricmp( Cmd_Argv(1), "keep_window" ) == 0
@@ -4434,6 +4429,12 @@ void CL_StartHunkUsers( void ) {
 	}
 
 #ifdef USE_ASYNCHRONOUS
+	if ( ( cls.state > CA_CONNECTED && cls.state != CA_CINEMATIC ) && !cls.cgameStarted ) {
+		cls.cgameStarted = qtrue;
+		CL_InitCGame(-1);
+		CL_SendPureChecksums();
+	}
+
 	// init with console down like Quake 1!
 	if(!uivm && !cls.uiStarted && cls.state == CA_DISCONNECTED) {
 		Key_SetCatcher( Key_GetCatcher( ) | KEYCATCH_CONSOLE );

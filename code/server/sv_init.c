@@ -648,10 +648,8 @@ void SV_SpawnServer( const char *mapname, qboolean killBots ) {
 	SV_InitGameProgs( qfalse );
 #ifdef USE_ASYNCHRONOUS
 	if(!gvm) {
-		svs.initialized = qfalse;
 		startingServer = qfalse;
-		sv.state = SS_DEAD;
-		Cvar_Set( "sv_running", "0" );
+		SV_Shutdown("Server qagame missing");
 		return;
 	}
 #endif

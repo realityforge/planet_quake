@@ -353,6 +353,10 @@ qhandle_t RE_RegisterModel( const char *name )
 	//
 	Q_strncpyz( localName, name, MAX_QPATH );
 
+	if(name[0] == '*') {
+		return mod->index;
+	}
+
 #ifdef USE_LAZY_LOAD
 	ri.Cvar_Set("r_loadingModel", name);
 #endif
