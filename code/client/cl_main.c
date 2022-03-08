@@ -2610,6 +2610,11 @@ static void CL_Vid_Restart_f( void ) {
 #ifdef USE_LAZY_LOAD
 	if ( Q_stricmp( Cmd_Argv(1), "lazy" ) == 0) {
 		CL_StartHunkUsers();
+		if ( ( cls.state > CA_CONNECTED && cls.state != CA_CINEMATIC ) && !cls.cgameStarted ) {
+			cls.cgameStarted = qtrue;
+			CL_InitCGame(-1);
+			CL_SendPureChecksums();
+		}
 	} else 
 #endif
 	if ( Q_stricmp( Cmd_Argv(1), "keep_window" ) == 0
