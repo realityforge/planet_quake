@@ -1457,6 +1457,9 @@ void R_ModelBounds( qhandle_t handle, vec3_t mins, vec3_t maxs ) {
 	model_t		*model;
 
 	model = R_GetModelByHandle( handle );
+	if(!model) {
+		return;
+	}
 
 	if(model->type == MOD_BRUSH) {
 		VectorCopy( model->bmodel->bounds[0], mins );

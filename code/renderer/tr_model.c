@@ -1252,11 +1252,11 @@ void R_ModelBounds( qhandle_t handle, vec3_t mins, vec3_t maxs ) {
 
 	model = R_GetModelByHandle( handle );
 
-	if(handle == 0) {
+	/*if(handle == 0) {
 		VectorCopy( tr.world->bmodels[0].bounds[0], mins );
 		VectorCopy( tr.world->bmodels[0].bounds[1], maxs );
 		return;
-	} else
+	} else*/
 	if(model->type == MOD_BRUSH) {
 		VectorCopy( model->bmodel->bounds[0], mins );
 		VectorCopy( model->bmodel->bounds[1], maxs );
@@ -1267,6 +1267,11 @@ void R_ModelBounds( qhandle_t handle, vec3_t mins, vec3_t maxs ) {
 		md3Frame_t	*frame;
 
 		header = model->md3[0];
+		if(!header) {
+			VectorClear(mins);
+			VectorClear(maxs);
+			return;
+		}
 		frame = (md3Frame_t *) ((byte *)header + header->ofsFrames);
 
 		VectorCopy( frame->bounds[0], mins );

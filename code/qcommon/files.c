@@ -1035,9 +1035,15 @@ fileInPack_t *FindFileInIndex(long hash, const char *filename, fileInPack_t* *ha
 	const char *isGame;
 	int length = strlen(FS_GetCurrentGameDir());
 	assert(hashTable);
+	if(filename[0] == '/') {
+		filename++;
+	}
 	isGame = Q_stristr(filename, FS_GetCurrentGameDir());
 	if(isGame) {
 		filename += length + 1;
+	}
+	if(filename[0] == '/') {
+		filename++;
 	}
 	if(hashTable[hash]) {
 		pakFile = hashTable[hash];
@@ -1140,6 +1146,7 @@ static void FixDownloadList( const char *parentDirectory ) {
 	int length;
 	int lengthGame;
 	long hash;
+	const char *s;
 
 	if(!virtualFileIndex) {
 		return;
@@ -1147,6 +1154,9 @@ static void FixDownloadList( const char *parentDirectory ) {
 //Com_Printf("fixing downloads: %s\n", parentDirectory);
 	length = strlen(parentDirectory);
 	lengthGame = strlen(FS_GetCurrentGameDir());
+	if((s = Q_stristr(parentDirectory, ".pk3dir/"))) {
+		lengthGame = (s - parentDirectory) + 7;
+	}
 
 	for(int j = 0; j < 5; j++) {
 		downloadLazy_t* *downloadTable = downloadTables[j];
@@ -1165,7 +1175,7 @@ static void FixDownloadList( const char *parentDirectory ) {
 						hash = FS_HashFileName( &download->downloadName[lengthGame+1], virtualHashSize );
 						if(!FindFileInIndex(hash, &download->downloadName[lengthGame+1], virtualFileIndex)) 
 						{
-//Com_Printf("purging: %i, %s\n", hash, &download->downloadName[lengthGame+1]);
+Com_Printf("purging: %i, %s\n", hash, &download->downloadName[lengthGame+1]);
 							download->downloaded = qtrue;
 						}
 					}
@@ -1357,26 +1367,30 @@ Com_DPrintf("Adding %s (from: %s) to directory index.\n", filename, realPath);
 
 
 static void FS_CheckIndex(const char *needs, qboolean isNotFound) {
-	char firstDirectory[MAX_OSPATH];
-	char lastDirectory[MAX_OSPATH];
-	char filename[MAX_OSPATH];
 	long fullHash;
 	const char *s;
 	int hash;
-	int lengthGame, lengthFile;
+	int lengthFile;
 	fileInPack_t *file;
 	qboolean isDirectoryInIndex = qfalse;
 	qboolean isInIndex = qfalse;
 	searchpath_t *search;
 
-	firstDirectory[0] = '\0';
-	lastDirectory[0] = '\0';
-
 	if(!virtualFileIndex) {
 		return;
 	}
 
-Com_Printf("searching index for (%s) %s\n", isNotFound ? "not found": "live", needs);
+	if(needs[0] == '/') {
+		needs++;
+	}
+		if(Q_stristr(needs, FS_GetCurrentGameDir())) {
+		needs += strlen(FS_GetCurrentGameDir()) + 1;
+	}
+	if(needs[0] == '/') {
+		needs++;
+	}
+
+//Com_Printf("searching index for (%s) %s\n", isNotFound ? "not found": "live", needs);
 
 	lengthFile = strlen(needs);
 	fullHash = FS_HashFileName( needs, 0U );
@@ -1384,31 +1398,39 @@ Com_Printf("searching index for (%s) %s\n", isNotFound ? "not found": "live", ne
 	// search the index again but for the first folder name, if it exists
 	//   then make the needed request for the parent directory and the file
 	for ( search = fs_searchpaths ; search ; search = search->next ) {
+		char filename[MAX_OSPATH];
+		int lengthGame;
+
 		if(!search->dir || !search->dir->gamedir 
 			|| !Q_stristr(search->dir->path, fs_homepath->string)) {
 			continue;
 		}
 
-		filename[0] = '\0';
 		lengthGame = strlen(search->dir->gamedir);
-		if(lengthGame) {
-			Q_strncpyz(filename, search->dir->gamedir, lengthGame + 1);
-			filename[lengthGame] = '/';
-			lengthGame++;
-			filename[lengthGame] = '\0';
-		}
-		Q_strncpyz(&filename[lengthGame], needs, lengthFile + 1);
-		filename[lengthGame + lengthFile] = '\0';
-
-//Com_Printf("goddamnit 2: %s - %s\n", search->dir->path, search->dir->gamedir);
+		filename[0] = '\0';
+		Q_strncpyz(filename, search->dir->gamedir, lengthGame + 1);
+		filename[lengthGame] = '/';
+		filename[lengthGame+1] = '\0';
+		Q_strncpyz(&filename[lengthGame+1], needs, lengthFile + 1);
 
 		// only look recursively when a file is not found
-		if(isNotFound && (s = strchr(filename, '/'))) {
+		if(isNotFound && (s = strchr(needs, '/'))) {
+			char firstDirectory[MAX_OSPATH];
+			char lastDirectory[MAX_OSPATH];
+			firstDirectory[0] = '\0';
+			lastDirectory[0] = '\0';
+
 			// look for directory listings in paths like baseq3/models/ and baseq3/models/players/sarge/
-			Q_strncpyz(firstDirectory, filename, (s-filename)+1);
-			firstDirectory[(s-filename)] = '/';
-			firstDirectory[(s-filename)+1] = '\0';
-			Q_strncpyz(lastDirectory, filename, (s-filename)+1);
+			Q_strncpyz(firstDirectory, search->dir->gamedir, lengthGame + 1);
+			Q_strncpyz(lastDirectory, search->dir->gamedir, lengthGame + 1);
+			firstDirectory[lengthGame] = '/';
+			lastDirectory[lengthGame] = '/';
+			firstDirectory[lengthGame+1] = '\0';
+			lastDirectory[lengthGame+1] = '\0';
+			Q_strncpyz(&firstDirectory[lengthGame+1], needs, (s - needs) + 1);
+			firstDirectory[lengthGame+lengthFile+1] = '/';
+			firstDirectory[lengthGame+lengthFile+2] = '\0';
+			Q_strncpyz(&lastDirectory[lengthGame+1], needs, lengthFile + 1);
 			s = strrchr(lastDirectory, '/');
 			if(s) {
 				lastDirectory[s-lastDirectory] = '/';

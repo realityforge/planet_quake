@@ -4071,10 +4071,7 @@ void Com_Init( char *commandLine ) {
 	if(FS_SV_FileExists(va("%s/default.cfg", FS_GetCurrentGameDir())))
 #endif
 	Com_ExecuteCfg();
-#ifdef USE_ASYNCHRONOUS
-	else
-		Com_Printf("goddamnit No default.cfg found.\n");
-#endif
+
 	// override anything from the config files with command line args
 	Com_StartupVariable( NULL );
 
