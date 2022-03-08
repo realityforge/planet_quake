@@ -3343,7 +3343,7 @@ Com_ExecuteCfg
 For controlling environment variables
 ==================
 */
-static void Com_ExecuteCfg( void )
+void Com_ExecuteCfg( void )
 {
 	Cbuf_ExecuteText(EXEC_NOW, "exec default.cfg\n");
 	Cbuf_Execute(); // Always execute after exec to prevent text buffer overflowing
@@ -4065,10 +4065,16 @@ void Com_Init( char *commandLine ) {
 
 #ifndef USE_ASYNCHRONOUS
 	Com_InitJournaling();
-
-	Com_ExecuteCfg();
 #endif
 
+#ifdef USE_ASYNCHRONOUS
+	if(FS_SV_FileExists(va("%s/default.cfg", FS_GetCurrentGameDir())))
+#endif
+	Com_ExecuteCfg();
+#ifdef USE_ASYNCHRONOUS
+	else
+		Com_Printf("goddamnit No default.cfg found.\n");
+#endif
 	// override anything from the config files with command line args
 	Com_StartupVariable( NULL );
 

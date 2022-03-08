@@ -9,11 +9,12 @@
 displayContextDef_t cgDC;
 #endif
 
-int forceModelModificationCount = -1;
-int enemyModelModificationCount  = -1;
-int	enemyColorsModificationCount = -1;
-int teamModelModificationCount  = -1;
-int	teamColorsModificationCount = -1;
+static int forceModelModificationCount = -1;
+static int enemyModelModificationCount  = -1;
+static int enemyColorsModificationCount = -1;
+static int teamModelModificationCount  = -1;
+static int teamColorsModificationCount = -1;
+static int breadcrumbModificationCount = -1;
 
 void CG_Init( int serverMessageNum, int serverCommandSequence, int clientNum );
 void CG_Shutdown( void );
@@ -275,6 +276,7 @@ int cg_weaponsCount = -1; //WarZone
 #endif
 
 vmCvar_t  cg_developer;
+vmCvar_t  cg_breadCrumb;
 vmCvar_t  cg_atmosphere;
 vmCvar_t  cg_atmosphericEffects;
 int atmosphereModificationCount = -1;
@@ -444,26 +446,27 @@ static const cvarTable_t cvarTable[] = {
   { &cgwp_flameCycle, "wp_flameCycle", "40", CVAR_SERVERINFO },
 #endif
 #endif
-	{ &cg_atmosphere, "g_atmosphere", "", CVAR_SERVERINFO},
+	{ &cg_atmosphere, "g_atmosphere", "", CVAR_SERVERINFO },
+	{ &cg_breadCrumb, "ui_breadCrumb", "", CVAR_ROM },
 	{ &cg_atmosphericEffects, "cg_atmosphericEffects", "1", CVAR_ARCHIVE },
-	{ &cg_smoothClients, "cg_smoothClients", "0", CVAR_USERINFO | CVAR_ARCHIVE},
-	{ &cg_cameraMode, "com_cameraMode", "0", CVAR_CHEAT},
-	{ &cg_noTaunt, "cg_noTaunt", "0", CVAR_ARCHIVE},
-	{ &cg_noProjectileTrail, "cg_noProjectileTrail", "0", CVAR_ARCHIVE},
-	{ &cg_smallFont, "ui_smallFont", "0.25", CVAR_ARCHIVE},
-	{ &cg_bigFont, "ui_bigFont", "0.4", CVAR_ARCHIVE},
-	{ &cg_oldRail, "cg_oldRail", "1", CVAR_ARCHIVE},
-	{ &cg_oldRocket, "cg_oldRocket", "1", CVAR_ARCHIVE},
-	{ &cg_oldPlasma, "cg_oldPlasma", "1", CVAR_ARCHIVE},
-	{ &cg_trueLightning, "cg_trueLightning", "0.0", CVAR_ARCHIVE},
-	{ &cg_hitSounds, "cg_hitSounds", "0", CVAR_ARCHIVE},
-	{ &cg_enemyModel, "cg_enemyModel", "", CVAR_ARCHIVE},
-	{ &cg_enemyColors, "cg_enemyColors", "", CVAR_ARCHIVE},
-	{ &cg_teamModel, "cg_teamModel", "", CVAR_ARCHIVE},
-	{ &cg_teamColors, "cg_teamColors", "", CVAR_ARCHIVE},
-	{ &cg_deadBodyDarken, "cg_deadBodyDarken", "1", CVAR_ARCHIVE},
-	{ &cg_fovAdjust, "cg_fovAdjust", "0", CVAR_ARCHIVE},
-	{ &cg_followKiller, "cg_followKiller", "0", CVAR_ARCHIVE}
+	{ &cg_smoothClients, "cg_smoothClients", "0", CVAR_USERINFO | CVAR_ARCHIVE },
+	{ &cg_cameraMode, "com_cameraMode", "0", CVAR_CHEAT },
+	{ &cg_noTaunt, "cg_noTaunt", "0", CVAR_ARCHIVE },
+	{ &cg_noProjectileTrail, "cg_noProjectileTrail", "0", CVAR_ARCHIVE },
+	{ &cg_smallFont, "ui_smallFont", "0.25", CVAR_ARCHIVE },
+	{ &cg_bigFont, "ui_bigFont", "0.4", CVAR_ARCHIVE },
+	{ &cg_oldRail, "cg_oldRail", "1", CVAR_ARCHIVE },
+	{ &cg_oldRocket, "cg_oldRocket", "1", CVAR_ARCHIVE },
+	{ &cg_oldPlasma, "cg_oldPlasma", "1", CVAR_ARCHIVE },
+	{ &cg_trueLightning, "cg_trueLightning", "0.0", CVAR_ARCHIVE },
+	{ &cg_hitSounds, "cg_hitSounds", "0", CVAR_ARCHIVE },
+	{ &cg_enemyModel, "cg_enemyModel", "", CVAR_ARCHIVE },
+	{ &cg_enemyColors, "cg_enemyColors", "", CVAR_ARCHIVE },
+	{ &cg_teamModel, "cg_teamModel", "", CVAR_ARCHIVE },
+	{ &cg_teamColors, "cg_teamColors", "", CVAR_ARCHIVE },
+	{ &cg_deadBodyDarken, "cg_deadBodyDarken", "1", CVAR_ARCHIVE },
+	{ &cg_fovAdjust, "cg_fovAdjust", "0", CVAR_ARCHIVE },
+	{ &cg_followKiller, "cg_followKiller", "0", CVAR_ARCHIVE }
 };
 
 
@@ -492,6 +495,7 @@ void CG_RegisterCvars( void ) {
 	teamModelModificationCount = cg_teamModel.modificationCount;
 	teamColorsModificationCount = cg_teamColors.modificationCount;
 	atmosphereModificationCount = cg_atmosphere.modificationCount;
+	breadcrumbModificationCount = cg_breadCrumb.modificationCount;
 
 	trap_Cvar_Register(NULL, "model", DEFAULT_MODEL, CVAR_USERINFO | CVAR_ARCHIVE );
 	trap_Cvar_Register(NULL, "headmodel", DEFAULT_MODEL, CVAR_USERINFO | CVAR_ARCHIVE );
@@ -606,6 +610,7 @@ void UpdateWeaponOrder (void)
 //</WarZone>
 #endif
 
+void CG_LoadClientInfo( clientInfo_t *ci );
 
 /*
 =================
@@ -649,6 +654,18 @@ void CG_UpdateCvars( void ) {
 	if(atmosphereModificationCount != cg_atmosphere.modificationCount) {
 		atmosphereModificationCount = cg_atmosphere.modificationCount;
 		CG_EffectParse(cg_atmosphere.string);
+	}
+
+	if(breadcrumbModificationCount != cg_breadCrumb.modificationCount) {
+		breadcrumbModificationCount = cg_breadCrumb.modificationCount;
+		if(!(cgs.clientinfo[ cg.clientNum ].legsModel 
+			&& cgs.clientinfo[ cg.clientNum ].torsoModel
+			&& cgs.clientinfo[ cg.clientNum ].headModel
+			&& cgs.clientinfo[ cg.clientNum ].legsSkin
+			&& cgs.clientinfo[ cg.clientNum ].torsoSkin
+			&& cgs.clientinfo[ cg.clientNum ].headSkin)) {
+			CG_LoadClientInfo( cg.clientNum );
+		}
 	}
 
 	// if model changed

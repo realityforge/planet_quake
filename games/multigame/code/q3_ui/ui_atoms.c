@@ -99,7 +99,7 @@ const char *UI_GetBreadCrumb( void ) {
 	return NULL;
 }
 
-static int breadcrumbModificationCount = 0;
+static int breadcrumbModificationCount = -1;
 
 void UI_SetBreadCrumb( void ) {
 	const char *breadcrumb = UI_GetBreadCrumb();
@@ -1270,7 +1270,6 @@ void UI_Refresh( int realtime )
 	if(ui_breadCrumb.modificationCount > breadcrumbModificationCount)
 	{
 		breadcrumbModificationCount = ui_breadCrumb.modificationCount;
-Com_Printf("hello!!!! %s != %s\n", ui_breadCrumb.string, UI_GetBreadCrumb());
 		if(!Q_stricmp(ui_breadCrumb.string, UI_GetBreadCrumb())) {
 			if(((menuframework_s *)uis.activemenu)->init) {
 				((menuframework_s *)uis.activemenu)->init();

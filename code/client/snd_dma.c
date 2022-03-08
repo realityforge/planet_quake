@@ -750,7 +750,8 @@ void S_Base_AddLoopingSound( int entityNum, const vec3_t origin, const vec3_t ve
 
 	sfx = &s_knownSfx[ sfxHandle ];
 
-	if (sfx->inMemory == qfalse) {
+	if (sfx->inMemory == qfalse && Com_Milliseconds() - sfx->lastTimeUsed > 2000) {
+		sfx->lastTimeUsed = Com_Milliseconds();
 		S_memoryLoad(sfx);
 	}
 
@@ -870,7 +871,7 @@ void S_AddLoopSounds (void) {
 			S_SpatializeOrigin( loop->origin, SPHERE_VOL,  &left_total, &right_total);	// sphere
 		}
 
-		loop->sfx->lastTimeUsed = startTime;
+		loop->sfx->lastTimeUsed = Com_Milliseconds();
 
 		for (j=(i+1); j< MAX_GENTITIES ; j++) {
 			loop2 = &loopSounds[j];
@@ -885,7 +886,7 @@ void S_AddLoopSounds (void) {
 				S_SpatializeOrigin( loop2->origin, SPHERE_VOL,  &left, &right);		// sphere
 			}
 
-			loop2->sfx->lastTimeUsed = startTime;
+			loop2->sfx->lastTimeUsed = Com_Milliseconds();
 			left_total += left;
 			right_total += right;
 		}
@@ -1515,7 +1516,6 @@ static void S_Base_Shutdown( void ) {
 
 	cls.soundRegistered = qfalse;
 }
-
 
 /*
 ================
