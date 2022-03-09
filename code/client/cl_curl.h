@@ -110,6 +110,7 @@ typedef struct download_s {
 	qboolean  directDownload;
 #ifdef USE_ASYNCHRONOUS
 	qboolean  Cancelled;
+	qboolean  Completed;
 #endif
 
 	struct func_s {

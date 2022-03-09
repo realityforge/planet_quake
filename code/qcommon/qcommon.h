@@ -837,6 +837,30 @@ issues.
 ==============================================================
 */
 
+#ifdef USE_ASYNCHRONOUS
+
+typedef enum {
+	VFS_NOENT,
+	VFS_LATER,
+	VFS_FILE,
+	VFS_NOW,
+	VFS_INDEX,
+	VFS_DL,
+	VFS_READY, // ready for updating
+	VFS_DONE, // already processed
+	VFS_FAIL,
+} vfsState_t;
+
+typedef struct downloadLazy_s {
+  char *downloadName; // this is the of the file in the shader
+	char *loadingName; // this is the name of the shader to update
+	time_t lastRequested;
+	vfsState_t state;
+  struct downloadLazy_s *next;
+} downloadLazy_t;
+
+#endif
+
 // referenced flags
 // these are in loop specific order so don't change the order
 #define FS_GENERAL_REF	0x01

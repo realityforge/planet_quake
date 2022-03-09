@@ -190,6 +190,8 @@ qboolean Com_DL_InProgress( const download_t *dl )
 }
 
 
+extern download_t *cl_downloads;
+
 /*
 =================
 Com_DL_Cleanup
@@ -197,6 +199,9 @@ Com_DL_Cleanup
 */
 void Com_DL_Cleanup( download_t *dl )
 {
+#ifdef USE_ASYNCHRONOUS
+	assert(!dl->URL[0] || dl->Completed); // god fucking damnit
+#endif
 	if( dl->cURLM )
 	{
 		if ( dl->cURL )
@@ -581,7 +586,7 @@ qboolean Com_DL_Begin( download_t *dl, const char *localName, const char *remote
 
 #ifdef USE_ASYNCHRONOUS
 	dl->headerCheck = qtrue;
-	Com_Printf( "URL: %s\n", dl->URL );
+	Com_DPrintf( "URL: %i %s\n", dl - cl_downloads, dl->URL );
 #else
 	Com_Printf( "URL: %s\n", dl->URL );
 #endif
@@ -752,11 +757,13 @@ qboolean Com_DL_Perform( download_t *dl )
 			// TODO: fix this stuff with slashes and use a variable if requesting an index
 			if(Q_stristr(dl->TempName, "/.")) {
 				// send to files for a quick scanning and adding to directory index
+				dl->Completed = qtrue;
 				Sys_FileReady( dl->Name, dl->TempName );
 			} else {
 				n = FS_GetZipChecksum( va("%s%c%s", dl->gameDir, PATH_SEP, dl->TempName) );
 				Com_sprintf( clc.downloadName, sizeof( clc.downloadName ), "%s/%s", dl->gameDir, dl->Name );
 				FS_SV_Rename( dl->TempName, clc.downloadName );
+				dl->Completed = qtrue;
 				Sys_FileReady( dl->Name, clc.downloadName );
 			}
 		} else
@@ -809,6 +816,7 @@ qboolean Com_DL_Perform( download_t *dl )
 	{
 		dl->func.easy_getinfo( msg->easy_handle, CURLINFO_RESPONSE_CODE, &code );
 #ifdef USE_ASYNCHRONOUS
+		dl->Completed = qtrue;
 		Sys_FileReady(dl->Name, NULL);
 		//if( !dl->Cancelled && code != 404 )
 #endif

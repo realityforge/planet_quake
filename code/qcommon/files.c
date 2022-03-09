@@ -549,41 +549,21 @@ static int FS_FileLength( FILE* h );
 static int FS_PakHashSize( const int filecount );
 static int FS_HashPK3( const char *name );
 
-typedef enum {
-	VFS_NOENT,
-	VFS_LATER,
-	VFS_FILE,
-	VFS_NOW,
-	VFS_INDEX,
-	VFS_DL,
-	VFS_READY, // ready for updating
-	VFS_DONE, // already processed
-	VFS_FAIL,
-} vfsState_t;
-
-typedef struct downloadLazy_s {
-  char *downloadName; // this is the of the file in the shader
-	char *loadingName; // this is the name of the shader to update
-	time_t lastRequested;
-	vfsState_t state;
-  struct downloadLazy_s *next;
-} downloadLazy_t;
-
 static downloadLazy_t *readyCallback[PK3_HASH_SIZE]; // MAX_MOD_KNOWN
 
 #if defined(USE_LIVE_RELOAD) || defined(__WASM__)
 static int lastVersionTime = 0;
 #endif
 
-void Sys_UpdateNeeded( char *ready, char *downloadNeeded ) {
+void Sys_UpdateNeeded( downloadLazy_t **ready, downloadLazy_t **downloadNeeded ) {
 	downloadLazy_t *highest = NULL;
 	downloadLazy_t *download;
 	int time = Sys_Milliseconds();
 	if(ready) {
-		ready[0] = 0;
+		*ready = NULL;
 	}
 	if(downloadNeeded) {
-		downloadNeeded[0] = 0;
+		*downloadNeeded = NULL;
 	}
 
 	// TODO: loop over readyFiles instead?
@@ -597,36 +577,31 @@ void Sys_UpdateNeeded( char *ready, char *downloadNeeded ) {
 			if(download->state == VFS_DONE) {
 				continue;
 			}
-			if(download->state == VFS_READY && ready && ready[0] == '\0') {
+			if(download->state == VFS_READY && ready && !*ready) {
 				// memcpy because paths are seperated by special characters and zeros
-				memcpy(ready, download->loadingName, MAX_OSPATH);
+				*ready = download;
 				download->state = VFS_DONE; // incase its not cleared right away
 				continue;
 			}
 			if(download->state > VFS_LATER && download->state < VFS_DL 
-				&& downloadNeeded && downloadNeeded[0] == '\0'
+				&& downloadNeeded && !*downloadNeeded
 				&& time - download->lastRequested > 1500
 				&& (!highest || highest->state < download->state)
 			) {
 				highest = download;
 			}
-			if((!downloadNeeded || downloadNeeded[0] != '\0') && (!ready || ready[0] != '\0')) {
+			if((!downloadNeeded || *downloadNeeded) && (!ready || *ready)) {
 				// we have both set
 				break;
 			}
 		} while((download = download->next) != NULL);
-		if((!downloadNeeded || downloadNeeded[0] != '\0') && (!ready || ready[0] != '\0')) {
+		if((!downloadNeeded || *downloadNeeded) && (!ready || *ready)) {
 			break;
     }
   }
 
 	if(downloadNeeded && highest) {
-		highest->lastRequested = time;
-		strcpy(downloadNeeded, highest->downloadName);
-		if(highest->state == VFS_INDEX && downloadNeeded[strlen(downloadNeeded) - 1] != '/') {
-			strcat(downloadNeeded, "/");
-		}
-		highest->state = VFS_DL;
+		*downloadNeeded = highest;
 	}
 }
 
@@ -707,7 +682,7 @@ downloadLazy_t *Sys_FileNeeded(const char *needs, vfsState_t state) {
 	}
 
 	if(!found) {
-		Com_Printf("file needed! %i, %i - %s, %s\n", hash, state, filename, loading);
+		//Com_Printf("file needed! %i, %i - %s, %s\n", hash, state, filename, loading);
 		downloadSize = sizeof(downloadLazy_t)
 				+ MAX_OSPATH /* because it's replaced with temp download name strlen(loading) + 1 */ 
 				+ strlen(filename) + 8;
@@ -927,7 +902,7 @@ void MakeDirectoryBuffer(char *paths, int count, int length, const char *parentD
 			}
 
 			do {
-				if(!Q_stricmpn(download->downloadName, parentDirectory, lengthDir)) {
+				if(download->state < VFS_DL && !Q_stricmpn(download->downloadName, parentDirectory, lengthDir)) {
 					download->state = VFS_NOENT;
 				}
 			} while ((download = download->next) != NULL);
@@ -953,15 +928,17 @@ void MakeDirectoryBuffer(char *paths, int count, int length, const char *parentD
 		}
 
 #ifdef USE_LIVE_RELOAD
+
+		// FIXME: move mtime to Sys_FileNeeded()
 		if(FS_FileExists(currentPath)) {
-			fileOffset_t _s;
-			fileTime_t _c;
+			//fileOffset_t _s;
+			//fileTime_t _c;
 			// TODO: FS_RealPath() so pk3 files can be bundled as updates
-			Sys_GetFileStats(FS_BuildOSPath(fs_homepath->string, FS_GetCurrentGameDir(), currentPath),
-				&_s, &curFile->mtime, &_c);
+			//Sys_GetFileStats(FS_BuildOSPath(fs_homepath->string, FS_GetCurrentGameDir(), currentPath),
+			//	&_s, &curFile->mtime, &_c);
 		} else {
 			// set mtime to at least when the engine starts up
-			curFile->mtime = 0;
+			//curFile->mtime = 0;
 		}
 #endif
 		// store the file position in the zip
@@ -992,9 +969,14 @@ void MakeDirectoryBuffer(char *paths, int count, int length, const char *parentD
 			// TODO: right thing to do would be test the content-type and duck out early 
 			//   on big files for anything that doesn't have a . dot in the name.
 			// TODO: check index instead
-			Sys_FileNeeded(currentPath, VFS_FILE);
+			download = Sys_FileNeeded(currentPath, VFS_FILE);
 		} else {
-			Sys_FileNeeded(currentPath, VFS_LATER);
+			download = Sys_FileNeeded(currentPath, VFS_LATER);
+		}
+		if(download->state == VFS_NOENT) {
+			// then it was already in the list which means we intended to download now,
+			//   and now we know it's there because its in the directory listing
+			download->state = VFS_NOW;
 		}
 
 		currentPath += strlen( currentPath ) + 1;
@@ -1025,7 +1007,7 @@ void Sys_FileReady(const char *filename, const char* tempname) {
 	}
 
 	// mark the correct file as ready
-	if(Q_stristr(filename, FS_GetCurrentGameDir())) {
+	if(!Q_stricmpn(filename, FS_GetCurrentGameDir(), lengthGame)) {
 		// special exception because this is the only file we download outside the gamedir
 		// TODO: make a special exception for updating the EXE from Github?
 		Com_sprintf(localName, sizeof(localName), "%s", filename);
@@ -1033,15 +1015,18 @@ void Sys_FileReady(const char *filename, const char* tempname) {
 		Com_sprintf(localName, sizeof(localName), "%s/%s", FS_GetCurrentGameDir(), filename);
 	}
 
-	// remove pk3dir from file hash
+	if(localName[lengthGame + 1] == '\0') {
+		isDirectory = qtrue;
+	}
+
 	if(isDirectory) {
 		localName[strlen(localName) - 1] = '\0';
 	}
-	if(localName[lengthGame] == '\0') {
-		localName[lengthGame + 1] = '\0';
-	}
+
+	// remove pk3dir from file hash
 	if((s = Q_stristr(localName, ".pk3dir/"))) {
 		hash = FS_HashPK3( s + 8 );
+		lengthGame = (s - localName) + 8;
 	} else {
 		hash = FS_HashPK3( &localName[lengthGame + 1] );
 	}
@@ -1057,6 +1042,18 @@ void Sys_FileReady(const char *filename, const char* tempname) {
 
 		do {
 			s = Q_stristr(download->downloadName, ".pk3dir/");
+			// find an exact match
+			if( i == hash && !Q_stricmp( download->downloadName, localName ) ) {
+				found = qtrue;
+				if(tempname) {
+					download->state = VFS_READY;
+					strcpy(&download->loadingName[MAX_QPATH], tempname);
+				} else {
+					download->state = VFS_FAIL;
+				}
+				break;
+			} else 
+#if 0
 			if ( i == hash 
 				// ignore pk3dir and mark all as ready
 				&& ((!s && !Q_stricmp( &download->downloadName[lengthGame + 1], &localName[lengthGame + 1] ))
@@ -1064,22 +1061,21 @@ void Sys_FileReady(const char *filename, const char* tempname) {
 			) {
 				// file is ready for processing!
 				if(tempname) {
-	//Com_Printf("downloaded: %s -> %s, %s\n", localName, filename, tempname);
 					download->state = VFS_READY;
 					strcpy(&download->loadingName[MAX_QPATH], tempname);
-	#ifdef USE_LIVE_RELOAD
+#ifdef USE_LIVE_RELOAD
 					// update file mtime so we know if it changed again
 					download->lastRequested = lastVersionTime;
-	#endif
+#endif
 				} else {
 					// download failed!
 					download->state = VFS_FAIL;
-					Com_DPrintf("WARNING: %i %s download failed.\n", hash, localName);
+					Com_Printf("WARNING: %i %s download failed.\n", hash, localName);
 				}
 				found = qtrue;
 				// break; // used to stop here, but now this will cover .pk3dir paths
 			} else 
-
+#endif
 			// really reduce misfires by removing missing download files once directory index is received
 			//   we know we won't find shader images with alternate extensions, so those downloads are marked
 			if( isDirectory && !tempname 
@@ -1088,6 +1084,7 @@ void Sys_FileReady(const char *filename, const char* tempname) {
 				// last folder in the path
 				&& strchr(&download->downloadName[length], '/') == NULL 
 			) {
+				Com_Printf("purging 2: %s\n", download->downloadName);
 				download->state = VFS_NOENT;
 			}
 		} while ((download = download->next) != NULL);
@@ -1204,7 +1201,6 @@ Com_Printf("updating files: %s -> %s\n", filename, tempname);
 
 	// TODO: load default model and current player model
 	if(Q_stristr(tempname, "vm/cgame.qvm")) {
-    Cvar_Set("com_skipLoadUI", "0");
 		Cbuf_AddText("wait; vid_restart lazy;");
 	} else 
 
@@ -1273,7 +1269,6 @@ Com_DPrintf("Adding %s (from: %s) to directory index.\n", filename, realPath);
 				Cbuf_AddText(va("wait; map %s;", Cvar_VariableString("mapname")));
 			}
 		} else {
-			Cvar_Set("com_skipLoadUI", "0");
 			Cbuf_AddText("wait; vid_restart lazy;");
 		}
 	}

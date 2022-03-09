@@ -709,8 +709,10 @@ static void CL_KeyDownEvent( int key, unsigned time, int fingerId )
         else {
           cls.uiStarted = qtrue;
       		CL_InitUI(qfalse);
-          VM_Call( uivm, 1, UI_SET_ACTIVE_MENU, UIMENU_INGAME );
-        }
+					if(cls.uiStarted) {
+  	        VM_Call( uivm, 1, UI_SET_ACTIVE_MENU, UIMENU_INGAME );
+					}
+				}
 			}
 			else if ( cls.state != CA_DISCONNECTED ) {
 #if 0

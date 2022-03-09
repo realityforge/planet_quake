@@ -3904,15 +3904,15 @@ void CL_ChangeNotifcations( void ) {
 	shaderCallback
 	filesCallback
 */
-void Sys_UpdateNeeded(char *ready, char *downloadNeeded);
+void Sys_UpdateNeeded( downloadLazy_t **ready, downloadLazy_t **downloadNeeded );
 void FS_UpdateFiles(const char *filename, const char* tempname);
 
 static int secondTimer = 0;
 static int thirdTimer = 0;
 
 void CL_CheckLazyUpdates( void ) {
-	char downloadNeeded[MAX_OSPATH];
-	char ready[MAX_OSPATH];
+	downloadLazy_t *downloadNeeded;
+	downloadLazy_t *ready;
 	int newTime = Sys_Milliseconds();
 
 	if(newTime - secondTimer > 100) {
@@ -3927,8 +3927,8 @@ void CL_CheckLazyUpdates( void ) {
 		return;
 	}
 
-	downloadNeeded[0] = '\0';
-	ready[0] = '\0';
+	downloadNeeded = NULL;
+	ready = NULL;
 	// lazy load only if the screen it out of view in multiworld
 #ifdef USE_LAZY_LOAD
 	if(cl_lazyLoad->integer <= 2 || cls.lazyLoading)
@@ -3936,61 +3936,58 @@ void CL_CheckLazyUpdates( void ) {
 
 	// always returns the first download requested by FS_*
 	Sys_UpdateNeeded(
-		secondTimer == newTime && ready[0] == '\0' ? ready : NULL, 
-		thirdTimer == newTime && downloadNeeded[0] == '\0' ? downloadNeeded : NULL);
+		secondTimer == newTime ? &ready : NULL, 
+		thirdTimer == newTime ? &downloadNeeded : NULL);
 
 	// check for files that need to be downloaded, runs on separate thread!?
-	if(thirdTimer == newTime && downloadNeeded[0] != '\0') {
-		thirdTimer++; // so it doesn't trigger again
-		//if(
+	if(thirdTimer == newTime && downloadNeeded) {
 #if defined(USE_CURL) || defined(__WASM__)
-			// we don't care if the USE_ASYNCHRONOUS code in the call cancels 
-			//   because it is requeued 1.5 seconds later
-			//|| !Com_DL_InProgress( &download ) // never true because download isn't used by async anymore
-			//|| !clc.downloadTempName[0]
-		//) {
-		CL_Download( "lazydl", downloadNeeded, qfalse );
-		//}
+		// we don't care if the USE_ASYNCHRONOUS code in the call cancels 
+		//   because it is requeued 1.5 seconds later
+		if(CL_Download( "lazydl", downloadNeeded->state == VFS_INDEX ? va("%s/", downloadNeeded->downloadName) : downloadNeeded->downloadName, qfalse )) {
+			downloadNeeded->lastRequested = newTime;
+			downloadNeeded->state = VFS_DL;
+		}
 #endif
 	}
 
 	// if we break here, nothing will update while download is in progress
-	if(secondTimer != newTime || ready[0] == '\0') {
+	if(secondTimer != newTime || !ready) {
 		return;
 	}
 
 #ifdef USE_LAZY_LOAD
-	const char *ext = COM_GetExtension(ready);
+	const char *ext = COM_GetExtension(ready->downloadName);
 	if(!Q_stricmp(ext, "md3") || !Q_stricmp(ext, "mdr")
 		|| !Q_stricmp(ext, "md5")) {
 		if(cls.rendererStarted) {
-			re.UpdateModel(ready);
+			re.UpdateModel(ready->loadingName);
 		}
 	}
 
 	if(!Q_stricmp(ext, "wav") || !Q_stricmp(ext, "ogg")
 		|| !Q_stricmp(ext, "mp3") || !Q_stricmp(ext, "opus")) {
 		if(cls.soundRegistered) {
-			S_UpdateSound(ready, qtrue);
+			S_UpdateSound(ready->loadingName, qtrue);
 		}
 	}
 
-	if(ready[12] == ';') {
-		ready[12] = '\0';
+	if(ready->loadingName[12] == ';') {
+		ready->loadingName[12] = '\0';
 		if(cls.rendererStarted) {
-			re.UpdateShader(&ready[13], atoi(&ready[0]));
+			re.UpdateShader(&ready->loadingName[13], atoi(&ready->loadingName[0]));
 		}
 	}
 
 	// intercept this here because it's client only code
-	if(Q_stristr(&ready[MAX_QPATH], "/scripts/")
-		&& Q_stristr(&ready[MAX_QPATH], ".shader")) {
+	if(Q_stristr(&ready->loadingName[MAX_QPATH], "/scripts/")
+		&& Q_stristr(&ready->loadingName[MAX_QPATH], ".shader")) {
 		re.ReloadShaders(qfalse);
 	}
 #endif
 
-	ready[MAX_QPATH - 1] = '\0';
-	FS_UpdateFiles(ready, &ready[MAX_QPATH]);
+	ready->loadingName[MAX_QPATH - 1] = '\0';
+	FS_UpdateFiles(ready->loadingName, &ready->loadingName[MAX_QPATH]);
 
 #if defined(USE_ASYNCHRONOUS) || defined(__WASM__)
 	// multigame has a special feature to reload an missing assets when INIT is called
@@ -4024,7 +4021,7 @@ void CL_Frame( int msec, int realMsec ) {
 	}
 #ifdef USE_ASYNCHRONOUS
 	for(int i = 0; i < cl_dlSimultaneous->integer; i++) {
-		if(cl_downloads[i].cURLM) {
+		if(cl_downloads[i].cURLM || cl_downloads[i].cURL) {
 			Com_DL_Perform(&cl_downloads[i]);
 		}
 	}
@@ -4385,11 +4382,13 @@ void CL_StartHunkUsers( void ) {
 		return;
 	}
 
+#ifndef USE_ASYNCHRONOUS
 #ifndef __WASM__
 #ifdef _DEBUG
   void *syms[20];
   const size_t size = backtrace( syms, ARRAY_LEN( syms ) );
   backtrace_symbols_fd( syms, size, STDERR_FILENO );
+#endif
 #endif
 #endif
 
@@ -6828,6 +6827,7 @@ qboolean CL_Download( const char *cmd, const char *pakname, qboolean autoDownloa
 			//Com_Printf("already downloading: %s\n", pakname);
 			return qfalse;
 		} else {
+			assert(cl_downloads[i].Name[0] == '\0' || cl_downloads[empty].Completed); // god fucking damnit
 			//Com_Printf("starting:%s\n", pakname);
 			dli = empty;
 		}
