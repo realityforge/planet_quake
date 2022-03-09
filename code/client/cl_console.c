@@ -997,7 +997,7 @@ void Con_Close( void )
 	if ( !com_cl_running || !com_cl_running->integer )
 		return;
 
-	if(!uivm) {
+	if(!uivm && !cgvm && cls.state == CA_DISCONNECTED) {
 		Key_SetCatcher( Key_GetCatcher( ) | KEYCATCH_CONSOLE );
 		return; // don't try to hide console because we don't have a VM to display
 	}

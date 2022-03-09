@@ -698,9 +698,9 @@ downloadLazy_t *Sys_FileNeeded(const char *filename, int state) {
 		} while ((download = download->next) != NULL);
 	}
 
-if(Q_stristr(localName, "lsdm3_v1.bsp")) {
-Com_Printf("file needed! %i, %i - %s\n", hash, state, localName);
-}
+//if(Q_stristr(localName, "lsdm3_v1.bsp")) {
+//Com_Printf("file needed! %i, %i - %s\n", hash, state, localName);
+//}
 
 	if(!found) {
 //Com_Printf("file needed! %i, %i - %s, %s\n", hash, state, localName, loading);
@@ -1011,13 +1011,13 @@ void MakeDirectoryBuffer(char *paths, int count, int length, const char *parentD
 		if(download->state < VFS_NOENT) {
 			// and now we know it's there because its in the directory listing
 			download->state = -download->state + VFS_NOENT;
-if(Q_stristr(parentDirectory, "lsdm3_v1.pk3dir/maps")) {
-Com_Printf("keeping %li, %s\n", hash, currentPath);
-}
+//if(Q_stristr(parentDirectory, "lsdm3_v1.pk3dir/maps")) {
+//Com_Printf("keeping %li, %s\n", hash, currentPath);
+//}
 		} else {
-if(Q_stristr(parentDirectory, "lsdm3_v1.pk3dir/maps")) {
-Com_Printf("adding %li, %s\n", hash, currentPath);
-}
+//if(Q_stristr(parentDirectory, "lsdm3_v1.pk3dir/maps")) {
+//Com_Printf("adding %li, %s\n", hash, currentPath);
+//}
 		}
 
 		currentPath += strlen( currentPath ) + 1;
@@ -1149,7 +1149,7 @@ void Com_ExecuteCfg( void );
 
 void FS_UpdateFiles(const char *filename, const char *tempname) {
 
-//Com_Printf("updating files: %s -> %s\n", filename, tempname);
+Com_Printf("updating files: %s -> %s\n", filename, tempname);
 
 #if defined(USE_LIVE_RELOAD) || defined(__WASM__)
 	if(Q_stristr(tempname, "version.json")) {
@@ -1227,7 +1227,7 @@ void FS_UpdateFiles(const char *filename, const char *tempname) {
 			}
 
 		}
-		if(Q_stristr(tempname, Cvar_VariableString("mapname"))) {
+		if(Q_stristr(tempname, Cvar_VariableString("mapname")) && !com_sv_running->integer) {
 			Cbuf_AddText(va("wait; map %s;", Cvar_VariableString("mapname")));
 		}
 	} else 
@@ -1240,7 +1240,7 @@ void FS_UpdateFiles(const char *filename, const char *tempname) {
 #ifndef DEDICATED
 	// try to reload UI with current game if needed
 	if(Q_stristr(tempname, "vm/ui.qvm")) {
-    Cvar_Set("com_skipLoadUI", "0");
+    //Cvar_Set("com_skipLoadUI", "0");
 		Cbuf_AddText("wait; vid_restart lazy;");
 	} else 
 
@@ -1254,16 +1254,18 @@ void FS_UpdateFiles(const char *filename, const char *tempname) {
 #ifndef BUILD_SLIM_CLIENT
 	// try to reload UI with current game if needed
 	if(Q_stristr(tempname, "vm/qagame.qvm")) {
-		Cbuf_AddText(va("wait; map %s;", Cvar_VariableString("mapname")));
+		if(*Cvar_VariableString("mapname") != '\0' && !com_sv_running->integer) {
+			Cbuf_AddText(va("wait; map %s;", Cvar_VariableString("mapname")));
+		}
 	} else 
 #endif
 
 	// do some extra processing, restart UI if default.cfg is found
 	if(Q_stristr(tempname, "default.cfg")) {
 		// will restart automatically from NextDownload()
-		//if(!fs_searchpaths)
-		FS_Restart(0);
-		// TODO: try to restart UI VM
+		if(!FS_Initialized()) {
+			FS_Restart(0);
+		}
 		// TODO: check on networking, shaderlist, anything else we skipped, etc again
 		com_fullyInitialized = qtrue;
 		Cbuf_AddText("wait; vid_restart lazy; wait; exec default.cfg; ");
@@ -1311,7 +1313,7 @@ Com_DPrintf("Adding %s (from: %s) to directory index.\n", filename, realPath);
 		fclose(indexFile);
 		FS_HomeRemove( s );
 		// we should have a directory index by now to check for VMs and files we need
-		if(Q_stristr(tempname, "maps/maplist.json")) {
+		if(Q_stristr(tempname, "maps/maplist.json") && !com_sv_running->integer) {
 			if(Cvar_VariableString("mapname")[0] != '\0') {
 				Cbuf_AddText(va("wait; map %s;", Cvar_VariableString("mapname")));
 			}

@@ -3944,7 +3944,10 @@ void CL_CheckLazyUpdates( void ) {
 #if defined(USE_CURL) || defined(__WASM__)
 		// we don't care if the USE_ASYNCHRONOUS code in the call cancels 
 		//   because it is requeued 1.5 seconds later
-		if(CL_Download( "lazydl", downloadNeeded->state == VFS_INDEX ? va("%s/", downloadNeeded->downloadName) : downloadNeeded->downloadName, qfalse )) {
+		if(CL_Download( "lazydl", downloadNeeded->state == VFS_INDEX 
+			? va("%s/", downloadNeeded->downloadName) 
+			: downloadNeeded->downloadName, qfalse )
+		) {
 			downloadNeeded->lastRequested = newTime;
 			downloadNeeded->state = VFS_DL;
 		}
@@ -3991,7 +3994,8 @@ void CL_CheckLazyUpdates( void ) {
 
 #if defined(USE_ASYNCHRONOUS) || defined(__WASM__)
 	// multigame has a special feature to reload an missing assets when INIT is called
-	if(cls.uiStarted && uivm && !Q_stricmp(FS_GetCurrentGameDir(), "multigame")) {
+	if(((cls.uiStarted && uivm) || (cls.cgameStarted && cgvm))
+		&& !Q_stricmp(FS_GetCurrentGameDir(), "multigame")) {
 		Cvar_Get("ui_breadCrumb", "", CVAR_ROM)->modificationCount++;
 	}
 #endif
@@ -4426,8 +4430,9 @@ void CL_StartHunkUsers( void ) {
 		cls.uiStarted = qtrue;
 		CL_InitUI(qfalse);
 #ifdef USE_ASYNCHRONOUS
-		if(uivm && cls.uiStarted)
+		if(uivm && cls.uiStarted) {
 			firstStart = qtrue;
+		}
 #endif
 	}
 
@@ -4436,18 +4441,25 @@ void CL_StartHunkUsers( void ) {
 		cls.cgameStarted = qtrue;
 		CL_InitCGame(-1);
 		CL_SendPureChecksums();
+		if(cgvm && cls.cgameStarted) {
+			firstStart = qtrue;
+		}
 	}
 
 	// init with console down like Quake 1!
-	if(!uivm && !cls.uiStarted && cls.state == CA_DISCONNECTED) {
+	if(!uivm && !cls.uiStarted && !Cvar_VariableIntegerValue("com_skipLoadUI") && cls.state == CA_DISCONNECTED) {
 		Key_SetCatcher( Key_GetCatcher( ) | KEYCATCH_CONSOLE );
 		// not connecting?
 		Com_Printf( S_COLOR_RED "WARNING: Using asynchronous build without an early \\connect <address> command.\n");
 	} else if (firstStart && (Key_GetCatcher( ) & KEYCATCH_CONSOLE)) {
 		// close console if UI just started
-		Key_SetCatcher( Key_GetCatcher( ) & ~KEYCATCH_CONSOLE );
+		Con_Close();
+		if(cgvm) {
+			Key_SetCatcher( Key_GetCatcher( ) | KEYCATCH_CGAME );
+		} else {
+			Key_SetCatcher( Key_GetCatcher( ) | KEYCATCH_UI );
+		}
 	}
-
 #endif
 
 }

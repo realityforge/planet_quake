@@ -854,7 +854,7 @@ This will be called twice if rendering in stereo mode
 ==================
 */
 static void SCR_DrawScreenField( stereoFrame_t stereoFrame ) {
-	qboolean uiFullscreen = qtrue;
+	qboolean uiFullscreen = !!uivm;
 
 	re.BeginFrame( stereoFrame );
 

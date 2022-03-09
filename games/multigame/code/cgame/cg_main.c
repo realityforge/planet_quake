@@ -658,13 +658,14 @@ void CG_UpdateCvars( void ) {
 
 	if(breadcrumbModificationCount != cg_breadCrumb.modificationCount) {
 		breadcrumbModificationCount = cg_breadCrumb.modificationCount;
+		Com_Printf("hello!!\n");
 		if(!(cgs.clientinfo[ cg.clientNum ].legsModel 
 			&& cgs.clientinfo[ cg.clientNum ].torsoModel
 			&& cgs.clientinfo[ cg.clientNum ].headModel
 			&& cgs.clientinfo[ cg.clientNum ].legsSkin
 			&& cgs.clientinfo[ cg.clientNum ].torsoSkin
 			&& cgs.clientinfo[ cg.clientNum ].headSkin)) {
-			//CG_LoadClientInfo( &cgs.clientinfo[ cg.clientNum ] );
+			CG_LoadClientInfo( &cgs.clientinfo[ cg.clientNum ] );
 		}
 	}
 
