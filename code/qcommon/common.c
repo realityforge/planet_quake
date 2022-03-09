@@ -3173,6 +3173,7 @@ int Com_EventLoop( void ) {
 				return ev.evTime;
 			}
 #endif
+
 #ifndef BUILD_SLIM_CLIENT
 			while ( NET_GetLoopPacket( NS_SERVER, &evFrom, &buf ) ) {
 				// if the server just shut down, flush the events

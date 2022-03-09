@@ -540,7 +540,6 @@ extern qboolean		com_fullyInitialized;
 #define PK3_HASH_SIZE 512
 #define FS_HashFileName Com_GenerateHashValue
 
-
 int FS_ReadFile( const char *qpath, void **buffer );
 void Sys_FreeFileList( char **list );
 static void FS_AddGameDirectory( const char *path, const char *dir, int igvm );
@@ -550,36 +549,34 @@ static int FS_FileLength( FILE* h );
 static int FS_PakHashSize( const int filecount );
 static int FS_HashPK3( const char *name );
 
+typedef enum {
+	VFS_NOENT,
+	VFS_LATER,
+	VFS_FILE,
+	VFS_NOW,
+	VFS_INDEX,
+	VFS_DL,
+	VFS_READY, // ready for updating
+	VFS_DONE, // already processed
+	VFS_FAIL,
+} vfsState_t;
+
 typedef struct downloadLazy_s {
   char *downloadName; // this is the of the file in the shader
 	char *loadingName; // this is the name of the shader to update
 	time_t lastRequested;
-	qboolean ready; // ready for updating
-	qboolean downloaded; // already processed
-	qboolean failed;
-	qboolean isDirectory;
+	vfsState_t state;
   struct downloadLazy_s *next;
 } downloadLazy_t;
 
-static downloadLazy_t *modelCallback[PK3_HASH_SIZE]; // MAX_MOD_KNOWN
-static downloadLazy_t *soundCallback[PK3_HASH_SIZE]; // 
-static downloadLazy_t *shaderCallback[PK3_HASH_SIZE]; // MAX_SHADERS
-static downloadLazy_t *filesCallback[PK3_HASH_SIZE]; // MAX_SHADERS
-static downloadLazy_t *indexesCallback[PK3_HASH_SIZE]; // MAX_SHADERS
-downloadLazy_t* *downloadTables[5] = {
-	indexesCallback,
-	modelCallback,
-	soundCallback,
-	shaderCallback,
-	filesCallback,
-};
+static downloadLazy_t *readyCallback[PK3_HASH_SIZE]; // MAX_MOD_KNOWN
 
 #if defined(USE_LIVE_RELOAD) || defined(__WASM__)
 static int lastVersionTime = 0;
 #endif
 
-void Sys_UpdateNeeded( int tableId, char *ready, char *downloadNeeded ) {
-	downloadLazy_t* *downloadTable = downloadTables[tableId];
+void Sys_UpdateNeeded( char *ready, char *downloadNeeded ) {
+	downloadLazy_t *highest = NULL;
 	downloadLazy_t *download;
 	int time = Sys_Milliseconds();
 	if(ready) {
@@ -591,119 +588,129 @@ void Sys_UpdateNeeded( int tableId, char *ready, char *downloadNeeded ) {
 
 	// TODO: loop over readyFiles instead?
 	for(int i = 0; i < PK3_HASH_SIZE; i++) {
-    if(downloadTable[i] != NULL) {
-			download = downloadTable[i];
-			do {
-				if(download->downloaded) {
-					continue;
-				}
-				if(download->ready && ready && ready[0] == '\0') {
-					memcpy(ready, download->loadingName, MAX_OSPATH);
-					download->downloaded = qtrue; // incase its not cleared right away
-					continue;
-				}
-				if(!download->ready && downloadNeeded && downloadNeeded[0] == '\0') {
-					if(time - download->lastRequested > 1500) {
-						download->lastRequested = time;
-						strcpy(downloadNeeded, download->downloadName);
-					}
-				}
-				if((!downloadNeeded || downloadNeeded[0] != '\0') && (!ready || ready[0] != '\0')) {
-					// we have both set
-					break;
-				}
-			} while((download = download->next) != NULL);
+		download = readyCallback[i];
+    if(!download) {
+			continue;
+		}
+
+		do {
+			if(download->state == VFS_DONE) {
+				continue;
+			}
+			if(download->state == VFS_READY && ready && ready[0] == '\0') {
+				// memcpy because paths are seperated by special characters and zeros
+				memcpy(ready, download->loadingName, MAX_OSPATH);
+				download->state = VFS_DONE; // incase its not cleared right away
+				continue;
+			}
+			if(download->state > VFS_LATER && download->state < VFS_DL 
+				&& downloadNeeded && downloadNeeded[0] == '\0'
+				&& time - download->lastRequested > 1500
+				&& (!highest || highest->state < download->state)
+			) {
+				highest = download;
+			}
 			if((!downloadNeeded || downloadNeeded[0] != '\0') && (!ready || ready[0] != '\0')) {
+				// we have both set
 				break;
 			}
+		} while((download = download->next) != NULL);
+		if((!downloadNeeded || downloadNeeded[0] != '\0') && (!ready || ready[0] != '\0')) {
+			break;
     }
   }
+
+	if(downloadNeeded && highest) {
+		highest->lastRequested = time;
+		strcpy(downloadNeeded, highest->downloadName);
+		if(highest->state == VFS_INDEX && downloadNeeded[strlen(downloadNeeded) - 1] != '/') {
+			strcat(downloadNeeded, "/");
+		}
+		highest->state = VFS_DL;
+	}
 }
 
 static char stupidPathError[MAX_OSPATH];
 
-void Sys_FileNeeded(const char *needs, qboolean isDirectoryIndex) {
+
+downloadLazy_t *Sys_FileNeeded(const char *needs, vfsState_t state) {
   unsigned int hash;
 	const char *loading;
 	const char *s;
-  downloadLazy_t* *downloadTable;
   downloadLazy_t *download;
 	int downloadSize;
   qboolean found = qfalse;
 	char filename[MAX_OSPATH];
+	const char *dir;
+	int lengthGame = strlen(FS_GetCurrentGameDir());
 	filename[0] = '\0';
+
+	assert(state < VFS_DL);
 
 	// skip leading slashes
 	while ( *needs == '/' || *needs == '\\' )
 		needs++;
 
-	if(!Q_stristr(needs, FS_GetCurrentGameDir())) {
+	if(Q_stricmpn(needs, FS_GetCurrentGameDir(), lengthGame)) {
 		strcat(filename, FS_GetCurrentGameDir());
 		strcat(filename, "/");
 	}
 	strcat(filename, needs);
-	if(needs[strlen(needs)-1] != '/' && isDirectoryIndex) {
-		strcat(filename, "/");
+	if(filename[lengthGame] == '\0') {
+		filename[lengthGame + 1] = '\0'; // because down because we use lengthGame + 1
+	}
+	// remove the last slash just for hashing in case it's a directory, but we don't know it yet
+	if(filename[strlen(filename)-1] == '/') {
+		state = VFS_INDEX;
+		filename[strlen(filename)-1] = '\0';
+	}
+
+	// try to find the directory first
+	if((dir = strrchr(filename, '/')) != NULL) {
+		char lastDirectory[MAX_OSPATH];
+		Q_strncpyz(lastDirectory, filename, (dir - filename) + 1);
+		Sys_FileNeeded(lastDirectory, VFS_INDEX);
 	}
 
 	// force indexes to get downloaded first in line
-#ifdef USE_LAZY_LOAD
-	if(isDirectoryIndex || Q_stristr(filename, "maplist.json")
-		|| Q_stristr(filename, "default.cfg")) {
-		downloadTable = indexesCallback;
-		loading = filename;
-	} else 
-#endif
-	{
-		// check index need to download
-		loading = Cvar_VariableString("r_loadingShader");
+	// check index need to download
+	loading = Cvar_VariableString("r_loadingShader");
+	if(!loading[0]) {
+		loading = Cvar_VariableString("snd_loadingSound");
 		if(!loading[0]) {
-			loading = Cvar_VariableString("snd_loadingSound");
+			loading = Cvar_VariableString("r_loadingModel");
 			if(!loading[0]) {
-				loading = Cvar_VariableString("r_loadingModel");
-				if(loading[0]) {
-					downloadTable = modelCallback;
-				} else {
-					// special files for calling just below
-					downloadTable = filesCallback;
-					loading = filename;
-				}
-			} else {
-				downloadTable = soundCallback;
+				loading = filename;
 			}
-		} else {
-			downloadTable = shaderCallback;
 		}
 	}
-	
-//Com_Printf("file needed! %s %s\n", filename, loading);
-
   if(!filename[0]) {
-		return;
+		return NULL;
 	}
 
 	// remove pk3dir from filename so we can find it again easily
-	if((s = Q_stristr(filename, ".pk3dir/"))) {
+	if((s = Q_stristr(filename, ".pk3dir/")) != NULL) {
 		hash = FS_HashPK3( s + 8 );
 	} else {
-		hash = FS_HashPK3( filename );
+		hash = FS_HashPK3( &filename[lengthGame + 1] );
 	}
 
-	download = downloadTable[hash];
-	while ( download )
-	{
-		if ( !Q_stricmp( filename, download->downloadName ) ) {
-			found = qtrue;
-			break;
-		} else {
-			download = download->next;
-		}
+	// absolute path to download item using hash of relative path
+	if(readyCallback[hash]) {
+		download = readyCallback[hash];
+		do {
+			if ( !Q_stricmp( filename, download->downloadName ) ) {
+				found = qtrue;
+				break;
+			}
+		} while ((download = download->next) != NULL);
 	}
 
 	if(!found) {
+		Com_Printf("file needed! %i, %i - %s, %s\n", hash, state, filename, loading);
 		downloadSize = sizeof(downloadLazy_t)
 				+ MAX_OSPATH /* because it's replaced with temp download name strlen(loading) + 1 */ 
-				+ strlen(filename) + 1;
+				+ strlen(filename) + 8;
 		download = (downloadLazy_t *)Z_Malloc(downloadSize);
 		memset(download, 0, downloadSize);
 		download->loadingName = &((void *)download)[sizeof(downloadLazy_t)];
@@ -712,31 +719,28 @@ void Sys_FileNeeded(const char *needs, qboolean isDirectoryIndex) {
 		strcpy(download->downloadName, filename);
 		download->loadingName[strlen(loading)] = '\0';
 		download->downloadName[strlen(filename)] = '\0';
-		download->next = downloadTable[hash];
-		download->ready = qfalse;
-		download->isDirectory = isDirectoryIndex;
-		downloadTable[hash] = download;
+		download->next = readyCallback[hash];
+		download->state = state;
+		readyCallback[hash] = download;
 		download->lastRequested = 0; // request immediately, updated after first request
 	} else {
 #if defined(USE_LIVE_RELOAD) || defined(__WASM__)
 		// allow redownloading of this file because when it's received the game updates
 		if(/* !download->failed && */ Q_stristr(filename, "version.json")) {
-			download->downloaded = qfalse;
-			download->ready = qfalse;
-			download->failed = qfalse;
-			download->isDirectory = qfalse;
+			download->state = VFS_NOW;
 			// add 1500 millis to whatever requested it a second time
 			download->lastRequested = Sys_Milliseconds(); 
 		} else
-		if( download->failed && download->lastRequested < lastVersionTime) {
-			download->downloaded = qfalse;
-			download->ready = qfalse;
-			download->isDirectory = isDirectoryIndex;
-			download->failed = qfalse;
+		if( download->state == VFS_FAIL && download->lastRequested < lastVersionTime) {
+			download->state = state;
 			download->lastRequested = Sys_Milliseconds(); 
-		}
+		} else
 #endif
-		return; // skip debug message below, that's all
+		// escalate download state but never go backwards from FAILED to DOWNLOADING
+		if(download->state != VFS_NOENT) {
+			download->state = MAX(download->state, state);
+		}
+		return download; // skip debug message below, that's all
 	}
 
 	// why is it repeating gamedir?
@@ -747,6 +751,7 @@ void Sys_FileNeeded(const char *needs, qboolean isDirectoryIndex) {
 	}
 
 	assert(!Q_stristr(filename, stupidPathError));
+	return download;
 }
 
 
@@ -879,7 +884,6 @@ static void ParseHTMLFileList(char *buf, int len, char *list, int *count, int *m
 	}
 }
 
-static void FS_CheckIndex(const char *filename, qboolean isNotFound);
 
 // basically just storing a few zeros until allocated
 //   append the base filesystem with a virtual path system
@@ -887,24 +891,15 @@ static void FS_CheckIndex(const char *filename, qboolean isNotFound);
 // when a valid but not yet existing file is request, queue it 
 //   for download and indicate to the renderer/client that it is valid
 //   and will be update when it arrives (i.e. returns 1 for a file length)
-
-static fileInPack_t **virtualFileIndex;
-static int virtualHashSize;
 // TODO: add header longs for the new file-based checksum system
 
-void MakeDirectoryBuffer(char *paths, int count, int length, const char *parentDirectory) {
-	char localName[MAX_OSPATH];
-	char *namePtr;
+void MakeDirectoryBuffer(char *paths, int count, int length, const char *parentDirectory, qboolean incomplete) {
 	const char *s;
 	long hash;
-	int dirSize;
-	void *dirStorage;
 	searchpath_t *search;
-	fileInPack_t *curFile;
 	qboolean hasIndex = qfalse;
-
-	// give us some room to expand with additional directory requests
-	virtualHashSize = FS_PakHashSize( 4096 ); //count < 128 ? 128 : !fs_searchpaths ? 4096 : count;
+  downloadLazy_t *download;
+	int lengthDir = strlen(parentDirectory);
 
 	for ( search = fs_searchpaths ; search ; search = search->next ) {
 		if(search->dir 
@@ -921,81 +916,63 @@ void MakeDirectoryBuffer(char *paths, int count, int length, const char *parentD
 		FS_AddGameDirectory(fs_homepath->string, FS_GetCurrentGameDir(), 0);
 		return;
 	}
+	// when a directory index is received, remove any files from the download list
+	//   that aren't in the now "known" directory listing
+	// mark all as failed
+	if(!incomplete) {
+		for(int i = 0; i < PK3_HASH_SIZE; i++) {
+			download = readyCallback[i];
+			if(!download) {
+				continue;
+			}
 
-	if(!virtualFileIndex) {
-		// laid out the same was as a pk3 buffer
-		dirSize = length
-			+ virtualHashSize * sizeof(intptr_t)
-			+ count * sizeof(fileInPack_t);
-		dirStorage = Z_Malloc( dirSize );
-		Com_Memset( dirStorage, 0, dirSize );
-		virtualFileIndex = (fileInPack_t **)dirStorage;
-		// TODO: BUG! putting names in wrong place variable reserve count?
-		curFile = (fileInPack_t*)( virtualFileIndex + virtualHashSize );
-		namePtr = (char*)( curFile + count );
-	} else {
-		dirSize = length + count * sizeof(fileInPack_t);
-		dirStorage = Z_Malloc( dirSize );
-		Com_Memset( dirStorage, 0, dirSize );
-		curFile = (fileInPack_t*)dirStorage;
-		namePtr = (char*)( curFile + count );
+			do {
+				if(!Q_stricmpn(download->downloadName, parentDirectory, lengthDir)) {
+					download->state = VFS_NOENT;
+				}
+			} while ((download = download->next) != NULL);
+		}
 	}
-	
+
 	// insert into the hash table
 	char *currentPath = paths;
 	for ( int i = 0; i < count; i++ )
 	{
-		curFile->name = namePtr;
-		// TODO: check if it matches current games?
-		strcpy( localName, currentPath );
-
-		s = localName;
-		// remove leading /
-		if(s[0] == '/') {
-			s++;
-		}
-
 		// remove game dir
-		if(Q_stristr(s, FS_GetCurrentGameDir())) {
-			s += strlen(FS_GetCurrentGameDir()) + 1;
+		if(Q_stristr(currentPath, FS_GetCurrentGameDir())) {
+			currentPath += strlen(FS_GetCurrentGameDir()) + 1;
 		}
 
 		// remove leading /
-		if(s[0] == '/') {
-			s++;
+		if(currentPath[0] == '/') {
+			currentPath++;
 		}
 
-		if(strlen(s) == 0) {
+		if(strlen(currentPath) == 0) {
 			continue;
 		}
 
-		strcpy(curFile->name, s);
-		curFile->name[strlen(s)] = '\0';
 #ifdef USE_LIVE_RELOAD
-		if(FS_FileExists(curFile->name)) {
+		if(FS_FileExists(currentPath)) {
 			fileOffset_t _s;
 			fileTime_t _c;
-			Sys_GetFileStats(FS_BuildOSPath(fs_homepath->string, FS_GetCurrentGameDir(), curFile->name),
+			// TODO: FS_RealPath() so pk3 files can be bundled as updates
+			Sys_GetFileStats(FS_BuildOSPath(fs_homepath->string, FS_GetCurrentGameDir(), currentPath),
 				&_s, &curFile->mtime, &_c);
 		} else {
 			// set mtime to at least when the engine starts up
 			curFile->mtime = 0;
 		}
 #endif
-		FS_ConvertFilename( curFile->name );
-		s = Q_stristr(curFile->name, ".pk3dir/");
-		if(s) {
-			hash = FS_HashFileName( s + 8, virtualHashSize );
-		} else {
-			hash = FS_HashFileName( curFile->name, virtualHashSize );
-		}
-//Com_Printf("adding %li, %s\n", hash, curFile->name);
-
 		// store the file position in the zip
 		// TODO: update this when Accept-Ranges is implemented
-		//curFile->size = it.size;
-		//curFile->pos = it.pos;
-
+		s = Q_stristr(currentPath, ".pk3dir/");
+		if(s) {
+			hash = FS_HashPK3( s + 8 );
+		} else {
+			hash = FS_HashPK3( currentPath );
+		}
+//Com_Printf("adding %li, %s\n", hash, curFile->name);
 		// download more directories recursively, at least for like 2 levels
 		if(qfalse
 			//!strrchr(currentPath, '.')
@@ -1015,52 +992,16 @@ void MakeDirectoryBuffer(char *paths, int count, int length, const char *parentD
 			// TODO: right thing to do would be test the content-type and duck out early 
 			//   on big files for anything that doesn't have a . dot in the name.
 			// TODO: check index instead
-			FS_CheckIndex(localName, qfalse);
+			Sys_FileNeeded(currentPath, VFS_FILE);
+		} else {
+			Sys_FileNeeded(currentPath, VFS_LATER);
 		}
 
-		// update hash table
-		namePtr += strlen( curFile->name ) + 1;
 		currentPath += strlen( currentPath ) + 1;
-		curFile->next = virtualFileIndex[ hash ];
-		virtualFileIndex[ hash ] = curFile;
-		curFile++;
 	}
 
 }
 
-static void FixDownloadList( const char *parentDirectory );
-
-
-fileInPack_t *FindFileInIndex(long hash, const char *filename, fileInPack_t* *hashTable) {
-	fileInPack_t	*pakFile;
-	const char *isPk3;
-	const char *isGame;
-	int length = strlen(FS_GetCurrentGameDir());
-	assert(hashTable);
-	if(filename[0] == '/') {
-		filename++;
-	}
-	isGame = Q_stristr(filename, FS_GetCurrentGameDir());
-	if(isGame) {
-		filename += length + 1;
-	}
-	if(filename[0] == '/') {
-		filename++;
-	}
-	if(hashTable[hash]) {
-		pakFile = hashTable[hash];
-		do {
-			isPk3 = Q_stristr(pakFile->name, ".pk3dir/");
-//Com_Printf("comparing: %i,  %s != %s\n", hash, pakFile->name, filename);
-			if ( (!isPk3 && !FS_FilenameCompare( pakFile->name, filename )) // trim pak name
-				|| (isPk3 && !FS_FilenameCompare( isPk3 + 8, filename )) ) {
-				return pakFile;
-			}
-			pakFile = pakFile->next;
-		} while ( pakFile != NULL );
-	}
-	return NULL;
-}
 
 #define CACHE_FILE_NAME "pk3cache.dat"
 
@@ -1073,7 +1014,10 @@ void Sys_FileReady(const char *filename, const char* tempname) {
 	unsigned int hash;
 	char localName[ MAX_OSPATH ];
 	const char *s;
+	int length;
 	qboolean found = qfalse;
+	qboolean isDirectory = filename[strlen(filename) - 1] == '/';
+	int lengthGame = strlen(FS_GetCurrentGameDir());
 
 	// skip leading slashes
 	while ( *filename == '/' || *filename == '\\' ) {
@@ -1090,103 +1034,69 @@ void Sys_FileReady(const char *filename, const char* tempname) {
 	}
 
 	// remove pk3dir from file hash
+	if(isDirectory) {
+		localName[strlen(localName) - 1] = '\0';
+	}
+	if(localName[lengthGame] == '\0') {
+		localName[lengthGame + 1] = '\0';
+	}
 	if((s = Q_stristr(localName, ".pk3dir/"))) {
 		hash = FS_HashPK3( s + 8 );
 	} else {
-		hash = FS_HashPK3( localName );
+		hash = FS_HashPK3( &localName[lengthGame + 1] );
 	}
 
+	length = strlen(localName);
+
 	// mark the file as downloaded
-	for(int i = 0; i < 5; i++) {
-    download = downloadTables[i][hash];
-    while ( download )
-    {
-      if ( !Q_stricmp( download->downloadName, localName ) ) {
+	for(int i = 0; i < PK3_HASH_SIZE; i++) {
+		download = readyCallback[i];
+    if(!download) {
+			continue;
+		}
+
+		do {
+			s = Q_stristr(download->downloadName, ".pk3dir/");
+			if ( i == hash 
+				// ignore pk3dir and mark all as ready
+				&& ((!s && !Q_stricmp( &download->downloadName[lengthGame + 1], &localName[lengthGame + 1] ))
+					|| (s && !Q_stricmp( s + 8, &localName[lengthGame + 1] )))
+			) {
 				// file is ready for processing!
 				if(tempname) {
-//Com_Printf("downloaded: %s -> %s, %s\n", localName, filename, tempname);
-					download->ready = qtrue;
-					download->failed = qfalse;
-					download->downloaded = qfalse; // trigger client events
+	//Com_Printf("downloaded: %s -> %s, %s\n", localName, filename, tempname);
+					download->state = VFS_READY;
 					strcpy(&download->loadingName[MAX_QPATH], tempname);
-#ifdef USE_LIVE_RELOAD
+	#ifdef USE_LIVE_RELOAD
 					// update file mtime so we know if it changed again
-					fileInPack_t *file;
-					if(virtualFileIndex) {
-						if((file = FindFileInIndex(hash, filename, virtualFileIndex))) {
-							file->mtime = lastVersionTime;
-						}
-					}
-#endif
+					download->lastRequested = lastVersionTime;
+	#endif
 				} else {
 					// download failed!
-					download->failed = qtrue;
-					download->ready = qfalse;
-					download->downloaded = qtrue;
+					download->state = VFS_FAIL;
 					Com_DPrintf("WARNING: %i %s download failed.\n", hash, localName);
-					if(localName[strlen(localName) - 1] == '/') {
-						FixDownloadList(localName);
-					}
 				}
 				found = qtrue;
 				// break; // used to stop here, but now this will cover .pk3dir paths
+			} else 
+
+			// really reduce misfires by removing missing download files once directory index is received
+			//   we know we won't find shader images with alternate extensions, so those downloads are marked
+			if( isDirectory && !tempname 
+				// match the first part of the path
+				&& !Q_stricmpn( download->downloadName, localName, length )
+				// last folder in the path
+				&& strchr(&download->downloadName[length], '/') == NULL 
+			) {
+				download->state = VFS_NOENT;
 			}
-			download = download->next;
-		}
-		//if(found) break;
+		} while ((download = download->next) != NULL);
 	}
 
 	if(!found && tempname) {
 		// TODO: DPrintf
 		// should never happen!
 		Com_Error(ERR_FATAL, "WARNING: %i %s not found in download list.\n", hash, localName);
-	}
-
-}
-
-
-// really reduce misfires by removing missing download files once directory index is received
-//   we know we won't find shader images with alternate extensions, so those downloads are marked
-static void FixDownloadList( const char *parentDirectory ) {
-	int length;
-	int lengthGame, lengthPk3;
-	long hash;
-	const char *s;
-
-	if(!virtualFileIndex) {
-		return;
-	}
-//Com_Printf("fixing downloads: %s\n", parentDirectory);
-	length = strlen(parentDirectory);
-	lengthGame = strlen(FS_GetCurrentGameDir());
-	if((s = Q_stristr(parentDirectory, ".pk3dir/"))) {
-		lengthPk3 = (s - parentDirectory) + 7;
-	}
-
-	for(int j = 0; j < 5; j++) {
-		downloadLazy_t* *downloadTable = downloadTables[j];
-		downloadLazy_t *download;
-		// when a directory index is received, remove any files from the download list
-		//   that aren't in the now "known" directory listing
-		for(int i = 0; i < PK3_HASH_SIZE; i++) {
-			if(downloadTable[i] != NULL) {
-				download = downloadTable[i];
-				do {
-					const char *s;
-					if((s = Q_stristr(download->downloadName, parentDirectory))
-						&& download->downloadName[length] != '\0'
-						&& !strchr(s + length + 1, '/') // make sure it's the last directory
-					) {
-						hash = FS_HashFileName( &download->downloadName[lengthGame+1], virtualHashSize );
-						if(!FindFileInIndex(hash, &download->downloadName[lengthPk3+1], virtualFileIndex)) 
-						{
-Com_Printf("purging: %i, %s\n", hash, &download->downloadName[lengthGame+1]);
-							download->downloaded = qtrue;
-						}
-					}
-				} while((download = download->next) != NULL);
-			}
-		}
 	}
 
 }
@@ -1350,10 +1260,9 @@ Com_DPrintf("Adding %s (from: %s) to directory index.\n", filename, realPath);
 			} else {
 				ParseHTMLFileList(buf, len, paths, &count, &nameLength);
 			}
-			MakeDirectoryBuffer(paths, count, nameLength, filename);
-			if(!Q_stristr(buf, "nextPageToken")) {
-				FixDownloadList(filename);
-			}
+			// can't purge missing files from an incomplete file index
+			MakeDirectoryBuffer(paths, count, nameLength, filename, !!Q_stristr(buf, "nextPageToken"));
+			// TODO: add next page token every time it's requested as if we're actually paging too
 			Z_Free(buf);
 		}
 		fclose(indexFile);
@@ -1370,128 +1279,6 @@ Com_DPrintf("Adding %s (from: %s) to directory index.\n", filename, realPath);
 	}
 }
 
-
-static void FS_CheckIndex(const char *needs, qboolean isNotFound) {
-	long fullHash;
-	const char *s;
-	int hash;
-	int lengthFile;
-	fileInPack_t *file;
-	qboolean isDirectoryInIndex = qfalse;
-	qboolean isInIndex = qfalse;
-	searchpath_t *search;
-
-	if(!virtualFileIndex) {
-		return;
-	}
-
-	if(needs[0] == '/') {
-		needs++;
-	}
-		if(Q_stristr(needs, FS_GetCurrentGameDir())) {
-		needs += strlen(FS_GetCurrentGameDir()) + 1;
-	}
-	if(needs[0] == '/') {
-		needs++;
-	}
-
-//Com_Printf("searching index for (%s) %s\n", isNotFound ? "not found": "live", needs);
-
-	lengthFile = strlen(needs);
-	fullHash = FS_HashFileName( needs, 0U );
-
-	// search the index again but for the first folder name, if it exists
-	//   then make the needed request for the parent directory and the file
-	for ( search = fs_searchpaths ; search ; search = search->next ) {
-		char filename[MAX_OSPATH];
-		int lengthGame;
-
-		if(!search->dir || !search->dir->gamedir 
-			|| !Q_stristr(search->dir->path, fs_homepath->string)) {
-			continue;
-		}
-
-		lengthGame = strlen(search->dir->gamedir);
-		filename[0] = '\0';
-		Q_strncpyz(filename, search->dir->gamedir, lengthGame + 1);
-		filename[lengthGame] = '/';
-		filename[lengthGame+1] = '\0';
-		Q_strncpyz(&filename[lengthGame+1], needs, lengthFile + 1);
-
-		// only look recursively when a file is not found
-		if(isNotFound && (s = strchr(needs, '/'))) {
-			int lengthFirst = 0;
-			char firstDirectory[MAX_OSPATH];
-			char lastDirectory[MAX_OSPATH];
-			firstDirectory[0] = '\0';
-			lastDirectory[0] = '\0';
-
-			// look for directory listings in paths like baseq3/models/ and baseq3/models/players/sarge/
-			Q_strncpyz(firstDirectory, search->dir->gamedir, lengthGame + 1);
-			firstDirectory[lengthGame] = '/';
-			firstDirectory[lengthGame+1] = '\0';
-			Q_strncpyz(&firstDirectory[lengthGame+1], needs, (s - needs) + 1);
-			lengthFirst = strlen(firstDirectory);
-			firstDirectory[lengthFirst] = '/';
-			firstDirectory[lengthFirst+1] = '\0';
-
-			Q_strncpyz(lastDirectory, search->dir->gamedir, lengthGame + 1);
-			lastDirectory[lengthGame] = '/';
-			lastDirectory[lengthGame+1] = '\0';
-			Q_strncpyz(&lastDirectory[lengthGame+1], needs, lengthFile + 1);
-			s = strrchr(lastDirectory, '/');
-			if(s) {
-				lastDirectory[s-lastDirectory] = '/';
-				lastDirectory[s-lastDirectory+1] = '\0';
-			} else {
-				lastDirectory[0] = '\0';
-			}
-
-			// try to reduce the number of mis-fires once a directory has been received
-			hash = FS_HashPK3(lengthGame ? &firstDirectory[lengthGame] : firstDirectory);
-			if(NULL != (file = FindFileInIndex(hash, firstDirectory, virtualFileIndex))) {
-				isDirectoryInIndex = qtrue;
-			} else {
-				Sys_FileNeeded(firstDirectory, qtrue);
-			}
-
-			if(lastDirectory[0]) {
-				hash = FS_HashPK3(lengthGame ? &lastDirectory[lengthGame] : lastDirectory);
-				if(NULL != (file = FindFileInIndex(hash, lastDirectory, virtualFileIndex))) {
-					isDirectoryInIndex = qtrue;
-				} else {
-					Sys_FileNeeded(lastDirectory, qtrue);
-				}
-			}
-
-			Com_Printf("god fucking damnit: %s - %s\n", firstDirectory, lastDirectory);
-		}
-
-		// check the current index for the requested file
-		hash = fullHash & (virtualHashSize-1);
-		if(NULL != (file = FindFileInIndex(hash, filename, virtualFileIndex))) {
-			isInIndex = qtrue;
-		}
-
-		// test if the file exists once anyways if we havent received a
-		//   real index from the server and are working off HTTP
-		if((!isInIndex || !isDirectoryInIndex)
-	#if defined(USE_LIVE_RELOAD) || defined(__WASM__)
-			|| (file && file->mtime < lastVersionTime)
-	#else
-			|| (file && isNotFound)
-	#endif
-		) {
-			if(isInIndex) {
-				Sys_FileNeeded(file->name, qfalse);
-			} else {
-				Sys_FileNeeded(filename, qfalse);
-			}
-			// found something!
-		}
-	}
-
-}
 
 #endif
 
@@ -2753,7 +2540,7 @@ int FS_FOpenFileRead( const char *filename, fileHandle_t *file, qboolean uniqueF
 #if defined(USE_ASYNCHRONOUS) || defined(USE_LAZY_LOAD)
 #ifdef USE_LIVE_RELOAD
 	// check for updates!
-	FS_CheckIndex(filename, qfalse);
+	Sys_FileNeeded(filename, VFS_LATER);
 #endif
 #endif
 
@@ -2791,7 +2578,7 @@ int FS_FOpenFileRead( const char *filename, fileHandle_t *file, qboolean uniqueF
 		}
 #if defined(USE_ASYNCHRONOUS) || defined(USE_LAZY_LOAD)
 		// check for updates!
-		FS_CheckIndex(filename, qtrue);
+		Sys_FileNeeded(filename, VFS_FILE);
 #endif
 		return -1;
 	}
@@ -2853,7 +2640,7 @@ int FS_FOpenFileRead( const char *filename, fileHandle_t *file, qboolean uniqueF
 	}
 #if defined(USE_ASYNCHRONOUS) || defined(USE_LAZY_LOAD)
 	// check for updates!
-	FS_CheckIndex(filename, qtrue);
+	Sys_FileNeeded(filename, VFS_FILE);
 #endif
 
 #ifdef FS_MISSING
@@ -6196,7 +5983,7 @@ static void FS_Startup( void ) {
 #ifdef USE_ASYNCHRONOUS
 	// setup paths for downloading to use
 	if(!FS_SV_FileExists(CACHE_FILE_NAME)) {
-		Sys_FileNeeded(CACHE_FILE_NAME, qfalse);
+		Sys_FileNeeded(CACHE_FILE_NAME, VFS_NOW);
 	}
 #endif
 
@@ -6991,15 +6778,15 @@ void FS_Restart( int checksumFeed ) {
 #ifdef USE_ASYNCHRONOUS
 
 #ifdef __WASM__
-	Sys_FileNeeded("version.json", qfalse);
+	Sys_FileNeeded("version.json", VFS_FILE);
 #endif
 
 	// snoop on directory index
 	if(!Cvar_VariableIntegerValue("sv_pure")) {
-		Sys_FileNeeded(FS_GetCurrentGameDir(), qtrue);
-		Sys_FileNeeded("vm/", qtrue);
-		Sys_FileNeeded("maps/maplist.json", qfalse);
-		Sys_FileNeeded("scripts/", qtrue);
+		Sys_FileNeeded(FS_GetCurrentGameDir(), VFS_INDEX);
+		Sys_FileNeeded("vm/", VFS_INDEX);
+		Sys_FileNeeded("maps/maplist.json", VFS_NOW);
+		Sys_FileNeeded("scripts/", VFS_INDEX);
 	}
 
 #endif
@@ -7024,7 +6811,7 @@ void FS_Restart( int checksumFeed ) {
 		}
 #ifdef USE_ASYNCHRONOUS
 		Com_Printf( S_COLOR_RED "Couldn't load default.cfg\n" );
-		Sys_FileNeeded("default.cfg", qfalse);
+		Sys_FileNeeded("default.cfg", VFS_NOW);
 #else
 		Com_Error( ERR_FATAL, "Couldn't load default.cfg" );
 #endif

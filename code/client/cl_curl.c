@@ -810,7 +810,7 @@ qboolean Com_DL_Perform( download_t *dl )
 		dl->func.easy_getinfo( msg->easy_handle, CURLINFO_RESPONSE_CODE, &code );
 #ifdef USE_ASYNCHRONOUS
 		Sys_FileReady(dl->Name, NULL);
-		if( !dl->Cancelled && code != 404 )
+		//if( !dl->Cancelled && code != 404 )
 #endif
 		Com_Printf( S_COLOR_RED "Download Error: %s Code: %ld URL: %s/%s\n",
 			dl->func.easy_strerror( msg->data.result ), 

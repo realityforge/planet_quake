@@ -3904,7 +3904,7 @@ void CL_ChangeNotifcations( void ) {
 	shaderCallback
 	filesCallback
 */
-void Sys_UpdateNeeded( int tableId, char *ready, char *downloadNeeded);
+void Sys_UpdateNeeded(char *ready, char *downloadNeeded);
 void FS_UpdateFiles(const char *filename, const char* tempname);
 
 static int secondTimer = 0;
@@ -3933,69 +3933,73 @@ void CL_CheckLazyUpdates( void ) {
 #ifdef USE_LAZY_LOAD
 	if(cl_lazyLoad->integer <= 2 || cls.lazyLoading)
 #endif
-	for(int j = 0; j < 5; j++) {
-		// always returns the first download requested by FS_*
-		Sys_UpdateNeeded(j, 
-			secondTimer == newTime && ready[0] == '\0' ? ready : NULL, 
-			thirdTimer == newTime && downloadNeeded[0] == '\0' ? downloadNeeded : NULL);
 
-		// check for files that need to be downloaded, runs on separate thread!?
-		if(thirdTimer == newTime && downloadNeeded[0] != '\0') {
-			thirdTimer++; // so it doesn't trigger again
-			//if(
+	// always returns the first download requested by FS_*
+	Sys_UpdateNeeded(
+		secondTimer == newTime && ready[0] == '\0' ? ready : NULL, 
+		thirdTimer == newTime && downloadNeeded[0] == '\0' ? downloadNeeded : NULL);
+
+	// check for files that need to be downloaded, runs on separate thread!?
+	if(thirdTimer == newTime && downloadNeeded[0] != '\0') {
+		thirdTimer++; // so it doesn't trigger again
+		//if(
 #if defined(USE_CURL) || defined(__WASM__)
-				// we don't care if the USE_ASYNCHRONOUS code in the call cancels 
-				//   because it is requeued 1.5 seconds later
-				//|| !Com_DL_InProgress( &download ) // never true because download isn't used by async anymore
-				//|| !clc.downloadTempName[0]
-			//) {
-			CL_Download( "lazydl", downloadNeeded, qfalse );
-			//}
+			// we don't care if the USE_ASYNCHRONOUS code in the call cancels 
+			//   because it is requeued 1.5 seconds later
+			//|| !Com_DL_InProgress( &download ) // never true because download isn't used by async anymore
+			//|| !clc.downloadTempName[0]
+		//) {
+		CL_Download( "lazydl", downloadNeeded, qfalse );
+		//}
 #endif
-		}
-
-		// if we break here, nothing will update while download is in progress
-		if(secondTimer != newTime || ready[0] == '\0') {
-			continue;
-		}
-
-		secondTimer++; // so it doesn't trigger again
-#ifdef USE_LAZY_LOAD
-		if(j == 1) {
-			if(cls.rendererStarted)
-				re.UpdateModel(ready);
-		} else if (j == 2) {
-			if(cls.soundRegistered)
-				S_UpdateSound(ready, qtrue);
-		} else if (j == 3) {
-			ready[12] = '\0';
-			if(cls.rendererStarted) {
-				re.UpdateShader(&ready[13], atoi(&ready[0]));
-			}
-		} else if (j == 4 || j == 0)  // indexes and files
-#endif
-		{
-			// intercept this here because it's client only code
-			if(Q_stristr(&ready[MAX_QPATH], "/scripts/")
-				&& Q_stristr(&ready[MAX_QPATH], ".shader")) {
-				re.ReloadShaders(qfalse);
-			}
-			// else { // for logging
-			ready[MAX_QPATH - 1] = '\0';
-			FS_UpdateFiles(ready, &ready[MAX_QPATH]);
-			//}
-		}
-
-#if defined(USE_ASYNCHRONOUS) || defined(__WASM__)
-		// multigame has a special feature to reload an missing assets when INIT is called
-		if(cls.uiStarted && uivm && !Q_stricmp(FS_GetCurrentGameDir(), "multigame")) {
-			Cvar_Get("ui_breadCrumb", "", CVAR_ROM)->modificationCount++;
-		}
-#endif
-
-		break; // something updated, that's good for this frame
 	}
 
+	// if we break here, nothing will update while download is in progress
+	if(secondTimer != newTime || ready[0] == '\0') {
+		return;
+	}
+
+#ifdef USE_LAZY_LOAD
+	const char *ext = COM_GetExtension(ready);
+	if(!Q_stricmp(ext, "md3") || !Q_stricmp(ext, "mdr")
+		|| !Q_stricmp(ext, "md5")) {
+		if(cls.rendererStarted) {
+			re.UpdateModel(ready);
+		}
+	}
+
+	if(!Q_stricmp(ext, "wav") || !Q_stricmp(ext, "ogg")
+		|| !Q_stricmp(ext, "mp3") || !Q_stricmp(ext, "opus")) {
+		if(cls.soundRegistered) {
+			S_UpdateSound(ready, qtrue);
+		}
+	}
+
+	if(ready[12] == ';') {
+		ready[12] = '\0';
+		if(cls.rendererStarted) {
+			re.UpdateShader(&ready[13], atoi(&ready[0]));
+		}
+	}
+
+	// intercept this here because it's client only code
+	if(Q_stristr(&ready[MAX_QPATH], "/scripts/")
+		&& Q_stristr(&ready[MAX_QPATH], ".shader")) {
+		re.ReloadShaders(qfalse);
+	}
+#endif
+
+	ready[MAX_QPATH - 1] = '\0';
+	FS_UpdateFiles(ready, &ready[MAX_QPATH]);
+
+#if defined(USE_ASYNCHRONOUS) || defined(__WASM__)
+	// multigame has a special feature to reload an missing assets when INIT is called
+	if(cls.uiStarted && uivm && !Q_stricmp(FS_GetCurrentGameDir(), "multigame")) {
+		Cvar_Get("ui_breadCrumb", "", CVAR_ROM)->modificationCount++;
+	}
+#endif
+
+	// something updated, that's good for this frame
 }
 #endif
 

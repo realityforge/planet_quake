@@ -664,7 +664,7 @@ void CG_UpdateCvars( void ) {
 			&& cgs.clientinfo[ cg.clientNum ].legsSkin
 			&& cgs.clientinfo[ cg.clientNum ].torsoSkin
 			&& cgs.clientinfo[ cg.clientNum ].headSkin)) {
-			CG_LoadClientInfo( &cgs.clientinfo[ cg.clientNum ] );
+			//CG_LoadClientInfo( &cgs.clientinfo[ cg.clientNum ] );
 		}
 	}
 
