@@ -574,6 +574,10 @@ void Sys_UpdateNeeded( downloadLazy_t **ready, downloadLazy_t **downloadNeeded )
 		}
 
 		do {
+			if(Q_stristr(download->downloadName, "default.cfg")) {
+				assert(download->state > VFS_LATER);
+			}
+
 			if(download->state == VFS_DONE) {
 				continue;
 			}
@@ -608,42 +612,42 @@ void Sys_UpdateNeeded( downloadLazy_t **ready, downloadLazy_t **downloadNeeded )
 static char stupidPathError[MAX_OSPATH];
 
 
-downloadLazy_t *Sys_FileNeeded(const char *needs, vfsState_t state) {
+downloadLazy_t *Sys_FileNeeded(const char *filename, int state) {
   unsigned int hash;
 	const char *loading;
 	const char *s;
   downloadLazy_t *download;
 	int downloadSize;
-  qboolean found = qfalse;
-	char filename[MAX_OSPATH];
+  downloadLazy_t *found = NULL;
+	char localName[MAX_OSPATH];
 	const char *dir;
 	int lengthGame = strlen(FS_GetCurrentGameDir());
-	filename[0] = '\0';
+	localName[0] = '\0';
 
 	assert(state < VFS_DL);
 
 	// skip leading slashes
-	while ( *needs == '/' || *needs == '\\' )
-		needs++;
+	while ( *filename == '/' || *filename == '\\' )
+		filename++;
 
-	if(Q_stricmpn(needs, FS_GetCurrentGameDir(), lengthGame)) {
-		strcat(filename, FS_GetCurrentGameDir());
-		strcat(filename, "/");
+	if(Q_stricmpn(filename, FS_GetCurrentGameDir(), lengthGame)) {
+		strcat(localName, FS_GetCurrentGameDir());
+		strcat(localName, "/");
 	}
-	strcat(filename, needs);
-	if(filename[lengthGame] == '\0') {
-		filename[lengthGame + 1] = '\0'; // because down because we use lengthGame + 1
+	strcat(localName, filename);
+	if(localName[lengthGame] == '\0') {
+		localName[lengthGame + 1] = '\0'; // because down because we use lengthGame + 1
 	}
 	// remove the last slash just for hashing in case it's a directory, but we don't know it yet
-	if(filename[strlen(filename)-1] == '/') {
+	if(localName[strlen(localName)-1] == '/') {
 		state = VFS_INDEX;
-		filename[strlen(filename)-1] = '\0';
+		localName[strlen(localName)-1] = '\0';
 	}
 
-	// try to find the directory first
-	if((dir = strrchr(filename, '/')) != NULL) {
+	// try to find the directory first, treat pk3dir like a second root
+	if((dir = strrchr(localName, '/')) != NULL && !Q_stristr(dir, ".pk3dir")) {
 		char lastDirectory[MAX_OSPATH];
-		Q_strncpyz(lastDirectory, filename, (dir - filename) + 1);
+		Q_strncpyz(lastDirectory, localName, (dir - localName) + 1);
 		Sys_FileNeeded(lastDirectory, VFS_INDEX);
 	}
 
@@ -655,45 +659,62 @@ downloadLazy_t *Sys_FileNeeded(const char *needs, vfsState_t state) {
 		if(!loading[0]) {
 			loading = Cvar_VariableString("r_loadingModel");
 			if(!loading[0]) {
-				loading = filename;
+				loading = localName;
 			}
 		}
 	}
-  if(!filename[0]) {
-		return NULL;
-	}
 
-	// remove pk3dir from filename so we can find it again easily
-	if((s = Q_stristr(filename, ".pk3dir/")) != NULL) {
+	// remove pk3dir from localName so we can find it again easily
+	if((s = Q_stristr(localName, ".pk3dir/")) != NULL) {
 		hash = FS_HashPK3( s + 8 );
 	} else {
-		hash = FS_HashPK3( &filename[lengthGame + 1] );
+		// TODO: check pk3dir paths
+		hash = FS_HashPK3( &localName[lengthGame + 1] );
 	}
 
 	// absolute path to download item using hash of relative path
 	if(readyCallback[hash]) {
 		download = readyCallback[hash];
 		do {
-			if ( !Q_stricmp( filename, download->downloadName ) ) {
-				found = qtrue;
-				break;
+			if ( !Q_stricmp( localName, download->downloadName ) ) {
+				found = download;
+				if(download->state > VFS_NOENT) {
+					download->state = MAX(download->state, state);
+				}
+				// break; // used to stop here but since we need to check multiple paths
+			} //else 
+			// make this exception here, basically load from a pk3dir that has been added as a file but
+			//   not yet added as a pk3dir to searchpaths. This gives searchpaths a starting point when
+			//   the BSP is downloaded the pk3dir will be added and all subsequent requests will go through
+			//   multiple root directory checks
+			if ((s = Q_stristr(download->downloadName, ".pk3dir/")) != NULL 
+				&& !Q_stricmp( &localName[lengthGame + 1], s + 8 )) {
+				// escalate download state but never go backwards from FAILED to DOWNLOADING
+				if(download->state > VFS_NOENT) {
+					download->state = MAX(download->state, state);
+				}
 			}
+
 		} while ((download = download->next) != NULL);
 	}
 
+if(Q_stristr(localName, "lsdm3_v1.bsp")) {
+Com_Printf("file needed! %i, %i - %s\n", hash, state, localName);
+}
+
 	if(!found) {
-		//Com_Printf("file needed! %i, %i - %s, %s\n", hash, state, filename, loading);
+//Com_Printf("file needed! %i, %i - %s, %s\n", hash, state, localName, loading);
 		downloadSize = sizeof(downloadLazy_t)
 				+ MAX_OSPATH /* because it's replaced with temp download name strlen(loading) + 1 */ 
-				+ strlen(filename) + 8;
+				+ strlen(localName) + 8;
 		download = (downloadLazy_t *)Z_Malloc(downloadSize);
 		memset(download, 0, downloadSize);
 		download->loadingName = &((void *)download)[sizeof(downloadLazy_t)];
 		download->downloadName = download->loadingName + MAX_OSPATH;
 		strcpy(download->loadingName, loading);
-		strcpy(download->downloadName, filename);
+		strcpy(download->downloadName, localName);
 		download->loadingName[strlen(loading)] = '\0';
-		download->downloadName[strlen(filename)] = '\0';
+		download->downloadName[strlen(localName)] = '\0';
 		download->next = readyCallback[hash];
 		download->state = state;
 		readyCallback[hash] = download;
@@ -701,21 +722,19 @@ downloadLazy_t *Sys_FileNeeded(const char *needs, vfsState_t state) {
 	} else {
 #if defined(USE_LIVE_RELOAD) || defined(__WASM__)
 		// allow redownloading of this file because when it's received the game updates
-		if(/* !download->failed && */ Q_stristr(filename, "version.json")) {
+		if(/* !download->failed && */ Q_stristr(localName, "version.json")) {
 			download->state = VFS_NOW;
 			// add 1500 millis to whatever requested it a second time
 			download->lastRequested = Sys_Milliseconds(); 
-		} else
+		}
+
 		if( download->state == VFS_FAIL && download->lastRequested < lastVersionTime) {
 			download->state = state;
 			download->lastRequested = Sys_Milliseconds(); 
-		} else
-#endif
-		// escalate download state but never go backwards from FAILED to DOWNLOADING
-		if(download->state != VFS_NOENT) {
-			download->state = MAX(download->state, state);
 		}
-		return download; // skip debug message below, that's all
+#endif
+
+		return found; // skip debug message below, that's all
 	}
 
 	// why is it repeating gamedir?
@@ -725,7 +744,7 @@ downloadLazy_t *Sys_FileNeeded(const char *needs, vfsState_t state) {
 		strcat(stupidPathError, FS_GetCurrentGameDir());
 	}
 
-	assert(!Q_stristr(filename, stupidPathError));
+	assert(!Q_stristr(localName, stupidPathError));
 	return download;
 }
 
@@ -874,6 +893,7 @@ void MakeDirectoryBuffer(char *paths, int count, int length, const char *parentD
 	searchpath_t *search;
 	qboolean hasIndex = qfalse;
   downloadLazy_t *download;
+  downloadLazy_t *defaultCfg = NULL;
 	int lengthDir = strlen(parentDirectory);
 
 	for ( search = fs_searchpaths ; search ; search = search->next ) {
@@ -891,6 +911,7 @@ void MakeDirectoryBuffer(char *paths, int count, int length, const char *parentD
 		FS_AddGameDirectory(fs_homepath->string, FS_GetCurrentGameDir(), 0);
 		return;
 	}
+
 	// when a directory index is received, remove any files from the download list
 	//   that aren't in the now "known" directory listing
 	// mark all as failed
@@ -902,8 +923,19 @@ void MakeDirectoryBuffer(char *paths, int count, int length, const char *parentD
 			}
 
 			do {
-				if(download->state < VFS_DL && !Q_stricmpn(download->downloadName, parentDirectory, lengthDir)) {
-					download->state = VFS_NOENT;
+				if(Q_stristr(download->downloadName, "default.cfg")) {
+					defaultCfg = download;
+				}
+				if(download->state > VFS_NOENT && download->state < VFS_DL
+					// reset file states for all files in the directory just received
+					&& !Q_stricmpn(download->downloadName, parentDirectory, lengthDir)
+					// last folder in the path
+					&& strchr(&download->downloadName[lengthDir + 1], '/') == NULL 
+				) {
+//Com_Printf("purging: %s\n", download->downloadName);
+					download->state = VFS_NOENT - download->state;
+				} else {
+//Com_Printf("skipping: %s != %s\n", download->downloadName, parentDirectory);
 				}
 			} while ((download = download->next) != NULL);
 		}
@@ -949,7 +981,6 @@ void MakeDirectoryBuffer(char *paths, int count, int length, const char *parentD
 		} else {
 			hash = FS_HashPK3( currentPath );
 		}
-//Com_Printf("adding %li, %s\n", hash, curFile->name);
 		// download more directories recursively, at least for like 2 levels
 		if(qfalse
 			//!strrchr(currentPath, '.')
@@ -973,14 +1004,26 @@ void MakeDirectoryBuffer(char *paths, int count, int length, const char *parentD
 		} else {
 			download = Sys_FileNeeded(currentPath, VFS_LATER);
 		}
-		if(download->state == VFS_NOENT) {
-			// then it was already in the list which means we intended to download now,
-			//   and now we know it's there because its in the directory listing
-			download->state = VFS_NOW;
+
+		assert(download != NULL);
+
+		// then it was already in the list which means we intended to download now,
+		if(download->state < VFS_NOENT) {
+			// and now we know it's there because its in the directory listing
+			download->state = -download->state + VFS_NOENT;
+if(Q_stristr(parentDirectory, "lsdm3_v1.pk3dir/maps")) {
+Com_Printf("keeping %li, %s\n", hash, currentPath);
+}
+		} else {
+if(Q_stristr(parentDirectory, "lsdm3_v1.pk3dir/maps")) {
+Com_Printf("adding %li, %s\n", hash, currentPath);
+}
 		}
 
 		currentPath += strlen( currentPath ) + 1;
 	}
+
+	assert(!defaultCfg || defaultCfg->state > VFS_NOENT);
 
 }
 
@@ -1082,10 +1125,12 @@ void Sys_FileReady(const char *filename, const char* tempname) {
 				// match the first part of the path
 				&& !Q_stricmpn( download->downloadName, localName, length )
 				// last folder in the path
-				&& strchr(&download->downloadName[length], '/') == NULL 
+				&& strchr(&download->downloadName[length + 1], '/') == NULL 
 			) {
-				Com_Printf("purging 2: %s\n", download->downloadName);
-				download->state = VFS_NOENT;
+				//Com_Printf("purging 2: %s\n", download->downloadName);
+				if(download->state > VFS_NOENT) {
+					download->state = VFS_NOENT - download->state;
+				}
 			}
 		} while ((download = download->next) != NULL);
 	}
@@ -1104,7 +1149,7 @@ void Com_ExecuteCfg( void );
 
 void FS_UpdateFiles(const char *filename, const char *tempname) {
 
-Com_Printf("updating files: %s -> %s\n", filename, tempname);
+//Com_Printf("updating files: %s -> %s\n", filename, tempname);
 
 #if defined(USE_LIVE_RELOAD) || defined(__WASM__)
 	if(Q_stristr(tempname, "version.json")) {
@@ -1216,13 +1261,15 @@ Com_Printf("updating files: %s -> %s\n", filename, tempname);
 	// do some extra processing, restart UI if default.cfg is found
 	if(Q_stristr(tempname, "default.cfg")) {
 		// will restart automatically from NextDownload()
-		if(!fs_searchpaths)
-			FS_Restart(0);
+		//if(!fs_searchpaths)
+		FS_Restart(0);
 		// TODO: try to restart UI VM
 		// TODO: check on networking, shaderlist, anything else we skipped, etc again
 		com_fullyInitialized = qtrue;
-		Cbuf_AddText("wait; vid_restart lazy;");
-		Com_ExecuteCfg();
+		Cbuf_AddText("wait; vid_restart lazy; wait; exec default.cfg; ");
+		if(*Cvar_VariableString("mapname") != '\0' && !com_sv_running->integer) {
+			Cbuf_AddText(va("wait; map %s;", Cvar_VariableString("mapname")));
+		}
 	} else 
 	
 	// scan index files for HTTP directories and add links to q3cache.dat

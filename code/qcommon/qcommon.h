@@ -839,23 +839,21 @@ issues.
 
 #ifdef USE_ASYNCHRONOUS
 
-typedef enum {
-	VFS_NOENT,
-	VFS_LATER,
-	VFS_FILE,
-	VFS_NOW,
-	VFS_INDEX,
-	VFS_DL,
-	VFS_READY, // ready for updating
-	VFS_DONE, // already processed
-	VFS_FAIL,
-} vfsState_t;
+#define VFS_NOENT 0
+#define VFS_LATER 1
+#define VFS_FILE 2
+#define VFS_NOW 3
+#define VFS_INDEX 4
+#define VFS_DL 5
+#define VFS_READY 6 // ready for updating
+#define VFS_DONE 7 // already processed
+#define VFS_FAIL 8
 
 typedef struct downloadLazy_s {
   char *downloadName; // this is the of the file in the shader
 	char *loadingName; // this is the name of the shader to update
 	time_t lastRequested;
-	vfsState_t state;
+	int state;
   struct downloadLazy_s *next;
 } downloadLazy_t;
 

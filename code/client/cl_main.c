@@ -3987,7 +3987,7 @@ void CL_CheckLazyUpdates( void ) {
 #endif
 
 	ready->loadingName[MAX_QPATH - 1] = '\0';
-	FS_UpdateFiles(ready->loadingName, &ready->loadingName[MAX_QPATH]);
+	FS_UpdateFiles(ready->downloadName, &ready->loadingName[MAX_QPATH]);
 
 #if defined(USE_ASYNCHRONOUS) || defined(__WASM__)
 	// multigame has a special feature to reload an missing assets when INIT is called
