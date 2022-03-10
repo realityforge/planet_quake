@@ -46,6 +46,8 @@ static int FS_HashPK3( const char *name )
 
 
 #ifdef USE_LIVE_RELOAD
+downloadLazy_t *Sys_FileNeeded(const char *filename, int state);
+
 int fileTimes[MAX_NOTIFICATIONS];
 char realNames[MAX_NOTIFICATIONS][MAX_OSPATH];
 static int changeTimer = 0;
