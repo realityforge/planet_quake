@@ -3908,11 +3908,13 @@ void CL_CheckLazyUpdates( void ) {
 	downloadLazy_t *ready;
 	int newTime = Sys_Milliseconds();
 
-	if(newTime - secondTimer > 100) {
+	// files must process faster otherwise we will have a bunch of indexes queued  
+	//   while downloading errors are happening
+	if(newTime - secondTimer > 200 / cl_dlSimultaneous->integer / 2) { // = 10ms, or about once per frame at 100 FPS
 		secondTimer = newTime;
 	}
 
-	if(newTime - thirdTimer > 100 / cl_dlSimultaneous->integer) {
+	if(newTime - thirdTimer > 200 / cl_dlSimultaneous->integer) { 
 		thirdTimer = newTime;
 	}
 	
@@ -5532,7 +5534,7 @@ void CL_Init( void ) {
 #endif
 
 #ifdef USE_ASYNCHRONOUS
-	cl_dlSimultaneous = Cvar_Get( "cl_dlSimultaneous", "20", CVAR_ARCHIVE_ND );
+	cl_dlSimultaneous = Cvar_Get( "cl_dlSimultaneous", "10", CVAR_ARCHIVE_ND );
 #ifdef USE_CURL
 	cl_downloads = Z_Malloc( sizeof(download_t) * cl_dlSimultaneous->integer );
 #endif

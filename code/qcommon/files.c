@@ -701,8 +701,9 @@ downloadLazy_t *Sys_FileNeeded(const char *filename, int state) {
 				found = download;
 				if(loading[12] == ';')
 					strcpy(download->loadingName, loading);
-				if(download->state > VFS_NOENT) {
-					download->state = MAX(download->state, state);
+				if(download->state > VFS_NOENT && download->state < state) {
+					download->state = state;
+Com_Printf("upgrading! %i, %i - %s, %s\n", hash, state, download->downloadName, loading);
 				}
 				// break; // used to stop here but since we need to check multiple paths
 			} //else 
@@ -717,8 +718,9 @@ downloadLazy_t *Sys_FileNeeded(const char *filename, int state) {
 				if(loading[12] == ';')
 					strcpy(download->loadingName, loading);
 				// escalate download state but never go backwards from FAILED to DOWNLOADING
-				if(download->state > VFS_NOENT) {
-					download->state = MAX(download->state, state);
+				if(download->state > VFS_NOENT && download->state < state) {
+					download->state = state;
+Com_Printf("upgrading! %i, %i - %s, %s\n", hash, state, download->downloadName, loading);
 				}
 			}
 
@@ -733,18 +735,10 @@ downloadLazy_t *Sys_FileNeeded(const char *filename, int state) {
 		return found;
 	}
 
-	if(parentDownload && parentDownload->state == VFS_FAIL) {
+	if(parentDownload && (parentDownload->state == VFS_FAIL
+		|| parentDownload->state <= VFS_NOENT)) {
 		// parent is done, !partial, so no more adding files
 		return found;
-	}
-
-	if(parentDownload && parentDownload->state == VFS_DONE) {
-		// parent is downloading, so don't add files
-		//   only accept additions from the subsequent MakeDirectoryBuffer(), none from FS_* calls
-		if(state > VFS_LAZY) {
-			return found;
-		}
-		assert(state == VFS_LAZY || state == VFS_LATER);
 	}
 
 	if(found) {
@@ -765,6 +759,16 @@ downloadLazy_t *Sys_FileNeeded(const char *filename, int state) {
 	}
 
 Com_Printf("file needed! %i, %i - %s, %s\n", hash, state, localName, loading);
+
+	if(parentDownload && parentDownload->state == VFS_DONE) {
+		// parent is done, so don't add files
+		if(state == VFS_LAZY || state == VFS_LATER) {
+			// only accept additions from the subsequent MakeDirectoryBuffer(), none from FS_* calls
+		} else {
+			return NULL;
+		}
+	}
+
 	downloadSize = sizeof(downloadLazy_t)
 			+ MAX_OSPATH /* because it's replaced with temp download name strlen(loading) + 1 */ 
 			+ strlen(localName) + 8;
@@ -977,6 +981,8 @@ void MakeDirectoryBuffer(char *paths, int count, int length, const char *parentD
 					defaultCfg = download;
 				}
 				if(download->state > VFS_NOENT && download->state < VFS_DL
+					// don't purge indexes this way
+					&& download->state != VFS_INDEX
 					// reset file states for all files in the directory just received
 					&& !Q_stricmpn(download->downloadName, parentDirectory, lengthDir)
 					// last folder in the path
@@ -1146,6 +1152,7 @@ void Sys_FileReady(const char *filename, const char* tempname) {
 				}
 				break;
 			} else 
+
 #if 0
 			if ( i == hash 
 				// ignore pk3dir and mark all as ready
@@ -1169,6 +1176,7 @@ void Sys_FileReady(const char *filename, const char* tempname) {
 				// break; // used to stop here, but now this will cover .pk3dir paths
 			} else 
 #endif
+
 			// really reduce misfires by removing missing download files once directory index is received
 			//   we know we won't find shader images with alternate extensions, so those downloads are marked
 			if( isDirectory && !tempname 
@@ -2637,7 +2645,7 @@ int FS_FOpenFileRead( const char *filename, fileHandle_t *file, qboolean uniqueF
 #if defined(USE_ASYNCHRONOUS) || defined(USE_LAZY_LOAD)
 #ifdef USE_LIVE_RELOAD
 	// check for updates!
-	Sys_FileNeeded(filename, VFS_LATER);
+	Sys_FileNeeded(filename, VFS_NOW);
 #endif
 #endif
 
@@ -2675,7 +2683,7 @@ int FS_FOpenFileRead( const char *filename, fileHandle_t *file, qboolean uniqueF
 		}
 #if defined(USE_ASYNCHRONOUS) || defined(USE_LAZY_LOAD)
 		// check for updates!
-		Sys_FileNeeded(filename, VFS_LAZY);
+		Sys_FileNeeded(filename, VFS_NOW);
 #endif
 		return -1;
 	}
@@ -6874,7 +6882,7 @@ void FS_Restart( int checksumFeed ) {
 
 #ifdef USE_ASYNCHRONOUS
 #ifdef __WASM__
-	Sys_FileNeeded("version.json", VFS_LAZY);
+	Sys_FileNeeded("version.json", VFS_NOW);
 #endif
 	// snoop on directory index
 	if(!Cvar_VariableIntegerValue("sv_pure")) {

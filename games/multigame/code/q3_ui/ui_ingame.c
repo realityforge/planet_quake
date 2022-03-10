@@ -316,7 +316,6 @@ InGame_Cache
 =================
 */
 void InGame_Cache( void ) {
-	Com_Printf("wtf 2??\n");
 	trap_R_RegisterShaderNoMip( INGAME_FRAME );
 }
 

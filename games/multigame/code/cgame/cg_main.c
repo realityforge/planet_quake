@@ -664,11 +664,10 @@ void CG_UpdateCvars( void ) {
 			&& cgs.clientinfo[ cg.clientNum ].legsSkin
 			&& cgs.clientinfo[ cg.clientNum ].torsoSkin
 			&& cgs.clientinfo[ cg.clientNum ].headSkin)) {
-		Com_Printf("hello!!\n");
 			CG_LoadClientInfo( &cgs.clientinfo[ cg.clientNum ] );
 		}
 
-		
+
 	}
 
 	// if model changed
