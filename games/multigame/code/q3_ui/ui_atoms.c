@@ -1273,6 +1273,8 @@ void UI_Refresh( int realtime )
 		if(!Q_stricmp(ui_breadCrumb.string, UI_GetBreadCrumb())) {
 			if(((menuframework_s *)uis.activemenu)->init) {
 				((menuframework_s *)uis.activemenu)->init();
+			} else {
+				Menu_Cache();
 			}
 		} /* else 
 		if(Q_stristr(ui_breadCrumb.string, "chooselevel")) {

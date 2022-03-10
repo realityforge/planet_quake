@@ -3385,9 +3385,8 @@ shader_t *R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImag
 		if ( !image ) {
 			ri.Printf( PRINT_DEVELOPER, "Couldn't find image file for shader %s\n", name );
 #ifdef USE_LAZY_LOAD
-			ri.Cvar_Set("r_loadingShader", "");
-#endif
-#ifdef USE_LAZY_LOAD
+			// TODO: shortcut the reloading thing by keeping shader indexes for internal uses, and returning
+			//   0 index for missing shaders to external like from UI/CGAME
 			// TODO: check index
 			//   in the future, we can check the index for specific known
 			//   shader reservations.
@@ -4038,14 +4037,14 @@ void RE_ReloadShaders( qboolean createNew ) {
 
 	// quickly recheck any missing
 #ifdef USE_LAZY_LOAD
-	if(r_lazyLoad->integer != 2) // TODO: _lazyLoad->integer != 4
+	//if(r_lazyLoad->integer != 2) // TODO: _lazyLoad->integer != 4
 #endif
-	for(int i = 0; i < tr.numShaders; i++) {
-		RE_RegisterShader(tr.shaders[i]->name);
-	}
-	for(int i = 0; i < tr.numModels; i++) {
-		RE_RegisterModel(tr.models[i]->name);
-	}
+	//for(int i = 0; i < tr.numShaders; i++) {
+	//  RE_RegisterShader(tr.shaders[i]->name);
+	//}
+	//for(int i = 0; i < tr.numModels; i++) {
+	//  RE_RegisterModel(tr.models[i]->name);
+	//}
 
 }
 #endif

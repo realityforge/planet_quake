@@ -3973,6 +3973,7 @@ void CL_CheckLazyUpdates( void ) {
 		if(cls.rendererStarted) {
 			re.UpdateShader(&ready->loadingName[13], atoi(&ready->loadingName[0]));
 		}
+		ready->loadingName[12] = ';';
 	}
 
 	// intercept this here because it's client only code

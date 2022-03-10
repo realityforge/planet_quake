@@ -852,7 +852,8 @@ issues.
 #define VFS_DL 5 // currently queued for download
 #define VFS_READY 6 // ready for updating
 #define VFS_DONE 7 // already processed
-#define VFS_FAIL 8 // 404 or something
+#define VFS_PARTIAL 8 // part of a directory index received
+#define VFS_FAIL 9 // 404 or something
 
 // store a list of files to download this session
 typedef struct downloadLazy_s {

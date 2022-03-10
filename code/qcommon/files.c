@@ -581,7 +581,7 @@ void Sys_UpdateNeeded( downloadLazy_t **ready, downloadLazy_t **downloadNeeded )
 				assert(download->state > VFS_LATER);
 			}
 
-			if(download->state == VFS_DONE) {
+			if(download->state >= VFS_DONE) {
 				continue;
 			}
 			if(download->state == VFS_READY && ready && !*ready) {
@@ -612,8 +612,9 @@ void Sys_UpdateNeeded( downloadLazy_t **ready, downloadLazy_t **downloadNeeded )
 	}
 }
 
+#if _DEBUG
 static char stupidPathError[MAX_OSPATH];
-
+#endif
 
 downloadLazy_t *Sys_FileNeeded(const char *filename, int state) {
   unsigned int hash;
@@ -622,6 +623,8 @@ downloadLazy_t *Sys_FileNeeded(const char *filename, int state) {
   downloadLazy_t *download;
 	int downloadSize;
   downloadLazy_t *found = NULL;
+	downloadLazy_t *parentDownload = NULL;
+	qboolean isRoot = qfalse;
 	char localName[MAX_OSPATH];
 	const char *dir;
 	int lengthGame = strlen(FS_GetCurrentGameDir());
@@ -651,7 +654,9 @@ downloadLazy_t *Sys_FileNeeded(const char *filename, int state) {
 	if((dir = strrchr(localName, '/')) != NULL && !Q_stristr(dir, ".pk3dir")) {
 		char lastDirectory[MAX_OSPATH];
 		Q_strncpyz(lastDirectory, localName, (dir - localName) + 1);
-		Sys_FileNeeded(lastDirectory, VFS_INDEX);
+		parentDownload = Sys_FileNeeded(lastDirectory, VFS_INDEX);
+	} else {
+		isRoot = qtrue;
 	}
 
 	// force indexes to get downloaded first in line
@@ -694,6 +699,8 @@ downloadLazy_t *Sys_FileNeeded(const char *filename, int state) {
 		do {
 			if ( !Q_stricmp( localName, download->downloadName ) ) {
 				found = download;
+				if(loading[12] == ';')
+					strcpy(download->loadingName, loading);
 				if(download->state > VFS_NOENT) {
 					download->state = MAX(download->state, state);
 				}
@@ -705,6 +712,10 @@ downloadLazy_t *Sys_FileNeeded(const char *filename, int state) {
 			//   multiple root directory checks
 			if ((s = Q_stristr(download->downloadName, ".pk3dir/")) != NULL 
 				&& !Q_stricmp( &localName[lengthGame + 1], s + 8 )) {
+				// fix shader name because the indexer will add files because they are loaded as shaders
+				//   and this path tells the renderer which shader to update that loaded the image file
+				if(loading[12] == ';')
+					strcpy(download->loadingName, loading);
 				// escalate download state but never go backwards from FAILED to DOWNLOADING
 				if(download->state > VFS_NOENT) {
 					download->state = MAX(download->state, state);
@@ -715,28 +726,29 @@ downloadLazy_t *Sys_FileNeeded(const char *filename, int state) {
 	}
 
 //if(Q_stristr(localName, "lsdm3_v1.bsp")) {
-//Com_Printf("file needed! %i, %i - %s\n", hash, state, localName);
+//Com_Printf("file needed! %i, %i - %s, %i, %i\n", hash, state, localName, parentDownload, isRoot);
 //}
+	if(!isRoot && !parentDownload) {
+		// no parent? no children
+		return found;
+	}
 
-	if(!found) {
-//Com_Printf("file needed! %i, %i - %s, %s\n", hash, state, localName, loading);
-		downloadSize = sizeof(downloadLazy_t)
-				+ MAX_OSPATH /* because it's replaced with temp download name strlen(loading) + 1 */ 
-				+ strlen(localName) + 8;
-		download = (downloadLazy_t *)Z_Malloc(downloadSize);
-		memset(download, 0, downloadSize);
-		download->loadingName = &((void *)download)[sizeof(downloadLazy_t)];
-		download->downloadName = download->loadingName + MAX_OSPATH;
-		strcpy(download->loadingName, loading);
-		strcpy(download->downloadName, localName);
-		download->loadingName[strlen(loading)] = '\0';
-		download->downloadName[strlen(localName)] = '\0';
-		download->next = readyCallback[hash];
-		download->state = state;
-		readyCallback[hash] = download;
-		download->lastRequested = 0; // request immediately, updated after first request
-	} else {
-#if defined(USE_LIVE_RELOAD) || defined(__WASM__)
+	if(parentDownload && parentDownload->state == VFS_FAIL) {
+		// parent is done, !partial, so no more adding files
+		return found;
+	}
+
+	if(parentDownload && parentDownload->state == VFS_DONE) {
+		// parent is downloading, so don't add files
+		//   only accept additions from the subsequent MakeDirectoryBuffer(), none from FS_* calls
+		if(state > VFS_LAZY) {
+			return found;
+		}
+		assert(state == VFS_LAZY || state == VFS_LATER);
+	}
+
+	if(found) {
+#if 0 //defined(USE_LIVE_RELOAD) || defined(__WASM__)
 		// allow redownloading of this file because when it's received the game updates
 		if(/* !download->failed && */ Q_stristr(localName, "version.json")) {
 			download->state = VFS_NOW;
@@ -749,10 +761,27 @@ downloadLazy_t *Sys_FileNeeded(const char *filename, int state) {
 			download->lastRequested = Sys_Milliseconds(); 
 		}
 #endif
-
 		return found; // skip debug message below, that's all
 	}
 
+Com_Printf("file needed! %i, %i - %s, %s\n", hash, state, localName, loading);
+	downloadSize = sizeof(downloadLazy_t)
+			+ MAX_OSPATH /* because it's replaced with temp download name strlen(loading) + 1 */ 
+			+ strlen(localName) + 8;
+	download = (downloadLazy_t *)Z_Malloc(downloadSize);
+	memset(download, 0, downloadSize);
+	download->loadingName = &((void *)download)[sizeof(downloadLazy_t)];
+	download->downloadName = download->loadingName + MAX_OSPATH;
+	strcpy(download->loadingName, loading);
+	strcpy(download->downloadName, localName);
+	download->loadingName[strlen(loading)] = '\0';
+	download->downloadName[strlen(localName)] = '\0';
+	download->next = readyCallback[hash];
+	download->state = state;
+	readyCallback[hash] = download;
+	download->lastRequested = 0; // request immediately, updated after first request
+
+#if _DEBUG
 	// why is it repeating gamedir?
 	if(!stupidPathError[0]) {
 		strcat(stupidPathError, FS_GetCurrentGameDir());
@@ -761,6 +790,8 @@ downloadLazy_t *Sys_FileNeeded(const char *filename, int state) {
 	}
 
 	assert(!Q_stristr(localName, stupidPathError));
+#endif
+
 	return download;
 }
 
@@ -1000,6 +1031,7 @@ void MakeDirectoryBuffer(char *paths, int count, int length, const char *parentD
 		} else {
 			hash = FS_HashPK3( currentPath );
 		}
+
 		// download more directories recursively, at least for like 2 levels
 		if(qfalse
 			//!strrchr(currentPath, '.')
@@ -1018,7 +1050,6 @@ void MakeDirectoryBuffer(char *paths, int count, int length, const char *parentD
 			// TODO: fix this, only works if directory listing allows slashes at the end?
 			// TODO: right thing to do would be test the content-type and duck out early 
 			//   on big files for anything that doesn't have a . dot in the name.
-			// TODO: check index instead
 			download = Sys_FileNeeded(currentPath, VFS_LAZY);
 		} else {
 			download = Sys_FileNeeded(currentPath, VFS_LATER);
@@ -1049,7 +1080,7 @@ void MakeDirectoryBuffer(char *paths, int count, int length, const char *parentD
 
 #define CACHE_FILE_NAME "pk3cache.dat"
 
-// TODO: move this to cl_main?
+
 #ifdef __WASM__
 Q_EXPORT
 #endif
@@ -1144,7 +1175,8 @@ void Sys_FileReady(const char *filename, const char* tempname) {
 				// match the first part of the path
 				&& !Q_stricmpn( download->downloadName, localName, length )
 				// last folder in the path
-				&& strchr(&download->downloadName[length + 1], '/') == NULL 
+				// if parent path doesn't exist, neither do children
+				//&& strchr(&download->downloadName[length + 1], '/') == NULL 
 			) {
 				//Com_Printf("purging 2: %s\n", download->downloadName);
 				if(download->state > VFS_NOENT) {
@@ -1155,7 +1187,6 @@ void Sys_FileReady(const char *filename, const char* tempname) {
 	}
 
 	if(!found && tempname) {
-		// TODO: DPrintf
 		// should never happen!
 		Com_Error(ERR_FATAL, "WARNING: %i %s not found in download list.\n", hash, localName);
 	}
@@ -1325,6 +1356,9 @@ Com_DPrintf("Adding %s (from: %s) to directory index.\n", filename, realPath);
 				ParseHTMLFileList(buf, len, paths, &count, &nameLength);
 			}
 			// can't purge missing files from an incomplete file index
+			if(!!Q_stristr(buf, "nextPageToken")) {
+				Sys_FileNeeded(filename, VFS_PARTIAL);
+			}
 			MakeDirectoryBuffer(paths, count, nameLength, filename, !!Q_stristr(buf, "nextPageToken"));
 			// TODO: add next page token every time it's requested as if we're actually paging too
 			Z_Free(buf);

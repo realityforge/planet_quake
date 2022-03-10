@@ -296,7 +296,7 @@ qhandle_t RE_RegisterModel( const char *name )
 	char		altName[ MAX_QPATH ];
 
 	if ( !name || !name[0] ) {
-		ri.Printf( PRINT_ALL, "RE_RegisterModel: NULL name\n" );
+		ri.Error( ERR_FATAL, "RE_RegisterModel: NULL name\n" );
 		return 0;
 	}
 
@@ -314,7 +314,7 @@ qhandle_t RE_RegisterModel( const char *name )
 #ifdef USE_LAZY_LOAD
 			found = qtrue;
 			// break instead in-case its time to re-load the model after download
-			if( (mod->type != MOD_BAD || !updateModels)
+			if( (mod->type != MOD_BAD && !updateModels)
 				// reload models if we got a new .shader file we have to reload surface references too
 				//   don't need to reload geometry though, unless the model was MOD_BAD
 				&& tr.lastRegistrationTime <= mod->lastTimeUsed
@@ -498,6 +498,8 @@ static qboolean R_LoadMD3( model_t *mod, int lod, void *buffer, int fileSize, co
 	if(mod->md3[lod]
 	  && ((md3Header_t *)mod->md3[lod])->ofsEnd == size) {
 		// don't make new memory, just overwrite
+		// TODO: shortcut the reloading thing by keeping shader indexes for internal uses, and returning
+		//   0 index for missing shaders to external like from UI/CGAME
 	} else
 	mod->md3[lod] = ri.Hunk_Alloc( size, h_low );
 

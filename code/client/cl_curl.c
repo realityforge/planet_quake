@@ -818,7 +818,7 @@ qboolean Com_DL_Perform( download_t *dl )
 #ifdef USE_ASYNCHRONOUS
 		dl->Completed = qtrue;
 		Sys_FileReady(dl->Name, NULL);
-		if( !dl->Cancelled && code != 404 )
+		//if( !dl->Cancelled && code != 404 )
 #endif
 		Com_Printf( S_COLOR_RED "Download Error: %s Code: %ld URL: %s/%s\n",
 			dl->func.easy_strerror( msg->data.result ), 

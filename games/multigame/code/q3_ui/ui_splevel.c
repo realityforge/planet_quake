@@ -651,6 +651,8 @@ UI_SPLevelMenu_Cache
 void UI_SPLevelMenu_Cache( void ) {
 	int				n;
 
+	Menu_Cache();
+
 	trap_R_RegisterShaderNoMip( ART_LEVELFRAME_FOCUS );
 	trap_R_RegisterShaderNoMip( ART_LEVELFRAME_SELECTED );
 	trap_R_RegisterShaderNoMip( ART_ARROW );
@@ -706,6 +708,7 @@ static void UI_SPLevelMenu_Init( void ) {
 	levelMenuInfo.menu.fullscreen = qtrue;
 	levelMenuInfo.menu.wrapAround = qtrue;
 	levelMenuInfo.menu.draw = UI_SPLevelMenu_MenuDraw;
+	levelMenuInfo.menu.init = UI_SPLevelMenu_Cache;
 
 	UI_SPLevelMenu_Cache();
 
