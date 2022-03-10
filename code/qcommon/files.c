@@ -668,7 +668,20 @@ downloadLazy_t *Sys_FileNeeded(const char *filename, int state) {
 	if((s = Q_stristr(localName, ".pk3dir/")) != NULL) {
 		hash = FS_HashPK3( s + 8 );
 	} else {
-		// TODO: check pk3dir paths
+		// check pk3dir paths
+		if(state == VFS_NOW) {
+			searchpath_t *search;
+			for ( search = fs_searchpaths ; search ; search = search->next ) {
+				if(search->dir && Q_stristr(search->dir->gamedir, ".pk3dir")) {
+					char pk3dirName[MAX_OSPATH];
+					pk3dirName[0] = '\0';
+					strcat(pk3dirName, search->dir->gamedir);
+					strcat(pk3dirName, "/");
+					strcat(pk3dirName, &localName[lengthGame + 1]);
+					Sys_FileNeeded(pk3dirName, state);
+				}
+			}
+		}
 		hash = FS_HashPK3( &localName[lengthGame + 1] );
 	}
 
@@ -1000,7 +1013,7 @@ void MakeDirectoryBuffer(char *paths, int count, int length, const char *parentD
 			// TODO: right thing to do would be test the content-type and duck out early 
 			//   on big files for anything that doesn't have a . dot in the name.
 			// TODO: check index instead
-			download = Sys_FileNeeded(currentPath, VFS_FILE);
+			download = Sys_FileNeeded(currentPath, VFS_LAZY);
 		} else {
 			download = Sys_FileNeeded(currentPath, VFS_LATER);
 		}
@@ -2622,7 +2635,7 @@ int FS_FOpenFileRead( const char *filename, fileHandle_t *file, qboolean uniqueF
 		}
 #if defined(USE_ASYNCHRONOUS) || defined(USE_LAZY_LOAD)
 		// check for updates!
-		Sys_FileNeeded(filename, VFS_FILE);
+		Sys_FileNeeded(filename, VFS_LAZY);
 #endif
 		return -1;
 	}
@@ -2684,7 +2697,7 @@ int FS_FOpenFileRead( const char *filename, fileHandle_t *file, qboolean uniqueF
 	}
 #if defined(USE_ASYNCHRONOUS) || defined(USE_LAZY_LOAD)
 	// check for updates!
-	Sys_FileNeeded(filename, VFS_FILE);
+	Sys_FileNeeded(filename, VFS_NOW);
 #endif
 
 #ifdef FS_MISSING
@@ -6820,11 +6833,9 @@ void FS_Restart( int checksumFeed ) {
 	FS_Startup();
 
 #ifdef USE_ASYNCHRONOUS
-
 #ifdef __WASM__
-	Sys_FileNeeded("version.json", VFS_FILE);
+	Sys_FileNeeded("version.json", VFS_LAZY);
 #endif
-
 	// snoop on directory index
 	if(!Cvar_VariableIntegerValue("sv_pure")) {
 		Sys_FileNeeded(FS_GetCurrentGameDir(), VFS_INDEX);
@@ -6832,7 +6843,6 @@ void FS_Restart( int checksumFeed ) {
 		Sys_FileNeeded("maps/maplist.json", VFS_NOW);
 		Sys_FileNeeded("scripts/", VFS_INDEX);
 	}
-
 #endif
 
 	// if we can't find default.cfg, assume that the paths are

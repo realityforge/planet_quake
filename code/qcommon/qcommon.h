@@ -841,7 +841,7 @@ issues.
 
 #define VFS_NOENT 0
 #define VFS_LATER 1
-#define VFS_FILE 2
+#define VFS_LAZY 2
 #define VFS_NOW 3
 #define VFS_INDEX 4
 #define VFS_DL 5

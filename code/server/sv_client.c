@@ -2464,6 +2464,9 @@ typedef enum {
 	MOVEORIGIN,
 } origin_enum_t;
 
+// TODO: write displacement code like showing a black cat and shifting 32 units to the right and 
+//   gibbing like a telefrag if they end up inside a wall, "player was displaced."
+
 void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, vec3_t *newOrigin ) {
 	int		clientNum; //, i;
 	playerState_t	*ps, oldps;

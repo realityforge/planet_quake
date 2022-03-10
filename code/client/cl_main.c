@@ -3863,7 +3863,7 @@ static void CL_CheckUserinfo( void ) {
 
 #ifdef USE_LIVE_RELOAD
 #ifdef USE_ASYNCHRONOUS
-void Sys_FileNeeded(const char *filename, qboolean isDirectoryIndex);
+downloadLazy_t *Sys_FileNeeded(const char *filename, qboolean isDirectoryIndex);
 #endif
 void Sys_ChangeNotify( char *ready );
 static int changeTimer = 0;
@@ -3897,13 +3897,6 @@ void CL_ChangeNotifcations( void ) {
 
 
 #if defined(USE_LAZY_LOAD) || defined(USE_ASYNCHRONOUS)
-/*
-	indexesCallback,
-	modelCallback,
-	soundCallback,
-	shaderCallback
-	filesCallback
-*/
 void Sys_UpdateNeeded( downloadLazy_t **ready, downloadLazy_t **downloadNeeded );
 void FS_UpdateFiles(const char *filename, const char* tempname);
 
