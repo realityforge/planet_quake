@@ -225,6 +225,8 @@ typedef struct {
 	qhandle_t		shader[ MAX_FONT_SHADERS ];
 	int				shaderThreshold[ MAX_FONT_SHADERS ];
 	int				shaderCount;
+//#ifdef USE_ASYNCHRONOUS
+	qboolean  hasFailures;
 } font_t;
 
 static font_t bigchars;
@@ -242,24 +244,6 @@ void CG_SelectFont( int index )
 
 	metrics = &font->metrics[0];
 }
-
-
-static qboolean CG_FileExist( const char *file )
-{
-	fileHandle_t	f;
-
-	if ( !file || !file[0] )
-		return qfalse;
-	
-	trap_FS_FOpenFile( file, &f, FS_READ );
-	if ( f == FS_INVALID_HANDLE )
-		return qfalse;
-	else {
-		trap_FS_FCloseFile( f );
-		return qtrue;
-	}
-}
-
 
 static void CG_LoadFont( font_t *fnt, const char *fontName )
 {
@@ -279,6 +263,11 @@ static void CG_LoadFont( font_t *fnt, const char *fontName )
 	float x0, y0;
 	qboolean swapped;
 
+	if(fnt->shaderCount > 0 && !fnt->hasFailures) {
+		Com_Printf("skipping font\n");
+		return;
+	}
+
 	memset( fnt, 0, sizeof( *fnt ) );
 
 	len = trap_FS_FOpenFile( fontName, &f, FS_READ );
@@ -297,6 +286,7 @@ static void CG_LoadFont( font_t *fnt, const char *fontName )
 	buf[ len ] = '\0';
 
 	shaderCount = 0;
+	fnt->hasFailures = qfalse;
 
 	text = buf; // initialize parser
 	COM_BeginParseSession( fontName );
@@ -317,10 +307,12 @@ static void CG_LoadFont( font_t *fnt, const char *fontName )
 				continue;
 			}
 			token = COM_ParseExt( &text, qfalse );
+#if 0 // this is a dumb check, most shaders load alt-images
 			if ( !CG_FileExist( token ) ) {
 				Com_Printf( "CG_LoadFont: font image '%s' doesn't exist.\n", token );
 				return;
 			}
+#endif
 			// save shader name
 			Q_strncpyz( shaderName[ shaderCount ], token, sizeof( shaderName[ shaderCount ] ) );
 			// get threshold
@@ -482,6 +474,9 @@ static void CG_LoadFont( font_t *fnt, const char *fontName )
 	fnt->shaderCount = shaderCount;
 	for ( i = 0; i < shaderCount; i++ ) {
 		fnt->shader[i] = trap_R_RegisterShaderNoMip( shaderName[i] );
+		if(!fnt->shader[i]) {
+			fnt->hasFailures = qtrue;
+		}
 		fnt->shaderThreshold[i] = shaderThreshold[i];
 	}
 

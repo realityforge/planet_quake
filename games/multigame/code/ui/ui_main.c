@@ -5750,6 +5750,7 @@ vmCvar_t	ui_realCaptureLimit;
 vmCvar_t	ui_realWarmUp;
 vmCvar_t	ui_serverStatusTimeOut;
 vmCvar_t  ui_breadCrumb;
+vmCvar_t  ui_developer;
 
 
 // bk001129 - made static to avoid aliasing
@@ -5872,7 +5873,8 @@ static cvarTable_t		cvarTable[] = {
 	{ &ui_realWarmUp, "g_warmup", "20", CVAR_ARCHIVE},
 	{ &ui_realCaptureLimit, "capturelimit", "8", CVAR_SERVERINFO | CVAR_ARCHIVE | CVAR_NORESTART},
 	{ &ui_serverStatusTimeOut, "ui_serverStatusTimeOut", "7000", CVAR_ARCHIVE},
-	{ &ui_breadCrumb, "ui_breadCrumb", "", CVAR_ROM }
+	{ &ui_breadCrumb, "ui_breadCrumb", "", CVAR_ROM },
+	{ &ui_developer, "developer", "", 0 }
 
 };
 

@@ -6707,7 +6707,6 @@ qboolean CL_Download( const char *cmd, const char *pakname, qboolean autoDownloa
 			return qfalse;
 		} else {
 			// why does Com_DL_InProgress() return false but we haven't finished downloading?
-			Com_Printf("starting: %i\n", cl_downloads[i].Name[0]);
 			assert(cl_downloads[i].Name[0] == '\0' || cl_downloads[empty].Completed); // god fucking damnit
 			dli = empty;
 		}

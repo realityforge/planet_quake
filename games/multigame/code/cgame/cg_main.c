@@ -667,7 +667,7 @@ void CG_UpdateCvars( void ) {
 			CG_LoadClientInfo( &cgs.clientinfo[ cg.clientNum ] );
 		}
 
-
+		CG_LoadFonts();
 	}
 
 	// if model changed
@@ -749,6 +749,20 @@ void QDECL Com_Printf( const char *msg, ... ) {
 
 	trap_Print( text );
 }
+
+void QDECL Com_DPrintf( const char *msg, ... ) {
+	va_list		argptr;
+	char		text[1024];
+
+	va_start (argptr, msg);
+	ED_vsprintf (text, msg, argptr);
+	va_end (argptr);
+
+	if(cg_developer.integer) {
+		trap_Print( text );
+	}
+}
+
 
 #endif
 

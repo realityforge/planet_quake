@@ -331,7 +331,7 @@ downloadLazy_t *Sys_FileNeeded(const char *filename, int state) {
 					strcpy(download->loadingName, loading);
 				if(download->state > VFS_NOENT && download->state < state) {
 					download->state = state;
-Com_Printf("upgrading! %i, %i - %s, %s\n", hash, state, download->downloadName, loading);
+//Com_Printf("upgrading! %i, %i - %s, %s\n", hash, state, download->downloadName, loading);
 				}
 				// break; // used to stop here but since we need to check multiple paths
 			} //else 
@@ -348,7 +348,7 @@ Com_Printf("upgrading! %i, %i - %s, %s\n", hash, state, download->downloadName, 
 				// escalate download state but never go backwards from FAILED to DOWNLOADING
 				if(download->state > VFS_NOENT && download->state < state) {
 					download->state = state;
-Com_Printf("upgrading! %i, %i - %s, %s\n", hash, state, download->downloadName, loading);
+//Com_Printf("upgrading! %i, %i - %s, %s\n", hash, state, download->downloadName, loading);
 				}
 			}
 
@@ -810,7 +810,7 @@ void Sys_FileReady(const char *filename, const char* tempname) {
 
 void FS_UpdateFiles(const char *filename, const char *tempname) {
 
-Com_Printf("updating files: %s -> %s\n", filename, tempname);
+//Com_Printf("updating files: %s -> %s\n", filename, tempname);
 
 #if defined(USE_LIVE_RELOAD) || defined(__WASM__)
 	if(Q_stristr(tempname, "version.json")) {
@@ -911,7 +911,7 @@ Com_Printf("updating files: %s -> %s\n", filename, tempname);
 		Com_sprintf( realPath, sizeof( realPath ), "%s/%s", 
 			Cvar_VariableString("fs_homepath"), tempname );
 
-Com_Printf("Adding %s (from: %s) to directory index.\n", filename, realPath);
+//Com_Printf("Adding %s (from: %s) to directory index.\n", filename, realPath);
 
 		// don't use FS_* here because that would create a loop
 		FILE *indexFile = Sys_FOpen(realPath, "rb");

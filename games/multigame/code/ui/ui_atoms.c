@@ -36,6 +36,19 @@ void QDECL Com_Printf( const char *msg, ... ) {
 	trap_Print( va("%s", text) );
 }
 
+void QDECL Com_DPrintf( const char *msg, ... ) {
+	va_list		argptr;
+	char		text[1024];
+
+	va_start (argptr, msg);
+	ED_vsprintf (text, msg, argptr);
+	va_end (argptr);
+
+	if(ui_developer.integer) {
+		trap_Print( text );
+	}
+}
+
 #endif
 
 qboolean newUI = qfalse;

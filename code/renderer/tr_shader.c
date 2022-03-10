@@ -718,7 +718,11 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 
 				if ( !stage->bundle[0].image[0] )
 				{
+#ifndef USE_LAZY_LOAD
 					ri.Printf( PRINT_WARNING, "WARNING: R_FindImageFile could not find '%s' in shader '%s'\n", token, shader.name );
+#else
+					ri.Printf( PRINT_DEVELOPER, "WARNING: R_FindImageFile could not find '%s' in shader '%s'\n", token, shader.name );
+#endif
 					return qfalse;
 				}
 			}
@@ -761,7 +765,11 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 			stage->bundle[0].image[0] = R_FindImageFile( token, flags );
 			if ( !stage->bundle[0].image[0] )
 			{
+#ifndef USE_LAZY_LOAD
 				ri.Printf( PRINT_WARNING, "WARNING: R_FindImageFile could not find '%s' in shader '%s'\n", token, shader.name );
+#else
+				ri.Printf( PRINT_DEVELOPER, "WARNING: R_FindImageFile could not find '%s' in shader '%s'\n", token, shader.name );
+#endif
 				return qfalse;
 			}
 		}
@@ -805,7 +813,11 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 					stage->bundle[0].image[num] = R_FindImageFile( token, flags );
 					if ( !stage->bundle[0].image[num] )
 					{
+#ifndef USE_LAZY_LOAD
 						ri.Printf( PRINT_WARNING, "WARNING: R_FindImageFile could not find '%s' in shader '%s'\n", token, shader.name );
+#else
+						ri.Printf( PRINT_DEVELOPER, "WARNING: R_FindImageFile could not find '%s' in shader '%s'\n", token, shader.name );
+#endif
 						return qfalse;
 					}
 					stage->bundle[0].numImageAnimations++;

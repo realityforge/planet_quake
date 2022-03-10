@@ -586,7 +586,7 @@ qboolean Com_DL_Begin( download_t *dl, const char *localName, const char *remote
 
 #ifdef USE_ASYNCHRONOUS
 	dl->headerCheck = qtrue;
-	Com_Printf( "URL: %i %s\n", dl - cl_downloads, dl->URL );
+	Com_DPrintf( "URL: %s\n", dl->URL );
 #else
 	Com_Printf( "URL: %s\n", dl->URL );
 #endif
@@ -818,7 +818,11 @@ qboolean Com_DL_Perform( download_t *dl )
 #ifdef USE_ASYNCHRONOUS
 		dl->Completed = qtrue;
 		Sys_FileReady(dl->Name, NULL);
-		//if( !dl->Cancelled && code != 404 )
+		if( dl->Cancelled || code == 404 ) {
+			Com_DPrintf( S_COLOR_RED "Download Error: %s Code: %ld URL: %s/%s\n",
+				dl->func.easy_strerror( msg->data.result ), 
+				code, clc.downloadURL, dl->Name );
+		} else 
 #endif
 		Com_Printf( S_COLOR_RED "Download Error: %s Code: %ld URL: %s/%s\n",
 			dl->func.easy_strerror( msg->data.result ), 

@@ -146,6 +146,7 @@ vmCvar_t	ui_server16;
 
 vmCvar_t	ui_cdkeychecked;
 vmCvar_t  ui_breadCrumb;
+vmCvar_t  ui_developer;
 
 // bk001129 - made static to avoid aliasing.
 static cvarTable_t		cvarTable[] = {
@@ -205,7 +206,9 @@ static cvarTable_t		cvarTable[] = {
 	{ &ui_server16, "server16", "", CVAR_ARCHIVE },
 
 	{ &ui_cdkeychecked, "ui_cdkeychecked", "0", CVAR_ROM },
-	{ &ui_breadCrumb, "ui_breadCrumb", "", CVAR_ROM }
+	{ &ui_breadCrumb, "ui_breadCrumb", "", CVAR_ROM },
+	{ &ui_developer, "developer", "", 0 },
+
 };
 
 // bk001129 - made static to avoid aliasing
