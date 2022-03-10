@@ -145,9 +145,9 @@ cvar_t  *cl_lazyLoad;
 #endif
 
 #ifdef USE_ASYNCHRONOUS
-cvar_t *cl_dlSimultaneous;
+extern cvar_t *cl_dlSimultaneous;
 #ifdef USE_CURL
-download_t *cl_downloads;
+download_t cl_downloads[10];
 #endif
 #endif
 
@@ -1684,6 +1684,7 @@ qboolean CL_Disconnect( qboolean showMainMenu, qboolean dropped ) {
 
 	SCR_StopCinematic();
 	S_StopAllSounds();
+
 	Key_ClearStates();
 
 	if ( uivm && showMainMenu ) {
@@ -1691,10 +1692,12 @@ qboolean CL_Disconnect( qboolean showMainMenu, qboolean dropped ) {
 	}
 
 	// Remove pure paks
-	FS_PureServerSetLoadedPaks( "", "" );
-	FS_PureServerSetReferencedPaks( "", "" );
+	if(!noGameRestart && !showMainMenu) {
+		FS_PureServerSetLoadedPaks( "", "" );
+		FS_PureServerSetReferencedPaks( "", "" );
 
-	FS_ClearPakReferences( FS_GENERAL_REF | FS_UI_REF | FS_CGAME_REF );
+		FS_ClearPakReferences( FS_GENERAL_REF | FS_UI_REF | FS_CGAME_REF );
+	}
 
 	if ( CL_GameSwitch() ) {
 		// keep current gamestate and connection
@@ -3862,142 +3865,11 @@ static void CL_CheckUserinfo( void ) {
 }
 
 #ifdef USE_LIVE_RELOAD
-#ifdef USE_ASYNCHRONOUS
-downloadLazy_t *Sys_FileNeeded(const char *filename, qboolean isDirectoryIndex);
+void CL_ChangeNotifcations( void );
 #endif
-void Sys_ChangeNotify( char *ready );
-static int changeTimer = 0;
-
-void CL_ChangeNotifcations( void ) {
-	char ready[MAX_OSPATH];
-	int newTime = Sys_Milliseconds();
-
-	if(newTime - changeTimer < 5000) {
-		return;
-	}
-
-	changeTimer = newTime;
-
-#ifdef USE_ASYNCHRONOUS
-	// ping the server version.json file for a file time
-	Sys_FileNeeded("version.json", qfalse);
-#endif
-
-	ready[0] = '\0';
-	Sys_ChangeNotify(ready);
-	if(strlen(ready) == 0) {
-		return;
-	}
-
-	// TODO: use the same file update logic as USE_ASYNCHRONOUS
-	//FS_UpdateFiles(ready, &ready[MAX_QPATH]);
-
-}
-#endif
-
 
 #if defined(USE_LAZY_LOAD) || defined(USE_ASYNCHRONOUS)
-void Sys_UpdateNeeded( downloadLazy_t **ready, downloadLazy_t **downloadNeeded );
-void FS_UpdateFiles(const char *filename, const char* tempname);
-
-static int secondTimer = 0;
-static int thirdTimer = 0;
-
-void CL_CheckLazyUpdates( void ) {
-	downloadLazy_t *downloadNeeded;
-	downloadLazy_t *ready;
-	int newTime = Sys_Milliseconds();
-
-	// files must process faster otherwise we will have a bunch of indexes queued  
-	//   while downloading errors are happening
-	if(newTime - secondTimer > 200 / cl_dlSimultaneous->integer / 2) { // = 10ms, or about once per frame at 100 FPS
-		secondTimer = newTime;
-	}
-
-	if(newTime - thirdTimer > 200 / cl_dlSimultaneous->integer) { 
-		thirdTimer = newTime;
-	}
-	
-	if(secondTimer < newTime && thirdTimer < newTime) {
-		return;
-	}
-
-	downloadNeeded = NULL;
-	ready = NULL;
-	// lazy load only if the screen it out of view in multiworld
-#ifdef USE_LAZY_LOAD
-	if(cl_lazyLoad->integer <= 2 || cls.lazyLoading)
-#endif
-
-	// always returns the first download requested by FS_*
-	Sys_UpdateNeeded(
-		secondTimer == newTime ? &ready : NULL, 
-		thirdTimer == newTime ? &downloadNeeded : NULL);
-
-	// check for files that need to be downloaded, runs on separate thread!?
-	if(thirdTimer == newTime && downloadNeeded) {
-#if defined(USE_CURL) || defined(__WASM__)
-		// we don't care if the USE_ASYNCHRONOUS code in the call cancels 
-		//   because it is requeued 1.5 seconds later
-		if(CL_Download( "lazydl", downloadNeeded->state == VFS_INDEX 
-			? va("%s/", downloadNeeded->downloadName) 
-			: downloadNeeded->downloadName, qfalse )
-		) {
-			downloadNeeded->lastRequested = newTime;
-			downloadNeeded->state = VFS_DL;
-		}
-#endif
-	}
-
-	// if we break here, nothing will update while download is in progress
-	if(secondTimer != newTime || !ready) {
-		return;
-	}
-
-#ifdef USE_LAZY_LOAD
-	const char *ext = COM_GetExtension(ready->downloadName);
-	if(!Q_stricmp(ext, "md3") || !Q_stricmp(ext, "mdr")
-		|| !Q_stricmp(ext, "md5")) {
-		if(cls.rendererStarted) {
-			re.UpdateModel(ready->loadingName);
-		}
-	}
-
-	if(!Q_stricmp(ext, "wav") || !Q_stricmp(ext, "ogg")
-		|| !Q_stricmp(ext, "mp3") || !Q_stricmp(ext, "opus")) {
-		if(cls.soundRegistered) {
-			S_UpdateSound(ready->loadingName, qtrue);
-		}
-	}
-
-	if(ready->loadingName[12] == ';') {
-		ready->loadingName[12] = '\0';
-		if(cls.rendererStarted) {
-			re.UpdateShader(&ready->loadingName[13], atoi(&ready->loadingName[0]));
-		}
-		ready->loadingName[12] = ';';
-	}
-
-	// intercept this here because it's client only code
-	if(Q_stristr(&ready->loadingName[MAX_QPATH], "/scripts/")
-		&& Q_stristr(&ready->loadingName[MAX_QPATH], ".shader")) {
-		re.ReloadShaders(qfalse);
-	}
-#endif
-
-	ready->loadingName[MAX_QPATH - 1] = '\0';
-	FS_UpdateFiles(ready->downloadName, &ready->loadingName[MAX_QPATH]);
-
-#if defined(USE_ASYNCHRONOUS) || defined(__WASM__)
-	// multigame has a special feature to reload an missing assets when INIT is called
-	if(((cls.uiStarted && uivm) || (cls.cgameStarted && cgvm))
-		&& !Q_stricmp(FS_GetCurrentGameDir(), "multigame")) {
-		Cvar_Get("ui_breadCrumb", "", CVAR_ROM)->modificationCount++;
-	}
-#endif
-
-	// something updated, that's good for this frame
-}
+void CL_CheckLazyUpdates( void );
 #endif
 
 /*
@@ -5536,7 +5408,8 @@ void CL_Init( void ) {
 #ifdef USE_ASYNCHRONOUS
 	cl_dlSimultaneous = Cvar_Get( "cl_dlSimultaneous", "10", CVAR_ARCHIVE_ND );
 #ifdef USE_CURL
-	cl_downloads = Z_Malloc( sizeof(download_t) * cl_dlSimultaneous->integer );
+	//cl_downloads = Z_Malloc( sizeof(download_t) * cl_dlSimultaneous->integer );
+	//memset( cl_downloads, 0, sizeof(download_t) * cl_dlSimultaneous->integer );
 #endif
 #endif
 //#ifdef _DEBUG
@@ -5707,9 +5580,9 @@ void CL_Shutdown( const char *finalmsg, qboolean quit ) {
 
 #ifdef USE_ASYNCHRONOUS
 #ifdef USE_CURL
-	if(cl_downloads) {
-		Z_Free(cl_downloads);
-	}
+	//if(cl_downloads) {
+	//	Z_Free(cl_downloads);
+	//}
 #endif
 #endif
 
@@ -5720,11 +5593,10 @@ void CL_Shutdown( const char *finalmsg, qboolean quit ) {
 	recursive = qtrue;
 
 	noGameRestart = quit;
-	CL_Disconnect( qfalse, qtrue );
+	CL_Disconnect( qfalse, qfalse );
 
 	S_DisableSounds();
 	CL_ShutdownVMs();
-
 
 	CL_ShutdownRef( quit ? REF_UNLOAD_DLL : REF_DESTROY_WINDOW );
 
@@ -6834,8 +6706,9 @@ qboolean CL_Download( const char *cmd, const char *pakname, qboolean autoDownloa
 			//Com_Printf("already downloading: %s\n", pakname);
 			return qfalse;
 		} else {
+			// why does Com_DL_InProgress() return false but we haven't finished downloading?
+			Com_Printf("starting: %i\n", cl_downloads[i].Name[0]);
 			assert(cl_downloads[i].Name[0] == '\0' || cl_downloads[empty].Completed); // god fucking damnit
-			//Com_Printf("starting:%s\n", pakname);
 			dli = empty;
 		}
 	}

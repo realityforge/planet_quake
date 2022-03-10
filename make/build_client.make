@@ -54,7 +54,7 @@ ifeq ($(USE_BSP1),1)
 CLIPMAP          += cm_load_bsp1.o
 endif
 
-QCOMMON          := cmd.o common.o cvar.o files.o history.o keys.o md4.o \
+QCOMMON          := cmd.o common.o cvar.o files.o files_async.o history.o keys.o md4.o \
                     md5.o msg.o net_chan.o net_ip.o qrcodegen.o huffman.o \
                     huffman_static.o q_math.o q_shared.o puff.o \
 										cvar_descriptions.o cmd_descriptions.o splines.o
