@@ -839,16 +839,22 @@ issues.
 
 #ifdef USE_ASYNCHRONOUS
 
+// file is proveably not found by a complete directory listing
 #define VFS_NOENT 0
-#define VFS_LATER 1
-#define VFS_LAZY 2
-#define VFS_NOW 3
-#define VFS_INDEX 4
-#define VFS_DL 5
+
+// types of download requirements
+#define VFS_LATER 1 // for offline mode
+#define VFS_LAZY 2 // download when network isn't busy
+#define VFS_NOW 3 // needed immediately
+#define VFS_INDEX 4 // directory listing needed before files
+
+// result status
+#define VFS_DL 5 // currently queued for download
 #define VFS_READY 6 // ready for updating
 #define VFS_DONE 7 // already processed
-#define VFS_FAIL 8
+#define VFS_FAIL 8 // 404 or something
 
+// store a list of files to download this session
 typedef struct downloadLazy_s {
   char *downloadName; // this is the of the file in the shader
 	char *loadingName; // this is the name of the shader to update

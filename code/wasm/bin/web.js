@@ -73,7 +73,7 @@ app.use('/multigame/', function (request, response, next) {
         console.error(e.message, (e.output || '').toString('utf-8').substr(0, 1000))
       }
       // if it is alpha
-      if(/* true || TODO: allAlpha? */ alphaCmd.match(/false/ig)) {
+      if(/* true || TODO: allAlpha? */ alphaCmd.match(/true/ig)) {
         hasAlpha = false
       }
     } else {

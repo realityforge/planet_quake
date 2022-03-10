@@ -4411,9 +4411,9 @@ void CL_StartHunkUsers( void ) {
 	}
 
 	if ( !cls.uiStarted
-//#ifndef BUILD_GAME_STATIC
+#ifndef BUILD_GAME_STATIC
     && !Cvar_VariableIntegerValue("com_skipLoadUI")
-//#endif
+#endif
 #ifdef USE_ASYNCHRONOUS
 		&& FS_Initialized()
 #endif

@@ -577,6 +577,9 @@ void Sys_UpdateNeeded( downloadLazy_t **ready, downloadLazy_t **downloadNeeded )
 			if(Q_stristr(download->downloadName, "default.cfg")) {
 				assert(download->state > VFS_LATER);
 			}
+			if(Q_stristr(download->downloadName, "palette.shader")) {
+				assert(download->state > VFS_LATER);
+			}
 
 			if(download->state == VFS_DONE) {
 				continue;
@@ -939,6 +942,9 @@ void MakeDirectoryBuffer(char *paths, int count, int length, const char *parentD
 				if(Q_stristr(download->downloadName, "default.cfg")) {
 					defaultCfg = download;
 				}
+				if(Q_stristr(download->downloadName, "palette.shader")) {
+					defaultCfg = download;
+				}
 				if(download->state > VFS_NOENT && download->state < VFS_DL
 					// reset file states for all files in the directory just received
 					&& !Q_stricmpn(download->downloadName, parentDirectory, lengthDir)
@@ -1003,7 +1009,7 @@ void MakeDirectoryBuffer(char *paths, int count, int length, const char *parentD
 			|| Q_stristr(currentPath, ".cfg")
 			//|| Q_stristr(currentPath, ".skin")
 			|| Q_stristr(currentPath, "ui/menus.txt")
-			|| (Q_stristr(currentPath, "/scripts/")
+			|| (Q_stristr(currentPath, "scripts/")
 				&& (Q_stristr(currentPath, ".shader") 
 				|| Q_stristr(currentPath, "arenas.txt")
 				|| Q_stristr(currentPath, "bots.txt")
@@ -1036,7 +1042,7 @@ void MakeDirectoryBuffer(char *paths, int count, int length, const char *parentD
 		currentPath += strlen( currentPath ) + 1;
 	}
 
-	assert(!defaultCfg || defaultCfg->state > VFS_NOENT);
+	assert(!defaultCfg || defaultCfg->state > VFS_LATER);
 
 }
 
