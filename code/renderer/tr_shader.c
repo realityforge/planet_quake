@@ -4041,10 +4041,10 @@ void RE_ReloadShaders( qboolean createNew ) {
 	if(r_lazyLoad->integer != 2) // TODO: _lazyLoad->integer != 4
 #endif
 	for(int i = 0; i < tr.numShaders; i++) {
-		//RE_RegisterShader(tr.shaders[i]->name);
+		RE_RegisterShader(tr.shaders[i]->name);
 	}
 	for(int i = 0; i < tr.numModels; i++) {
-		//RE_RegisterModel(tr.models[i]->name);
+		RE_RegisterModel(tr.models[i]->name);
 	}
 
 }

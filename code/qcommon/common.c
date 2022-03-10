@@ -4287,9 +4287,6 @@ void Com_Init( char *commandLine ) {
 	}
 
 #ifdef USE_ASYNCHRONOUS
-	// always skip because async file-system triggers it to start after
-	//   index is recevied
-	Cvar_Set("com_skipLoadUI", "1");
 	if(!com_earlyConnect) {
 		Com_Printf("WARNING: Using asynchronous build without an early \\connect <address> command.\n");
 	}

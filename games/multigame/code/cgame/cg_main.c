@@ -667,6 +667,8 @@ void CG_UpdateCvars( void ) {
 		Com_Printf("hello!!\n");
 			CG_LoadClientInfo( &cgs.clientinfo[ cg.clientNum ] );
 		}
+
+		
 	}
 
 	// if model changed

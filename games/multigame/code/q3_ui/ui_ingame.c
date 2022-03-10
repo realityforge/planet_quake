@@ -147,6 +147,7 @@ void InGame_MenuInit( void ) {
 
 	s_ingame.menu.wrapAround = qtrue;
 	s_ingame.menu.fullscreen = qfalse;
+	s_ingame.menu.init = InGame_Cache;
 
 	s_ingame.frame.generic.type			= MTYPE_BITMAP;
 	s_ingame.frame.generic.flags		= QMF_INACTIVE;
@@ -315,6 +316,7 @@ InGame_Cache
 =================
 */
 void InGame_Cache( void ) {
+	Com_Printf("wtf 2??\n");
 	trap_R_RegisterShaderNoMip( INGAME_FRAME );
 }
 
