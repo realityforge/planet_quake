@@ -908,7 +908,7 @@ will keep the demoloop from immediately starting
 static qboolean Com_AddStartupCommands( void ) {
 	int		i;
 	qboolean	added;
-#if !defined(BUILD_GAME_STATIC)
+#ifndef BUILD_GAME_STATIC
 	com_skipLoadUI = qfalse;
 #endif
 #ifdef USE_ASYNCHRONOUS
@@ -927,17 +927,17 @@ static qboolean Com_AddStartupCommands( void ) {
 			continue;
 		}
 
-#if !defined(BUILD_GAME_STATIC)
-    if( !Q_stricmp(Cmd_Argv(0), "map")
-      || !Q_stricmp(Cmd_Argv(0), "devmap")
-      || !Q_stricmp(Cmd_Argv(0), "spmap")
-      || !Q_stricmp(Cmd_Argv(0), "spdevmap") ) {
-      com_skipLoadUI = qtrue;
-    }
+#ifndef BUILD_GAME_STATIC
+		if( !Q_stricmpn(com_consoleLines[i], "map ", 4)
+			|| !Q_stricmpn(com_consoleLines[i], "devmap ", 7)
+			|| !Q_stricmpn(com_consoleLines[i], "spmap ", 6)
+			|| !Q_stricmpn(com_consoleLines[i], "spdevmap ", 9) ) {
+			com_skipLoadUI = qtrue;
+		}
 #endif
 
 #ifdef USE_ASYNCHRONOUS
-    if( !Q_stricmp(Cmd_Argv(0), "connect") ) {
+    if( !Q_stricmpn(com_consoleLines[i], "connect ", 8) ) {
 			com_earlyConnect = qtrue;
     }
 #endif
