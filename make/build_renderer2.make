@@ -27,16 +27,17 @@ REND_Q3OBJ     := $(addprefix $(B)/$(REND_WORKDIR)/,$(notdir $(REND_OBJS))) \
                   $(addprefix $(B)/$(REND_WORKDIR)/glsl/,$(notdir $(Q3R2STRINGOBJ)))
 Q3R2STRCLEAN   := $(addsuffix _clean,$(addprefix $(B)/$(REND_WORKDIR)/glsl/,$(notdir $(Q3R2STRINGOBJ))))
 
-CFLAGS    ?= $(INCLUDE) -fsigned-char -ftree-vectorize \
-                  -ffast-math -fno-short-enums -MMD
-
+REND_CFLAGS    ?= $(BASE_CFLAGS) $(INCLUDE)
+ifeq ($(BUILD_CLIENT),1)
+REND_CFLAGS    += $(CLIENT_CFLAGS)
+endif
 ifneq ($(BUILD_CLIENT),1)
-CFLAGS    += $(SHLIBCFLAGS)
+REND_CFLAGS    += $(SHLIBCFLAGS)
 endif
 
 define DO_REND_CC
   $(echo_cmd) "REND_CC $<"
-  $(Q)$(CC) $(CFLAGS) -o $@ -c $<
+  $(Q)$(CC) -o $@ $(REND_CFLAGS) -c $<
 endef
 
 define DO_REF_STR
@@ -51,14 +52,14 @@ debug:
 	$(echo_cmd) "MAKE $(REND_TARGET)"
 	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) WORKDIRS="$(REND_WORKDIR) $(REND_WORKDIR)/glsl" mkdirs
 	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) pre-build
-	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) CFLAGS="$(CFLAGS) $(DEBUG_CFLAGS)" LDFLAGS="$(LDFLAGS) $(DEBUG_LDFLAGS)" $(BD)/$(REND_TARGET)
+	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) REND_CFLAGS="$(REND_CFLAGS) $(DEBUG_CFLAGS)" LDFLAGS="$(LDFLAGS) $(DEBUG_LDFLAGS)" $(BD)/$(REND_TARGET)
 	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) $(REND_TARGET)_clean
 
 release:
 	$(echo_cmd) "MAKE $(REND_TARGET)"
 	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) WORKDIRS="$(REND_WORKDIR) $(REND_WORKDIR)/glsl" mkdirs
 	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) pre-build
-	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) CFLAGS="$(CFLAGS) $(RELEASE_CFLAGS)" LDFLAGS="$(LDFLAGS) $(RELEASE_CFLAGS)" $(BR)/$(REND_TARGET)
+	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) REND_CFLAGS="$(REND_CFLAGS) $(RELEASE_CFLAGS)" LDFLAGS="$(LDFLAGS) $(RELEASE_CFLAGS)" $(BR)/$(REND_TARGET)
 	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) $(REND_TARGET)_clean
 
 clean:

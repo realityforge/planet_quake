@@ -1,4 +1,16 @@
 
+function Com_RealTime(outAddress) {
+  let now = new Date()
+  let t = t.now() / 1000
+  HEAP32[(tm >> 2) + 5] = now.getFullYear() - 1900
+  HEAP32[(tm >> 2) + 4] = now.getMonth() // already subtracted by 1
+  HEAP32[(tm >> 2) + 3] = now.getDate() 
+  HEAP32[(tm >> 2) + 2] = (t / 60 / 60) % 24
+  HEAP32[(tm >> 2) + 1] = (t / 60) % 60
+  HEAP32[(tm >> 2) + 0] = t % 60
+  return t
+}
+
 var DATE = {
   mktime: function (tm) {
     return new Date(
@@ -82,7 +94,9 @@ var STD = {
   memcpy: function (dest, source, length) {
     HEAP8.copyWithin(dest, source, source + length)
   },
-  strncpy: function () { debugger },
+  strncpy: function (dest, src, cnt) {
+    stringToAddress(addressToString(src).substr(0, cnt), dest)
+  },
   strcmp: function (str1, str2) {
     let i = 0
     while(i < 1024) {
@@ -121,7 +135,9 @@ var STD = {
     HEAP8.copyWithin(dest, source, source + length)
     return dest
   },
-  strncmp: function () { debugger },
+  strncmp: function (str, cmp, cnt) {
+    return addressToString(str).substr(0, cnt).localeCompare(addressToString(cmp).substr(0, cnt));
+  },
   strpbrk: function () { debugger },
   strstr: function (haystack, needle) {
     let i = 0

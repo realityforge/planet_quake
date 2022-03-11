@@ -202,7 +202,8 @@ function Sys_ListFiles (directory, extension, filter, numfiles, wantsubs) {
   //let matches = []
   // can't use utility because FS_* frees and moves stuff around
   let matches = Object.keys(FS.virtual).filter(function (key) { 
-    return (!extensionStr || key.endsWith(extensionStr))
+    return (!extensionStr || key.endsWith(extensionStr) 
+      || (extensionStr == '/' && FS.virtual[key].mode == 16895))
       // TODO: match directory 
       && (!localName || key.startsWith(localName))
       && (!wantsubs || FS.virtual[key].mode == 16895)

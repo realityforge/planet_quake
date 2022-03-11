@@ -1,5 +1,15 @@
+#ifndef __STDLIB_H
+#define __STDLIB_H
+
+#ifndef __BYTEBOOL__
+typedef enum { qfalse = 0, qtrue } qboolean;
+#define __BYTEBOOL__
+#endif
+
 //#include "../wasm/wasi/api.h"
 //#include "../wasm/wasi/wasi-helpers.h"
+
+#define NULL ((void*)0)
 #define fopen Sys_FOpen
 #define INT_MIN  (-1-0x7fffffff)
 #define INT_MAX  0x7fffffff
@@ -21,6 +31,7 @@ int *__errno_location(void);
 #define va_copy(d,s)    __builtin_va_copy(d,s)
 #define a_crash Sys_Exit
 #define abort Sys_Exit
+#define exit Sys_Exit
 #define UINT_MAX 0xffffffffU
 #define RAND_MAX (0x7fffffff)
 typedef qboolean bool;
@@ -39,6 +50,7 @@ typedef unsigned int    uint64_t;
 typedef signed int time_t;
 struct _IO_FILE { char __x; };
 typedef struct _IO_FILE FILE;
+extern FILE *const stderr;
 typedef __builtin_va_list va_list;
 typedef __builtin_va_list __isoc_va_list;
 typedef __SIZE_TYPE__ size_t;
@@ -72,8 +84,7 @@ char *strstr (const char *, const char *);
 
 #define Com_Memset memset
 #define Com_Memcpy memcpy
-#define Snd_Memset Com_Memset
-void *memset (void *, int, size_t);
+void *memset (void *, const int, const size_t);
 void *memcpy (void *, const void *, size_t);
 
 // this only works because it's a single char?
@@ -86,7 +97,7 @@ typedef void*jmp_buf;
 #define longjmp(x, y)
 //void longjmp( void *buf, int ret );
 //int setjmp( void *buf );
-int CL_Download( const char *cmd, const char *pakname, int autoDownload );
+qboolean CL_Download( const char *cmd, const char *pakname, qboolean autoDownload );
 
 
 #define offsetof(type, member) __builtin_offsetof(type, member)
@@ -108,6 +119,8 @@ size_t Sys_FRead(void *restrict destv, size_t size, size_t nmemb, FILE *restrict
 size_t Sys_Remove(const char *);
 size_t Sys_Rename(const char *, const char *);
 uint16_t ntohs(uint16_t n);
+int Com_sprintf( char *dest, int size, const char *fmt, ... ) __attribute__ ((format (printf, 3, 4)));
+void Sys_Exit( int code ) __attribute__ ((noreturn));
 
 int ED_vsprintf( char *str, const char *format, va_list ap );
 int Q_sscanf( const char *buffer, const char *fmt, ... ) ;
@@ -209,7 +222,6 @@ struct tm {
 	int tm_isdst;   /* daylight savings time flag */
 };
 
-typedef struct tm qtime_t;
 char *ctime(const time_t *timer);
 struct tm *localtime(const time_t * t);
 time_t time(time_t *t);
@@ -217,3 +229,4 @@ time_t mktime (struct tm *);
 
 char *asctime (const struct tm *);
 
+#endif

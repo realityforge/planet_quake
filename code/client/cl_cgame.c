@@ -1380,7 +1380,8 @@ void CL_InitCGame( int inVM ) {
   } else
 #endif
 #endif
-	cgvm = VM_Create( VM_CGAME, CL_CgameSystemCalls, CL_DllSyscall, interpret );
+		cgvm = VM_Create( VM_CGAME, CL_CgameSystemCalls, CL_DllSyscall, interpret );
+
 	if ( !cgvm ) {
 #ifdef USE_ASYNCHRONOUS
 		cls.cgameStarted = qfalse;

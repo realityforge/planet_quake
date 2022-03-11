@@ -37,7 +37,7 @@ REND_CFLAGS    ?= $(INCLUDE) -fsigned-char -ftree-vectorize \
 
 define DO_REND_CC
   $(echo_cmd) "REND_CC $<"
-  $(Q)$(CC) $(SHLIBCFLAGS) $(CFLAGS) -o $@ -c $<
+  $(Q)$(CC) $(SHLIBCFLAGS) $(REND_CFLAGS) -o $@ -c $<
 endef
 
 ifneq ($(BUILD_CLIENT),1)
@@ -46,7 +46,7 @@ debug:
 	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) WORKDIRS=$(REND_WORKDIR) mkdirs
 	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) pre-build
 	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) -j 8 \
-		CFLAGS="$(REND_CFLAGS) $(DEBUG_CFLAGS)" \
+		REND_CFLAGS="$(REND_CFLAGS) $(DEBUG_CFLAGS)" \
 		LDFLAGS="$(LDFLAGS) $(DEBUG_LDFLAGS)" $(BD)/$(REND_TARGET)
 
 release:
@@ -54,7 +54,7 @@ release:
 	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) WORKDIRS=$(REND_WORKDIR) mkdirs
 	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) pre-build
 	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) -j 8 \
-		CFLAGS="$(REND_CFLAGS) $(RELEASE_CFLAGS)" \
+		REND_CFLAGS="$(REND_CFLAGS) $(RELEASE_CFLAGS)" \
 		LDFLAGS="$(LDFLAGS) $(RELEASE_CFLAGS)" $(BR)/$(REND_TARGET)
 
 clean:

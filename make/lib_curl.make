@@ -25,8 +25,8 @@ CFLAGS      := $(INCLUDE) -fsigned-char -O3 \
 							 -Dlibcurl_EXPORTS
 
 define DO_CURL_CC
-  @echo "CURL_CC $<"
-  @$(CC) $(SHLIBCFLAGS) $(CFLAGS) -o $@ -c $<
+  $(echo_cmd) "CURL_CC $<"
+  $(Q)$(CC) $(SHLIBCFLAGS) $(CFLAGS) -o $@ -c $<
 endef
 
 debug:

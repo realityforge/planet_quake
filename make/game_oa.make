@@ -92,7 +92,7 @@ release:
 		$(BR)/$(MOD)/vm/cgame.qvm \
 	  $(BR)/$(MOD)/vm/qagame.qvm \
 	  $(BR)/$(MOD)/vm/ui.qvm \
-	   B=$(BR) GAME_CFLAGS="$(GAME_CFLAGS)" \
+	  B=$(BR) GAME_CFLAGS="$(GAME_CFLAGS)" \
 	  OPTIMIZE="-DNDEBUG $(OPTIMIZE)" V=$(V)
 
 makegamedirs:

@@ -244,7 +244,7 @@ static downloadLazy_t *Sys_FileNeeded_real(const char *filename, int state) {
 	}
 	strcat(localName, filename);
 	if(localName[lengthGame] == '\0') {
-		localName[lengthGame + 1] = '\0'; // because down because we use lengthGame + 1
+		localName[lengthGame + 1] = '\0'; // because down below we use lengthGame + 1
 	}
 	// remove the last slash just for hashing in case it's a directory, but we don't know it yet
 	if(localName[strlen(localName)-1] == '/') {

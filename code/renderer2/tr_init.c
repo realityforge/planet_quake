@@ -1776,16 +1776,20 @@ int backendSize;
 #undef BASSIGN
 
 #else
+
+int backendSize;
+
+#define BASSIGN(a, t, n) \
+		+ sizeof(t) * n
 #define BACKEND \
 	BASSIGN( backEndData->indexes, int, r_maxpolyverts->integer) \
 	BASSIGN( backEndData->polys, srfPoly_t, r_maxpolyverts->integer) \
 	BASSIGN( backEndData->polyVerts, polyVert_t, r_maxpolyverts->integer) \
 	BASSIGN( backEndData->polybuffers, srfPolyBuffer_t, r_maxpolyverts->integer)
-	ptr = ri.Hunk_Alloc( sizeof( *backEndData ) 
-#define BASSIGN(a, t, n) \
-		+ sizeof(t) * n
-		BACKEND
-		, h_low);
+	
+	backendSize = sizeof( *backEndData ) 
+		BACKEND;
+	ptr = ri.Hunk_AllocDebug( backendSize, h_low, "backendSize", __FILE__, __LINE__);
 #undef BASSIGN
 	backEndData = (backEndData_t *) ptr;
 	ptr += sizeof( *backEndData );

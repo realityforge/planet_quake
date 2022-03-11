@@ -50,6 +50,9 @@ endif
 ifeq ($(PLATFORM),js)
 ARCH=js
 endif
+ifeq ($(PLATFORM),wasm)
+ARCH=js
+endif
 export ARCH
 
 ####################################################################
@@ -85,7 +88,11 @@ else
 ifeq ($(PLATFORM),js)
 include make/platform_emjs.make
 else
+ifeq ($(PLATFORM),wasm)
+include make/platform_wasm.make
+else
 include make/platform_unix.make
+endif
 endif
 endif
 endif

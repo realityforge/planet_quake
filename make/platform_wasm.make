@@ -2,6 +2,7 @@ HAVE_VM_COMPILED := false
 BUILD_CLIENT     ?= 0
 BUILD_SERVER     := 0
 BUILD_STANDALONE := 1
+BUILD_SLIM_CLIENT := 1
 USE_RENDERER_DLOPEN := 0
 USE_SYSTEM_JPEG  := 0
 USE_INTERNAL_JPEG := 1
@@ -33,7 +34,7 @@ SHLIBLDFLAGS     := -Wl,--import-memory -Wl,--import-table -Wl,--error-limit=200
                     -Wl,--no-entry -Wl,--allow-undefined-file=code/wasm/wasm.syms 
 LDFLAGS          := -Wl,--import-memory -Wl,--import-table -Wl,--error-limit=200 \
                     -Wl,--export-dynamic --no-standard-libraries \
-                    -Wl,--no-entry -Wl,--strip-all 
+                    -Wl,--no-entry 
 
 ifeq ($(BUILD_CLIENT),1)
 SHLIBLDFLAGS     += -Wl,--allow-undefined-file=code/wasm/wasm.syms
@@ -49,6 +50,8 @@ CLIENT_LDFLAGS   :=
 
 BASE_CFLAGS      += -Wall --target=wasm32 --no-standard-libraries \
                     -Wimplicit -fstrict-aliasing \
+                    -ftree-vectorize -fsigned-char -MMD \
+                    -ffast-math -fno-short-enums \
                     -DGL_GLEXT_PROTOTYPES=1 \
                     -DGL_ARB_ES2_compatibility=1 \
                     -DGL_EXT_direct_state_access=1 \
@@ -60,14 +63,15 @@ BASE_CFLAGS      += -Wall --target=wasm32 --no-standard-libraries \
                     -DUSE_LAZY_MEMORY \
                     -DUSE_MASTER_LAN \
                     -D__WASM__ \
-                    -Icode/wasm/include 
+                    -std=c11 \
+                    -Icode/wasm 
 
 
-DEBUG_CFLAGS     := $(BASE_CFLAGS) -fvisibility=default \
-                    -std=c11 -DDEBUG -D_DEBUG -frtti -fPIC -O0 -g -g3 -gdwarf -gfull
+DEBUG_CFLAGS     := -fvisibility=default \
+                    -DDEBUG -D_DEBUG -frtti -fPIC -O0 -g -g3 -gdwarf -gfull
 
-RELEASE_CFLAGS   := $(BASE_CFLAGS) -fvisibility=hidden \
-                    -std=c11 -DNDEBUG -O3 -Oz -flto -fPIC -Ofast
+RELEASE_CFLAGS   := -fvisibility=hidden \
+                    -DNDEBUG -O3 -Oz -flto -fPIC -Ofast
 
 export INCLUDE   := -Icode/wasm/include 
 
@@ -78,7 +82,9 @@ pre-build:
 	@:
 
 post-build:
-	$(Q)$(OPT) -Os --no-validation -o $@ $@
+	@:
+#	$(Q)$(OPT) -Os --no-validation -o $(B)/$(TARGET) $(B)/$(TARGET)
+
 # TODO: compile all js files into one/minify/webpack
 # TODO: insert bigchars font into web page
 

@@ -28,13 +28,14 @@ JPEGOBJS     := $(addprefix $(B)/$(JPEG_WORKDIR)/,$(notdir $(LIBOBJECTS)))
 
 export JPEG_INCLUDE	:= $(foreach dir,$(JPEG_INCLUDES),-I$(dir))
 
-JPEG_CFLAGS       := $(JPEG_INCLUDE) -fsigned-char -MMD \
-                -O2 -ftree-vectorize -g -ffast-math -fno-short-enums
+JPEG_CFLAGS       := $(BASE_CFLAGS) $(JPEG_INCLUDE) \
+	                    -DNO_GETENV \
+
 
 
 define DO_JPEG_CC
-  @echo "JPEG_CC $<"
-  @$(CC) -o $@ $(SHLIBCFLAGS) $(JPEG_CFLAGS) -c $<
+  $(echo_cmd) "JPEG_CC $<"
+  $(Q)$(CC) -o $@ $(SHLIBCFLAGS) $(JPEG_CFLAGS) -c $<
 endef
 
 ifneq ($(BUILD_CLIENT),1)
@@ -43,13 +44,13 @@ debug:
 	$(echo_cmd) "MAKE $(JPEG_TARGET)"
 	@$(MAKE) -f $(JPEG_MKFILE) B=$(BD) WORKDIRS=$(JPEG_WORKDIR) mkdirs
 	@$(MAKE) -f $(JPEG_MKFILE) B=$(BD) V=$(V) pre-build
-	@$(MAKE) -f $(JPEG_MKFILE) B=$(BD) CFLAGS="$(JPEG_CFLAGS) $(DEBUG_CFLAGS)" LDFLAGS="$(LDFLAGS) $(DEBUG_LDFLAGS)" $(BD)/$(JPEG_TARGET)
+	@$(MAKE) -f $(JPEG_MKFILE) B=$(BD) JPEG_CFLAGS="$(JPEG_CFLAGS) $(DEBUG_CFLAGS)" LDFLAGS="$(LDFLAGS) $(DEBUG_LDFLAGS)" $(BD)/$(JPEG_TARGET)
 
 release:
 	$(echo_cmd) "MAKE $(JPEG_TARGET)"
 	@$(MAKE) -f $(JPEG_MKFILE) B=$(BR) WORKDIRS=$(JPEG_WORKDIR) mkdirs
 	@$(MAKE) -f $(JPEG_MKFILE) B=$(BR) V=$(V) pre-build
-	@$(MAKE) -f $(JPEG_MKFILE) B=$(BR) CFLAGS="$(JPEG_CFLAGS) $(RELEASE_CFLAGS)" LDFLAGS="$(LDFLAGS) $(RELEASE_LDFLAGS)" $(BR)/$(JPEG_TARGET)
+	@$(MAKE) -f $(JPEG_MKFILE) B=$(BR) JPEG_CFLAGS="$(JPEG_CFLAGS) $(RELEASE_CFLAGS)" LDFLAGS="$(LDFLAGS) $(RELEASE_LDFLAGS)" $(BR)/$(JPEG_TARGET)
 
 clean:
 	@rm -rf ./$(BD)/$(JPEG_WORKDIR) ./$(BD)/$(JPEG_TARGET)

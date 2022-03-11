@@ -47,13 +47,13 @@ CFLAGS      := $(INCLUDE) -fsigned-char -MMD \
                -O2 -ftree-vectorize -ffast-math -fno-short-enums
 
 define DO_OGG_CC
-  @echo "OGG_CC $<"
-  @$(CC) $(SHLIBCFLAGS) $(CFLAGS) -o $@ -c $<
+  $(echo_cmd) "OGG_CC $<"
+  $(Q)$(CC) $(SHLIBCFLAGS) $(CFLAGS) -o $@ -c $<
 endef
 
 define DO_VORBIS_CC
-  @echo "VORBIS_CC $<"
-  @$(CC) $(SHLIBCFLAGS) $(CFLAGS) -o $@ -c $<
+  $(echo_cmd) "VORBIS_CC $<"
+  $(Q)$(CC) $(SHLIBCFLAGS) $(CFLAGS) -o $@ -c $<
 endef
 
 debug:

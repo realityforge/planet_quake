@@ -177,6 +177,11 @@ BASE_CFLAGS      += $(THEORA_CFLAGS)
 CLIENT_LDFLAGS   += $(THEORA_LIBS)
 endif
 
+ifeq ($(USE_INTERNAL_JPEG),1)
+BASE_CFLAGS      += $(JPEG_CFLAGS)
+CLIENT_LDFLAGS   += $(JPEG_LIBS)
+endif
+
 ifeq ($(USE_MEMORY_MAPS),1)
 CLIENT_LDFLAGS   += $(BR)/$(CNAME)_q3map2_$(SHLIBNAME)
 endif
@@ -226,29 +231,29 @@ endif
 
 export INCLUDE   := $(foreach dir,$(INCLUDES),-I$(dir))
 
-CFLAGS           := $(INCLUDE) -fsigned-char -ftree-vectorize -ffast-math \
-                    -fno-short-enums -MMD
+CLIENT_CFLAGS    := $(BASE_CFLAGS) $(INCLUDE)
+
 ifeq ($(BUILD_GAME_STATIC),1)
-CFLAGS           += $(GAME_INCLUDE)
+CLIENT_CFLAGS           += $(GAME_INCLUDE)
 endif
 
-#GXXFLAGS := $(CFLAGS) -std=gnu++11
+#GXXFLAGS := $(CLIENT_CFLAGS) -std=gnu++11
 
 # TODO build quake 3 as a library that can be use for rendering embedded in other apps?
 
 define DO_CLIENT_CC
 	$(echo_cmd) "CLIENT_CC $<"
-	$(Q)$(CC) -o $@ $(CFLAGS) -c $<
+	$(Q)$(CC) -o $@ $(CLIENT_CFLAGS) -c $<
 endef
 
 define DO_BOT_CC
 	$(echo_cmd) "BOT_CC $<"
-	$(Q)$(CC) -o $@ $(CFLAGS) -DBOTLIB -c $<
+	$(Q)$(CC) -o $@ $(CLIENT_CFLAGS) -DBOTLIB -c $<
 endef
 
 define DO_SERVER_CC
 	$(echo_cmd) "SERVER_CC $<"
-	$(Q)$(CC) $(CFLAGS) -o $@ -c $<
+	$(Q)$(CC) -o $@ $(CLIENT_CFLAGS) -c $<
 endef
 
 ifdef WINDRES
@@ -264,9 +269,10 @@ debug:
 	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) pre-build
 	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) -j 8 \
 		WORKDIRS="$(WORKDIR) $(WORKDIRS)" \
-		CFLAGS="$(CFLAGS) $(DEBUG_CFLAGS)" \
+		CLIENT_CFLAGS="$(CLIENT_CFLAGS) $(DEBUG_CFLAGS)" \
 		LDFLAGS="$(LDFLAGS) $(DEBUG_LDFLAGS)" \
 		$(BD)/$(TARGET_CLIENT)
+	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) post-build TARGET="$(TARGET_CLIENT)"
 
 release:
 	$(echo_cmd) "MAKE $(TARGET_CLIENT)"
@@ -274,9 +280,10 @@ release:
 	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) pre-build
 	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) -j 8 \
 		WORKDIRS="$(WORKDIR) $(WORKDIRS)" \
-		CFLAGS="$(CFLAGS) $(RELEASE_CFLAGS)" \
+		CLIENT_CFLAGS="$(CLIENT_CFLAGS) $(RELEASE_CFLAGS)" \
 		LDFLAGS="$(LDFLAGS) $(RELEASE_LDFLAGS)" \
 		$(BR)/$(TARGET_CLIENT)
+	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) post-build TARGET="$(TARGET_CLIENT)"
 
 clean:
 	@rm -rf ./$(BD)/$(WORKDIR) ./$(BD)/$(TARGET_CLIENT)

@@ -233,11 +233,6 @@ static void thread_proc_mmap( void );
 static void thread_proc_direct( void );
 
 
-void Snd_Memset( void* dest, const int val, const size_t count )
-{
-    Com_Memset( dest, val, count );
-}
-
 
 void SNDDMA_BeginPainting( void )
 {
@@ -1117,10 +1112,6 @@ static cvar_t *snddevice;
 /* Some devices may work only with 48000 */
 static int tryrates[] = { 22050, 11025, 44100, 48000, 8000 };
 
-void Snd_Memset( void* dest, const int val, const size_t count )
-{
-	Com_Memset( dest, val, count );
-}
 
 qboolean SNDDMA_Init( void )
 {

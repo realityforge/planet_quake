@@ -328,7 +328,7 @@ void R_AddMD3Surfaces( trRefEntity_t *ent ) {
 
 	model = tr.currentModel->mdv[lod];
 
-	if(!tr.currentModel->md3[lod]) {
+	if(!tr.currentModel->mdv[lod]) {
 		return;
 	}
 

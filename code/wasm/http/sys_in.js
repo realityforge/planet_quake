@@ -45,7 +45,9 @@ function GLimp_StartDriverAndSetMode(mode, modeFS, fullscreen, fallback) {
   if(typeof GL != 'undefined') {
     INPUT.handle = GL.registerContext(Q3e.webgl, webGLContextAttributes)
     GL.makeContextCurrent(INPUT.handle)
-    Module.useWebGL = true;
+    //if(typeof Module != 'undefined') {
+    //  Module.useWebGL = true;
+    //}
     //GLImmediate.clientColor = new Float32Array([ 1, 1, 1, 1 ]);
     //GLImmediate.init()
     //GLImmediate.getRenderer()
@@ -167,7 +169,7 @@ function captureClipBoard () {
   text.focus()
   setTimeout(function () {
     INPUT.paste = text.value
-    Module.viewport.focus()
+    Q3e.webgl.focus()
     if(INPUT.field) {
       INPUT.paste.split('').forEach(function (k) {
         Field_CharEvent(INPUT.field, k.charCodeAt(0))

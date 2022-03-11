@@ -10,11 +10,15 @@ const app = express()
 const ASSETS_DIRECTORY = __dirname + '/../../../games/multigame/assets/'
 const BUILD_DIRECTORY = __dirname + '/../../../build/'
 
+app.use('/', express.static(BUILD_DIRECTORY + 'release-wasm-js/'));
+app.use('/', express.static(BUILD_DIRECTORY + 'debug-wasm-js/'));
 app.use('/', express.static(BUILD_DIRECTORY + 'release-js-js/'));
 app.use('/', express.static(BUILD_DIRECTORY + 'debug-js-js/'));
 
 
 // layer alternatives because WASM loads QVM
+app.use('/multigame/vm/', serveIndex(BUILD_DIRECTORY + 'release-wasm-js/multigame/vm/'));
+app.use('/multigame/vm/', serveIndex(BUILD_DIRECTORY + 'debug-wasm-js/multigame/vm/'));
 app.use('/multigame/vm/', serveIndex(BUILD_DIRECTORY + 'release-js-js/multigame/vm/'));
 app.use('/multigame/vm/', serveIndex(BUILD_DIRECTORY + 'debug-js-js/multigame/vm/'));
 
@@ -26,6 +30,8 @@ app.use('/multigame/vm/', serveIndex(BUILD_DIRECTORY + 'release-win-x86_64/multi
 app.use('/multigame/vm/', serveIndex(BUILD_DIRECTORY + 'debug-win-x86_64/multigame/vm/'));
 
 
+app.use('/multigame/vm/', express.static(BUILD_DIRECTORY + 'release-wasm-js/multigame/vm/'));
+app.use('/multigame/vm/', express.static(BUILD_DIRECTORY + 'debug-wasm-js/multigame/vm/'));
 app.use('/multigame/vm/', express.static(BUILD_DIRECTORY + 'release-js-js/multigame/vm/'));
 app.use('/multigame/vm/', express.static(BUILD_DIRECTORY + 'debug-js-js/multigame/vm/'));
 

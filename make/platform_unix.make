@@ -68,10 +68,12 @@ ifeq ($(PLATFORM),linux)
   endif
 endif
 
-DEBUG_CFLAGS = $(BASE_CFLAGS) -DDEBUG -D_DEBUG -g -O0
-RELEASE_CFLAGS = $(BASE_CFLAGS) -DNDEBUG $(OPTIMIZE)
+DEBUG_CFLAGS = -DDEBUG -D_DEBUG -g -O0
+RELEASE_CFLAGS = -DNDEBUG $(OPTIMIZE)
 
 ifdef B
 pre-build:
+	@:
+post-build:
 	@:
 endif

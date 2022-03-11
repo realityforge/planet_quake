@@ -54,7 +54,7 @@ Automatically reload game when the QVM changes from a new compile, or restart th
 ### USE_DIDYOUMEAN
 Show "Did you mean?" results for mis-typed map names, cvars, command names, etc.
 
-### BUILD_CLIENT_SLIM
+### BUILD_SLIM_CLIENT
 Slim client without extra file formats or server, only for connecting to games or rendering demos.
 
 ### define USE_UNLOCKED_CVARS

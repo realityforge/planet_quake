@@ -17,7 +17,7 @@ ifndef EMJS_CONFIG_PATH
 EMJS_CONFIG_PATH := $(HOME)/.emscripten
 endif
 
-CC               ?= emcc
+CC               := emcc
 BINEXT           := .js
 SHLIBEXT         := wasm
 
@@ -39,18 +39,15 @@ BASE_CFLAGS      += -Wall -Wno-unused-variable -fno-strict-aliasing \
                     -Wimplicit -Wstrict-prototypes \
                     -DGL_GLEXT_PROTOTYPES=1 -DGL_ARB_ES2_compatibility=1\
                     -DGL_EXT_direct_state_access=1 \
-                    -DUSE_Q3KEY -DUSE_MD5 -D__WASM__ \
-                    --em-config $(EMJS_CONFIG_PATH)
+                    -DUSE_Q3KEY -DUSE_MD5 -D__WASM__
 
-DEBUG_CFLAGS     := $(BASE_CFLAGS) \
-                    -DDEBUG -D_DEBUG -frtti -fPIC -O0 -g -gsource-map
+DEBUG_CFLAGS     := -DDEBUG -D_DEBUG -frtti -fPIC -O0 -g -gsource-map
           
-RELEASE_CFLAGS   := $(BASE_CFLAGS) \
-                    -DNDEBUG -O3 -Oz -flto -fPIC
+RELEASE_CFLAGS   := -DNDEBUG -O3 -Oz -flto -fPIC
 
 # TODO: IMPORTED_MEMORY
 SHLIBLDFLAGS     += --no-entry \
-                    -O0 -g -gsource-map -fPIC -gsource-map \
+                    -O0 -g -gsource-map -fPIC \
                     --source-map-base http://local.games:8080/ \
                     -DASSERTIONS \
                     -s WASM=1 \
@@ -160,5 +157,7 @@ export EM_CACHE=$(EM_CACHE_LOCATION)
 
 ifdef B
 pre-build:
+	@:
+post-build:
 	@:
 endif
