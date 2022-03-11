@@ -22,7 +22,6 @@ static int secondTimer = 0;
 static int thirdTimer = 0;
 extern cvar_t *cl_lazyLoad;
 cvar_t *cl_dlSimultaneous;
-cvar_t *fs_notify[MAX_NOTIFICATIONS];
 #endif
 
 #if defined(USE_LIVE_RELOAD) || defined(__WASM__)
@@ -47,7 +46,7 @@ static int FS_HashPK3( const char *name )
 
 #ifdef USE_LIVE_RELOAD
 downloadLazy_t *Sys_FileNeeded(const char *filename, int state);
-
+cvar_t *fs_notify[MAX_NOTIFICATIONS];
 int fileTimes[MAX_NOTIFICATIONS];
 char realNames[MAX_NOTIFICATIONS][MAX_OSPATH];
 static int changeTimer = 0;
@@ -64,40 +63,6 @@ static int changeTimer = 0;
 
 //void FS_ReloadGame( void ) {
 //  Cbuf_AddText("wait; wait; wait; map_restart;");
-
-// find the pk3 file or real file on the filessystem
-static const char *FS_RealPath(const char *localPath) {
-	char *netpath;
-	long			hash;
-	long			fullHash;
-	searchpath_t *search;
-	pack_t			*pak;
-	fileInPack_t	*pakFile;
-	FILE *temp;
-
-	fullHash = FS_HashFileName( localPath, 0U );
-	for ( search = fs_searchpaths ; search ; search = search->next ) {
-		if ( search->pack && search->pack->hashTable[ (hash = fullHash & (search->pack->hashSize-1)) ] ) {
-			pak = search->pack;
-			pakFile = pak->hashTable[hash];
-			do {
-				if ( !FS_FilenameCompare( pakFile->name, localPath ) ) {
-					// found it!
-					return search->pack->pakFilename;
-				}
-				pakFile = pakFile->next;
-			} while ( pakFile != NULL );
-		} else
-		if ( search->dir && search->policy != DIR_DENY ) {
-			netpath = FS_BuildOSPath( search->dir->path, search->dir->gamedir, localPath );
-			if((temp = Sys_FOpen( netpath, "rb" ))) {
-				fclose(temp);
-				return netpath;
-			}
-		}
-	}
-	return NULL;
-}
 
 
 void Sys_ChangeNotify(char *ready) {
@@ -132,8 +97,10 @@ void FS_NotifyChange(const char *localPath) {
 			}
 
 			// set the initial file time so we know when to update
-			const char *realPath = FS_RealPath(localPath);
-			if(realPath && Sys_GetFileStats( realPath, &size, &mtime, &ctime )) {
+			char realPath[MAX_OSPATH];
+			Com_sprintf( realPath, sizeof( realPath ), "%s/%s", 
+				Cvar_VariableString("fs_homepath"), localPath );
+			if(Sys_GetFileStats( realPath, &size, &mtime, &ctime )) {
 				fileTimes[i] = mtime;
 				strcpy(realNames[i], realPath);
 			} else {
@@ -200,11 +167,15 @@ void Sys_UpdateNeeded( downloadLazy_t **ready, downloadLazy_t **downloadNeeded )
 		}
 
 		do {
-			if(Q_stristr(download->downloadName, "default.cfg")) {
-				assert(download->state > VFS_LATER);
-			}
-			if(Q_stristr(download->downloadName, "palette.shader")) {
-				assert(download->state > VFS_LATER);
+			//if(Q_stristr(download->downloadName, "default.cfg")) {
+			//	assert(download->state > VFS_LATER);
+			//}
+			//if(Q_stristr(download->downloadName, "palette.shader")) {
+			//	assert(download->state > VFS_LATER);
+			//}
+			if(!Q_stristr(download->downloadName, ".pk3dir/")
+				&& Q_stristr(download->downloadName, "numbers_32.png")) {
+				assert(download->state > VFS_NOENT);
 			}
 
 			if(download->state >= VFS_DONE) {
@@ -585,10 +556,14 @@ void MakeDirectoryBuffer(char *paths, int count, int length, const char *parentD
 			}
 
 			do {
-				if(Q_stristr(download->downloadName, "default.cfg")) {
-					defaultCfg = download;
-				}
-				if(Q_stristr(download->downloadName, "palette.shader")) {
+				//if(Q_stristr(download->downloadName, "default.cfg")) {
+				//	defaultCfg = download;
+				//}
+				//if(Q_stristr(download->downloadName, "palette.shader")) {
+				//	defaultCfg = download;
+				//}
+				if(!Q_stristr(download->downloadName, ".pk3dir/")
+					&& Q_stristr(download->downloadName, "numbers_32.png")) {
 					defaultCfg = download;
 				}
 				if(download->state > VFS_NOENT && download->state < VFS_DL
@@ -596,6 +571,7 @@ void MakeDirectoryBuffer(char *paths, int count, int length, const char *parentD
 					&& download->state != VFS_INDEX
 					// reset file states for all files in the directory just received
 					&& !Q_stricmpn(download->downloadName, parentDirectory, lengthDir)
+					&& download->downloadName[lengthDir] == '/'
 					// last folder in the path
 					&& strchr(&download->downloadName[lengthDir + 1], '/') == NULL 
 				) {
@@ -679,10 +655,12 @@ void MakeDirectoryBuffer(char *paths, int count, int length, const char *parentD
 			// and now we know it's there because its in the directory listing
 			download->state = -download->state + VFS_NOENT;
 //if(Q_stristr(parentDirectory, "lsdm3_v1.pk3dir/maps")) {
+//if(Q_stristr(parentDirectory, "gfx/2d")) {
 //Com_Printf("keeping %li, %s\n", hash, currentPath);
 //}
 		} else {
 //if(Q_stristr(parentDirectory, "lsdm3_v1.pk3dir/maps")) {
+//if(Q_stristr(parentDirectory, "gfx/2d")) {
 //Com_Printf("adding %li, %s\n", hash, currentPath);
 //}
 		}
@@ -690,7 +668,7 @@ void MakeDirectoryBuffer(char *paths, int count, int length, const char *parentD
 		currentPath += strlen( currentPath ) + 1;
 	}
 
-	assert(!defaultCfg || defaultCfg->state > VFS_LATER);
+	assert(!defaultCfg || defaultCfg->state > VFS_NOENT);
 
 }
 

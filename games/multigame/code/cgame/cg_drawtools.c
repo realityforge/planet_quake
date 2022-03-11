@@ -264,7 +264,6 @@ static void CG_LoadFont( font_t *fnt, const char *fontName )
 	qboolean swapped;
 
 	if(fnt->shaderCount > 0 && !fnt->hasFailures) {
-		Com_Printf("skipping font\n");
 		return;
 	}
 
@@ -480,7 +479,7 @@ static void CG_LoadFont( font_t *fnt, const char *fontName )
 		fnt->shaderThreshold[i] = shaderThreshold[i];
 	}
 
-	CG_Printf( "Font '%s' loaded with %i chars and %i images\n", fontName, chars, shaderCount );
+	Com_DPrintf( "Font '%s' loaded with %i chars and %i images\n", fontName, chars, shaderCount );
 }
 
 

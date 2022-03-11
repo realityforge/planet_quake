@@ -3501,11 +3501,6 @@ qhandle_t RE_RegisterShaderLightMap( const char *name, int lightmapIndex ) {
   	sh = R_FindShader( name, lightmapIndex, qtrue );
   }
 
-#ifdef USE_LAZY_LOAD
-	if( sh == tr.defaultShader ) {
-		return 0;
-	}
-#else
 	// we want to return 0 if the shader failed to
 	// load for some reason, but R_FindShader should
 	// still keep a name allocated for it, so if
@@ -3514,7 +3509,6 @@ qhandle_t RE_RegisterShaderLightMap( const char *name, int lightmapIndex ) {
 	if ( sh->defaultShader ) {
 		return 0;
 	}
-#endif
 
 	return sh->index;
 }
@@ -3546,11 +3540,6 @@ qhandle_t RE_RegisterShader( const char *name ) {
 
 	sh = R_FindShader( name, LIGHTMAP_2D, qtrue );
 
-#ifdef USE_LAZY_LOAD
-	if( sh == tr.defaultShader ) {
-		return 0;
-	}
-#else
 	// we want to return 0 if the shader failed to
 	// load for some reason, but R_FindShader should
 	// still keep a name allocated for it, so if
@@ -3559,7 +3548,6 @@ qhandle_t RE_RegisterShader( const char *name ) {
 	if ( sh->defaultShader ) {
 		return 0;
 	}
-#endif
 
 	return sh->index;
 }
@@ -3582,11 +3570,6 @@ qhandle_t RE_RegisterShaderNoMip( const char *name ) {
 
 	sh = R_FindShader( name, LIGHTMAP_2D, qfalse );
 
-#ifdef USE_LAZY_LOAD
-	if( sh == tr.defaultShader ) {
-		return 0;
-	}
-#else
 	// we want to return 0 if the shader failed to
 	// load for some reason, but R_FindShader should
 	// still keep a name allocated for it, so if
@@ -3595,7 +3578,6 @@ qhandle_t RE_RegisterShaderNoMip( const char *name ) {
 	if ( sh->defaultShader ) {
 		return 0;
 	}
-#endif
 
 	return sh->index;
 }

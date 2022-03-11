@@ -5081,6 +5081,14 @@ void Com_GamedirModified(char *oldValue, char *newValue, cvar_t *cv) {
   
 }
 
+
+#ifdef USE_LIVE_RELOAD
+#define MAX_NOTIFICATIONS 10
+void FS_NotifyChange(const char *localPath);
+extern cvar_t *fs_notify[MAX_NOTIFICATIONS];
+
+#endif
+
 /*
 ================
 FS_Startup
