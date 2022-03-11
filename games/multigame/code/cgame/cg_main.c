@@ -668,6 +668,8 @@ void CG_UpdateCvars( void ) {
 		}
 
 		CG_LoadFonts();
+
+		
 	}
 
 	// if model changed

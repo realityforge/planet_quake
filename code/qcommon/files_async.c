@@ -182,10 +182,10 @@ void Sys_UpdateNeeded( downloadLazy_t **ready, downloadLazy_t **downloadNeeded )
 			//if(Q_stristr(download->downloadName, "palette.shader")) {
 			//	assert(download->state > VFS_LATER);
 			//}
-			if(!Q_stristr(download->downloadName, ".pk3dir/")
-				&& Q_stristr(download->downloadName, "numbers_32.png")) {
-				assert(download->state > VFS_NOENT);
-			}
+			//if(!Q_stristr(download->downloadName, ".pk3dir/")
+			//	&& Q_stristr(download->downloadName, "bfg.md3")) {
+			//	assert(download->state > VFS_NOENT);
+			//}
 
 			if(download->state >= VFS_DONE) {
 				continue;
@@ -338,7 +338,8 @@ static downloadLazy_t *Sys_FileNeeded_real(const char *filename, int state) {
 	}
 
 //if(Q_stristr(localName, "lsdm3_v1.bsp")) {
-//Com_Printf("file needed! %i, %i - %s, %i, %i\n", hash, state, localName, parentDownload, isRoot);
+//if(Q_stristr(localName, "weapons2/bfg")) {
+//Com_Printf("file needed! %i, %i - %s, %i, %i\n", hash, state, localName, !!parentDownload, isRoot);
 //}
 	if(!isRoot && !parentDownload) {
 		// no parent? no children
@@ -575,10 +576,10 @@ void MakeDirectoryBuffer(char *paths, int count, int length, const char *parentD
 				//if(Q_stristr(download->downloadName, "palette.shader")) {
 				//	defaultCfg = download;
 				//}
-				if(!Q_stristr(download->downloadName, ".pk3dir/")
-					&& Q_stristr(download->downloadName, "numbers_32.png")) {
-					defaultCfg = download;
-				}
+				//if(!Q_stristr(download->downloadName, ".pk3dir/")
+				//	&& Q_stristr(download->downloadName, "bfg.md3")) {
+				//	defaultCfg = download;
+				//}
 				if(download->state > VFS_NOENT && download->state < VFS_DL
 					// don't purge indexes this way
 					&& download->state != VFS_INDEX
@@ -667,13 +668,13 @@ void MakeDirectoryBuffer(char *paths, int count, int length, const char *parentD
 		if(download->state < VFS_NOENT) {
 			// and now we know it's there because its in the directory listing
 			download->state = -download->state + VFS_NOENT;
-//if(Q_stristr(parentDirectory, "lsdm3_v1.pk3dir/maps")) {
+//if(Q_stristr(parentDirectory, "weapons2/bfg")) {
 //if(Q_stristr(parentDirectory, "gfx/2d")) {
 //Com_Printf("keeping %li, %s\n", hash, currentPath);
 //}
 		} else {
 //if(Q_stristr(parentDirectory, "lsdm3_v1.pk3dir/maps")) {
-//if(Q_stristr(parentDirectory, "gfx/2d")) {
+//if(Q_stristr(parentDirectory, "weapons2/bfg")) {
 //Com_Printf("adding %li, %s\n", hash, currentPath);
 //}
 		}
@@ -781,11 +782,12 @@ void Sys_FileReady(const char *filename, const char* tempname) {
 			if( isDirectory && !tempname 
 				// match the first part of the path
 				&& !Q_stricmpn( download->downloadName, localName, length )
+				&& download->downloadName[length] == '/'
 				// last folder in the path
 				// if parent path doesn't exist, neither do children
 				//&& strchr(&download->downloadName[length + 1], '/') == NULL 
 			) {
-				//Com_Printf("purging 2: %s\n", download->downloadName);
+//Com_Printf("purging 2: %s - %s\n", download->downloadName, filename);
 				if(download->state > VFS_NOENT) {
 					download->state = VFS_NOENT - download->state;
 				}
