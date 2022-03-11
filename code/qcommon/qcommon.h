@@ -856,15 +856,6 @@ issues.
 #define VFS_PARTIAL 8 // part of a directory index received
 #define VFS_FAIL 9 // 404 or something
 
-// store a list of files to download this session
-typedef struct downloadLazy_s {
-  char *downloadName; // this is the of the file in the shader
-	char *loadingName; // this is the name of the shader to update
-	time_t lastRequested;
-	int state;
-  struct downloadLazy_s *next;
-} downloadLazy_t;
-
 #endif
 
 // referenced flags

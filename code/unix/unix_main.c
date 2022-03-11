@@ -527,12 +527,12 @@ char *Sys_ConsoleInput( void )
 #ifdef USE_ASYNCHRONOUS
                 if(FS_Initialized())
 #endif
-								if ( Con_HistoryGetPrev( &history ) )
-								{
-									tty_Hide();
-									tty_con = history;
-									tty_Show();
-								}
+									if ( Con_HistoryGetPrev( &history ) )
+									{
+										tty_Hide();
+										tty_con = history;
+										tty_Show();
+									}
 								tty_FlushIn();
 								return NULL;
 								break;
@@ -540,12 +540,12 @@ char *Sys_ConsoleInput( void )
 #ifdef USE_ASYNCHRONOUS
                 if(FS_Initialized())
 #endif
-								if ( Con_HistoryGetNext( &history ) )
-								{
-									tty_Hide();
-									tty_con = history;
-									tty_Show();
-								}
+									if ( Con_HistoryGetNext( &history ) )
+									{
+										tty_Hide();
+										tty_con = history;
+										tty_Show();
+									}
 								tty_FlushIn();
 								return NULL;
 								break;

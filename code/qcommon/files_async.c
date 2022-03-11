@@ -16,6 +16,15 @@ void FS_AddGameDirectory( const char *path, const char *dir, int igvm );
 int FS_FileLength( FILE* h );
 
 #if defined(USE_LAZY_LOAD) || defined(USE_ASYNCHRONOUS)
+// store a list of files to download this session
+typedef struct downloadLazy_s {
+  char *downloadName; // this is the of the file in the shader
+	char *loadingName; // this is the name of the shader to update
+	time_t lastRequested;
+	int state;
+  struct downloadLazy_s *next;
+} downloadLazy_t;
+
 extern qboolean		com_fullyInitialized;
 static downloadLazy_t *readyCallback[PK3_HASH_SIZE]; // MAX_MOD_KNOWN
 static int secondTimer = 0;
@@ -45,7 +54,7 @@ static int FS_HashPK3( const char *name )
 
 
 #ifdef USE_LIVE_RELOAD
-downloadLazy_t *Sys_FileNeeded(const char *filename, int state);
+void Sys_FileNeeded(const char *filename, int state);
 cvar_t *fs_notify[MAX_NOTIFICATIONS];
 int fileTimes[MAX_NOTIFICATIONS];
 char realNames[MAX_NOTIFICATIONS][MAX_OSPATH];
@@ -209,7 +218,7 @@ void Sys_UpdateNeeded( downloadLazy_t **ready, downloadLazy_t **downloadNeeded )
 	}
 }
 
-downloadLazy_t *Sys_FileNeeded(const char *filename, int state) {
+static downloadLazy_t *Sys_FileNeeded_real(const char *filename, int state) {
   unsigned int hash;
 	const char *loading;
 	const char *s;
@@ -247,7 +256,7 @@ downloadLazy_t *Sys_FileNeeded(const char *filename, int state) {
 	if((dir = strrchr(localName, '/')) != NULL && !Q_stristr(dir, ".pk3dir")) {
 		char lastDirectory[MAX_OSPATH];
 		Q_strncpyz(lastDirectory, localName, (dir - localName) + 1);
-		parentDownload = Sys_FileNeeded(lastDirectory, VFS_INDEX);
+		parentDownload = Sys_FileNeeded_real(lastDirectory, VFS_INDEX);
 	} else {
 		isRoot = qtrue;
 	}
@@ -286,7 +295,7 @@ downloadLazy_t *Sys_FileNeeded(const char *filename, int state) {
 					strcat(pk3dirName, pakdirs[pakdirsi]);
 					strcat(pk3dirName, "/");
 					strcat(pk3dirName, &localName[lengthGame + 1]);
-					Sys_FileNeeded(pk3dirName, state);
+					Sys_FileNeeded_real(pk3dirName, state);
 				}
 				pakdirsi++;
 			}
@@ -398,6 +407,10 @@ downloadLazy_t *Sys_FileNeeded(const char *filename, int state) {
 #endif
 
 	return download;
+}
+
+void Sys_FileNeeded(const char *filename, int state) {
+	Sys_FileNeeded_real(filename, state);
 }
 
 
@@ -604,7 +617,7 @@ void MakeDirectoryBuffer(char *paths, int count, int length, const char *parentD
 
 #ifdef USE_LIVE_RELOAD
 
-		// FIXME: move mtime to Sys_FileNeeded()
+		// FIXME: move mtime to Sys_FileNeeded_real()
 		if(FS_FileExists(currentPath)) {
 			//fileOffset_t _s;
 			//fileTime_t _c;
@@ -643,9 +656,9 @@ void MakeDirectoryBuffer(char *paths, int count, int length, const char *parentD
 			// TODO: fix this, only works if directory listing allows slashes at the end?
 			// TODO: right thing to do would be test the content-type and duck out early 
 			//   on big files for anything that doesn't have a . dot in the name.
-			download = Sys_FileNeeded(currentPath, VFS_LAZY);
+			download = Sys_FileNeeded_real(currentPath, VFS_LAZY);
 		} else {
-			download = Sys_FileNeeded(currentPath, VFS_LATER);
+			download = Sys_FileNeeded_real(currentPath, VFS_LATER);
 		}
 
 		assert(download != NULL);
@@ -910,7 +923,7 @@ void FS_UpdateFiles(const char *filename, const char *tempname) {
 			}
 			// can't purge missing files from an incomplete file index
 			if(!!Q_stristr(buf, "nextPageToken")) {
-				Sys_FileNeeded(filename, VFS_PARTIAL);
+				Sys_FileNeeded_real(filename, VFS_PARTIAL);
 			}
 			MakeDirectoryBuffer(paths, count, nameLength, filename, !!Q_stristr(buf, "nextPageToken"));
 			// TODO: add next page token every time it's requested as if we're actually paging too

@@ -3046,9 +3046,6 @@ and determine if we need to download them
 */
 void CL_InitDownloads( void ) {
 	char missingfiles[ MAXPRINTMSG ];
-#ifdef USE_MULTIVM_CLIENT
-  int igs = clc.currentView;
-#endif
 
 	if ( FS_ComparePaks( missingfiles, sizeof( missingfiles ) , qtrue ) ) {
 

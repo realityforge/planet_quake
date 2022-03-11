@@ -682,7 +682,7 @@ static void SV_MarkClientPortalPVS( const vec3_t origin, int clientNum, int port
 		if ( !(ent->r.svFlags & SVF_PORTAL) ) {
 			continue;
 		}
-		if( !(ent->r.svFlags * SVF_NOCLIENT) ) {
+		if( ent->r.svFlags & SVF_NOCLIENT ) {
 			continue;
 		}
 		if ( (ent->r.svFlags & SVF_SINGLECLIENT) && ent->r.singleClient != clientNum ) {
@@ -971,16 +971,15 @@ static void SV_BuildCommonSnapshot( void )
 						&& !(numDied[ent->s.clientNum / 8] & (1 << (ent->s.clientNum % 8)))
 					) {
 						char player[1024];
-						int playerLength;
 						client_t *c1 = &svs.clients[ent->s.clientNum];
 						playerState_t *ps1 = SV_GameClientNum( ent->s.clientNum );
 						if(ent->s.eventParm == 1022) {
-							playerLength = Com_sprintf( player, sizeof( player ), "[[%i,%i,\"%s\"]]", 
+							Com_sprintf( player, sizeof( player ), "[[%i,%i,\"%s\"]]", 
 								ps1->persistant[ PERS_SCORE ], c1->ping, c1->name);			
 						} else {
 							client_t *c2 = &svs.clients[ent->s.eventParm];
 							playerState_t *ps2 = SV_GameClientNum( ent->s.eventParm );
-							playerLength = Com_sprintf( player, sizeof( player ), "[[%i,%i,\"%s\"],[%i,%i,\"%s\"]]", 
+							Com_sprintf( player, sizeof( player ), "[[%i,%i,\"%s\"],[%i,%i,\"%s\"]]", 
 								ps1->persistant[ PERS_SCORE ], c1->ping, c1->name, 
 								ps2->persistant[ PERS_SCORE ], c2->ping, c2->name );
 						}

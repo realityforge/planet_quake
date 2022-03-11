@@ -423,7 +423,7 @@ static void FS_CheckIdPaks( void );
 void FS_Reload( void );
 
 #if defined(USE_LAZY_LOAD) || defined(USE_ASYNCHRONOUS)
-downloadLazy_t *Sys_FileNeeded(const char *filename, int state);
+void Sys_FileNeeded(const char *filename, int state);
 extern qboolean		com_fullyInitialized;
 #endif
 
