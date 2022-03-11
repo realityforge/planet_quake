@@ -657,6 +657,7 @@ void CG_UpdateCvars( void ) {
 	}
 
 	if(breadcrumbModificationCount != cg_breadCrumb.modificationCount) {
+		char		items[MAX_ITEMS+1];
 		breadcrumbModificationCount = cg_breadCrumb.modificationCount;
 		if(!(cgs.clientinfo[ cg.clientNum ].legsModel 
 			&& cgs.clientinfo[ cg.clientNum ].torsoModel
@@ -669,7 +670,24 @@ void CG_UpdateCvars( void ) {
 
 		CG_LoadFonts();
 
-		
+		Q_strncpyz( items, CG_ConfigString(CS_ITEMS), sizeof( items ) );
+		for ( i = 1 ; i < bg_numItems ; i++ ) {
+			if ( items[ i ] == '1' || cg_buildScript.integer ) {
+				if(!cg_items[ i ].models[0] 
+					&& trap_R_RegisterModel( bg_itemlist[ i ].world_model[0] )
+				) {
+					cg_items[ i ].registered = qfalse;
+					CG_RegisterItemVisuals( i );
+				} else 
+				if (bg_itemlist[ i ].giType == IT_WEAPON
+					&& !cg_weapons[bg_itemlist[ i ].giTag].weaponModel
+					&& trap_R_RegisterModel( bg_itemlist[ i ].world_model[0] )
+				) {
+					cg_weapons[bg_itemlist[ i ].giTag].registered = qfalse;
+					CG_RegisterWeapon( bg_itemlist[ i ].giTag );
+				}
+			}
+		}
 	}
 
 	// if model changed

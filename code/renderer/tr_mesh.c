@@ -333,6 +333,10 @@ void R_AddMD3Surfaces( trRefEntity_t *ent ) {
 
 	header = tr.currentModel->md3[lod];
 
+	if(!tr.currentModel->md3[lod]) {
+		return;
+	}
+
 	//
 	// cull the entire model if merged bounding box of both frames
 	// is outside the view frustum.
@@ -379,9 +383,9 @@ void R_AddMD3Surfaces( trRefEntity_t *ent ) {
 			int		j;
 
 			skin = R_GetSkinByHandle( ent->e.customSkin );
-		if(!skin) {
-			continue;
-		}
+			if(!skin) {
+				continue;
+			}
 
 			// match the surface name to something in the skin file
 			shader = tr.defaultShader;
@@ -406,9 +410,9 @@ void R_AddMD3Surfaces( trRefEntity_t *ent ) {
 			shader = tr.shaders[ md3Shader->shaderIndex ];
 		}
 
-if(!shader) {
-	continue;
-}
+		if(!shader) {
+			continue;
+		}
 
 		// we will add shadows even if the main object isn't visible in the view
 

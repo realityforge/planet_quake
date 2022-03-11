@@ -500,6 +500,7 @@ static qboolean R_LoadMD3( model_t *mod, int lod, void *buffer, int fileSize, co
 		// don't make new memory, just overwrite
 		// TODO: shortcut the reloading thing by keeping shader indexes for internal uses, and returning
 		//   0 index for missing shaders to external like from UI/CGAME
+		
 	} else
 	mod->md3[lod] = ri.Hunk_Alloc( size, h_low );
 
