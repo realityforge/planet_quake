@@ -21,7 +21,7 @@ CLIPMAP  := cm_load.o cm_load_bsp2.o \
 
 QCOMMON  := cmd.o cmd_descriptions.o common.o \
             cvar.o cvar_descriptions.o \
-            files.o history.o keys.o \
+            files.o files_async.o history.o keys.o \
             md4.o md5.o msg.o \
             net_chan.o net_ip.o huffman.o \
             huffman_static.o q_math.o q_shared.o \
