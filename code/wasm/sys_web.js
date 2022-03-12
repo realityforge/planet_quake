@@ -85,16 +85,6 @@ Module['onRuntimeInitialized'] = function () {
     //   something isn't cleared out, crash
     Q3e['sharedMemory'] = malloc(1024 * 1024) // store some strings and crap
     Q3e['sharedCounter'] = 0
-    if(HEAP32[g_bigcharsSize >> 2] == 0) {
-      let bigchars = atob(document.getElementById('bigchars').src.substring(22))
-        .split("").map(function(c) { return c.charCodeAt(0); })
-      let startPos = HEAP32[g_bigcharsData >> 2] = malloc(bigchars.length)
-      HEAP32[g_bigcharsSize >> 2] = bigchars.length
-      for(let i = 0; i < bigchars.length; i++) {
-        HEAP8[startPos] = bigchars[i]
-        startPos++
-      }
-    }
   
     // Startup args is expecting a char **
     let startup = getQueryCommands()

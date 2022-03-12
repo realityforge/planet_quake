@@ -58,6 +58,18 @@ function addressToString(addr, length) {
     }
     newString += String.fromCharCode(HEAP8[addr + i])
   }
+
+  if(HEAP32[g_bigcharsSize >> 2] == 0) {
+    let bigchars = atob(document.getElementById('bigchars').src.substring(22))
+      .split("").map(function(c) { return c.charCodeAt(0); })
+    let startPos = HEAP32[g_bigcharsData >> 2] = malloc(bigchars.length)
+    HEAP32[g_bigcharsSize >> 2] = bigchars.length
+    for(let i = 0; i < bigchars.length; i++) {
+      HEAP8[startPos] = bigchars[i]
+      startPos++
+    }
+  }
+
   return newString
 }
 

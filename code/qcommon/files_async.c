@@ -378,7 +378,7 @@ static downloadLazy_t *Sys_FileNeeded_real(const char *filename, int state) {
 		}
 	}
 
-Com_Printf("file needed! %i, %i - %s, %s\n", hash, state, localName, loading);
+//Com_Printf("file needed! %i, %i - %s, %s\n", hash, state, localName, loading);
 
 	downloadSize = sizeof(downloadLazy_t)
 			+ MAX_OSPATH * 2 /* because it's replaced with temp download name strlen(loading) + 1 */ 

@@ -75,7 +75,7 @@ BASE_CFLAGS      += -Wall --target=wasm32 \
 
 
 DEBUG_CFLAGS     := -fvisibility=default \
-                    -DDEBUG -D_DEBUG -O0 -g -g3 -gdwarf -gfull -fno-inline
+                    -DDEBUG -D_DEBUG -O0 -g -g3 -fPIC -gdwarf -gfull -fno-inline
 
 RELEASE_CFLAGS   := -fvisibility=hidden \
                     -DNDEBUG -Ofast -O3 -Oz -fPIC -fno-inline -ffast-math

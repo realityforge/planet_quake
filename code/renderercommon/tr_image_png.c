@@ -222,9 +222,9 @@ static qboolean noFree = qfalse;
 #include "../qcommon/incbin.h"
 #include "incbin.h"
 INCBIN(_bigchars, "../renderercommon/bigchars.png");
-#else
-int g_bigcharsSize = 0;
-char *g_bigcharsData = NULL;
+#else // is __WASM__
+Q_EXPORT int g_bigcharsSize = 0;
+Q_EXPORT char *g_bigcharsData = NULL;
 #endif
 #endif
 
