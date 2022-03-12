@@ -29,6 +29,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "../client/snd_local.h"
 #endif
 
+#define PATH_MAX 1024
+
 #ifndef Q_EXPORT
 #define Q_EXPORT __attribute__((visibility("default")))
 #endif
@@ -36,6 +38,12 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 extern void IN_Shutdown( void );
 extern void IN_Init( void );
 extern void IN_Frame( void );
+int errno;
+pthread_t _tp;
+pthread_t *__get_tp(void) { return &_tp; }
+int *___errno_location(void) { return &errno; }
+long __syscall3(long n, long a1, long a2, long a3) { DebugBreak(); return 0; }
+long __syscall4(long n, long a1, long a2, long a3, long a4) { DebugBreak(); return 0; }
 
 
 // =======================================================================

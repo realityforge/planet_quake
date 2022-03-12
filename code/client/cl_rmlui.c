@@ -1,6 +1,7 @@
 
-#ifdef USE_RMLUI
 #include "client.h"
+
+#ifdef USE_RMLUI
 #include <RmlUi/Wrapper.h>
 
 #ifdef USE_RMLUI_DLOPEN

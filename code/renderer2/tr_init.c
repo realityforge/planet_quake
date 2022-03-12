@@ -1789,7 +1789,7 @@ int backendSize;
 	
 	backendSize = sizeof( *backEndData ) 
 		BACKEND;
-	ptr = ri.Hunk_AllocDebug( backendSize, h_low, "backendSize", __FILE__, __LINE__);
+	ptr = ri.Hunk_Alloc( backendSize, h_low );
 #undef BASSIGN
 	backEndData = (backEndData_t *) ptr;
 	ptr += sizeof( *backEndData );

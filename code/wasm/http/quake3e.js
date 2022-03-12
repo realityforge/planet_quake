@@ -53,7 +53,7 @@ function addressToString(addr, length) {
   if(!addr) return newString
   if(!length) length = 1024
   for(let i = 0; i < length; i++) {
-    if(HEAP8[addr + i] == '0') {
+    if(HEAP8[addr + i] == 0) {
       break;
     }
     newString += String.fromCharCode(HEAP8[addr + i])
@@ -68,8 +68,10 @@ function stringToAddress(str, addr) {
     HEAP8[start+j] = str.charCodeAt(j)
   }
   HEAP8[start+str.length] = 0
+  HEAP8[start+str.length+1] = 0
+  HEAP8[start+str.length+2] = 0
   if(!addr) {
-    Q3e.sharedCounter += str.length + 1
+    Q3e.sharedCounter += str.length + 3
     Q3e.sharedCounter += 4 - (Q3e.sharedCounter % 4)
     if(Q3e.sharedCounter > 1024 * 512) {
       Q3e.sharedCounter = 0
@@ -157,11 +159,22 @@ function Sys_Print(message) {
   console.log(addressToString(message))
 }
 
+function Sys_Exit(code) {
+  if(Q3e.frameInterval) {
+    clearInterval(Q3e.frameInterval)
+  }
+  // redirect to lvlworld
+  let returnUrl = addressToString(Cvar_VariableString('cl_returnURL'))
+  if(returnUrl) {
+    window.location = returnUrl
+  }
+}
+
 function Sys_Error(fmt, args) {
   let len = BG_sprintf(Q3e.sharedMemory + Q3e.sharedCounter, fmt, args)
   if(len > 0)
     console.log('Sys_Error: ', addressToString(Q3e.sharedMemory + Q3e.sharedCounter))
-  _Sys_Exit( 1 )
+  Sys_Exit( 1 )
   throw new Error(addressToString(fmt))
 }
 
@@ -222,17 +235,6 @@ function Sys_Frame() {
       console.log(e)
     }
   })
-}
-
-function Sys_Exit() {
-  if(Q3e.frameInterval) {
-    clearInterval(Q3e.frameInterval)
-  }
-  // redirect to lvlworld
-  let returnUrl = addressToString(Cvar_VariableString('cl_returnURL'))
-  if(returnUrl) {
-    window.location = returnUrl
-  }
 }
 
 var SYS = {

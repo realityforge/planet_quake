@@ -20,10 +20,10 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 ===========================================================================
 */
 // tr_map.c
+#include "tr_local.h"
 
 #ifdef USE_BSP1
 
-#include "tr_local.h"
 #include "../qcommon/cm_load_bsp1.h"
 
 extern void ParseFace( dsurface_t *ds, drawVert_t *verts, float *hdrVertColors, msurface_t *surf, int *indexes  );

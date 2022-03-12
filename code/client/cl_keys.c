@@ -1010,6 +1010,9 @@ void CL_CharEvent( int key )
 Key_ClearStates
 ===================
 */
+#ifdef __WASM__
+Q_EXPORT
+#endif
 void Key_ClearStates( void )
 {
 	int		i;

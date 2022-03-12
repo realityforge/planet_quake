@@ -2604,8 +2604,7 @@ Wrapper for CL_Vid_Restart
 =================
 */
 static void CL_Vid_Restart_f( void ) {
-
-	 // hack for OSP mod: do not allow vid restart right after cgame init
+	// hack for OSP mod: do not allow vid restart right after cgame init
 	if ( cls.lastVidRestart )
 		if ( abs( cls.lastVidRestart - Sys_Milliseconds() ) < 500 )
 			return;
@@ -4243,11 +4242,14 @@ void CL_StartHunkUsers( void ) {
 	qboolean firstStart = qfalse;
 #endif
 
+
 	if (!com_cl_running) {
+Com_Printf("skipping\n");
 		return;
 	}
 
 	if ( !com_cl_running || !com_cl_running->integer ) {
+Com_Printf( "skipping\n");
 		return;
 	}
 
@@ -4299,6 +4301,10 @@ void CL_StartHunkUsers( void ) {
 		}
 #endif
 	}
+
+
+//Com_Printf("wtf? started: %d, skip: %d, init: %d\n", 
+	//cls.uiStarted, Cvar_VariableIntegerValue("com_skipLoadUI"), FS_Initialized());
 
 #ifdef USE_ASYNCHRONOUS
 	if ( ( cls.state > CA_CONNECTED && cls.state != CA_CINEMATIC ) && !cls.cgameStarted ) {
@@ -4406,23 +4412,8 @@ byte	*CL_CM_ClusterPVS (int cluster) {
 	return CM_ClusterPVS(cluster);
 }
 void	CL_CM_Trace( trace_t *results, const vec3_t start, const vec3_t mins, const vec3_t maxs, const vec3_t end, int passEntityNum, int contentmask ) {
-	return CM_BoxTrace(results, start, end, mins, maxs, 0, contentmask, qfalse);
+	CM_BoxTrace(results, start, end, mins, maxs, 0, contentmask, qfalse);
 }
-#endif
-
-
-
-#ifdef __WASM__
-int64_t CL_Microseconds( void ) {
-	struct timeval curr;
-	//gettimeofday( &curr, NULL );
-
-	//uint32_t *time = Sys_Microseconds()
-	int64_t result = (int64_t)curr.tv_sec * 1000000LL + (int64_t)curr.tv_usec; //(int64_t)time[0] * 1000000LL + (int64_t)time[1];
-	DebugBreak();
-	return result;
-}
-
 #endif
 
 
@@ -4500,9 +4491,7 @@ static void CL_InitRef( void ) {
 	rimp.Printf = CL_RefPrintf;
 	rimp.Error = Com_Error;
 	rimp.Milliseconds = CL_ScaledMilliseconds;
-#ifdef __WASM__
-	rimp.Microseconds = CL_Microseconds;
-#else
+#ifndef __WASM__
 	rimp.Microseconds = Sys_Microseconds;
 #endif
 	rimp.Malloc = CL_RefMalloc;

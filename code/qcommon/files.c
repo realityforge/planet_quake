@@ -631,6 +631,9 @@ char *FS_BuildOSPath( const char *base, const char *game, const char *qpath ) {
 		game = fs_gamedir;
 	}
 
+	memset( temp, 0, sizeof( temp ) );
+	memset( ospath[toggle], 0, MAX_OSPATH );
+
 	if ( qpath )
 		Com_sprintf( temp, sizeof( temp ), "%c%s%c%s", PATH_SEP, game, PATH_SEP, qpath );
 	else

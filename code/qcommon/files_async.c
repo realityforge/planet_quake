@@ -145,7 +145,7 @@ void CL_ChangeNotifcations( void ) {
 	}
 
 	// TODO: use the same file update logic as USE_ASYNCHRONOUS
-	//FS_UpdateFiles(ready, &ready[MAX_QPATH]);
+	//FS_UpdateFiles(ready, &ready[MAX_OSPATH]);
 
 }
 
@@ -369,8 +369,6 @@ static downloadLazy_t *Sys_FileNeeded_real(const char *filename, int state) {
 		return found; // skip debug message below, that's all
 	}
 
-//Com_Printf("file needed! %i, %i - %s, %s\n", hash, state, localName, loading);
-
 	if(parentDownload && parentDownload->state == VFS_DONE) {
 		// parent is done, so don't add files
 		if(state == VFS_LAZY || state == VFS_LATER) {
@@ -380,13 +378,15 @@ static downloadLazy_t *Sys_FileNeeded_real(const char *filename, int state) {
 		}
 	}
 
+Com_Printf("file needed! %i, %i - %s, %s\n", hash, state, localName, loading);
+
 	downloadSize = sizeof(downloadLazy_t)
-			+ MAX_OSPATH /* because it's replaced with temp download name strlen(loading) + 1 */ 
+			+ MAX_OSPATH * 2 /* because it's replaced with temp download name strlen(loading) + 1 */ 
 			+ strlen(localName) + 8;
 	download = (downloadLazy_t *)Z_Malloc(downloadSize);
 	memset(download, 0, downloadSize);
-	download->loadingName = &((void *)download)[sizeof(downloadLazy_t)];
-	download->downloadName = download->loadingName + MAX_OSPATH;
+	download->loadingName = (void *)(download + 1);
+	download->downloadName = download->loadingName + MAX_OSPATH * 2;
 	strcpy(download->loadingName, loading);
 	strcpy(download->downloadName, localName);
 	download->loadingName[strlen(loading)] = '\0';
@@ -406,6 +406,9 @@ static downloadLazy_t *Sys_FileNeeded_real(const char *filename, int state) {
 
 	assert(!Q_stristr(localName, stupidPathError));
 #endif
+if(Q_stristr(download->downloadName, ".tmp")) {
+	Com_Error(ERR_FATAL, "goddamnit\n");
+}
 
 	return download;
 }
@@ -699,6 +702,7 @@ void Sys_FileReady(const char *filename, const char* tempname) {
 	qboolean found = qfalse;
 	qboolean isDirectory = filename[strlen(filename) - 1] == '/';
 	int lengthGame = strlen(FS_GetCurrentGameDir());
+	memset(localName, 0, sizeof(localName));
 
 	// skip leading slashes
 	while ( *filename == '/' || *filename == '\\' ) {
@@ -723,7 +727,7 @@ void Sys_FileReady(const char *filename, const char* tempname) {
 	}
 
 	// remove pk3dir from file hash
-	if((s = Q_stristr(localName, ".pk3dir/"))) {
+	if((s = Q_stristr(localName, ".pk3dir/")) != NULL) {
 		hash = FS_HashPK3( s + 8 );
 		lengthGame = (s - localName) + 8;
 	} else {
@@ -746,7 +750,7 @@ void Sys_FileReady(const char *filename, const char* tempname) {
 				found = qtrue;
 				if(tempname) {
 					download->state = VFS_READY;
-					strcpy(&download->loadingName[MAX_QPATH], tempname);
+					strcpy(&download->loadingName[MAX_OSPATH], tempname);
 				} else {
 					download->state = VFS_FAIL;
 				}
@@ -762,7 +766,7 @@ void Sys_FileReady(const char *filename, const char* tempname) {
 				// file is ready for processing!
 				if(tempname) {
 					download->state = VFS_READY;
-					strcpy(&download->loadingName[MAX_QPATH], tempname);
+					strcpy(&download->loadingName[MAX_OSPATH], tempname);
 #ifdef USE_LIVE_RELOAD
 					// update file mtime so we know if it changed again
 					download->lastRequested = lastVersionTime;
@@ -805,8 +809,22 @@ void Sys_FileReady(const char *filename, const char* tempname) {
 
 void FS_UpdateFiles(const char *filename, const char *tempname) {
 
-//Com_Printf("updating files: %s -> %s\n", filename, tempname);
+Com_Printf("updating files: %s -> %s\n", filename, tempname);
 
+	// do some extra processing, restart UI if default.cfg is found
+	if(Q_stristr(tempname, "default.cfg")) {
+		// will restart automatically from NextDownload()
+		if(!FS_Initialized()) {
+			FS_Restart(0);
+		}
+		// TODO: check on networking, shaderlist, anything else we skipped, etc again
+		com_fullyInitialized = qtrue;
+		Cbuf_AddText("wait; vid_restart lazy; wait; exec default.cfg; ");
+		if(*Cvar_VariableString("mapname") != '\0' && !com_sv_running->integer) {
+			Cbuf_AddText(va("wait; map %s;", Cvar_VariableString("mapname")));
+		}
+	} else 
+	
 #if defined(USE_LIVE_RELOAD) || defined(__WASM__)
 	if(Q_stristr(tempname, "version.json")) {
 		int y, mo, d, h, m, s;
@@ -877,26 +895,13 @@ void FS_UpdateFiles(const char *filename, const char *tempname) {
 	} else 
 #endif
 
-	// do some extra processing, restart UI if default.cfg is found
-	if(Q_stristr(tempname, "default.cfg")) {
-		// will restart automatically from NextDownload()
-		if(!FS_Initialized()) {
-			FS_Restart(0);
-		}
-		// TODO: check on networking, shaderlist, anything else we skipped, etc again
-		com_fullyInitialized = qtrue;
-		Cbuf_AddText("wait; vid_restart lazy; wait; exec default.cfg; ");
-		if(*Cvar_VariableString("mapname") != '\0' && !com_sv_running->integer) {
-			Cbuf_AddText(va("wait; map %s;", Cvar_VariableString("mapname")));
-		}
-	} else 
-	
 	// scan index files for HTTP directories and add links to q3cache.dat
 	if ((Q_stristr(tempname, ".tmp") && Q_stristr(tempname, "/."))
 		|| Q_stristr(tempname, "maps/maplist.json")) {
 		// left in the temp directory, must be an index file
 		char realPath[MAX_OSPATH];
 		const char *s;
+		memset(realPath, 0, sizeof(realPath));
 		s = strchr( tempname, '/' );
 		if(s) {
 			s++;
@@ -1021,14 +1026,14 @@ void CL_CheckLazyUpdates( void ) {
 	}
 
 	// intercept this here because it's client only code
-	if(Q_stristr(&ready->loadingName[MAX_QPATH], "/scripts/")
-		&& Q_stristr(&ready->loadingName[MAX_QPATH], ".shader")) {
+	if(Q_stristr(&ready->loadingName[MAX_OSPATH], "/scripts/")
+		&& Q_stristr(&ready->loadingName[MAX_OSPATH], ".shader")) {
 		re.ReloadShaders(qfalse);
 	}
 #endif
 
-	ready->loadingName[MAX_QPATH - 1] = '\0';
-	FS_UpdateFiles(ready->downloadName, &ready->loadingName[MAX_QPATH]);
+	ready->loadingName[MAX_OSPATH - 1] = '\0';
+	FS_UpdateFiles(ready->downloadName, &ready->loadingName[MAX_OSPATH]);
 
 #if defined(USE_ASYNCHRONOUS) || defined(__WASM__)
 	// multigame has a special feature to reload an missing assets when INIT is called

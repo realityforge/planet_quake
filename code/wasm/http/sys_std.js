@@ -61,7 +61,7 @@ typedef struct qtime_s {
 
 
 var STD = {
-  assert_fail: console.assert, // TODO: convert to variadic fmt for help messages
+  __assert_fail: console.assert, // TODO: convert to variadic fmt for help messages
   memset: function (addr, val, count) {
     HEAP8.fill(val, addr, addr + count)
     return addr
@@ -95,7 +95,8 @@ var STD = {
     HEAP8.copyWithin(dest, source, source + length)
   },
   strncpy: function (dest, src, cnt) {
-    stringToAddress(addressToString(src).substr(0, cnt), dest)
+    stringToAddress(addressToString(src).substr(0, cnt - 1), dest)
+    HEAP8[dest + cnt - 1] = 0
   },
   strcmp: function (str1, str2) {
     let i = 0
@@ -167,7 +168,8 @@ var STD = {
 var MATHS = {
   htons: function (c) { return c ? (n<<8 | n>>8) : n },
   ntohs: function (c) { return c ? (n<<8 | n>>8) : n },
-
+  exp2: function (c) { return Math.pow(2, c) },
+  exp2f: function (c) { return Math.pow(2, c) },
 }
 // These can be assigned automatically? but only because they deal only with numbers and not strings
 //   TODO: What about converting between float, endian, and shorts?

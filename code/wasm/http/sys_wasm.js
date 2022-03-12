@@ -63,7 +63,7 @@ function instantiateWasm(bytes) {
   }
 
   Q3e['table'] = Q3e['__indirect_function_table'] =
-    new WebAssembly.Table({ initial: 1024, element: 'anyfunc' });
+    new WebAssembly.Table({ initial: 2048, element: 'anyfunc' });
   Q3e['memory'] = new WebAssembly.Memory( {
     'initial': 2048,
     //'shared': true

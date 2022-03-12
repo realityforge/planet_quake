@@ -32,9 +32,11 @@ SHLIBCFLAGS      :=
 SHLIBLDFLAGS     := -Wl,--import-memory -Wl,--import-table -Wl,--error-limit=200 \
                     -Wl,--export-dynamic --no-standard-libraries \
                     -Wl,--no-entry -Wl,--allow-undefined-file=code/wasm/wasm.syms 
+
 LDFLAGS          := -Wl,--import-memory -Wl,--import-table -Wl,--error-limit=200 \
                     -Wl,--export-dynamic --no-standard-libraries \
                     -Wl,--no-entry 
+                    #-Wl,--strip-all 
 
 ifeq ($(BUILD_CLIENT),1)
 SHLIBLDFLAGS     += -Wl,--allow-undefined-file=code/wasm/wasm.syms
@@ -46,12 +48,16 @@ SHLIBLDFLAGS     += -Wl,--allow-undefined-file=code/wasm/wasm-nogl.syms
 LDFLAGS          += -Wl,--allow-undefined-file=code/wasm/wasm-nogl.syms
 endif
 
-CLIENT_LDFLAGS   := 
+CLIENT_LDFLAGS   := code/wasm/wasi/libclang_rt.builtins-wasm32.a
 
-BASE_CFLAGS      += -Wall --target=wasm32 --no-standard-libraries \
+# -fno-common -ffreestanding -nostdinc --no-standard-libraries
+
+BASE_CFLAGS      += -Wall --target=wasm32 \
                     -Wimplicit -fstrict-aliasing \
                     -ftree-vectorize -fsigned-char -MMD \
                     -ffast-math -fno-short-enums \
+                     -pedantic \
+										 -Wno-extra-semi \
                     -DGL_GLEXT_PROTOTYPES=1 \
                     -DGL_ARB_ES2_compatibility=1 \
                     -DGL_EXT_direct_state_access=1 \
@@ -64,14 +70,16 @@ BASE_CFLAGS      += -Wall --target=wasm32 --no-standard-libraries \
                     -DUSE_MASTER_LAN \
                     -D__WASM__ \
                     -std=c11 \
-                    -Icode/wasm 
+                    -Icode/wasm \
+                    -Ilibs/musl-1.2.2/include
 
 
 DEBUG_CFLAGS     := -fvisibility=default \
-                    -DDEBUG -D_DEBUG -frtti -fPIC -O0 -g -g3 -gdwarf -gfull
+                    -DDEBUG -D_DEBUG -O0 -g -g3 -gdwarf -gfull -fno-inline
 
 RELEASE_CFLAGS   := -fvisibility=hidden \
-                    -DNDEBUG -O3 -Oz -flto -fPIC -Ofast
+                    -DNDEBUG -Ofast -O3 -Oz -fPIC -fno-inline -ffast-math
+                    # -flto 
 
 export INCLUDE   := -Icode/wasm/include 
 
@@ -82,8 +90,7 @@ pre-build:
 	@:
 
 post-build:
-	@:
-#	$(Q)$(OPT) -Os --no-validation -o $(B)/$(TARGET) $(B)/$(TARGET)
+	$(Q)$(OPT) -Os --no-validation -o $(B)/$(TARGET) $(B)/$(TARGET)
 
 # TODO: compile all js files into one/minify/webpack
 # TODO: insert bigchars font into web page

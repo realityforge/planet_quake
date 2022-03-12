@@ -220,6 +220,7 @@ function Sys_ListFiles (directory, extension, filter, numfiles, wantsubs) {
     //matches.push(files[i])
     HEAP32[(listInMemory + i*4)>>2] = FS_CopyString(stringToAddress(relativeName));
   }
+  HEAP32[(listInMemory>>2)+matches.length] = 0
   HEAP32[numfiles >> 2] = matches.length
   // skip address-list because for-loop counts \0 with numfiles
   return listInMemory

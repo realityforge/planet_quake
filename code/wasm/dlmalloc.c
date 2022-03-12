@@ -566,6 +566,9 @@
 #define DLMALLOC_EXPORT extern __attribute__((visibility("default")))
 #endif
 
+#define ENOMEM 9971
+#define EINVAL ((short)28)
+
 #ifndef WIN32
 #ifdef _WIN32
 #define WIN32 1
@@ -604,14 +607,6 @@
 #ifdef __GNUC__
 __attribute__((const))
 #endif
-static int __errno_storage = 0;
-
-int *__errno_location(void)
-{
-	return &__errno_storage;
-}
-
-#undef errno
 
 
 #if 0
@@ -710,7 +705,7 @@ defined(__i386__) || defined(__x86_64__))) ||                    \
 #endif  /* linux */
 #endif  /* HAVE_MREMAP */
 #ifndef MALLOC_FAILURE_ACTION
-#define MALLOC_FAILURE_ACTION  (*__errno_location()) = ENOMEM;
+#define MALLOC_FAILURE_ACTION  
 #endif  /* MALLOC_FAILURE_ACTION */
 #ifndef HAVE_MORECORE
 #if ONLY_MSPACES

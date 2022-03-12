@@ -40,8 +40,9 @@ theora:
 */
 
 
-#ifdef USE_CIN_OGM
 #include "cl_cin.h"
+
+#ifdef USE_CIN_OGM
 #include <ogg/ogg.h>
 #include <vorbis/codec.h>
 

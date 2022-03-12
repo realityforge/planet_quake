@@ -4173,6 +4173,7 @@ static int loadShaderBuffers( char **shaderFiles, const int numShaderFiles, char
 	// load and parse shader files
 	for ( i = 0; i < numShaderFiles; i++ )
 	{
+		memset(filename, 0, sizeof(filename));
 		Com_sprintf( filename, sizeof( filename ), "scripts/%s", shaderFiles[i] );
 		//ri.Printf( PRINT_DEVELOPER, "...loading '%s'\n", filename );
 		summand = ri.FS_ReadFile( filename, (void **)&buffers[i] );

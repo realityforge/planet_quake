@@ -10,10 +10,10 @@ GXX              := g++
 
 BASE_CFLAGS      += -Wall -fno-strict-aliasing -Wimplicit \
                     -Wstrict-prototypes -pipe \
-                    -Wno-unused-result \
-                    -fsigned-char -ftree-vectorize \
-                    -ffast-math -fno-short-enums -MMD
-OPTIMIZE         := -O2 -fvisibility=hidden
+                    -Wno-unused-result
+                    # -fsigned-char -ftree-vectorize 
+                    
+OPTIMIZE         := -O2 -fvisibility=hidden -ffast-math -fno-short-enums -MMD
 SHLIBEXT         := dylib
 SHLIBCFLAGS      := -fPIC -fvisibility=hidden -fno-common
 LDFLAGS          := -rdynamic
@@ -56,7 +56,7 @@ endif
 
 
 BASE_CFLAGS      += -I/usr/include -I/usr/local/include -isysroot $(SYSROOT)
-DEBUG_CFLAGS      = -DDEBUG -D_DEBUG -g -O0
+DEBUG_CFLAGS      = -DDEBUG -D_DEBUG -g -O0 -g3 -fno-inline
 RELEASE_CFLAGS    = -DNDEBUG $(OPTIMIZE)
 USE_SDL          ?= 1
 

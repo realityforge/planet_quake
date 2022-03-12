@@ -8,11 +8,7 @@
 #include "../qcommon/q_shared.h"
 
 
-#ifndef EMSCRIPTEN_NO_ERRNO
-#define SET_ERRNO() { errno = ENOMEM; }
-#else
-#define SET_ERRNO()
-#endif
+#define SET_ERRNO() 
 
 extern size_t __heap_base;
 

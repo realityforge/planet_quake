@@ -32,8 +32,10 @@ endif
 REND_OBJS      := $(REND_CFILES:.c=.o) 
 REND_Q3OBJ     := $(addprefix $(B)/$(REND_WORKDIR)/,$(notdir $(REND_OBJS)))
 
-REND_CFLAGS    ?= $(INCLUDE) -fsigned-char -ftree-vectorize \
-                  -ffast-math -fno-short-enums -MMD
+REND_CFLAGS    ?= $(BASE_CFLAGS) $(INCLUDE)
+ifeq ($(BUILD_CLIENT),1)
+REND_CFLAGS    += $(CLIENT_CFLAGS)
+endif
 
 define DO_REND_CC
   $(echo_cmd) "REND_CC $<"
