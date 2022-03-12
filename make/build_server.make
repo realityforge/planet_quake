@@ -87,14 +87,13 @@ Q3OBJ    := $(addprefix $(B)/$(WORKDIR)/,$(notdir $(OBJS)))
 
 export INCLUDE  := $(foreach dir,$(INCLUDES),-I$(dir))
 
-CFLAGS   := $(INCLUDE) -fsigned-char -ftree-vectorize \
-            -ffast-math -fno-short-enums -MMD
+SERVER_CFLAGS := $(BASE_CFLAGS) $(INCLUDE)
 
 # TODO build server as a library that client can launch many instances
 
 define DO_SERVER_CC
   $(echo_cmd) "SERVER_CC $<"
-  $(Q)$(CC) $(CFLAGS) -o $@ -c $<
+  $(Q)$(CC) $(SERVER_CFLAGS) -o $@ -c $<
 endef
 
 ifdef WINDRES
@@ -106,20 +105,22 @@ endif
 
 define DO_BOT_CC
 	$(echo_cmd) "BOT_CC $<"
-	$(Q)$(CC) -o $@ $(CFLAGS) -DBOTLIB -c $<
+	$(Q)$(CC) -o $@ $(SERVER_CFLAGS) -DBOTLIB -c $<
 endef
 
 debug:
 	$(echo_cmd) "MAKE $(BD)/$(TARGET_SERVER)"
 	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) WORKDIRS=$(WORKDIR) mkdirs
 	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) pre-build
-	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) CFLAGS="$(CFLAGS) $(DEBUG_CFLAGS)" LDFLAGS="$(LDFLAGS) $(DEBUG_LDFLAGS)" $(BD)/$(TARGET_SERVER)
+	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) -j 8 \
+    SERVER_CFLAGS="$(SERVER_CFLAGS) $(DEBUG_CFLAGS)" LDFLAGS="$(LDFLAGS) $(DEBUG_LDFLAGS)" $(BD)/$(TARGET_SERVER)
 
 release:
 	$(echo_cmd) "MAKE $(BR)/$(TARGET_SERVER)"
 	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) WORKDIRS=$(WORKDIR) mkdirs
 	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) pre-build
-	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) CFLAGS="$(CFLAGS) $(RELEASE_CFLAGS)" LDFLAGS="$(LDFLAGS) $(RELEASE_LDFLAGS)" $(BR)/$(TARGET_SERVER)
+	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) -j 8 \
+    SERVER_CFLAGS="$(SERVER_CFLAGS) $(RELEASE_CFLAGS)" LDFLAGS="$(LDFLAGS) $(RELEASE_LDFLAGS)" $(BR)/$(TARGET_SERVER)
 
 clean:
 	@rm -rf ./$(BD)/$(WORKDIR) ./$(BD)/$(TARGET_SERVER)

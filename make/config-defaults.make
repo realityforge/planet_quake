@@ -262,6 +262,9 @@ ifeq ($(USE_CIN_VPX),1)
   BASE_CFLAGS += -DUSE_CIN_VPX=1
 endif
 
+ifeq ($(DEDICATED),1)
+  BASE_CFLAGS += -DDEDICATED
+endif
 ifeq ($(USE_DEDICATED),1)
   BASE_CFLAGS += -DDEDICATED
 endif

@@ -358,7 +358,9 @@ void Sys_Exit( int ex ) {
 
 
 void Sys_Quit (void) {
+#ifndef DEDICATED
   CL_Shutdown ();
+#endif
   fcntl (0, F_SETFL, fcntl (0, F_GETFL, 0) & ~FNDELAY);
   Sys_Exit(0);
 }
@@ -436,7 +438,9 @@ void  Sys_Error( const char *error, ...)
     tty_Hide();
   }
 
+#ifndef DEDICATED
   CL_Shutdown ();
+#endif
 
   va_start (argptr,error);
   vsprintf (string,error,argptr);
@@ -525,7 +529,7 @@ void Sys_ConsoleInputInit( void )
               characters  EOF,  EOL,  EOL2, ERASE, KILL, REPRINT,
               STATUS, and WERASE, and buffers by lines.
      ISIG: when any of the characters  INTR,  QUIT,  SUSP,  or
-              DSUSP are received, generate the corresponding sig­
+              DSUSP are received, generate the corresponding sigï¿½
               nal
     */              
     tc.c_lflag &= ~(ECHO | ICANON);
