@@ -1,10 +1,6 @@
 
 /* XXX Emscripten XXX */
 #if __WASM__
-
-#include "../qcommon/q_shared.h"
-
-#define LACKS_SYS_PARAM_H 1
 // When building for wasm we export `malloc` and `emscripten_builtin_malloc` as
 // weak alias of the internal `dlmalloc` which is static to this file.
 #define DLMALLOC_EXPORT static
@@ -19,6 +15,8 @@
 /* allow malloc stats only in debug builds, which brings in stdio code. */
 #define NO_MALLOC_STATS 1
 #endif
+/* XXX Emscripten Tracing API. This defines away the code if tracing is disabled. */
+//#include <emscripten/trace.h>
 
 /* Make malloc() and free() threadsafe by securing the memory allocations with pthread mutexes. */
 #if __EMSCRIPTEN_PTHREADS__
@@ -26,6 +24,8 @@
 #define USE_SPIN_LOCKS 0 // Ensure we use pthread_mutex_t.
 #endif
 
+#else
+#error goddamnit
 #endif
 
 
@@ -563,11 +563,8 @@
 #endif /* DLMALLOC_VERSION */
 
 #ifndef DLMALLOC_EXPORT
-#define DLMALLOC_EXPORT extern __attribute__((visibility("default")))
+#define DLMALLOC_EXPORT extern
 #endif
-
-#define ENOMEM 9971
-#define EINVAL ((short)28)
 
 #ifndef WIN32
 #ifdef _WIN32
@@ -580,8 +577,8 @@
 #endif  /* WIN32 */
 #ifdef WIN32
 #define WIN32_LEAN_AND_MEAN
-//#include <windows.h>
-//#include <tchar.h>
+#include <windows.h>
+#include <tchar.h>
 #define HAVE_MMAP 1
 #define HAVE_MORECORE 0
 #define LACKS_UNISTD_H
@@ -604,12 +601,6 @@
 #endif /*MMAP_CLEARS */
 #endif  /* WIN32 */
 
-#ifdef __GNUC__
-__attribute__((const))
-#endif
-
-
-#if 0
 #if defined(DARWIN) || defined(_DARWIN)
 /* Mac OSX docs advise not to use sbrk; it seems better to use mmap */
 #ifndef HAVE_MORECORE
@@ -622,10 +613,8 @@ __attribute__((const))
 #endif  /* HAVE_MORECORE */
 #endif  /* DARWIN */
 
-#endif
-
 #ifndef LACKS_SYS_TYPES_H
-//#include <sys/types.h>  /* For size_t */
+#include <sys/types.h>  /* For size_t */
 #endif  /* LACKS_SYS_TYPES_H */
 
 /* The maximum possible size_t value has all bits set */
@@ -705,7 +694,7 @@ defined(__i386__) || defined(__x86_64__))) ||                    \
 #endif  /* linux */
 #endif  /* HAVE_MREMAP */
 #ifndef MALLOC_FAILURE_ACTION
-#define MALLOC_FAILURE_ACTION  
+#define MALLOC_FAILURE_ACTION  errno = ENOMEM;
 #endif  /* MALLOC_FAILURE_ACTION */
 #ifndef HAVE_MORECORE
 #if ONLY_MSPACES
@@ -808,7 +797,7 @@ defined(__i386__) || defined(__x86_64__))) ||                    \
 /* #define HAVE_USR_INCLUDE_MALLOC_H */
 
 #ifdef HAVE_USR_INCLUDE_MALLOC_H
-//#include "/usr/include/malloc.h"
+#include "/usr/include/malloc.h"
 #else /* HAVE_USR_INCLUDE_MALLOC_H */
 #ifndef STRUCT_MALLINFO_DECLARED
 /* HP-UX (and others?) redefines mallinfo unless _STRUCT_MALLINFO is defined */
@@ -866,14 +855,9 @@ extern "C" {
     
     /* ------------------- Declarations of public routines ------------------- */
     
-#ifndef Q_EXPORT
-#define Q_EXPORT __attribute__((visibility("default")))
-#endif
-
 #ifndef USE_DL_PREFIX
 // XXX Emscripten XXX
-#if defined(__WASM__)
-Q_EXPORT void* malloc(size_t) __attribute__((weak, alias("dlmalloc")));
+void* malloc(size_t) __attribute__((weak, alias("dlmalloc")));
 void  free(void*) __attribute__((weak, alias("dlfree")));
 void* calloc(size_t, size_t) __attribute__((weak, alias("dlcalloc")));
 void* realloc(void*, size_t) __attribute__((weak, alias("dlrealloc")));
@@ -901,7 +885,6 @@ void malloc_inspect_all(void(*handler)(void*, void *, size_t, void*), void* arg)
 void** independent_calloc(size_t, size_t, void**) __attribute__((weak, alias("dlindependent_calloc")));
 void** independent_comalloc(size_t, size_t*, void**) __attribute__((weak, alias("dlindependent_comalloc")));
 size_t bulk_free(void**, size_t n_elements) __attribute__((weak, alias("dlbulk_free")));
-#endif /*__WASM__*/
 #endif /* USE_DL_PREFIX */
     
     /*
@@ -1330,7 +1313,7 @@ size_t bulk_free(void**, size_t n_elements) __attribute__((weak, alias("dlbulk_f
 #endif /* ONLY_MSPACES */
     
 #if MSPACES
-        
+    
     /*
      mspace is an opaque type representing an independent
      region of space that supports mspace_malloc, etc.
@@ -1409,14 +1392,13 @@ size_t bulk_free(void**, size_t n_elements) __attribute__((weak, alias("dlbulk_f
      spaces.
      */
     DLMALLOC_EXPORT void* mspace_realloc(mspace msp, void* mem, size_t newsize);
-
+    
     /*
      mspace_calloc behaves as calloc, but operates within
      the given space.
      */
     DLMALLOC_EXPORT void* mspace_calloc(mspace msp, size_t n_elements, size_t elem_size);
-    ;
-
+    
     /*
      mspace_memalign behaves as memalign, but operates within
      the given space.
@@ -1502,16 +1484,17 @@ size_t bulk_free(void**, size_t n_elements) __attribute__((weak, alias("dlbulk_f
 #pragma warning( disable : 4146 ) /* no "unsigned" warnings */
 #endif /* _MSC_VER */
 #if !NO_MALLOC_STATS
-//#include <stdio.h>       /* for printing in malloc_stats */
+#include <stdio.h>       /* for printing in malloc_stats */
 #endif /* NO_MALLOC_STATS */
 #ifndef LACKS_ERRNO_H
-//#include <errno.h>       /* for MALLOC_FAILURE_ACTION */
+#include <errno.h>       /* for MALLOC_FAILURE_ACTION */
 #endif /* LACKS_ERRNO_H */
 #ifdef DEBUG
 #if ABORT_ON_ASSERT_FAILURE
 #undef assert
 #define assert(x) if(!(x)) ABORT
 #else /* ABORT_ON_ASSERT_FAILURE */
+#include <assert.h>
 #endif /* ABORT_ON_ASSERT_FAILURE */
 #else  /* DEBUG */
 #ifndef assert
@@ -1520,19 +1503,17 @@ size_t bulk_free(void**, size_t n_elements) __attribute__((weak, alias("dlbulk_f
 #define DEBUG 0
 #endif /* DEBUG */
 #if !defined(WIN32) && !defined(LACKS_TIME_H)
-//#include <time.h>        /* for magic initialization */
+#include <time.h>        /* for magic initialization */
 #endif /* WIN32 */
-#ifndef __WASM__
 #ifndef LACKS_STDLIB_H
-//#include <stdlib.h>      /* for abort() */
+#include <stdlib.h>      /* for abort() */
 #endif /* LACKS_STDLIB_H */
-#endif
 #ifndef LACKS_STRING_H
-//#include <string.h>      /* for memset etc */
+#include <string.h>      /* for memset etc */
 #endif  /* LACKS_STRING_H */
 #if USE_BUILTIN_FFS
 #ifndef LACKS_STRINGS_H
-//#include <strings.h>     /* for ffs */
+#include <strings.h>     /* for ffs */
 #endif /* LACKS_STRINGS_H */
 #endif /* USE_BUILTIN_FFS */
 #if HAVE_MMAP
@@ -1540,37 +1521,35 @@ size_t bulk_free(void**, size_t n_elements) __attribute__((weak, alias("dlbulk_f
 /* On some versions of linux, mremap decl in mman.h needs __USE_GNU set */
 #if (defined(linux) && !defined(__USE_GNU))
 #define __USE_GNU 1
-//#include <sys/mman.h>    /* for mmap */
+#include <sys/mman.h>    /* for mmap */
 #undef __USE_GNU
 #else
-//#include <sys/mman.h>    /* for mmap */
+#include <sys/mman.h>    /* for mmap */
 #endif /* linux */
 #endif /* LACKS_SYS_MMAN_H */
 #ifndef LACKS_FCNTL_H
-//#include <fcntl.h>
+#include <fcntl.h>
 #endif /* LACKS_FCNTL_H */
 #endif /* HAVE_MMAP */
 #ifndef LACKS_UNISTD_H
-//#include <unistd.h>     /* for sbrk, sysconf */
+#include <unistd.h>     /* for sbrk, sysconf */
 #else /* LACKS_UNISTD_H */
+#error goddamnit
 #if !defined(__FreeBSD__) && !defined(__OpenBSD__) && !defined(__NetBSD__)
 extern void*     sbrk(ptrdiff_t);
 #endif /* FreeBSD etc */
 #endif /* LACKS_UNISTD_H */
-#ifdef __WASM__
-extern void*     sbrk(ptrdiff_t);
-#endif
 
 /* Declarations for locking */
 #if USE_LOCKS
 #ifndef WIN32
 #if defined (__SVR4) && defined (__sun)  /* solaris */
-//#include <thread.h>
+#include <thread.h>
 #elif !defined(LACKS_SCHED_H)
-//#include <sched.h>
+#include <sched.h>
 #endif /* solaris or LACKS_SCHED_H */
 #if (defined(USE_RECURSIVE_LOCKS) && USE_RECURSIVE_LOCKS != 0) || !USE_SPIN_LOCKS
-//#include <pthread.h>
+#include <pthread.h>
 #endif /* USE_RECURSIVE_LOCKS ... */
 #elif defined(_MSC_VER)
 #ifndef _M_AMD64
@@ -1598,6 +1577,13 @@ extern "C" {
 #ifndef LOCK_AT_FORK
 #define LOCK_AT_FORK 0
 #endif
+
+
+#ifdef __WASM__
+void *sbrk(intptr_t increment_);
+#define abort() Sys_Exit(1)
+#endif
+
 
 /* Declarations for bit scanning on win32 */
 #if defined(_MSC_VER) && _MSC_VER>=1300
@@ -2829,10 +2815,6 @@ static int has_segment_link(mstate m, msegmentptr ss) {
 #endif  /* POSTACTION */
 
 #endif /* USE_LOCKS */
-
-
-
-
 
 /*
  CORRUPTION_ERROR_ACTION is triggered upon detected bad addresses.
@@ -4618,7 +4600,6 @@ static void* tmalloc_small(mstate m, size_t nb) {
 
 #if !ONLY_MSPACES
 
-
 void* dlmalloc(size_t bytes) {
     /*
      Basic algorithm:
@@ -4749,6 +4730,10 @@ void* dlmalloc(size_t bytes) {
         
     postaction:
         POSTACTION(gm);
+#if __WASM_TRACING__
+        /* XXX Emscripten Tracing API. */
+        emscripten_trace_record_allocation(mem, bytes);
+#endif
         return mem;
     }
     
@@ -4765,6 +4750,10 @@ void dlfree(void* mem) {
      */
     
     if (mem != 0) {
+#if __WASM_TRACING__
+        /* XXX Emscripten Tracing API. */
+        emscripten_trace_record_free(mem);
+#endif
         mchunkptr p  = mem2chunk(mem);
 #if FOOTERS
         mstate fm = get_mstate_for(p);
@@ -5291,6 +5280,10 @@ void* dlrealloc(void* oldmem, size_t bytes) {
             if (newp != 0) {
                 check_inuse_chunk(m, newp);
                 mem = chunk2mem(newp);
+#if __WASM_TRACING__
+                /* XXX Emscripten Tracing API. */
+                emscripten_trace_record_reallocation(oldmem, mem, bytes);
+#endif
             }
             else {
                 mem = internal_malloc(m, bytes);
@@ -5333,6 +5326,10 @@ void* dlrealloc_in_place(void* oldmem, size_t bytes) {
             }
         }
     }
+#if __WASM_TRACING__
+    /* XXX Emscripten Tracing API. */
+    emscripten_trace_record_reallocation(oldmem, mem, bytes);
+#endif
     return mem;
 }
 
@@ -6055,15 +6052,12 @@ int mspace_mallopt(int param_number, int value) {
 // in their code, and make those replacements refer to the original dlmalloc
 // and dlfree from this file.
 // This allows an easy mechanism for hooking into memory allocation.
-#ifdef __WASM__
-/*
-extern __typeof(dlmalloc) malloc __attribute__((alias("dlmalloc")));
-extern __typeof(dlfree) free __attribute__((alias("dlfree")));
-extern __typeof(dlmemalign) memalign __attribute__((alias("dlmemalign")));
-extern __typeof(dlcalloc) calloc __attribute__((alias("dlcalloc")));
-extern __typeof(realloc) realloc __attribute__((alias("dlrealloc")));
-*/
+#if defined(__WASM__) && !ONLY_MSPACES
+extern __typeof(malloc) emscripten_builtin_malloc __attribute__((alias("dlmalloc")));
+extern __typeof(free) emscripten_builtin_free __attribute__((alias("dlfree")));
+extern __typeof(memalign) emscripten_builtin_memalign __attribute__((alias("dlmemalign")));
 #endif
+
 
 /* -------------------- Alternative MORECORE functions ------------------- */
 

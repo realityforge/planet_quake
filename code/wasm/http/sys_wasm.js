@@ -68,14 +68,7 @@ function instantiateWasm(bytes) {
     'initial': 2048,
     //'shared': true
   } )
-  window.HEAPU8 = new Uint8Array( Q3e['memory'].buffer )
-  window.HEAP8 = new Int8Array( Q3e['memory'].buffer )
-  window.HEAPU16 = new Uint16Array( Q3e['memory'].buffer )
-  window.HEAP16 = new Int16Array( Q3e['memory'].buffer )
-  window.HEAPU32 = new Uint32Array( Q3e['memory'].buffer )
-  window.HEAP32 = new Int32Array( Q3e['memory'].buffer )
-  window.HEAPF32 = new Float32Array( Q3e['memory'].buffer )
-  window.HEAPF64 = new Float64Array( Q3e['memory'].buffer )
+  updateGlobalBufferAndViews(Q3e.memory.buffer)
   return WebAssembly.instantiate(bytes, Q3e)
 }
 

@@ -251,9 +251,68 @@ function Sys_Frame() {
   })
 }
 
+function alignUp(x, multiple) {
+  if (x % multiple > 0) {
+   x += multiple - x % multiple;
+  }
+  return x;
+}
+
+function updateGlobalBufferAndViews(buf) {
+  Q3e["HEAP8"] = window.HEAP8 = new Int8Array(buf);
+  Q3e["HEAP16"] = window.HEAP16 = new Int16Array(buf);
+  Q3e["HEAP32"] = window.HEAP32 = new Int32Array(buf);
+  Q3e["HEAPU8"] = window.HEAPU8 = new Uint8Array(buf);
+  Q3e["HEAPU16"] = window.HEAPU16 = new Uint16Array(buf);
+  Q3e["HEAPU32"] = window.HEAPU32 = new Uint32Array(buf);
+  Q3e["HEAPF32"] = window.HEAPF32 = new Float32Array(buf);
+  Q3e["HEAPF64"] = window.HEAPF64 = new Float64Array(buf);
+}
+ 
+function emscripten_realloc_buffer(size) {
+  try {
+    Q3e.memory.grow(size - Q3e.memory.buffer.byteLength + 65535 >>> 16);
+   updateGlobalBufferAndViews(Q3e.memory.buffer);
+   return 1;
+  } catch (e) {
+   console.error("emscripten_realloc_buffer: Attempted to grow heap from " + buffer.byteLength + " bytes to " + size + " bytes, but got error: " + e);
+  }
+}
+
+function _emscripten_resize_heap(requestedSize) {
+  var oldSize = HEAPU8.length;
+  requestedSize = requestedSize >>> 0;
+  console.assert(requestedSize > oldSize);
+  var maxHeapSize = 2147483648;
+  if (requestedSize > maxHeapSize) {
+   err("Cannot enlarge memory, asked to go up to " + requestedSize + " bytes, but the limit is " + maxHeapSize + " bytes!");
+   return false;
+  }
+  for (var cutDown = 1; cutDown <= 4; cutDown *= 2) {
+   var overGrownHeapSize = oldSize * (1 + .2 / cutDown);
+   overGrownHeapSize = Math.min(overGrownHeapSize, requestedSize + 100663296);
+   var newSize = Math.min(maxHeapSize, alignUp(Math.max(requestedSize, overGrownHeapSize), 65536));
+   var t0 = Sys_Milliseconds();
+   var replacement = emscripten_realloc_buffer(newSize);
+   var t1 = Sys_Milliseconds();
+   console.log("Heap resize call from " + oldSize + " to " + newSize + " took " + (t1 - t0) + " msecs. Success: " + !!replacement);
+   if (replacement) {
+    return true;
+   }
+  }
+  err("Failed to grow the heap from " + oldSize + " bytes to " + newSize + " bytes, not enough memory!");
+  return false;
+}
+
+function _emscripten_get_heap_size() {
+  return HEAPU8.length;
+ }
+ 
 var SYS = {
   DebugBreak: function () { debugger },
   DebugTrace: function () { console.log(new Error()) },
+  emscripten_resize_heap: _emscripten_resize_heap,
+  emscripten_get_heap_size: _emscripten_get_heap_size,
   Sys_RandomBytes: Sys_RandomBytes,
   Sys_Milliseconds: Sys_Milliseconds,
   Sys_Microseconds: Sys_Microseconds,

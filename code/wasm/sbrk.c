@@ -5,29 +5,39 @@
  * found in the LICENSE file.
  *
 */
-#include "../qcommon/q_shared.h"
 
+#ifndef EMSCRIPTEN_NO_ERRNO
+#include <errno.h>
+#endif
+#include <limits.h>
+#include <stddef.h>
+#include <stdint.h>
+#if __EMSCRIPTEN_PTHREADS__ // for error handling, see below
+#include <stdio.h>
+#include <stdlib.h>
+#endif
 
-#define SET_ERRNO() 
+#ifdef __EMSCRIPTEN_TRACING__
+//#include <emscripten/em_asm.h>
+#endif
+
+//#include <emscripten/heap.h>
+#define WASM_PAGE_SIZE 65536
+#define EMSCRIPTEN_PAGE_SIZE WASM_PAGE_SIZE
+uintptr_t *emscripten_get_sbrk_ptr(void);
+extern int emscripten_resize_heap(size_t requested_size);
+size_t emscripten_get_heap_size(void);
+size_t emscripten_get_heap_max(void);
+
+#ifndef EMSCRIPTEN_NO_ERRNO
+#define SET_ERRNO() { errno = ENOMEM; }
+#else
+#define SET_ERRNO()
+#endif
 
 extern size_t __heap_base;
 
 static uintptr_t sbrk_val = (uintptr_t)&__heap_base;
-
-int emscripten_resize_heap(size_t size){
-#ifdef __EMSCRIPTEN_MEMORY_GROWTH__
-  size_t old_size = __builtin_wasm_memory_size(0) * WASM_PAGE_SIZE;
-  assert(old_size < size);
-  ssize_t diff = (size - old_size + WASM_PAGE_SIZE - 1) / WASM_PAGE_SIZE;
-  size_t result = __builtin_wasm_memory_grow(0, diff);
-  if (result != (size_t)-1) {
-    // Success, update JS (see https://github.com/WebAssembly/WASI/issues/82)
-    emscripten_notify_memory_growth(0);
-    return 1;
-  }
-#endif
-  return 0;
-}
 
 uintptr_t* emscripten_get_sbrk_ptr() {
 #ifdef __PIC__
@@ -68,7 +78,7 @@ void *sbrk(intptr_t increment_) {
     if (increment > 0 && (uint32_t)new_brk <= (uint32_t)old_brk) {
       goto Error;
     }
-    old_size = __builtin_wasm_memory_size(0) << 16;
+    old_size = emscripten_get_heap_size();
     if (new_brk > old_size) {
       // Try to grow memory.
       if (!emscripten_resize_heap(new_brk)) {

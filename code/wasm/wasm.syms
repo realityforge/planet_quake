@@ -1,4 +1,6 @@
 __assert_fail
+emscripten_get_heap_size
+emscripten_resize_heap
 stderr
 cos
 cosf
