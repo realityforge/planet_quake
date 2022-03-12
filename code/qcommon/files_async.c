@@ -406,9 +406,6 @@ static downloadLazy_t *Sys_FileNeeded_real(const char *filename, int state) {
 
 	assert(!Q_stristr(localName, stupidPathError));
 #endif
-if(Q_stristr(download->downloadName, ".tmp")) {
-	Com_Error(ERR_FATAL, "goddamnit\n");
-}
 
 	return download;
 }

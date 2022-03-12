@@ -680,7 +680,7 @@ static qboolean parse_file( const char *filename )
 	if ( !filename || !*filename )
 		return qfalse;
 
-	f = fopen( filename, "rb" );
+	f = Sys_FOpen( filename, "rb" );
 	if ( f == NULL )
 		return qfalse;
 

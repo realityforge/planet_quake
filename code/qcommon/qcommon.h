@@ -1319,7 +1319,8 @@ temp file loading
 
 */
 #ifdef  __WASM__
-void DebugBreak( void );
+extern void DebugBreak( void );
+extern void DebugTrace( void );
 #endif
 
 

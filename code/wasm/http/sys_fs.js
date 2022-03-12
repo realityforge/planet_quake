@@ -52,6 +52,9 @@ function writeStore(value, key) {
 function Sys_Mkdir(filename) {
   let fileStr = addressToString(filename)
   let localName = fileStr
+  if(localName.startsWith('/base')
+    || localName.startsWith('/home'))
+    localName = localName.substring('/base'.length)
   if(localName[0] == '/')
     localName = localName.substring(1)
   if(!FS.database) {

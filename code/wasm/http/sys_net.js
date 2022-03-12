@@ -13,18 +13,14 @@ function Sys_StringToSockaddr() {
 }
 
 function Sys_SendPacket() {
-
+  debugger
 }
 
 function NET_GetPacket() {
-
+  debugger
 }
 
 function NET_Sleep() {
-
-}
-
-function NET_SendPacket() {
 
 }
 
@@ -45,6 +41,7 @@ function Sys_Offline() {
 }
 
 function Sys_NET_MulticastLocal (net, length, data) {
+  debugger
   // all this does is use a dedicated server in a service worker
   window.serverWorker.postMessage([
     'net', net, Uint8Array.from(HEAP8.slice(data, data+length))])
@@ -104,6 +101,7 @@ function CL_Download(cmd, name, auto) {
     if(nameStr[nameStr.length - 1] == '/') {
       let tempName = gamedir + '/.' // yes this is where it always looks for temp files
         + Math.round(Math.random() * 0xFFFFFFFF).toString(16) + '.tmp'
+      FS_CreatePath(stringToAddress('/home/' + tempName))
       FS.virtual[tempName] = {
         timestamp: new Date(),
         mode: 33206,
@@ -123,6 +121,7 @@ function CL_Download(cmd, name, auto) {
         debugger
         throw new Error('something wrong')
       }
+      FS_CreatePath(stringToAddress('/home/' + nameStr))
       FS.virtual[nameStr] = {
         timestamp: new Date(),
         mode: 33206,
@@ -138,6 +137,7 @@ function CL_Download(cmd, name, auto) {
   } catch (e) {
     
   }
+  return true
 }
 
 var NET = {
@@ -147,7 +147,6 @@ var NET = {
   Sys_StringToSockaddr: Sys_StringToSockaddr,
   NET_GetPacket: NET_GetPacket,
   NET_Sleep: NET_Sleep,
-  NET_SendPacket: NET_SendPacket,
   NET_OpenIP: NET_OpenIP,
   NET_Close: NET_Close,
   Sys_StringToAdr: Sys_StringToAdr,

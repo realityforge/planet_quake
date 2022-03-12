@@ -18,6 +18,7 @@ function getQueryCommands() {
     '+set', 'cl_dlURL', '"http://local.games:8080/multigame"',
     '+set', 'r_mode', '-1',
     '+set', 'r_ext_framebuffer_object', '0',
+    '+set', 'bot_enable', '0',
 
     //'+set', 'r_ext_multitexture', '0',
     //'+set', 'r_ext_framebuffer_multisample', '0',
@@ -174,6 +175,7 @@ function Sys_Print(message) {
 function Sys_Exit(code) {
   if(Q3e.frameInterval) {
     clearInterval(Q3e.frameInterval)
+    Q3e.frameInterval = null
   }
   // redirect to lvlworld
   let returnUrl = addressToString(Cvar_VariableString('cl_returnURL'))
@@ -242,7 +244,7 @@ function CL_ModifyMenu(event) {
 function Sys_Frame() {
   requestAnimationFrame(function () {
     try {
-      Com_Frame(true)
+      Com_Frame(false)
     } catch (e) {
       console.log(e)
     }
@@ -251,6 +253,7 @@ function Sys_Frame() {
 
 var SYS = {
   DebugBreak: function () { debugger },
+  DebugTrace: function () { console.log(new Error()) },
   Sys_RandomBytes: Sys_RandomBytes,
   Sys_Milliseconds: Sys_Milliseconds,
   Sys_Microseconds: Sys_Microseconds,

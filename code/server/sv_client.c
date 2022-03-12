@@ -3544,10 +3544,14 @@ void SV_ExecuteClientMessage( client_t *cl, msg_t *msg ) {
 			return;
 		}
 		// if we can tell that the client has dropped the last gamestate we sent them, resend it
-		if ( cl->state != CS_ACTIVE && cl->messageAcknowledge - cl->gamestateMessageNum > 0 ) {
+		if ( cl->state != CS_ACTIVE 
+#ifndef __WASM__
+			&& cl->messageAcknowledge - cl->gamestateMessageNum > 0 
+#endif
+		) {
 			if ( !SVC_RateLimit( &cl->gamestate_rate, 4, 1000 ) ) {
-				if ( cl->gentity )
-				Com_DPrintf( "%s : dropped gamestate, resending\n", cl->name );
+				//if ( cl->gentity )
+				Com_Printf( "%s : dropped gamestate, resending\n", cl->name );
 				SV_SendClientGameState( cl );
 			}
 		}
@@ -3584,6 +3588,7 @@ void SV_ExecuteClientMessage( client_t *cl, msg_t *msg ) {
 #ifdef USE_ASYNCHRONOUS
 	// skip user move commands if server is restarting because of the command above
 	if(!FS_Initialized()) {
+		Com_Error(ERR_FATAL, "fs restarting?");
 		return;
 	}
 #endif

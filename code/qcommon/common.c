@@ -3158,8 +3158,6 @@ int Com_EventLoop( void ) {
 
 		// if no more events are available
 		if ( ev.evType == SE_NONE ) {
-#ifndef __WASM__ // PUSH NOW!!!!
-			// manually send packet events for the loopback channel
 #ifndef DEDICATED
 			while ( NET_GetLoopPacket( NS_CLIENT, &evFrom, &buf ) ) {
 #ifdef USE_LOCAL_DED
@@ -3185,8 +3183,8 @@ int Com_EventLoop( void ) {
 				}
 			}
 #endif
-#endif // !__WASM__
 			return ev.evTime;
+		} else {
 		}
 
 		switch ( ev.evType ) {
@@ -4102,7 +4100,7 @@ void Com_Init( char *commandLine ) {
 #endif
 #ifdef __WASM__
 	// because request animation frame isn't called when the window is out of focus
-	com_maxfpsUnfocused = Cvar_Get( "com_maxfpsUnfocused", "10", CVAR_ARCHIVE_ND );
+	com_maxfpsUnfocused = Cvar_Get( "com_maxfpsUnfocused", "30", CVAR_ARCHIVE_ND );
 #else
 	com_maxfpsUnfocused = Cvar_Get( "com_maxfpsUnfocused", "60", CVAR_ARCHIVE_ND );
 #endif
@@ -4605,7 +4603,6 @@ void Com_Frame( qboolean noDelay ) {
 #endif
 	}
 
-#ifndef __WASM__
 	// waiting for incoming packets
 	if ( noDelay == qfalse )
 	do {
@@ -4634,9 +4631,10 @@ void Com_Frame( qboolean noDelay ) {
 		if ( timeVal > sleepMsec )
 			Com_EventLoop();
 #endif
+#ifndef __WASM__
 		NET_Sleep( sleepMsec * 1000 - 500 );
-	} while( Com_TimeVal( minMsec ) );
 #endif
+	} while( Com_TimeVal( minMsec ) );
 
 
 	lastTime = com_frameTime;

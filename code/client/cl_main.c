@@ -1622,6 +1622,8 @@ qboolean CL_Disconnect( qboolean showMainMenu, qboolean dropped ) {
   void *syms[20];
   const size_t size = backtrace( syms, ARRAY_LEN( syms ) );
   backtrace_symbols_fd( syms, size, STDERR_FILENO );
+#else
+	DebugTrace();
 #endif
 #endif
 
@@ -1744,6 +1746,7 @@ qboolean CL_Disconnect( qboolean showMainMenu, qboolean dropped ) {
 	CL_ClearState();
 
 	// wipe the client connection
+	Com_Printf("whoops!\n");
 	Com_Memset( &clc, 0, sizeof( clc ) );
 	
 	cls.state = CA_DISCONNECTED;
@@ -3725,6 +3728,7 @@ void CL_PacketEvent( const netadr_t *from, msg_t *msg ) {
 	// packet from server
 	//
 	if ( !NET_CompareAdr( from, &clc.netchan.remoteAddress ) ) {
+		Com_Printf("whoops!\n");
 		if ( com_developer->integer ) {
 			Com_Printf( "%s:sequenced packet without connection\n",
 				NET_AdrToStringwPort( from ) );
@@ -4254,11 +4258,13 @@ Com_Printf( "skipping\n");
 	}
 
 #ifndef USE_ASYNCHRONOUS
-#ifndef __WASM__
 #ifdef _DEBUG
+#ifndef __WASM__
   void *syms[20];
   const size_t size = backtrace( syms, ARRAY_LEN( syms ) );
   backtrace_symbols_fd( syms, size, STDERR_FILENO );
+#else
+	DebugTrace();
 #endif
 #endif
 #endif
@@ -4301,10 +4307,6 @@ Com_Printf( "skipping\n");
 		}
 #endif
 	}
-
-
-//Com_Printf("wtf? started: %d, skip: %d, init: %d\n", 
-	//cls.uiStarted, Cvar_VariableIntegerValue("com_skipLoadUI"), FS_Initialized());
 
 #ifdef USE_ASYNCHRONOUS
 	if ( ( cls.state > CA_CONNECTED && cls.state != CA_CINEMATIC ) && !cls.cgameStarted ) {

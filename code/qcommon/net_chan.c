@@ -66,10 +66,6 @@ static const char *netsrcString[2] = {
 	"server"
 };
 
-#ifdef __WASM__
-void Sys_NET_MulticastLocal( int sock, int length, const int *data );
-#endif
-
 /*
 ===============
 Netchan_Init
@@ -459,18 +455,8 @@ qboolean NET_GetLoopPacket( netsrc_t sock, netadr_t *net_from, msg_t *net_messag
 	net_message->cursize = loop->msgs[i].datalen;
 	Com_Memset (net_from, 0, sizeof(*net_from));
 	net_from->type = NA_LOOPBACK;
-/*
-#ifdef __WASM__
-	// TODO: server to server communication, multiple server
-  // replicate server states inside qagame
-	// also send queued messages to local client if running in dedicated thread
-	if(sock == NS_CLIENT && com_dedicated->integer) {
-		Sys_NET_MulticastLocal(sock, net_message->cursize, net_message->data);
-	}
-#endif
-*/
-	return qtrue;
 
+	return qtrue;
 }
 
 
@@ -486,12 +472,16 @@ static void NET_SendLoopPacket( netsrc_t sock, int length, const void *data )
 
 	Com_Memcpy (loop->msgs[i].data, data, length);
 	loop->msgs[i].datalen = length;
-	
-#ifdef USE_LOCAL_DED
+	/*
 #ifdef __WASM__
-	Sys_NET_MulticastLocal(sock, length, data);
+	// TODO: server to server communication, multiple server
+  // replicate server states inside qagame
+	// also send queued messages to local client if running in dedicated thread
+	if(sock == NS_CLIENT && com_dedicated->integer) {
+		Sys_NET_MulticastLocal(sock, net_message->cursize, net_message->data);
+	}
 #endif
-#endif
+*/
 }
 
 //=============================================================================

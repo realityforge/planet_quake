@@ -971,7 +971,6 @@ void SCR_UpdateScreen( qboolean fromVM ) {
 		return; // not initialized yet
 
   ms = Sys_Milliseconds();
-#ifndef __WASM__
   if ( framecount == cls.framecount ) {
 		if ( next_frametime && ms - next_frametime < 0 ) {
 			re.ThrottleBackend();
@@ -982,7 +981,6 @@ void SCR_UpdateScreen( qboolean fromVM ) {
 		next_frametime = 0;
 		framecount = cls.framecount;
 	}
-#endif
 
 	if ( ++recursive > 2 ) {
 		Com_Error( ERR_FATAL, "SCR_UpdateScreen: recursively called" );

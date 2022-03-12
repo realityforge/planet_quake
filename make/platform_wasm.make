@@ -7,7 +7,7 @@ USE_SYSTEM_JPEG  := 0
 USE_INTERNAL_JPEG := 1
 USE_SYSTEM_LIBC  := 0
 USE_ABS_MOUSE    := 1
-USE_LOCAL_DED    := 1
+USE_LOCAL_DED    := 0
 USE_LAZY_LOAD    := 1
 USE_LAZY_MEMORY  := 1
 USE_MASTER_LAN   := 1
@@ -63,7 +63,6 @@ BASE_CFLAGS      += -Wall --target=wasm32 \
                     -DUSE_Q3KEY \
                     -DUSE_MD5 \
                     -DUSE_ABS_MOUSE \
-                    -DUSE_LOCAL_DED \
                     -DUSE_LAZY_LOAD \
                     -DUSE_LAZY_MEMORY \
                     -DUSE_MASTER_LAN \

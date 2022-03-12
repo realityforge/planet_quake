@@ -54,6 +54,13 @@ MUSL_LOBJ        := string/stpcpy.o  string/memset.o  string/memcpy.o    \
                     math/__math_oflowf.o math/__math_uflowf.o \
                     math/__math_invalidf.o math/__math_xflowf.o \
                     \
+                    stdlib/atoi.o   stdlib/atof.o   stdlib/strtod.o \
+                    stdlib/qsort.o  stdlib/strtol.o stdlib/atol.o \
+                    \
+                    ctype/tolower.o ctype/isalnum.o  ctype/isspace.o \
+                    ctype/isdigit.o ctype/iswdigit.o ctype/isupper.o \
+										ctype/isalpha.o \
+                    \
                     multibyte/mbrtowc.o   multibyte/mbstowcs.o multibyte/wctomb.o \
                     multibyte/mbsrtowcs.o multibyte/wcrtomb.o  multibyte/mbsinit.o \
                     multibyte/mbtowc.o    multibyte/btowc.o    multibyte/internal.o \

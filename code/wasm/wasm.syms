@@ -10,6 +10,7 @@ ceil
 fabs
 fabsf
 isdigit
+atan2
 floor
 sqrtf
 sqrt
@@ -79,7 +80,7 @@ Sys_LoadFunction
 popen
 pclose
 DebugBreak
-atan2
+DebugTrace
 Sys_GetFileStats
 Sys_FOpen
 tolower

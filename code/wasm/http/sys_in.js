@@ -138,7 +138,11 @@ function InputPushMovedEvent (evt) {
     if(Q3e.frameInterval) {
       clearInterval(Q3e.frameInterval)
     }
-    Q3e.frameInterval = setInterval(Sys_Frame, 1000 / INPUT.fpsUnfocused);
+    // put this here not to restart if it's shut down
+    if(Cvar_VariableIntegerValue(stringToAddress('cl_running'))
+      || Cvar_VariableIntegerValue(stringToAddress('sv_running'))) {
+      Q3e.frameInterval = setInterval(Sys_Frame, 1000 / INPUT.fpsUnfocused)
+    }
     return
   }
 
