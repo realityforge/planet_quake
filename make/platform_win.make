@@ -107,4 +107,6 @@ RELEASE_CFLAGS = $(BASE_CFLAGS) -DNDEBUG $(OPTIMIZE)
 ifdef B
 pre-build:
 	@:
+post-build:
+	@:
 endif

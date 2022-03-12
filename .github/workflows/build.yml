@@ -256,22 +256,21 @@ jobs:
         sudo apt-get -qq update
         sudo apt-get -y install libcurl4-openssl-dev mesa-common-dev libxxf86dga-dev libxrandr-dev libxxf86vm-dev libasound-dev libsdl2-dev wget binaryen git
         cd ..
-        git clone https://github.com/emscripten-core/emsdk.git
-        cd emsdk
-        ./emsdk install latest
-        ./emsdk activate latest
-        source ./emsdk_env.sh
-        cd ..
-#wget --no-check-certificate https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-14/wasi-sdk-14.0-linux.tar.gz
-#tar -zxvf wasi-sdk-14.0-linux.tar.gz -C libs/linux/
-#ls -lah libs/linux/
+        wget --no-check-certificate https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-14/wasi-sdk-14.0-linux.tar.gz
+        tar -zxvf wasi-sdk-14.0-linux.tar.gz
+        #git clone https://github.com/emscripten-core/emsdk.git
+        #cd emsdk
+        #./emsdk install latest
+        #./emsdk activate latest
+        #source ./emsdk_env.sh
+        #cd ..
 
     - name: Build
       run: |
         mkdir bin
-        make -f make/build_client.make clean ${{ matrix.rule }}  ARCH=${{ matrix.arch }}    ${{ matrix.use_sdl }} USE_VULKAN_API=0 CNAME=quake3e PLATFORM=js NO_MAKE_LOCAL=1 USE_ASYNCHRONOUS=1 USE_LAZY_LOAD=1 PLATFORM=js CC=/home/runner/work/planet_quake/emsdk/upstream/emscripten/emcc EMJS_CONFIG_PATH=/home/runner/work/planet_quake/emsdk/.emscripten
-        cp build/release-js-js/quake3e.js bin/
-#        cp build/release-js-js/quake3e.wasm bin/
+        make -f make/build_client.make clean ${{ matrix.rule }}  ARCH=${{ matrix.arch }}    ${{ matrix.use_sdl }} USE_VULKAN_API=0 CNAME=quake3e NO_MAKE_LOCAL=1 USE_ASYNCHRONOUS=1 USE_LAZY_LOAD=1 PLATFORM=wasm CC=/home/runner/work/planet_quake/wasi-sdk-14.0/bin/clang
+        cp build/release-wasm-js/quake3e.wasm bin/
+#        cp build/release-js-js/quake3e.js bin/
 
     - uses: actions/upload-artifact@v2
       if: matrix.config == 'Release'

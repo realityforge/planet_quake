@@ -92,6 +92,7 @@ post-build:
 	$(Q)$(OPT) -Os --no-validation -o $(B)/$(TARGET) $(B)/$(TARGET)
 
 # TODO: compile all js files into one/minify/webpack
-# TODO: insert bigchars font into web page
+# TODO: insert bigchars font into index page, insert all javascript and wasm into index page
+# TODO: deploy index page with Actions
 
 endif
