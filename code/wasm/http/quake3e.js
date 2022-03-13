@@ -15,7 +15,6 @@ function getQueryCommands() {
     '+set', 'fs_homepath', '/home',
     '+set', 'sv_pure', '0', // require for now, TODO: server side zips
     '+set', 'fs_basegame', 'multigame',
-    '+set', 'cl_dlURL', '"http://local.games:8080/multigame"',
     '+set', 'r_mode', '-1',
     '+set', 'r_ext_framebuffer_object', '0',
     '+set', 'bot_enable', '0',
@@ -173,6 +172,7 @@ function Sys_Print(message) {
 }
 
 function Sys_Exit(code) {
+  GLimp_Shutdown();
   if(Q3e.frameInterval) {
     clearInterval(Q3e.frameInterval)
     Q3e.frameInterval = null
@@ -275,7 +275,7 @@ function emscripten_realloc_buffer(size) {
    updateGlobalBufferAndViews(Q3e.memory.buffer);
    return 1;
   } catch (e) {
-   console.error("emscripten_realloc_buffer: Attempted to grow heap from " + buffer.byteLength + " bytes to " + size + " bytes, but got error: " + e);
+   console.error("emscripten_realloc_buffer: Attempted to grow heap from " + Q3e.memory.buffer.byteLength + " bytes to " + size + " bytes, but got error: " + e);
   }
 }
 

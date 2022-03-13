@@ -76,7 +76,7 @@ DEBUG_CFLAGS     := -fvisibility=default \
                     -DDEBUG -D_DEBUG -O0 -g -g3 -fPIC -gdwarf -gfull -fno-inline
 
 RELEASE_CFLAGS   := -fvisibility=hidden \
-                    -DNDEBUG -Ofast -O3 -Oz -fPIC -fno-inline -ffast-math
+                    -DNDEBUG -Ofast -O3 -Oz -fPIC -ffast-math
                     # -flto 
 
 export INCLUDE   := -Icode/wasm/include 

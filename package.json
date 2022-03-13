@@ -3,7 +3,13 @@
   "version": "0.0.1",
   "scripts": {
     "start": "node ./code/wasm/bin/web.js",
-    "proxy": "node ./code/wasm/bin/proxy.js"
+    "proxy": "node ./code/wasm/bin/proxy.js",
+    "deploy:cors": "gsutil cors set code/wasm/bin/cors.json gs://nightly.quake.games/",
+    "deploy:assets": "gsutil -m rsync -r games/multigame/assets/ gs://nightly.quake.games/assets/multigame/",
+    "deploy:http": "gsutil -m rsync -r code/wasm/http/ gs://nightly.quake.games/",
+    "deploy:game": "gsutil -m cp -r build/*/multigame/vm/*.qvm gs://nightly.quake.games/assets/multigame/vm/",
+    "deploy:build": "gsutil -m cp -r build/release-wasm-js/*.wasm gs://nightly.quake.games/",
+    "deploy": "npm run deploy:assets && npm run deploy:http && npm run deploy:build && npm run deploy:game"
   },
   "bin": {
     "quakejs-content": "bin/content.js",

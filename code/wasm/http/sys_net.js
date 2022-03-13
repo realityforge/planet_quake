@@ -54,6 +54,9 @@ function CL_Download(cmd, name, auto) {
   if(AbortController && !NET.controller) {
     NET.controller = new AbortController()
   }
+  if(NET.downloadCount > 5) {
+    return false // delay like cl_curl does
+  }
 
   // TODO: make a utility for Cvar stuff?
   let dlURL = addressToString(Cvar_VariableString(stringToAddress("cl_dlURL")))
@@ -67,8 +70,25 @@ function CL_Download(cmd, name, auto) {
   if(localName[0] == '/')
     localName = localName.substring(1)
 
+  let remoteURL
+  if(dlURL.includes('%1')) {
+    remoteURL = dlURL.replace('%1', localName.replace(/\//ig, '%2F'))
+  } else {
+    remoteURL = dlURL + '/' + localName
+  }
+  if(remoteURL.includes('.googleapis.com')) {
+    if(nameStr.endsWith('/')) {
+      remoteURL = 'https://www.googleapis.com/storage/v1/b/'
+        + remoteURL.match(/\/b\/(.*?)\/o\//)[1]
+        + '/o/?includeTrailingDelimiter=true&maxResults=100&delimiter=%2f&prefix='
+        + remoteURL.match(/\/o\/(.*)/)[1]
+    } else if (!remoteURL.includes('?')) {
+      remoteURL += '?alt=media'
+    }
+  }
   try {
-  fetch(dlURL + '/' + localName, {
+  NET.downloadCount++
+  fetch(remoteURL, {
     mode: 'cors',
     responseType: 'arraybuffer',
     credentials: 'omit',
@@ -93,15 +113,16 @@ function CL_Download(cmd, name, auto) {
     return
   })
   .then(function (responseData) {
+    NET.downloadCount--
     if(!responseData) {
       // already responded with null data
       return
     }
     // don't store any index files, redownload every start
     if(nameStr[nameStr.length - 1] == '/') {
-      let tempName = gamedir + '/.' // yes this is where it always looks for temp files
+      let tempName = nameStr + '.' // yes this is where it always looks for temp files
         + Math.round(Math.random() * 0xFFFFFFFF).toString(16) + '.tmp'
-      FS_CreatePath(stringToAddress('/home/' + tempName))
+      FS_CreatePath(stringToAddress('/home/' + nameStr + '/'))
       FS.virtual[tempName] = {
         timestamp: new Date(),
         mode: 33206,
@@ -141,6 +162,7 @@ function CL_Download(cmd, name, auto) {
 }
 
 var NET = {
+  downloadCount: 0,
   controller: null,
   Sys_Offline: Sys_Offline,
   Sys_SockaddrToString: Sys_SockaddrToString,

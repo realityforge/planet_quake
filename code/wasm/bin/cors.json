@@ -6,6 +6,12 @@
       "maxAgeSeconds": 3600
     },
     {
+      "origin": ["https://nightly.quake.games"],
+      "responseHeader": ["*"],
+      "method": ["GET", "HEAD"],
+      "maxAgeSeconds": 3600
+    },
+    {
       "origin": ["https://quake.games"],
       "responseHeader": ["*"],
       "method": ["GET", "HEAD"],

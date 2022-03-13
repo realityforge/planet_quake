@@ -856,13 +856,14 @@ extern "C" {
     /* ------------------- Declarations of public routines ------------------- */
     
 #ifndef USE_DL_PREFIX
+
 // XXX Emscripten XXX
-void* malloc(size_t) __attribute__((weak, alias("dlmalloc")));
-void  free(void*) __attribute__((weak, alias("dlfree")));
+extern __attribute__((visibility("default"))) void* malloc(size_t) __attribute__((weak, alias("dlmalloc")));
+extern __attribute__((visibility("default"))) void  free(void*) __attribute__((weak, alias("dlfree")));
 void* calloc(size_t, size_t) __attribute__((weak, alias("dlcalloc")));
 void* realloc(void*, size_t) __attribute__((weak, alias("dlrealloc")));
 void* realloc_in_place(void*, size_t) __attribute__((weak, alias("dlrealloc_in_place")));
-void* memalign(size_t, size_t) __attribute__((weak, alias("dlmemalign")));
+extern __attribute__((visibility("default"))) void* memalign(size_t, size_t) __attribute__((weak, alias("dlmemalign")));
 int posix_memalign(void**, size_t, size_t) __attribute__((weak, alias("dlposix_memalign")));
 void* valloc(size_t) __attribute__((weak, alias("dlvalloc")));
 void* pvalloc(size_t) __attribute__((weak, alias("dlpvalloc")));
@@ -6053,9 +6054,9 @@ int mspace_mallopt(int param_number, int value) {
 // and dlfree from this file.
 // This allows an easy mechanism for hooking into memory allocation.
 #if defined(__WASM__) && !ONLY_MSPACES
-extern __typeof(malloc) emscripten_builtin_malloc __attribute__((alias("dlmalloc")));
-extern __typeof(free) emscripten_builtin_free __attribute__((alias("dlfree")));
-extern __typeof(memalign) emscripten_builtin_memalign __attribute__((alias("dlmemalign")));
+//extern __typeof(malloc) emscripten_builtin_malloc __attribute__((alias("dlmalloc")));
+//extern __typeof(free) emscripten_builtin_free __attribute__((alias("dlfree")));
+//extern __typeof(memalign) emscripten_builtin_memalign __attribute__((alias("dlmemalign")));
 #endif
 
 

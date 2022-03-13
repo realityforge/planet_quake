@@ -62,18 +62,18 @@ typedef struct qtime_s {
 
 var STD = {
   __assert_fail: console.assert, // TODO: convert to variadic fmt for help messages
+  longjmp: function (id, code) { throw new Error('longjmp', id, code) },
+  setjmp: function (id) { try {  } catch (e) { } },
+  /*
   memset: function (addr, val, count) {
     HEAP8.fill(val, addr, addr + count)
     return addr
   },
-  longjmp: function (id, code) { throw new Error('longjmp', id, code) },
-  setjmp: function (id) { try {  } catch (e) { } },
   fprintf: function (f, err, args) {
     // TODO: rewrite va_args in JS for convenience?
     console.log(addressToString(err), addressToString(HEAP32[(args) >> 2]));
   },
   tolower: function tolower(c) { return String.fromCharCode(c).toLowerCase().charCodeAt(0) },
-  srand: function srand() {}, // TODO: highly under-appreciated game dynamic
   atoi: function (i) { return parseInt(addressToString(i)) },
   atol: function (i) { return parseInt(addressToString(i)) },
   atof: function (f) { return parseFloat(addressToString(f)) },
@@ -158,14 +158,15 @@ var STD = {
   memcmp: function () { debugger },
   qsort: function () { debugger },
   strncat: function () { debugger },
-  rand: Math.random,
   strtod: function (str, n) { return STD.strtof(str, n) },
-
+  */
 }
 
 
 
 var MATHS = {
+  srand: function srand() {}, // TODO: highly under-appreciated game dynamic
+  rand: Math.random,
   htons: function (c) { return c ? (n<<8 | n>>8) : n },
   ntohs: function (c) { return c ? (n<<8 | n>>8) : n },
   exp2: function (c) { return Math.pow(2, c) },

@@ -101,8 +101,10 @@ qhandle_t R_RegisterMD3(const char *name, model_t *mod)
 		return mod->index;
 	}
 
+#ifndef __WASM__
 #ifdef _DEBUG
-	ri.Printf(PRINT_WARNING,"R_RegisterMD3: couldn't load %s\n", name);
+	ri.Printf(PRINT_WARNING, "R_RegisterMD3: couldn't load %s\n", name);
+#endif
 #endif
 
 	mod->type = MOD_BAD;

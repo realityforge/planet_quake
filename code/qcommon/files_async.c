@@ -3,6 +3,8 @@
 #include "qcommon.h"
 #include "../client/client.h"
 
+#undef assert
+#define assert(x) {if(!(x)) { Com_Error( ERR_FATAL, "assert failed: %s", #x ); }}
 #define PK3_HASH_SIZE 512
 #define FS_HashFileName Com_GenerateHashValue
 #define CACHE_FILE_NAME "pk3cache.dat"
@@ -179,9 +181,6 @@ void Sys_UpdateNeeded( downloadLazy_t **ready, downloadLazy_t **downloadNeeded )
 			//if(Q_stristr(download->downloadName, "default.cfg")) {
 			//	assert(download->state > VFS_LATER);
 			//}
-			//if(Q_stristr(download->downloadName, "palette.shader")) {
-			//	assert(download->state > VFS_LATER);
-			//}
 			//if(!Q_stristr(download->downloadName, ".pk3dir/")
 			//	&& Q_stristr(download->downloadName, "bfg.md3")) {
 			//	assert(download->state > VFS_NOENT);
@@ -214,6 +213,9 @@ void Sys_UpdateNeeded( downloadLazy_t **ready, downloadLazy_t **downloadNeeded )
   }
 
 	if(downloadNeeded && highest) {
+		//if(Q_stristr(highest->downloadName, "icona_grenade.jpeg")) {
+		//	assert(highest->state <= VFS_NOENT);
+		//}
 		*downloadNeeded = highest;
 	}
 }
@@ -230,6 +232,7 @@ static downloadLazy_t *Sys_FileNeeded_real(const char *filename, int state) {
 	char localName[MAX_OSPATH];
 	const char *dir;
 	int lengthGame = strlen(FS_GetCurrentGameDir());
+	int newState = state;
 	localName[0] = '\0';
 
 	assert(state < VFS_DL);
@@ -277,6 +280,7 @@ static downloadLazy_t *Sys_FileNeeded_real(const char *filename, int state) {
 	// remove pk3dir from localName so we can find it again easily
 	if((s = Q_stristr(localName, ".pk3dir/")) != NULL) {
 		hash = FS_HashPK3( s + 8 );
+		lengthGame = (s - localName) + 7;
 	} else {
 		// check pk3dir paths
 		if(state == VFS_NOW) {
@@ -284,12 +288,14 @@ static downloadLazy_t *Sys_FileNeeded_real(const char *filename, int state) {
 			char			**pakdirs;
 			int				pakdirsi = 0;
 			int       numdirs;
+			int       len;
 			Com_sprintf( realPath, sizeof( realPath ), "%s/%s", 
 				Cvar_VariableString("fs_homepath"), FS_GetCurrentGameDir() );
 			pakdirs = Sys_ListFiles( realPath, "/", NULL, &numdirs, qfalse );
 			while (pakdirsi < numdirs) 
 			{
-				if (!Q_stricmpn(&pakdirs[pakdirsi][strlen(pakdirs[pakdirsi]) - 7], ".pk3dir", 7)) {
+				len = strlen(pakdirs[pakdirsi]);
+				if (len && !Q_stricmpn(&pakdirs[pakdirsi][len - 7], ".pk3dir", 7)) {
 					char pk3dirName[MAX_OSPATH];
 					pk3dirName[0] = '\0';
 					strcat(pk3dirName, pakdirs[pakdirsi]);
@@ -331,16 +337,28 @@ static downloadLazy_t *Sys_FileNeeded_real(const char *filename, int state) {
 				if(download->state > VFS_NOENT && download->state < state) {
 					download->state = state;
 //Com_Printf("upgrading! %i, %i - %s, %s\n", hash, state, download->downloadName, loading);
+				} else if (download->state == VFS_NOW) {
+					// upgrade if a regular map request happened and the maplist arrives after
+					newState = MAX(VFS_NOW, newState);
 				}
 			}
 
 		} while ((download = download->next) != NULL);
 	}
 
-//if(Q_stristr(localName, "lsdm3_v1.bsp")) {
+	if(found && found->state > VFS_NOENT) {
+		found->state = MAX(found->state, newState);
+	}
+
+//if(Q_stristr(localName, "lsdm3_v1.pk3dir")) {
 //if(Q_stristr(localName, "weapons2/bfg")) {
-//Com_Printf("file needed! %i, %i - %s, %i, %i\n", hash, state, localName, !!parentDownload, isRoot);
+//if(Q_stristr(localName, "weapons2/shotgun")) {
+//	&& Q_stristr(download->downloadName, "nunuk-bluedark.jpg")) {
+//if(parentDownload) {
+//if(Q_stristr(localName, "icona_grenade.jpeg"))
+//  Com_Printf("file testing! %i, %i - %s, %i, %i\n", hash, state, localName, !!parentDownload, isRoot);
 //}
+
 	if(!isRoot && !parentDownload) {
 		// no parent? no children
 		return found;
@@ -371,14 +389,14 @@ static downloadLazy_t *Sys_FileNeeded_real(const char *filename, int state) {
 
 	if(parentDownload && parentDownload->state == VFS_DONE) {
 		// parent is done, so don't add files
-		if(state == VFS_LAZY || state == VFS_LATER) {
+		if(state == VFS_LAZY || state == VFS_LATER || state == VFS_INDEX) {
 			// only accept additions from the subsequent MakeDirectoryBuffer(), none from FS_* calls
 		} else {
 			return NULL;
 		}
 	}
 
-//Com_Printf("file needed! %i, %i - %s, %s\n", hash, state, localName, loading);
+Com_DPrintf("file needed! %i, %i - %s, %s\n", hash, state, localName, loading);
 
 	downloadSize = sizeof(downloadLazy_t)
 			+ MAX_OSPATH * 2 /* because it's replaced with temp download name strlen(loading) + 1 */ 
@@ -392,7 +410,7 @@ static downloadLazy_t *Sys_FileNeeded_real(const char *filename, int state) {
 	download->loadingName[strlen(loading)] = '\0';
 	download->downloadName[strlen(localName)] = '\0';
 	download->next = readyCallback[hash];
-	download->state = state;
+	download->state = newState;
 	readyCallback[hash] = download;
 	download->lastRequested = 0; // request immediately, updated after first request
 
@@ -449,6 +467,7 @@ static void ParseJSONFileList(char *buf, int len, char *list, int *count, int *m
 		if(insideAnchor && !insideHref && buf[c] == '"') {
 			c++;
 			insideHref = qtrue;
+			memset(link, 0, sizeof(link));
 			lenLink = 0;
 		}
 
@@ -459,7 +478,6 @@ static void ParseJSONFileList(char *buf, int len, char *list, int *count, int *m
 				link[lenLink] = '\0';
 				if((s = Q_stristr(link, FS_GetCurrentGameDir()))
 					&& lenLink > length + 2) {
-					// inject filepath into pk3cache.dat with some unknown information
 					if((*count) < 1024)
 						strcpy(list + (*max), s);
 					if(count)
@@ -518,6 +536,7 @@ static void ParseHTMLFileList(char *buf, int len, char *list, int *count, int *m
 			}
 			insideHref = qtrue;
 			lenLink = 0;
+			memset(link, 0, sizeof(link));
 		}
 
 		if(insideHref) {
@@ -526,7 +545,7 @@ static void ParseHTMLFileList(char *buf, int len, char *list, int *count, int *m
 				link[lenLink] = '\0';
 				if(Q_stristr(link, FS_GetCurrentGameDir())
 					&& lenLink > length + 2) {
-					// inject filepath into pk3cache.dat with some unknown information
+					Com_Printf("wtf? %s\n", link);
 					if((*count) < 1024)
 						strcpy(list + (*max), link);
 					if(count)
@@ -556,7 +575,9 @@ void MakeDirectoryBuffer(char *paths, int count, int length, const char *parentD
 	const char *s;
 	long hash;
   downloadLazy_t *download;
+#ifdef _DEBUG
   downloadLazy_t *defaultCfg = NULL;
+#endif
 	int lengthDir = strlen(parentDirectory);
 
 	// when a directory index is received, remove any files from the download list
@@ -570,16 +591,31 @@ void MakeDirectoryBuffer(char *paths, int count, int length, const char *parentD
 			}
 
 			do {
-				//if(Q_stristr(download->downloadName, "default.cfg")) {
+#ifdef _DEBUG
+				//if(!Q_stristr(download->downloadName, ".pk3dir/")
+				//	&& Q_stristr(download->downloadName, "default.cfg")) {
+				//	defaultCfg = download;
+				//}
+				//if(!Q_stristr(download->downloadName, ".pk3dir/")
+				//	&& Q_stristr(download->downloadName, "vm/ui.qvm")) {
 				//	defaultCfg = download;
 				//}
 				//if(Q_stristr(download->downloadName, "palette.shader")) {
 				//	defaultCfg = download;
 				//}
-				//if(!Q_stristr(download->downloadName, ".pk3dir/")
-				//	&& Q_stristr(download->downloadName, "bfg.md3")) {
+				//if(Q_stristr(download->downloadName, ".pk3dir/")
+				//	&& Q_stristr(download->downloadName, "nunuk-bluedark.jpg")) {
 				//	defaultCfg = download;
 				//}
+				//if(Q_stristr(parentDirectory, "icons")
+				//	&& Q_stristr(download->downloadName, "icona_grenade.jpeg")) {
+				//	defaultCfg = download;
+				//}
+#endif
+				if(incomplete && !Q_stricmp( download->downloadName, parentDirectory )) {
+					download->state = VFS_PARTIAL;
+				}
+
 				if(download->state > VFS_NOENT && download->state < VFS_DL
 					// don't purge indexes this way
 					&& download->state != VFS_INDEX
@@ -589,7 +625,8 @@ void MakeDirectoryBuffer(char *paths, int count, int length, const char *parentD
 					// last folder in the path
 					&& strchr(&download->downloadName[lengthDir + 1], '/') == NULL 
 				) {
-//Com_Printf("purging: %s\n", download->downloadName);
+if(Q_stristr(parentDirectory, "icons"))
+Com_Printf("purging: %s\n", download->downloadName);
 					download->state = VFS_NOENT - download->state;
 				} else {
 //Com_Printf("skipping: %s != %s\n", download->downloadName, parentDirectory);
@@ -613,6 +650,7 @@ void MakeDirectoryBuffer(char *paths, int count, int length, const char *parentD
 		}
 
 		if(strlen(currentPath) == 0) {
+			currentPath++;
 			continue;
 		}
 
@@ -669,12 +707,12 @@ void MakeDirectoryBuffer(char *paths, int count, int length, const char *parentD
 			// and now we know it's there because its in the directory listing
 			download->state = -download->state + VFS_NOENT;
 //if(Q_stristr(parentDirectory, "weapons2/bfg")) {
-//if(Q_stristr(parentDirectory, "gfx/2d")) {
+//if(Q_stristr(parentDirectory, "icons")) {
 //Com_Printf("keeping %li, %s\n", hash, currentPath);
 //}
 		} else {
 //if(Q_stristr(parentDirectory, "lsdm3_v1.pk3dir/maps")) {
-//if(Q_stristr(parentDirectory, "weapons2/bfg")) {
+//if(Q_stristr(parentDirectory, "icons")) {
 //Com_Printf("adding %li, %s\n", hash, currentPath);
 //}
 		}
@@ -682,7 +720,9 @@ void MakeDirectoryBuffer(char *paths, int count, int length, const char *parentD
 		currentPath += strlen( currentPath ) + 1;
 	}
 
-	assert(!defaultCfg || defaultCfg->state > VFS_NOENT);
+	// default.cfg purged from directory listing
+	//assert(!defaultCfg || defaultCfg->state > VFS_NOENT);
+	//assert(!defaultCfg || defaultCfg->state <= VFS_NOENT);
 
 }
 
@@ -726,7 +766,7 @@ void Sys_FileReady(const char *filename, const char* tempname) {
 	// remove pk3dir from file hash
 	if((s = Q_stristr(localName, ".pk3dir/")) != NULL) {
 		hash = FS_HashPK3( s + 8 );
-		lengthGame = (s - localName) + 8;
+		lengthGame = (s - localName) + 7;
 	} else {
 		hash = FS_HashPK3( &localName[lengthGame + 1] );
 	}
@@ -806,7 +846,7 @@ void Sys_FileReady(const char *filename, const char* tempname) {
 
 void FS_UpdateFiles(const char *filename, const char *tempname) {
 
-Com_Printf("updating files: %s -> %s\n", filename, tempname);
+Com_DPrintf("updating files: %s -> %s\n", filename, tempname);
 
 	// do some extra processing, restart UI if default.cfg is found
 	if(Q_stristr(tempname, "default.cfg")) {
@@ -926,9 +966,6 @@ Com_Printf("updating files: %s -> %s\n", filename, tempname);
 				ParseHTMLFileList(buf, len, paths, &count, &nameLength);
 			}
 			// can't purge missing files from an incomplete file index
-			if(!!Q_stristr(buf, "nextPageToken")) {
-				Sys_FileNeeded_real(filename, VFS_PARTIAL);
-			}
 			MakeDirectoryBuffer(paths, count, nameLength, filename, !!Q_stristr(buf, "nextPageToken"));
 			// TODO: add next page token every time it's requested as if we're actually paging too
 			Z_Free(buf);
@@ -936,21 +973,27 @@ Com_Printf("updating files: %s -> %s\n", filename, tempname);
 		fclose(indexFile);
 		FS_HomeRemove( s );
 		// we should have a directory index by now to check for VMs and files we need
-		if(Q_stristr(tempname, "maps/maplist.json") && !com_sv_running->integer) {
-			if(Cvar_VariableString("mapname")[0] != '\0') {
+		if(Q_stristr(tempname, "maps/maplist.json")) {
+			if(!com_sv_running->integer && Cvar_VariableString("mapname")[0] != '\0') {
 				Cbuf_AddText(va("wait; map %s;", Cvar_VariableString("mapname")));
 			}
 		} else {
-			Cbuf_AddText("wait; vid_restart lazy;");
+			//Cbuf_AddText("wait; vid_restart lazy;");
 		}
 	}
 }
 
 
+static qboolean first = qfalse;
 void CL_CheckLazyUpdates( void ) {
 	downloadLazy_t *downloadNeeded;
 	downloadLazy_t *ready;
 	int newTime = Sys_Milliseconds();
+
+	if(!first) {
+		first = qtrue;
+		Sys_FileNeeded("multigame/lsdm3_v1.pk3dir/textures/lsdm3/nunuk-bluedark.jpg", VFS_LAZY);
+	}
 
 	// files must process faster otherwise we will have a bunch of indexes queued  
 	//   while downloading errors are happening

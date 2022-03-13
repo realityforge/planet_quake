@@ -3934,6 +3934,11 @@ void Sys_SnapVector( float *vector )
 #endif // clang/gcc/mingw
 
 
+#ifdef __WASM__
+void Com_MaxFPSChanged( char *, char *, cvar_t * );
+#endif
+
+
 /*
 =================
 Com_Init
@@ -4099,6 +4104,7 @@ void Com_Init( char *commandLine ) {
   com_maxfps = Cvar_Get( "com_maxfps", "300", 0 ); // try to force that in some light way
 #endif
 #ifdef __WASM__
+	Cvar_SetModifiedFunc(com_maxfps, Com_MaxFPSChanged);
 	// because request animation frame isn't called when the window is out of focus
 	com_maxfpsUnfocused = Cvar_Get( "com_maxfpsUnfocused", "30", CVAR_ARCHIVE_ND );
 #else

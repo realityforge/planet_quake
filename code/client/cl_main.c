@@ -1746,7 +1746,6 @@ qboolean CL_Disconnect( qboolean showMainMenu, qboolean dropped ) {
 	CL_ClearState();
 
 	// wipe the client connection
-	Com_Printf("whoops!\n");
 	Com_Memset( &clc, 0, sizeof( clc ) );
 	
 	cls.state = CA_DISCONNECTED;
@@ -3728,7 +3727,6 @@ void CL_PacketEvent( const netadr_t *from, msg_t *msg ) {
 	// packet from server
 	//
 	if ( !NET_CompareAdr( from, &clc.netchan.remoteAddress ) ) {
-		Com_Printf("whoops!\n");
 		if ( com_developer->integer ) {
 			Com_Printf( "%s:sequenced packet without connection\n",
 				NET_AdrToStringwPort( from ) );
@@ -5400,11 +5398,17 @@ void CL_Init( void ) {
 	//memset( cl_downloads, 0, sizeof(download_t) * cl_dlSimultaneous->integer );
 #endif
 #endif
-//#ifdef _DEBUG
-//	cl_dlURL = Cvar_Get( "cl_dlURL", "http://local.games:8080/multigame", CVAR_ARCHIVE_ND );
-//#else
+
+#ifdef __WASM__
+#if 0 //def _DEBUG
+	cl_dlURL = Cvar_Get( "cl_dlURL", "http://local.games:8080/multigame", CVAR_ARCHIVE_ND );
+#else
+	cl_dlURL = Cvar_Get( "cl_dlURL", "https://www.googleapis.com/download/storage/v1/b/nightly.quake.games/o/assets%2Fmultigame%2F%1", CVAR_ARCHIVE_ND );
+	//cl_dlURL = Cvar_Get( "cl_dlURL", "https://nightly.quake.games/assets/multigame", CVAR_ARCHIVE_ND );
+#endif
+#else
 	cl_dlURL = Cvar_Get( "cl_dlURL", "http://ws.q3df.org/maps/download/%1", CVAR_ARCHIVE_ND );
-//#endif
+#endif
 	
 	cl_dlDirectory = Cvar_Get( "cl_dlDirectory", "0", CVAR_ARCHIVE_ND );
 	Cvar_CheckRange( cl_dlDirectory, "0", "1", CV_INTEGER );

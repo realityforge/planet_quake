@@ -138,11 +138,7 @@ function InputPushMovedEvent (evt) {
     if(Q3e.frameInterval) {
       clearInterval(Q3e.frameInterval)
     }
-    // put this here not to restart if it's shut down
-    if(Cvar_VariableIntegerValue(stringToAddress('cl_running'))
-      || Cvar_VariableIntegerValue(stringToAddress('sv_running'))) {
-      Q3e.frameInterval = setInterval(Sys_Frame, 1000 / INPUT.fpsUnfocused)
-    }
+    Q3e.frameInterval = setInterval(Sys_Frame, 1000.0 / INPUT.fpsUnfocused)
     return
   }
 
@@ -318,7 +314,7 @@ function InputPushMouseEvent (evt) {
       if(Q3e.frameInterval) {
         clearInterval(Q3e.frameInterval)
       }
-      Q3e.frameInterval = setInterval(Sys_Frame, 1000 / INPUT.fps);
+      Q3e.frameInterval = setInterval(Sys_Frame, 1000.0 / INPUT.fps);
     }
     Sys_QueEvent( Sys_Milliseconds(), SE_KEY, 
       INPUT.keystrings['MOUSE1'] + evt.button, down, 0, null );
@@ -326,6 +322,15 @@ function InputPushMouseEvent (evt) {
 		Sys_QueEvent( Sys_Milliseconds(), SE_MOUSE, 
       getMovementX(evt), getMovementY(evt), 0, null );
   }
+}
+
+function Com_MaxFPSChanged() {
+  INPUT.fpsUnfocused = Cvar_VariableIntegerValue(stringToAddress("com_maxfpsUnfocused"));
+  INPUT.fps = Cvar_VariableIntegerValue(stringToAddress("com_maxfps"));
+  if(Q3e.frameInterval) {
+    clearInterval(Q3e.frameInterval)
+  }
+  Q3e.frameInterval = setInterval(Sys_Frame, 1000.0 / INPUT.fps)
 }
 
 function InputInit () {
@@ -432,6 +437,7 @@ function GLimp_Shutdown(destroy) {
   window.removeEventListener('keydown', InputPushKeyEvent)
   window.removeEventListener('keyup', InputPushKeyEvent)
   window.removeEventListener('keypress', InputPushTextEvent)
+  window.removeEventListener('mouseout', InputPushMovedEvent)
   window.removeEventListener('popstate', CL_ModifyMenu)
 
   document.removeEventListener('mousewheel', InputPushWheelEvent)
@@ -470,6 +476,7 @@ var INPUT = {
   GL_GetDrawableSize: function (width, height) {
     HEAP32[(width+0)>>2] = Q3e.canvas.width
     HEAP32[(height+0)>>2] = Q3e.canvas.height
-  }
+  },
+  Com_MaxFPSChanged: Com_MaxFPSChanged,
 }
 
