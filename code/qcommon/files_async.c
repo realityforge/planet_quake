@@ -1007,11 +1007,11 @@ void CL_CheckLazyUpdates( void ) {
 
 	// files must process faster otherwise we will have a bunch of indexes queued  
 	//   while downloading errors are happening
-	if(newTime - secondTimer > 200 / cl_dlSimultaneous->integer / 2) { // = 10ms, or about once per frame at 100 FPS
+	if(newTime - secondTimer > 9) { // = 10ms, or about once per frame at 100 FPS
 		secondTimer = newTime;
 	}
 
-	if(newTime - thirdTimer > 200 / cl_dlSimultaneous->integer) { 
+	if(newTime - thirdTimer > 10) { 
 		thirdTimer = newTime;
 	}
 	

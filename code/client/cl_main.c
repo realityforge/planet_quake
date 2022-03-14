@@ -145,7 +145,6 @@ cvar_t  *cl_lazyLoad;
 #endif
 
 #ifdef USE_ASYNCHRONOUS
-extern cvar_t *cl_dlSimultaneous;
 #ifdef USE_CURL
 download_t cl_downloads[10];
 #endif
@@ -1395,7 +1394,7 @@ void CL_ShutdownAll( void ) {
 #ifdef USE_CURL
 	Com_DL_Cleanup(&download);
 #ifdef USE_ASYNCHRONOUS
-	for(int i = 0; i < cl_dlSimultaneous->integer; i++) {
+	for(int i = 0; i < 10; i++) {
 		Com_DL_Cleanup(&cl_downloads[i]);
 	}
 #endif
@@ -3890,7 +3889,7 @@ void CL_Frame( int msec, int realMsec ) {
 		Com_DL_Perform( &download );
 	}
 #ifdef USE_ASYNCHRONOUS
-	for(int i = 0; i < cl_dlSimultaneous->integer; i++) {
+	for(int i = 0; i < 10; i++) {
 		if(cl_downloads[i].cURLM || cl_downloads[i].cURL) {
 			Com_DL_Perform(&cl_downloads[i]);
 		}
@@ -5389,14 +5388,6 @@ void CL_Init( void ) {
 #endif
 	//if(cl_lazyLoad->integer > 1)
 	//	Cvar_Set("cl_lazyLoad", "1");
-#endif
-
-#ifdef USE_ASYNCHRONOUS
-	cl_dlSimultaneous = Cvar_Get( "cl_dlSimultaneous", "10", CVAR_ARCHIVE_ND );
-#ifdef USE_CURL
-	//cl_downloads = Z_Malloc( sizeof(download_t) * cl_dlSimultaneous->integer );
-	//memset( cl_downloads, 0, sizeof(download_t) * cl_dlSimultaneous->integer );
-#endif
 #endif
 
 #ifdef __WASM__

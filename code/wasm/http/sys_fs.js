@@ -97,17 +97,15 @@ function Sys_Mkdir(filename) {
     localName = localName.substring('/base'.length)
   if(localName[0] == '/')
     localName = localName.substring(1)
-  if(!FS.database) {
-    openDatabase()
-  }
   FS.virtual[localName] = {
     timestamp: new Date(),
     mode: 16895,
   }
   // async to filesystem
   // does it REALLY matter if it makes it? wont it just redownload?
-  writeStore(FS.virtual[localName], localName)
-
+  openDatabase().then(function (db) {
+    writeStore(FS.virtual[localName], localName)
+  })
 }
 
 function Sys_GetFileStats( filename, size, mtime, ctime ) {
