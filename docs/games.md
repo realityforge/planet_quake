@@ -182,6 +182,7 @@ Special multiworld features like cameras and portals. See [multiworld](../docs/m
 
 ## TODO
 
+  * Real auto-sprite for models using portal code but put in renderer and apply with RF_* name. 
   * Use srand() or seeded-random for random looking but synchronized effects.
   * Add radius damage to lighting bolt only in the rain.
   * Add atmospheric effects, smoke and sparks over lava, dust, worldly fog, to old maps.

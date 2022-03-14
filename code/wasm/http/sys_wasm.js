@@ -44,7 +44,6 @@ function startProgram(program) {
 
 
 function instantiateWasm(bytes) {
-  Q3e['imports'] = Q3e
   let libraries = {
     env: Q3e,
     SYS: SYS,
@@ -63,35 +62,43 @@ function instantiateWasm(bytes) {
   }
 
   Q3e['table'] = Q3e['__indirect_function_table'] =
-    new WebAssembly.Table({ initial: 2048, element: 'anyfunc' });
-  Q3e['memory'] = new WebAssembly.Memory( {
-    'initial': 2048,
-    //'shared': true
-  } )
+    new WebAssembly.Table({ initial: 2048, element: 'anyfunc' })
+  Q3e['memory'] = new WebAssembly.Memory({ 'initial': 2048, /* 'shared': true */ })
   updateGlobalBufferAndViews(Q3e.memory.buffer)
   return WebAssembly.instantiate(bytes, Q3e)
 }
 
 
 function init() {
+  Q3e['imports'] = Q3e
 
   // TODO: bootstrap download function so it saves binary to disk
-  fetch('./quake3e_mv.wasm').then(function(response) {
-    if(response.status == 404) {
-      return fetch('./quake3e_slim.wasm').then(function(response) {
-        if(response.status == 404) {
-          return fetch('./quake3e.wasm')
-            .then(function(response2) { return response2.arrayBuffer() })
-        }
-        return response.arrayBuffer()
-      })
+  fetch('./quake3e_mv.wasm')
+  .catch(function (e) {})
+  .then(function(response) {
+    if(!response || response.status == 404) {
+      return fetch('./quake3e_slim.wasm')
     }
-    return response.arrayBuffer()
+  })
+  .catch(function (e) {})
+  .then(function(response) {
+    if(!response || response.status == 404) {
+      return fetch('./quake3e.wasm')
+    }
+  })
+  .catch(function (e) {})
+  .then(function (response) {
+    if(response && response.status == 200) {
+      return response.arrayBuffer()
+    }
   })
     .then(instantiateWasm)
     // TODO: change when hot reloading works
     .then(startProgram);
 }
 
-
-init()
+window.addEventListener('load', function () {
+  if(typeof Q3e.imports == 'undefined') {
+    init()
+  }
+}, false)

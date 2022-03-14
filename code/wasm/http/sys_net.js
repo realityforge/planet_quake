@@ -47,12 +47,82 @@ function Sys_NET_MulticastLocal (net, length, data) {
     'net', net, Uint8Array.from(HEAP8.slice(data, data+length))])
 }
 
+function Com_DL_HeaderCallback(localName, response) {
+    //let type = response.headers.get('Content-Type')
+    if (!response || !(response.status >= 200 && response.status < 300 || response.status === 304)) {
+      Sys_FileReady(stringToAddress(localName), null) // failed state, not to retry
+      //throw new Error('Couldn\'t load ' + response.url + '. Status: ' + (response || {}).statusCode)
+      response.body.getReader().cancel()
+      // TODO: check for too big files!
+      //if(controller)
+        //controller.abort()
+      return
+    }
+    return response.arrayBuffer()
+}
+
+function Com_DL_Begin(localName, remoteURL) {
+  if(AbortController && !NET.controller) {
+    NET.controller = new AbortController()
+  }
+  return fetch(remoteURL, {
+    mode: 'cors',
+    responseType: 'arraybuffer',
+    credentials: 'omit',
+    signal: NET.controller ? NET.controller.signal : null
+  })
+  // why so many? this catches connection errors
+  .catch(function (error) {
+    return
+  })
+  .then(Com_DL_HeaderCallback.bind(null, localName))
+  // this catches streaming errors, does everybody do this?
+  .catch(function (error) {
+    return
+  })
+}
+
+function Com_DL_Perform(nameStr, localName, responseData) {
+  NET.downloadCount--
+  if(!responseData) {
+    // already responded with null data
+    return
+  }
+  // TODO: intercept this information here so we can invalidate the IDBFS storage
+  if(localName.includes('version.json')) {
+
+  }
+  // don't store any index files, redownload every start
+  if(localName.endsWith('/')) {
+    let tempName = nameStr + '.' // yes this is where it always looks for temp files
+      + Math.round(Math.random() * 0xFFFFFFFF).toString(16) + '.tmp'
+    FS_CreatePath(stringToAddress(nameStr))
+    FS.virtual[tempName] = {
+      timestamp: new Date(),
+      mode: 33206,
+      contents: new Uint8Array(responseData)
+    }
+    Sys_FileReady(stringToAddress(localName), stringToAddress(tempName));
+  } else {
+    // TODO: JSON.parse
+    // save the file in memory for now
+    FS_CreatePath(stringToAddress(nameStr))
+    FS.virtual[nameStr] = {
+      timestamp: new Date(),
+      mode: 33206,
+      contents: new Uint8Array(responseData)
+    }
+    // async to filesystem
+    // does it REALLY matter if it makes it? wont it just redownload?
+    writeStore(FS.virtual[nameStr], nameStr)
+    Sys_FileReady(stringToAddress(localName), stringToAddress(nameStr));
+  }
+
+}
+
 function CL_Download(cmd, name, auto) {
   if(!FS.database) {
     openDatabase()
-  }
-  if(AbortController && !NET.controller) {
-    NET.controller = new AbortController()
   }
   if(NET.downloadCount > 5) {
     return false // delay like cl_curl does
@@ -87,77 +157,26 @@ function CL_Download(cmd, name, auto) {
     }
   }
   try {
-  NET.downloadCount++
-  fetch(remoteURL, {
-    mode: 'cors',
-    responseType: 'arraybuffer',
-    credentials: 'omit',
-    signal: NET.controller ? NET.controller.signal : null
-  })
-  .catch(function (error) {
-    return
-  })
-  .then(function (response) {
-    //let type = response.headers.get('Content-Type')
-    if (!response || !(response.status >= 200 && response.status < 300 || response.status === 304)) {
-      Sys_FileReady(stringToAddress(localName), null) // failed state, not to retry
-      //throw new Error('Couldn\'t load ' + response.url + '. Status: ' + (response || {}).statusCode)
-      response.body.getReader().cancel()
-      //if(controller)
-        //controller.abort()
-      return
-    }
-    return response.arrayBuffer()
-  })
-  .catch(function (error) {
-    return
-  })
-  .then(function (responseData) {
-    NET.downloadCount--
-    if(!responseData) {
-      // already responded with null data
-      return
-    }
-    // don't store any index files, redownload every start
-    if(nameStr[nameStr.length - 1] == '/') {
-      let tempName = nameStr + '.' // yes this is where it always looks for temp files
-        + Math.round(Math.random() * 0xFFFFFFFF).toString(16) + '.tmp'
-      FS_CreatePath(stringToAddress('/home/' + nameStr + '/'))
-      FS.virtual[tempName] = {
-        timestamp: new Date(),
-        mode: 33206,
-        contents: new Uint8Array(responseData)
-      }
-      /*
-      let storeDirectory = objStore.put({
-        timestamp: new Date(),
-        mode: 16895
-      }, key)
-      */
-      Sys_FileReady(stringToAddress(localName), stringToAddress(tempName));
-    } else {
-      // TODO: JSON.parse
-      // save the file in memory for now
-      if(!nameStr.includes(gamedir)) {
-        debugger
-        throw new Error('something wrong')
-      }
-      FS_CreatePath(stringToAddress('/home/' + nameStr))
-      FS.virtual[nameStr] = {
-        timestamp: new Date(),
-        mode: 33206,
-        contents: new Uint8Array(responseData)
-      }
-      // async to filesystem
-      // does it REALLY matter if it makes it? wont it just redownload?
-      writeStore(FS.virtual[nameStr], '/base/' + nameStr)
-      Sys_FileReady(stringToAddress(localName), stringToAddress(nameStr));
-    }
+    NET.downloadCount++
 
-  })
+    readStore(nameStr)
+      .then(function (result) {
+        // always redownload indexes in case the content has changed?
+        if(!result || result.mode == 16895) {
+          return Com_DL_Begin(localName, remoteURL)
+        } else {
+          return Com_DL_Perform(nameStr, localName, result.contents)
+        }
+      })
+      .then(Com_DL_Perform.bind(null, nameStr, localName))
   } catch (e) {
     
   }
+  if(!nameStr.includes(gamedir)) {
+    debugger
+    throw new Error('something wrong')
+  }
+
   return true
 }
 

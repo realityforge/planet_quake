@@ -33,6 +33,7 @@ static int secondTimer = 0;
 static int thirdTimer = 0;
 extern cvar_t *cl_lazyLoad;
 cvar_t *cl_dlSimultaneous;
+
 #endif
 
 #if defined(USE_LIVE_RELOAD) || defined(__WASM__)
@@ -291,6 +292,7 @@ static downloadLazy_t *Sys_FileNeeded_real(const char *filename, int state) {
 			int       len;
 			Com_sprintf( realPath, sizeof( realPath ), "%s/%s", 
 				Cvar_VariableString("fs_homepath"), FS_GetCurrentGameDir() );
+			// TODO: remove this shit and get it from searchpaths
 			pakdirs = Sys_ListFiles( realPath, "/", NULL, &numdirs, qfalse );
 			while (pakdirsi < numdirs) 
 			{
@@ -545,7 +547,6 @@ static void ParseHTMLFileList(char *buf, int len, char *list, int *count, int *m
 				link[lenLink] = '\0';
 				if(Q_stristr(link, FS_GetCurrentGameDir())
 					&& lenLink > length + 2) {
-					Com_Printf("wtf? %s\n", link);
 					if((*count) < 1024)
 						strcpy(list + (*max), link);
 					if(count)
@@ -625,8 +626,8 @@ void MakeDirectoryBuffer(char *paths, int count, int length, const char *parentD
 					// last folder in the path
 					&& strchr(&download->downloadName[lengthDir + 1], '/') == NULL 
 				) {
-if(Q_stristr(parentDirectory, "icons"))
-Com_Printf("purging: %s\n", download->downloadName);
+//if(Q_stristr(parentDirectory, "icons"))
+//Com_Printf("purging: %s\n", download->downloadName);
 					download->state = VFS_NOENT - download->state;
 				} else {
 //Com_Printf("skipping: %s != %s\n", download->downloadName, parentDirectory);
@@ -845,8 +846,7 @@ void Sys_FileReady(const char *filename, const char* tempname) {
 
 
 void FS_UpdateFiles(const char *filename, const char *tempname) {
-
-Com_DPrintf("updating files: %s -> %s\n", filename, tempname);
+Com_Printf("updating files: %s -> %s\n", filename, tempname);
 
 	// do some extra processing, restart UI if default.cfg is found
 	if(Q_stristr(tempname, "default.cfg")) {
@@ -888,7 +888,7 @@ Com_DPrintf("updating files: %s -> %s\n", filename, tempname);
 				lastVersionTime = approxTime;
 				// version was supposed to describe what changed in each index, 
 				//   0 - main program, 1 - asset files, 2 - scripts, 3 - sounds, 4 - qvms?
-				Cbuf_AddText("wait; vid_restart lazy;");
+				//Cbuf_AddText("wait; vid_restart lazy;");
 			}
 		}
 	} else
@@ -912,13 +912,15 @@ Com_DPrintf("updating files: %s -> %s\n", filename, tempname);
 #ifndef DEDICATED
 	// try to reload UI with current game if needed
 	if(Q_stristr(tempname, "vm/ui.qvm")) {
-    //Cvar_Set("com_skipLoadUI", "0");
-		Cbuf_AddText("wait; vid_restart lazy;");
+    Cvar_Set("com_skipLoadUI", "0");
+		//Cbuf_AddText("wait; vid_restart lazy;");
+		CL_StartHunkUsers();
 	} else 
 
 	// TODO: load default model and current player model
 	if(Q_stristr(tempname, "vm/cgame.qvm")) {
-		Cbuf_AddText("wait; vid_restart lazy;");
+		assert(!cls.cgameStarted);
+		CL_StartHunkUsers();
 	} else 
 
 #endif
@@ -926,6 +928,7 @@ Com_DPrintf("updating files: %s -> %s\n", filename, tempname);
 #ifndef BUILD_SLIM_CLIENT
 	// try to reload UI with current game if needed
 	if(Q_stristr(tempname, "vm/qagame.qvm")) {
+		assert(!com_sv_running->integer);
 		if(*Cvar_VariableString("mapname") != '\0' && !com_sv_running->integer) {
 			Cbuf_AddText(va("wait; map %s;", Cvar_VariableString("mapname")));
 		}
@@ -975,7 +978,7 @@ Com_DPrintf("updating files: %s -> %s\n", filename, tempname);
 		// we should have a directory index by now to check for VMs and files we need
 		if(Q_stristr(tempname, "maps/maplist.json")) {
 			if(!com_sv_running->integer && Cvar_VariableString("mapname")[0] != '\0') {
-				Cbuf_AddText(va("wait; map %s;", Cvar_VariableString("mapname")));
+				//Cbuf_AddText(va("wait; map %s;", Cvar_VariableString("mapname")));
 			}
 		} else {
 			//Cbuf_AddText("wait; vid_restart lazy;");
@@ -990,10 +993,17 @@ void CL_CheckLazyUpdates( void ) {
 	downloadLazy_t *ready;
 	int newTime = Sys_Milliseconds();
 
+	// TODO: remove this, good to see 1 color during testing
 	if(!first) {
 		first = qtrue;
 		Sys_FileNeeded("multigame/lsdm3_v1.pk3dir/textures/lsdm3/nunuk-bluedark.jpg", VFS_LAZY);
 	}
+
+	if((cls.cgameStarted || cls.uiStarted)
+		&& com_sv_running->integer) {
+		return;
+	}
+
 
 	// files must process faster otherwise we will have a bunch of indexes queued  
 	//   while downloading errors are happening
@@ -1046,21 +1056,21 @@ void CL_CheckLazyUpdates( void ) {
 	if(!Q_stricmp(ext, "md3") || !Q_stricmp(ext, "mdr")
 		|| !Q_stricmp(ext, "md5")) {
 		if(cls.rendererStarted) {
-			re.UpdateModel(ready->loadingName);
+			//re.UpdateModel(ready->loadingName);
 		}
 	}
 
 	if(!Q_stricmp(ext, "wav") || !Q_stricmp(ext, "ogg")
 		|| !Q_stricmp(ext, "mp3") || !Q_stricmp(ext, "opus")) {
 		if(cls.soundRegistered) {
-			S_UpdateSound(ready->loadingName, qtrue);
+			//S_UpdateSound(ready->loadingName, qtrue);
 		}
 	}
 
 	if(ready->loadingName[12] == ';') {
 		ready->loadingName[12] = '\0';
 		if(cls.rendererStarted) {
-			re.UpdateShader(&ready->loadingName[13], atoi(&ready->loadingName[0]));
+			//re.UpdateShader(&ready->loadingName[13], atoi(&ready->loadingName[0]));
 		}
 		ready->loadingName[12] = ';';
 	}
@@ -1068,7 +1078,7 @@ void CL_CheckLazyUpdates( void ) {
 	// intercept this here because it's client only code
 	if(Q_stristr(&ready->loadingName[MAX_OSPATH], "/scripts/")
 		&& Q_stristr(&ready->loadingName[MAX_OSPATH], ".shader")) {
-		re.ReloadShaders(qfalse);
+		//re.ReloadShaders(qfalse);
 	}
 #endif
 
@@ -1079,7 +1089,7 @@ void CL_CheckLazyUpdates( void ) {
 	// multigame has a special feature to reload an missing assets when INIT is called
 	if(((cls.uiStarted && uivm) || (cls.cgameStarted && cgvm))
 		&& !Q_stricmp(FS_GetCurrentGameDir(), "multigame")) {
-		Cvar_Get("ui_breadCrumb", "", CVAR_ROM)->modificationCount++;
+		//Cvar_Get("ui_breadCrumb", "", CVAR_ROM)->modificationCount++;
 	}
 #endif
 

@@ -5400,7 +5400,7 @@ void CL_Init( void ) {
 #endif
 
 #ifdef __WASM__
-#if 0 //def _DEBUG
+#ifdef _DEBUG
 	cl_dlURL = Cvar_Get( "cl_dlURL", "http://local.games:8080/multigame", CVAR_ARCHIVE_ND );
 #else
 	cl_dlURL = Cvar_Get( "cl_dlURL", "https://www.googleapis.com/download/storage/v1/b/nightly.quake.games/o/assets%2Fmultigame%2F%1", CVAR_ARCHIVE_ND );

@@ -5968,6 +5968,10 @@ void FS_Restart( int checksumFeed ) {
 	// busted and error out now, rather than getting an unreadable
 	// graphics screen when the font fails to load
 	if ( FS_ReadFile( "default.cfg", NULL ) <= 0 ) {
+#ifdef USE_ASYNCHRONOUS
+		Com_Printf( S_COLOR_RED "Couldn't load default.cfg\n" );
+		Sys_FileNeeded("default.cfg", VFS_NOW);
+#else
 		// this might happen when connecting to a pure server not using BASEGAME/pak0.pk3
 		// (for instance a TA demo server)
 		if (lastValidBase[0]) {
@@ -5982,10 +5986,6 @@ void FS_Restart( int checksumFeed ) {
 			Com_Error( ERR_DROP, "Invalid game folder" );
 			return;
 		}
-#ifdef USE_ASYNCHRONOUS
-		Com_Printf( S_COLOR_RED "Couldn't load default.cfg\n" );
-		Sys_FileNeeded("default.cfg", VFS_NOW);
-#else
 		Com_Error( ERR_FATAL, "Couldn't load default.cfg" );
 #endif
 	}

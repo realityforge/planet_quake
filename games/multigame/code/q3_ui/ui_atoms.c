@@ -1282,6 +1282,7 @@ void UI_Refresh( int realtime )
 
 	if(ui_breadCrumb.modificationCount > breadcrumbModificationCount)
 	{
+		/*
 		breadcrumbModificationCount = ui_breadCrumb.modificationCount;
 		if(!Q_stricmp(ui_breadCrumb.string, UI_GetBreadCrumb())) {
 			if(((menuframework_s *)uis.activemenu)->init) {
@@ -1289,20 +1290,9 @@ void UI_Refresh( int realtime )
 			} else {
 				Menu_Cache();
 			}
-		} /* else 
-		if(Q_stristr(ui_breadCrumb.string, "chooselevel")) {
-			UI_SPLevelMenu();
-		} else
-		if(Q_stristr(ui_breadCrumb.string, "mainmenu")) {
-			if(uis.menusp == 1) {
-				MainMenu_Cache();
-			} else {
-				UI_SetActiveMenu(UIMENU_MAIN);
-			}
-		} else 
-		if (Q_stristr(ui_breadCrumb.string, "multiplayer")) {
-			UI_ArenaServersMenu();
-		} */
+		} 
+		*/
+		// TODO: UI_SetActiveMenu(UIMENU_MAIN);
 	}
 
 	UI_VideoCheck( realtime );

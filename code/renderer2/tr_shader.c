@@ -22,6 +22,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "tr_local.h"
 #include "tr_dsa.h"
 
+void R_AddPalette(const char *name, int a, int r, int g, int b);
+
 #ifdef USE_LAZY_LOAD
 #define R_FindImageFile(x, y, z) R_FindImageFile( x, y, z | (r_paletteMode->integer && shader.lightmapIndex != LIGHTMAP_2D ? IMGFLAG_PALETTE : 0) | (!mapShaders && r_lazyLoad->integer >= 2 ? IMGFLAG_FORCELAZY : 0))
 static qboolean mapShaders;
@@ -2325,15 +2327,15 @@ static qboolean ParseShader( const char **text )
       char color[4];
       int a = 0, r = 0, g = 0, b = 0;
       int ci = 0;
-      int ri = 0;
+      int ri2 = 0;
       int gi = 0;
       int bi = 0;
       for(int i = 0; i < 12; i++) {
         if(colors[i] == ',') {
-          if(ri == 0) {
+          if(ri2 == 0) {
             color[ci] = 0;
             a = atoi(color);
-            ri = i + 1;
+            ri2 = i + 1;
           } else if(gi == 0) {
             color[ci] = 0;
             r = atoi(color);
@@ -4540,10 +4542,10 @@ void RE_UpdateShader(char *shaderName, int lightmapIndex) {
 void GL_SetDefaultState( void );
 
 void RE_ReloadShaders( qboolean createNew ) {
-  int i;
   tr.lastRegistrationTime = ri.Milliseconds();
 
 #ifdef USE_MULTIVM_CLIENT
+  int i;
 	if(createNew) {
 		int i;
 		for(i = 0; i < MAX_NUM_WORLDS; i++) {

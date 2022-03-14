@@ -663,11 +663,7 @@ void Touch_Item (gentity_t *ent, gentity_t *other, trace_t *trace) {
 	// to be placed on movers.
 	ent->s.eFlags |= EF_NODRAW;
 	ent->r.contents = 0;
-#ifdef USE_ITEM_TIMERS
-  ent->r.svFlags |= SVF_BROADCAST;
-#else
   ent->r.svFlags |= SVF_NOCLIENT;
-#endif
 
 	// ZOID
 	// A negative respawn times means to never respawn this item (but don't 
@@ -683,6 +679,15 @@ void Touch_Item (gentity_t *ent, gentity_t *other, trace_t *trace) {
 		ent->nextthink = level.time + respawn;
 		ent->think = RespawnItem;
 #ifdef USE_ITEM_TIMERS
+		/* 
+		if ( cg_itemTimer->integer && (
+			(ent->item->giType == IT_ARMOR) ||
+			(ent->item->giType == IT_POWERUP) ||
+			(ent->item->giType == IT_HOLDABLE) ||
+			(ent->item->giType == IT_PERSISTANT_POWERUP))) {
+		*/
+			ent->r.svFlags |= SVF_BROADCAST;
+		//}
     ent->s.eFlags |= EF_TIMER;
     ent->s.time = level.time;
     ent->s.frame = respawn / 1000; // save bandwidth

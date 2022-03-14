@@ -657,6 +657,7 @@ void CG_UpdateCvars( void ) {
 	}
 
 	if(breadcrumbModificationCount != cg_breadCrumb.modificationCount) {
+		/*
 		char		items[MAX_ITEMS+1];
 		breadcrumbModificationCount = cg_breadCrumb.modificationCount;
 		if(!(cgs.clientinfo[ cg.clientNum ].legsModel 
@@ -688,6 +689,7 @@ void CG_UpdateCvars( void ) {
 				}
 			}
 		}
+		*/
 	}
 
 	// if model changed
