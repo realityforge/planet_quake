@@ -412,7 +412,7 @@ jobs:
           7z a -r xxx-multigame.zip xxx-multigame.pk3
           7z a -r xxx-multigame.zip ./planet_quake_build/linux-x86_64/*.so
           7z a -r xxx-multigame.zip ./planet_quake_build/macos-x86_64/*.dylib
-          7z a -r xxx-multigame.zip ./planet_quake_build/minqw-x86_64/*.dll
+          7z a -r xxx-multigame.zip ./planet_quake_build/windows-minqw-x86_64/*.dll
 
 
       - name: Create latest build
