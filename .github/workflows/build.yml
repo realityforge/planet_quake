@@ -275,7 +275,7 @@ jobs:
     - uses: actions/upload-artifact@v2
       if: matrix.config == 'Release'
       with:
-        name: js-${{ matrix.arch }}
+        name: wasm-${{ matrix.arch }}
         path: bin
         if-no-files-found: error
         retention-days: 5
