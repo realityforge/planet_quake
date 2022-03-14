@@ -46,6 +46,10 @@ make external lightmaps for lazy updating, see [procedural.md](../docs/procedura
 Multigame is a mod I've been working on that adds Runes and alternate fire modes and stuff, [games.md](../docs/games.md#game-features).
 
 
+## TODO: Server-side GPU
+
+I've been thinking about this concept to move VBO and any FPU calculation to the GPU using shaders and readPixels or PBOs to calculate the floating point values for the frame and return the results in the next frame when it arrives from the GPU. Somehow all the traces from a frame would have to be queued in another shader image, then the game would react to the results a frame later intead of procedurally. The GPU could also calculate trajectories automatically just from updating a variadic for time interpolation.
+
 ## TODOs
 
   * write displacement code like showing a black cat and shifting 32 units to the right and 
