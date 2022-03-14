@@ -384,9 +384,6 @@ jobs:
 
       - name: Create binary archives
         run: |
-          pwd
-          ls -lah
-          ls -lah /
           cd ../
           mv planet_quake planet_quake_build
           mkdir planet_quake
@@ -407,14 +404,16 @@ jobs:
 
       - name: Create game archive
         run: |
-          pwd
-          ls -lah
-          ls -lah /
-          7z a -r ../xxx-multigame.zip      ./games/multigame/assets/*
+          7z a -r ../xxx-multigame.pk3      ./games/multigame/assets/*
           cd ..
           ls -lah
-          7z a -r xxx-multigame.zip ./planet_quake_build/linux-x86_64/multigame/vm/*
-          #cp planet_quake_build/linux-x86_64/muultigame/*.so 
+          ls -lah ./planet_quake_build/
+          7z a -r xxx-multigame.pk3 ./planet_quake_build/linux-x86_64/*.qvm
+          7z a -r xxx-multigame.zip xxx-multigame.pk3
+          7z a -r xxx-multigame.zip ./planet_quake_build/linux-x86_64/*.so
+          7z a -r xxx-multigame.zip ./planet_quake_build/macos-x86_64/*.dylib
+          7z a -r xxx-multigame.zip ./planet_quake_build/minqw-x86_64/*.dll
+
 
       - name: Create latest build
         uses: ec-/action-automatic-releases@test
@@ -425,6 +424,7 @@ jobs:
           title: Latest Build
           files: |
             *.zip
+            *.pk3
 
   update-release:
     if: ${{ github.event_name == 'release' }}
