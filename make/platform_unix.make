@@ -51,7 +51,7 @@ ifeq ($(USE_SYSTEM_ZLIB),1)
 endif
 
 ifeq ($(USE_SYSTEM_JPEG),1)
-  CLIENT_LDFLAGS += -ljpeg
+  CLIENT_LDFLAGS += $(JPEG_LIBS)
 endif
 
 ifeq ($(USE_CURL),1)
