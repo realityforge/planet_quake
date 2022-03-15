@@ -2381,7 +2381,7 @@ static image_t *R_CreateImage3( const char *name, GLenum picFormat, int numMips,
 	image->internalFormat = PixelDataFormatFromInternalFormat(internalFormat);
 
 	if(image->width > 1 && image->height > 1) {
-		R_FinishImage3( image, picFormat, numMips );
+		R_FinishImage3( image, picFormat, 0 );
 	}
 
 	hash = generateHashValue(name);
@@ -2392,13 +2392,11 @@ static image_t *R_CreateImage3( const char *name, GLenum picFormat, int numMips,
 }
 
 Q_EXPORT void R_FinishImage3( image_t *image, GLenum picFormat, int numMips ) {
-	int       glWrapClampMode, mipWidth, mipHeight, miplevel;
-	qboolean    mipmap = !!(image->flags & IMGFLAG_MIPMAP);
+	int      glWrapClampMode, mipWidth, mipHeight, miplevel;
+	qboolean mipmap = !!(image->flags & IMGFLAG_MIPMAP);
 	qboolean lastMip = qfalse;
 	qboolean cubemap = qfalse;
-	GLenum textureTarget = cubemap ? GL_TEXTURE_CUBE_MAP : GL_TEXTURE_2D;
-
-Com_Printf("wtf: %s\n", image->imgName);
+	GLenum   textureTarget = cubemap ? GL_TEXTURE_CUBE_MAP : GL_TEXTURE_2D;
 
 	image->uploadWidth = image->width;
 	image->uploadHeight = image->height;
@@ -2422,14 +2420,15 @@ Com_Printf("wtf: %s\n", image->imgName);
 			qglTextureImage2DEXT(image->texnum, GL_TEXTURE_2D, miplevel, image->internalFormat, mipWidth, mipHeight, 0, image->internalFormat, GL_UNSIGNED_BYTE, NULL);
 		}
 
+		// Upload data.
+
+		qglTextureSubImage2DEXT(image->texnum, GL_TEXTURE_2D, miplevel, 0, 0, mipWidth, mipHeight, image->internalFormat, picFormat == GL_RGBA16 ? GL_UNSIGNED_SHORT : GL_UNSIGNED_BYTE, 0);
+
 		mipWidth  = MAX(1, mipWidth >> 1);
 		mipHeight = MAX(1, mipHeight >> 1);
 		miplevel++;
 	}
 	while (!lastMip);
-
-	// Upload data.
-	qglTextureSubImage2DEXT(image->texnum, GL_TEXTURE_2D, numMips, 0, 0, image->width, image->height, image->internalFormat, picFormat == GL_RGBA16 ? GL_UNSIGNED_SHORT : GL_UNSIGNED_BYTE, 0);
 
 	if (image->flags & IMGFLAG_CLAMPTOEDGE)
 		glWrapClampMode = GL_CLAMP_TO_EDGE;

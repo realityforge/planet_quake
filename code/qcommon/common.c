@@ -4639,6 +4639,8 @@ void Com_Frame( qboolean noDelay ) {
 #endif
 #ifndef __WASM__
 		NET_Sleep( sleepMsec * 1000 - 500 );
+#else
+		break;
 #endif
 	} while( Com_TimeVal( minMsec ) );
 

@@ -733,12 +733,12 @@ function loadImage(filename, pic, ext) {
       HEAP32[(thisImage.address - 3 * 4) >> 2] = thisImage.height
       R_FinishImage3(thisImage.address - 7 * 4, 0x1908 /* GL_RGBA */, 0)
     }
-    //thisImage.src = URL.createObjectURL(
-    //  new Blob(HEAP8.slice(HEAP32[buf >> 2], HEAP32[buf >> 2] + length), 
-    //  {type: 'image/' + ext + ';charset=utf8'}))
     let imageView = Array.from(HEAPU8.slice(HEAPU32[buf >> 2], HEAPU32[buf >> 2] + length))
-    var b64encoded = btoa(imageView.map(function (c) { return String.fromCharCode(c) }).join(''))
-    thisImage.setAttribute('src', 'data:image/' + ext + ';base64,' + b64encoded)
+    let utfEncoded = imageView.map(function (c) { return String.fromCharCode(c) }).join('')
+    //var b64encoded = 
+    //thisImage.src = URL.createObjectURL(
+    //  new Blob([utfEncoded], {type: 'image/' + ext + ';charset=utf8'}))
+    thisImage.src = 'data:image/' + ext + ';base64,' + btoa(utfEncoded)
     HEAP32[pic >> 2] = 1
     FS_FreeFile(HEAPU32[buf >> 2])
     return
