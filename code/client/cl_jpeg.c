@@ -479,6 +479,7 @@ void CL_SaveJPG( const char *filename, int quality, int image_width, int image_h
 }
 
 #else
+#ifndef __WASM__
 #error you probably meant to have jpeg
 
 void CL_LoadJPG( const char *filename, unsigned char **pic, int *width, int *height )
@@ -492,4 +493,5 @@ size_t CL_SaveJPGToBuffer(byte *buffer, size_t bufSize, int quality,
 {
   return 0;
 }
+#endif
 #endif

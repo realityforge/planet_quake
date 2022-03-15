@@ -71,7 +71,7 @@ var STD = {
   },
   fprintf: function (f, err, args) {
     // TODO: rewrite va_args in JS for convenience?
-    console.log(addressToString(err), addressToString(HEAP32[(args) >> 2]));
+    console.log(addressToString(err), addressToString(HEAPU32[(args) >> 2]));
   },
   tolower: function tolower(c) { return String.fromCharCode(c).toLowerCase().charCodeAt(0) },
   atoi: function (i) { return parseInt(addressToString(i)) },

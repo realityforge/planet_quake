@@ -53,22 +53,24 @@ function addressToString(addr, length) {
   if(!addr) return newString
   if(!length) length = 1024
   for(let i = 0; i < length; i++) {
-    if(HEAP8[addr + i] == 0) {
+    if(HEAPU8[addr + i] == 0) {
       break;
     }
-    newString += String.fromCharCode(HEAP8[addr + i])
+    newString += String.fromCharCode(HEAPU8[addr + i])
   }
 
-  if(typeof g_bigcharsSize != 'undefined' && HEAP32[g_bigcharsSize >> 2] == 0) {
+  /*
+  if(typeof g_bigcharsSize != 'undefined' && HEAPU32[g_bigcharsSize >> 2] == 0) {
     let bigchars = atob(document.getElementById('bigchars').src.substring(22))
       .split("").map(function(c) { return c.charCodeAt(0); })
-    let startPos = HEAP32[g_bigcharsData >> 2] = malloc(bigchars.length)
-    HEAP32[g_bigcharsSize >> 2] = bigchars.length
+    let startPos = HEAPU32[g_bigcharsData >> 2] = malloc(bigchars.length)
+    HEAPU32[g_bigcharsSize >> 2] = bigchars.length
     for(let i = 0; i < bigchars.length; i++) {
       HEAP8[startPos] = bigchars[i]
       startPos++
     }
   }
+  */
 
   return newString
 }
@@ -77,11 +79,11 @@ function stringToAddress(str, addr) {
   let start = Q3e.sharedMemory + Q3e.sharedCounter
   if(addr) start = addr
   for(let j = 0; j < str.length; j++) {
-    HEAP8[start+j] = str.charCodeAt(j)
+    HEAPU8[start+j] = str.charCodeAt(j)
   }
-  HEAP8[start+str.length] = 0
-  HEAP8[start+str.length+1] = 0
-  HEAP8[start+str.length+2] = 0
+  HEAPU8[start+str.length] = 0
+  HEAPU8[start+str.length+1] = 0
+  HEAPU8[start+str.length+2] = 0
   if(!addr) {
     Q3e.sharedCounter += str.length + 3
     Q3e.sharedCounter += 4 - (Q3e.sharedCounter % 4)
@@ -102,11 +104,11 @@ function stringsToMemory(list, length) {
   let start = Q3e.sharedMemory + Q3e.sharedCounter
   let posInSeries = start + list.length * 4
   for (let i = 0; i < list.length; i++) {
-    HEAP32[(start+i*4)>>2] = posInSeries // save the starting address in the list
+    HEAPU32[(start+i*4)>>2] = posInSeries // save the starting address in the list
     stringToAddress(list[i], posInSeries)
     posInSeries += list[i].length + 1
   }
-  if(length) HEAP32[length >> 2] = posInSeries - start
+  if(length) HEAPU32[length >> 2] = posInSeries - start
   Q3e.sharedCounter = posInSeries - Q3e.sharedMemory
   Q3e.sharedCounter += 4 - (Q3e.sharedCounter % 4)
   if(Q3e.sharedCounter > 1024 * 512) {
@@ -247,6 +249,8 @@ function Sys_Frame() {
       Com_Frame(false)
     } catch (e) {
       console.log(e)
+      Sys_Exit(1)
+      throw e
     }
   })
 }
@@ -260,10 +264,10 @@ function alignUp(x, multiple) {
 
 function updateGlobalBufferAndViews(buf) {
   Q3e["HEAP8"] = window.HEAP8 = new Int8Array(buf);
-  Q3e["HEAP16"] = window.HEAP16 = new Int16Array(buf);
-  Q3e["HEAP32"] = window.HEAP32 = new Int32Array(buf);
   Q3e["HEAPU8"] = window.HEAPU8 = new Uint8Array(buf);
+  Q3e["HEAP16"] = window.HEAP16 = new Int16Array(buf);
   Q3e["HEAPU16"] = window.HEAPU16 = new Uint16Array(buf);
+  Q3e["HEAP32"] = window.HEAP32 = new Int32Array(buf);
   Q3e["HEAPU32"] = window.HEAPU32 = new Uint32Array(buf);
   Q3e["HEAPF32"] = window.HEAPF32 = new Float32Array(buf);
   Q3e["HEAPF64"] = window.HEAPF64 = new Float64Array(buf);

@@ -23,6 +23,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #include "tr_common.h"
 
+#ifndef __WASM__
+
 typedef unsigned int   ui32_t;
 
 typedef struct ddsHeader_s
@@ -496,3 +498,6 @@ void R_SaveDDS(const char *filename, byte *pic, int width, int height, int depth
 
 	ri.Free(data);
 }
+
+#endif
+

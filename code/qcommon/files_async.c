@@ -999,12 +999,6 @@ void CL_CheckLazyUpdates( void ) {
 		Sys_FileNeeded("multigame/lsdm3_v1.pk3dir/textures/lsdm3/nunuk-bluedark.jpg", VFS_LAZY);
 	}
 
-	if((cls.cgameStarted || cls.uiStarted)
-		&& com_sv_running->integer) {
-		return;
-	}
-
-
 	// files must process faster otherwise we will have a bunch of indexes queued  
 	//   while downloading errors are happening
 	if(newTime - secondTimer > 9) { // = 10ms, or about once per frame at 100 FPS
@@ -1070,7 +1064,7 @@ void CL_CheckLazyUpdates( void ) {
 	if(ready->loadingName[12] == ';') {
 		ready->loadingName[12] = '\0';
 		if(cls.rendererStarted) {
-			//re.UpdateShader(&ready->loadingName[13], atoi(&ready->loadingName[0]));
+			re.UpdateShader(&ready->loadingName[13], atoi(&ready->loadingName[0]));
 		}
 		ready->loadingName[12] = ';';
 	}
@@ -1078,7 +1072,7 @@ void CL_CheckLazyUpdates( void ) {
 	// intercept this here because it's client only code
 	if(Q_stristr(&ready->loadingName[MAX_OSPATH], "/scripts/")
 		&& Q_stristr(&ready->loadingName[MAX_OSPATH], ".shader")) {
-		//re.ReloadShaders(qfalse);
+		re.ReloadShaders(qfalse);
 	}
 #endif
 

@@ -826,6 +826,8 @@ void R_ScreenShotJPEG_f (void) {
 
 //============================================================================
 
+
+#ifndef __WASM__
 /*
 ==================
 R_ExportCubemaps
@@ -852,6 +854,8 @@ void R_ExportCubemaps_f(void)
 {
 	R_ExportCubemaps();
 }
+#endif
+
 
 //============================================================================
 static GLuint videoPBO[2] = {0, 0};
@@ -1590,8 +1594,10 @@ void R_Register( void )
 	ri.Cmd_SetDescription( "gfxinfo", "Returns extensive information about video settings\nUsage: gfxinfo");
 	ri.Cmd_AddCommand( "gfxmeminfo", GfxMemInfo_f );
 	ri.Cmd_SetDescription( "gfxmeminfo", "Returns extensive memory information\nUsage: gfxmeminfo");
+#ifndef __WASM__
 	ri.Cmd_AddCommand( "exportCubemaps", R_ExportCubemaps_f );
 	ri.Cmd_SetDescription( "exportCubemaps", "Export a DDS file of graphics loaded as a cubemap\nUsage: exportCubemaps");
+#endif
 }
 
 void R_InitQueries(void)

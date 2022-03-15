@@ -2171,7 +2171,7 @@ static image_t *R_CreateImage2( const char *name, byte *pic, int width, int heig
 			return NULL;
 		}
 	} else
-		image = tr.images[tr.numImages] = ri.Hunk_Alloc( sizeof( *image ) + namelen + 1, h_low );
+		image = tr.images[tr.numImages] = ri.Hunk_Alloc( sizeof( *image ) + MAX_QPATH, h_low );
 	qglGenTextures(1, &image->texnum);
 	tr.numImages++;
 
@@ -2330,6 +2330,7 @@ static image_t *R_CreateImage2( const char *name, byte *pic, int width, int heig
 }
 
 #ifdef __WASM__
+void R_FinishImage3( image_t *, GLenum picFormat, int numMips );
 /*
 ================
 R_CreateImage2
@@ -2341,12 +2342,6 @@ static image_t *R_CreateImage3( const char *name, GLenum picFormat, int numMips,
 	image_t   *image;
 	long      hash;
 	size_t		namelen;
-	int       glWrapClampMode, mipWidth, mipHeight, miplevel;
-	qboolean    mipmap = !!(flags & IMGFLAG_MIPMAP);
-	qboolean lastMip = qfalse;
-	qboolean cubemap = qfalse;
-	GLenum textureTarget = cubemap ? GL_TEXTURE_CUBE_MAP : GL_TEXTURE_2D;
-	GLenum dataFormat;
 
 	namelen = strlen( name );
 	if ( namelen >= MAX_QPATH ) {
@@ -2360,7 +2355,7 @@ static image_t *R_CreateImage3( const char *name, GLenum picFormat, int numMips,
 			return NULL;
 		}
 	} else
-		image = tr.images[tr.numImages] = ri.Hunk_Alloc( sizeof( *image ) + namelen + 1, h_low );
+		image = tr.images[tr.numImages] = ri.Hunk_Alloc( sizeof( *image ) + MAX_QPATH, h_low );
 
 	image->width = 0;
 	image->height = 0;
@@ -2383,16 +2378,34 @@ static image_t *R_CreateImage3( const char *name, GLenum picFormat, int numMips,
 	//	internalFormat = RawImage_GetFormat(pic, width * height, picFormat, isLightmap, image->type, image->flags);
 
 	image->lastTimeUsed = tr.lastRegistrationTime;
-	image->internalFormat = internalFormat;
+	image->internalFormat = PixelDataFormatFromInternalFormat(internalFormat);
+
+	if(image->width > 1 && image->height > 1) {
+		R_FinishImage3( image, picFormat, numMips );
+	}
+
+	hash = generateHashValue(name);
+	image->next = hashTable[hash];
+	hashTable[hash] = image;
+
+	return image;
+}
+
+Q_EXPORT void R_FinishImage3( image_t *image, GLenum picFormat, int numMips ) {
+	int       glWrapClampMode, mipWidth, mipHeight, miplevel;
+	qboolean    mipmap = !!(image->flags & IMGFLAG_MIPMAP);
+	qboolean lastMip = qfalse;
+	qboolean cubemap = qfalse;
+	GLenum textureTarget = cubemap ? GL_TEXTURE_CUBE_MAP : GL_TEXTURE_2D;
+
+Com_Printf("wtf: %s\n", image->imgName);
 
 	image->uploadWidth = image->width;
 	image->uploadHeight = image->height;
 
 	// Allocate texture storage so we don't have to worry about it later.
-	dataFormat = PixelDataFormatFromInternalFormat(internalFormat);
-	internalFormat = dataFormat;
 	mipWidth = image->width;
-	mipHeight = image->width;
+	mipHeight = image->height;
 	miplevel = 0;
 	do
 	{
@@ -2402,11 +2415,11 @@ static image_t *R_CreateImage3( const char *name, GLenum picFormat, int numMips,
 			int i;
 
 			for (i = 0; i < 6; i++)
-				qglTextureImage2DEXT(image->texnum, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, miplevel, internalFormat, mipWidth, mipHeight, 0, dataFormat, GL_UNSIGNED_BYTE, NULL);
+				qglTextureImage2DEXT(image->texnum, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, miplevel, image->internalFormat, mipWidth, mipHeight, 0, image->internalFormat, GL_UNSIGNED_BYTE, NULL);
 		}
 		else
 		{
-			qglTextureImage2DEXT(image->texnum, GL_TEXTURE_2D, miplevel, internalFormat, mipWidth, mipHeight, 0, dataFormat, GL_UNSIGNED_BYTE, NULL);
+			qglTextureImage2DEXT(image->texnum, GL_TEXTURE_2D, miplevel, image->internalFormat, mipWidth, mipHeight, 0, image->internalFormat, GL_UNSIGNED_BYTE, NULL);
 		}
 
 		mipWidth  = MAX(1, mipWidth >> 1);
@@ -2416,9 +2429,9 @@ static image_t *R_CreateImage3( const char *name, GLenum picFormat, int numMips,
 	while (!lastMip);
 
 	// Upload data.
-	qglTextureSubImage2DEXT(image->texnum, GL_TEXTURE_2D, numMips, 0, 0, image->width, image->height, PixelDataFormatFromInternalFormat(internalFormat), picFormat == GL_RGBA16 ? GL_UNSIGNED_SHORT : GL_UNSIGNED_BYTE, 0);
+	qglTextureSubImage2DEXT(image->texnum, GL_TEXTURE_2D, numMips, 0, 0, image->width, image->height, image->internalFormat, picFormat == GL_RGBA16 ? GL_UNSIGNED_SHORT : GL_UNSIGNED_BYTE, 0);
 
-	if (flags & IMGFLAG_CLAMPTOEDGE)
+	if (image->flags & IMGFLAG_CLAMPTOEDGE)
 		glWrapClampMode = GL_CLAMP_TO_EDGE;
 	else
 		glWrapClampMode = GL_REPEAT;
@@ -2434,7 +2447,7 @@ static image_t *R_CreateImage3( const char *name, GLenum picFormat, int numMips,
 		qglTextureParameteriEXT(image->texnum, textureTarget, GL_TEXTURE_MAX_ANISOTROPY_EXT,
 			mipmap ? (GLint)Com_Clamp(1, maxAnisotropy, r_ext_max_anisotropy->integer) : 1);
 
-	switch(internalFormat)
+	switch(image->internalFormat)
 	{
 		case GL_DEPTH_COMPONENT:
 		case GL_DEPTH_COMPONENT16_ARB:
@@ -2454,11 +2467,6 @@ static image_t *R_CreateImage3( const char *name, GLenum picFormat, int numMips,
 
 	GL_CheckErrors();
 
-	hash = generateHashValue(name);
-	image->next = hashTable[hash];
-	hashTable[hash] = image;
-
-	return image;
 }
 #endif
 
@@ -2483,8 +2491,11 @@ void R_UpdateSubImage( image_t *image, byte *pic, int x, int y, int width, int h
 
 //===================================================================
 
+#ifndef __WASM__
 // Prototype for dds loader function which isn't common to both renderers
 void R_LoadDDS(const char *filename, byte **pic, int *width, int *height, GLenum *picFormat, int *numMips);
+#endif
+
 
 typedef struct
 {
@@ -2541,7 +2552,7 @@ void R_LoadImage( const char *name, byte **pic, int *width, int *height, GLenum 
 
 	Q_strncpyz( localName, name, sizeof( localName ) );
 
-
+#ifndef __WASM__
 	// If compressed textures are enabled, try loading a DDS first, it'll load fastest
 	if (r_ext_compressed_textures->integer)
 	{
@@ -2582,6 +2593,7 @@ void R_LoadImage( const char *name, byte **pic, int *width, int *height, GLenum 
         return;
   	}
 	}
+#endif
 
 	ext = COM_GetExtension( localName );
 	if( *ext )
@@ -2610,19 +2622,19 @@ void R_LoadImage( const char *name, byte **pic, int *width, int *height, GLenum 
 		// A loader was found
 		//if( i < numImageLoaders )
 		//{
-			if( *pic == NULL )
-			{
-				// Loader failed, most likely because the file isn't there;
-				// try again without the extension
-				orgNameFailed = qtrue;
-				orgLoader = i;
-				COM_StripExtension( name, localName, MAX_QPATH );
-			}
-			else
-			{
-				// Something loaded
-				return;
-			}
+		if( *pic == NULL )
+		{
+			// Loader failed, most likely because the file isn't there;
+			// try again without the extension
+			orgNameFailed = qtrue;
+			orgLoader = i;
+			COM_StripExtension( name, localName, MAX_QPATH );
+		}
+		else
+		{
+			// Something loaded
+			return;
+		}
 		//}
 	}
 
@@ -2772,16 +2784,10 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, imgFlags_t flags )
 	//
 	// load the pic from disk
 	//
-#ifdef __WASM__
-	// in browser mode it's always "just checking" because the image loader will
-	//   load it when it's bound to the texture
-	R_LoadImage( name, &pic, &width, &height, &picFormat, &picNumMips, qtrue );
-#else
 #ifdef USE_LAZY_LOAD
 	R_LoadImage( name, &pic, &width, &height, &picFormat, &picNumMips, qfalse );
 #else
   R_LoadImage( name, &pic, &width, &height, &picFormat, &picNumMips );
-#endif
 #endif
 
 #ifdef USE_ASYNCHRONOUS

@@ -1671,8 +1671,11 @@ const void *RB_PostProcess(const void *data)
 	return (const void *)(cmd + 1);
 }
 
+
+#ifndef __WASM__
 // FIXME: put this function declaration elsewhere
 void R_SaveDDS(const char *filename, byte *pic, int width, int height, int depth);
+
 
 /*
 =============
@@ -1739,6 +1742,8 @@ const void *RB_ExportCubemaps(const void *data)
 	return (const void *)(cmd + 1);
 }
 
+#endif // !__WASM__
+
 
 /*
 ====================
@@ -1787,9 +1792,11 @@ void RB_ExecuteRenderCommands( const void *data ) {
 		case RC_POSTPROCESS:
 			data = RB_PostProcess(data);
 			break;
+#ifndef __WASM__
 		case RC_EXPORT_CUBEMAPS:
 			data = RB_ExportCubemaps(data);
 			break;
+#endif
 		case RC_END_OF_LIST:
 		default:
 			// finish any 2D drawing if needed

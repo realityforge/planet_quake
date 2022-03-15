@@ -2313,6 +2313,9 @@ int FS_ReadFile( const char *qpath, void **buffer ) {
 FS_FreeFile
 =============
 */
+#ifdef __WASM__
+Q_EXPORT
+#endif
 void FS_FreeFile( void *buffer ) {
 	if ( !fs_searchpaths ) {
 		Com_Error( ERR_FATAL, "Filesystem call made without initialization" );
