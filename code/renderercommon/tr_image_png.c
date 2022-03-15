@@ -21,6 +21,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "../qcommon/q_shared.h"
 #include "../renderercommon/tr_public.h"
+
+#ifndef __WASM__
 #include "../qcommon/puff.h"
 
 // we could limit the png size to a lower value here
@@ -2531,3 +2533,5 @@ void R_LoadPNG(const char *name, byte **pic, int *width, int *height)
 
 	CloseBufferedFile(ThePNG);
 }
+
+#endif // !__WASM__ use web browser Image

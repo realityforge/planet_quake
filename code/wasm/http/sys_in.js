@@ -221,22 +221,58 @@ function InputPushKeyEvent(evt) {
       Sys_QueEvent( Sys_Milliseconds(), SE_CHAR, 8, 0, 0, null );
   }
 
-  if( evt.ctrlKey && key >= 'a' && evt.keyCode <= 'z' ) {
+  if( evt.ctrlKey && evt.keyCode >= 'a'.charCodeAt(0) && evt.keyCode <= 'z'.charCodeAt(0) ) {
     Sys_QueEvent( Sys_Milliseconds(), SE_CHAR, evt.charCode-('a'.charCodeAt(0))+1, 0, 0, null );
   } else
-
-  if(evt.shiftKey && evt.keyCode >= 65 && evt.keyCode <= 90) {
-    Sys_QueEvent( Sys_Milliseconds(), SE_KEY, 
-      INPUT.keystrings['A'] + (evt.keyCode - 65), evt.type == 'keydown', 0, null );
-  } else 
 
   if(evt.keyCode >= 65 && evt.keyCode <= 90) {
     Sys_QueEvent( Sys_Milliseconds(), SE_KEY, 
       INPUT.keystrings['a'] + (evt.keyCode - 65), evt.type == 'keydown', 0, null );
   } else 
 
-  if(evt.shiftKey) {
-    debugger
+  if(evt.shiftKey && evt.keyCode >= 65 && evt.keyCode <= 90) {
+    Sys_QueEvent( Sys_Milliseconds(), SE_KEY, 
+      INPUT.keystrings['a'] + (evt.keyCode - 65 + 97), evt.type == 'keydown', 0, null );
+  } else 
+
+  if(evt.keyCode >= 48 && evt.keyCode <= 57) {
+    Sys_QueEvent( Sys_Milliseconds(), SE_KEY, 
+      INPUT.keystrings['0'] + (evt.keyCode - 48), evt.type == 'keydown', 0, null );
+  } else 
+
+  if(evt.shiftKey && evt.keyCode >= 48 && evt.keyCode <= 57) {
+    Sys_QueEvent( Sys_Milliseconds(), SE_KEY, 
+      INPUT.keystrings[' '] + (evt.keyCode - 48), evt.type == 'keydown', 0, null );
+  } else 
+
+  if(evt.keyCode == 37) {
+    Sys_QueEvent( Sys_Milliseconds(), SE_KEY, 
+      INPUT.keystrings['LEFTARROW'], evt.type == 'keydown', 0, null );
+  } else 
+
+  if(evt.keyCode == 38) {
+    Sys_QueEvent( Sys_Milliseconds(), SE_KEY, 
+      INPUT.keystrings['UPARROW'], evt.type == 'keydown', 0, null );
+  } else 
+
+  if(evt.keyCode == 39) {
+    Sys_QueEvent( Sys_Milliseconds(), SE_KEY, 
+      INPUT.keystrings['RIGHTARROW'], evt.type == 'keydown', 0, null );
+  } else 
+
+  if(evt.keyCode == 40) {
+    Sys_QueEvent( Sys_Milliseconds(), SE_KEY, 
+      INPUT.keystrings['DOWNARROW'], evt.type == 'keydown', 0, null );
+  } else 
+
+  if(evt.keyCode == 16) {
+    Sys_QueEvent( Sys_Milliseconds(), SE_KEY, 
+      INPUT.keystrings['SHIFT'], evt.type == 'keydown', 0, null );
+  }
+
+  if(evt.keyCode == 32) {
+    Sys_QueEvent( Sys_Milliseconds(), SE_KEY, 
+      INPUT.keystrings['SPACE'], evt.type == 'keydown', 0, null );
   }
 
   if(evt.keyCode == 13) {
@@ -246,7 +282,7 @@ function InputPushKeyEvent(evt) {
 
   if(evt.keyCode == 27) {
     Sys_QueEvent( Sys_Milliseconds(), SE_KEY, 
-      INPUT.keystrings['ESC'], evt.type == 'keydown', 0, null );
+      INPUT.keystrings['ESCAPE'], evt.type == 'keydown', 0, null );
   }
 }
 

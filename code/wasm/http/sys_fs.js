@@ -211,6 +211,7 @@ function Sys_FWrite(buf, count, size, pointer) {
   }
   tmp.set(new Uint8Array(HEAP8.slice(buf, buf + count * size)), FS.pointers[pointer][0]);
   FS.pointers[pointer][2].contents = tmp
+  return count * size
 }
 
 function Sys_FFlush(pointer) {

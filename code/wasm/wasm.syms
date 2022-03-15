@@ -60,6 +60,8 @@ Sys_FClose
 Sys_FWrite
 Sys_FFlush
 Sys_FRead
+R_LoadPNG
+R_LoadJPG
 Sys_ListFiles
 Sys_SockaddrToString
 Sys_NET_MulticastLocal

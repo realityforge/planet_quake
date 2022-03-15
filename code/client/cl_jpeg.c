@@ -479,6 +479,8 @@ void CL_SaveJPG( const char *filename, int quality, int image_width, int image_h
 }
 
 #else
+#error you probably meant to have jpeg
+
 void CL_LoadJPG( const char *filename, unsigned char **pic, int *width, int *height )
 {
 }

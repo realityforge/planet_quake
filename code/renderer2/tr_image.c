@@ -432,6 +432,7 @@ static void YCoCgAtoRGBA(const byte *in, byte *out, int width, int height)
 }
 
 
+#ifndef __WASM__
 // uses a sobel filter to change a texture to a normal map
 static void RGBAtoNormal(const byte *in, byte *out, int width, int height, qboolean clampToEdge)
 {
@@ -542,6 +543,8 @@ static void RGBAtoNormal(const byte *in, byte *out, int width, int height, qbool
 		}
 	}
 }
+#endif
+
 
 #define COPYSAMPLE(a,b) *(unsigned int *)(a) = *(unsigned int *)(b)
 
@@ -1966,11 +1969,6 @@ static void RawImage_UploadTexture(GLuint texture, byte *data, int x, int y, int
 	dataFormat = PixelDataFormatFromInternalFormat(internalFormat);
 	dataType = picFormat == GL_RGBA16 ? GL_UNSIGNED_SHORT : GL_UNSIGNED_BYTE;
 
-#ifdef EMSCRIPTEN
-	// HULK-SMASH! GLES requires that the internal format matches the data format.
-	internalFormat = dataFormat;
-#endif
-
 	miplevel = 0;
 	do
 	{
@@ -2331,6 +2329,139 @@ static image_t *R_CreateImage2( const char *name, byte *pic, int width, int heig
 	return image;
 }
 
+#ifdef __WASM__
+/*
+================
+R_CreateImage2
+
+This is the only way any image_t are created
+================
+*/
+static image_t *R_CreateImage3( const char *name, GLenum picFormat, int numMips, imgType_t type, imgFlags_t flags, int internalFormat ) {
+	image_t   *image;
+	long      hash;
+	size_t		namelen;
+	int       glWrapClampMode, mipWidth, mipHeight, miplevel;
+	qboolean    mipmap = !!(flags & IMGFLAG_MIPMAP);
+	qboolean lastMip = qfalse;
+	qboolean cubemap = qfalse;
+	GLenum textureTarget = cubemap ? GL_TEXTURE_CUBE_MAP : GL_TEXTURE_2D;
+	GLenum dataFormat;
+
+	namelen = strlen( name );
+	if ( namelen >= MAX_QPATH ) {
+		ri.Error (ERR_DROP, "R_CreateImage: \"%s\" is too long", name);
+	}
+
+	if ( tr.numImages == MAX_DRAWIMAGES ) {
+		image = R_FreeOldestImage();
+		if(!image) {
+			ri.Printf( PRINT_WARNING, "R_CreateImage: MAX_DRAWIMAGES hit");
+			return NULL;
+		}
+	} else
+		image = tr.images[tr.numImages] = ri.Hunk_Alloc( sizeof( *image ) + namelen + 1, h_low );
+
+	image->width = 0;
+	image->height = 0;
+	qglGenTextures(1, &image->texnum);
+	tr.numImages++;
+
+	image->type = type;
+	image->flags = flags;
+
+	image->imgName = (char *)( image + 1 );
+	strcpy( image->imgName, name );
+
+	if ( namelen > 6 && Q_stristr( image->imgName, "maps/" ) == image->imgName && Q_stristr( image->imgName + 6, "/lm_" ) != NULL ) {
+		// external lightmap atlases stored in maps/<mapname>/lm_XXXX textures
+		//image->flags = IMGFLAG_NOLIGHTSCALE | IMGFLAG_NO_COMPRESSION | IMGFLAG_NOSCALE | IMGFLAG_COLORSHIFT;
+		image->flags |= IMGFLAG_NO_COMPRESSION | IMGFLAG_NOSCALE;
+	}
+  
+	//if (!internalFormat)
+	//	internalFormat = RawImage_GetFormat(pic, width * height, picFormat, isLightmap, image->type, image->flags);
+
+	image->lastTimeUsed = tr.lastRegistrationTime;
+	image->internalFormat = internalFormat;
+
+	image->uploadWidth = image->width;
+	image->uploadHeight = image->height;
+
+	// Allocate texture storage so we don't have to worry about it later.
+	dataFormat = PixelDataFormatFromInternalFormat(internalFormat);
+	internalFormat = dataFormat;
+	mipWidth = image->width;
+	mipHeight = image->width;
+	miplevel = 0;
+	do
+	{
+		lastMip = !mipmap || (mipWidth == 1 && mipHeight == 1);
+		if (cubemap)
+		{
+			int i;
+
+			for (i = 0; i < 6; i++)
+				qglTextureImage2DEXT(image->texnum, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, miplevel, internalFormat, mipWidth, mipHeight, 0, dataFormat, GL_UNSIGNED_BYTE, NULL);
+		}
+		else
+		{
+			qglTextureImage2DEXT(image->texnum, GL_TEXTURE_2D, miplevel, internalFormat, mipWidth, mipHeight, 0, dataFormat, GL_UNSIGNED_BYTE, NULL);
+		}
+
+		mipWidth  = MAX(1, mipWidth >> 1);
+		mipHeight = MAX(1, mipHeight >> 1);
+		miplevel++;
+	}
+	while (!lastMip);
+
+	// Upload data.
+	qglTextureSubImage2DEXT(image->texnum, GL_TEXTURE_2D, numMips, 0, 0, image->width, image->height, PixelDataFormatFromInternalFormat(internalFormat), picFormat == GL_RGBA16 ? GL_UNSIGNED_SHORT : GL_UNSIGNED_BYTE, 0);
+
+	if (flags & IMGFLAG_CLAMPTOEDGE)
+		glWrapClampMode = GL_CLAMP_TO_EDGE;
+	else
+		glWrapClampMode = GL_REPEAT;
+
+	// Set all necessary texture parameters.
+	qglTextureParameterfEXT(image->texnum, textureTarget, GL_TEXTURE_WRAP_S, glWrapClampMode);
+	qglTextureParameterfEXT(image->texnum, textureTarget, GL_TEXTURE_WRAP_T, glWrapClampMode);
+
+	if (cubemap)
+		qglTextureParameteriEXT(image->texnum, textureTarget, GL_TEXTURE_WRAP_R, glWrapClampMode);
+
+	if (textureFilterAnisotropic && !cubemap)
+		qglTextureParameteriEXT(image->texnum, textureTarget, GL_TEXTURE_MAX_ANISOTROPY_EXT,
+			mipmap ? (GLint)Com_Clamp(1, maxAnisotropy, r_ext_max_anisotropy->integer) : 1);
+
+	switch(internalFormat)
+	{
+		case GL_DEPTH_COMPONENT:
+		case GL_DEPTH_COMPONENT16_ARB:
+		case GL_DEPTH_COMPONENT24_ARB:
+		case GL_DEPTH_COMPONENT32_ARB:
+			// Fix for sampling depth buffer on old nVidia cards.
+			// from http://www.idevgames.com/forums/thread-4141-post-34844.html#pid34844
+			qglTextureParameterfEXT(image->texnum, textureTarget, GL_DEPTH_TEXTURE_MODE, GL_LUMINANCE);
+			qglTextureParameterfEXT(image->texnum, textureTarget, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+			qglTextureParameterfEXT(image->texnum, textureTarget, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+			break;
+		default:
+			qglTextureParameterfEXT(image->texnum, textureTarget, GL_TEXTURE_MIN_FILTER, mipmap ? gl_filter_min : GL_LINEAR);
+			qglTextureParameterfEXT(image->texnum, textureTarget, GL_TEXTURE_MAG_FILTER, mipmap ? gl_filter_max : GL_LINEAR);
+			break;
+	}
+
+	GL_CheckErrors();
+
+	hash = generateHashValue(name);
+	image->next = hashTable[hash];
+	hashTable[hash] = image;
+
+	return image;
+}
+#endif
+
 
 /*
 ================
@@ -2592,11 +2723,13 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, imgFlags_t flags )
 {
 	image_t	*image;
 	int		width, height;
-	byte	*pic;
+	byte	*pic = NULL;
 	GLenum  picFormat;
 	int picNumMips;
 	long	hash;
+#ifndef __WASM__
 	imgFlags_t checkFlagsTrue, checkFlagsFalse;
+#endif
 
 	if (!name || !name[0]) {
 		return NULL;
@@ -2639,10 +2772,16 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, imgFlags_t flags )
 	//
 	// load the pic from disk
 	//
+#ifdef __WASM__
+	// in browser mode it's always "just checking" because the image loader will
+	//   load it when it's bound to the texture
+	R_LoadImage( name, &pic, &width, &height, &picFormat, &picNumMips, qtrue );
+#else
 #ifdef USE_LAZY_LOAD
 	R_LoadImage( name, &pic, &width, &height, &picFormat, &picNumMips, qfalse );
 #else
   R_LoadImage( name, &pic, &width, &height, &picFormat, &picNumMips );
+#endif
 #endif
 
 #ifdef USE_ASYNCHRONOUS
@@ -2662,6 +2801,7 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, imgFlags_t flags )
 		return NULL;
 	}
 
+#ifndef __WASM__
 	checkFlagsTrue = IMGFLAG_PICMIP | IMGFLAG_MIPMAP | IMGFLAG_GENNORMALMAP;
 	checkFlagsFalse = IMGFLAG_CUBEMAP;
 	if (r_normalMapping->integer && (picFormat == GL_RGBA8) && (type == IMGTYPE_COLORALPHA) &&
@@ -2767,6 +2907,7 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, imgFlags_t flags )
 			ri.Free( normalPic );	
 		}
 	}
+#endif
 
 	// force mipmaps off if image is compressed but doesn't have enough mips
 	if ((flags & IMGFLAG_MIPMAP) && picFormat != GL_RGBA8 && picFormat != GL_SRGB8_ALPHA8_EXT)
@@ -2782,8 +2923,14 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, imgFlags_t flags )
 			flags &= ~IMGFLAG_MIPMAP;
 	}
 
+#ifdef __WASM__
+	// we think the image is out there so register it in the system, then we can update
+	//   the glBind when it loads
+	image = R_CreateImage3( ( char * ) name, picFormat, picNumMips, type, flags, GL_RGBA );
+#else
 	image = R_CreateImage2( ( char * ) name, pic, width, height, picFormat, picNumMips, type, flags, 0 );
 	ri.Free( pic );
+#endif
 	return image;
 }
 

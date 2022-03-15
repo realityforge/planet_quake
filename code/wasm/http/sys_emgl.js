@@ -365,6 +365,12 @@ GLctx.bindRenderbuffer(target, GL.renderbuffers[renderbuffer]);
 
 function _glBindTexture(target, texture) {
 GLctx.bindTexture(target, GL.textures[texture]);
+  EMGL.previousTex = texture
+  if(typeof EMGL.texFiles[texture] != 'undefined') {
+    EMGL.previousImage = EMGL.texFiles[texture][1]
+  } else {
+    EMGL.previousImage = null
+  }
 }
 
 function _glBindVertexArray(vao) {
@@ -709,8 +715,34 @@ function _glGenRenderbuffers(n, renderbuffers) {
 __glGenObject(n, renderbuffers, "createRenderbuffer", GL.renderbuffers);
 }
 
+
+function R_LoadPNG(filename, pic) {
+  let filenameStr = addressToString(filename)
+  if(filenameStr.match('gfx/2d/bigchars_backup')) {
+    EMGL.previousName = filenameStr
+    EMGL.previousImage = document.getElementById('bigchars')
+    HEAP32[pic >> 2] = 1
+  } else {
+    EMGL.previousName = ''
+    EMGL.previousImage = null
+    HEAP32[pic >> 2] = null
+  }
+}
+
+function R_LoadJPG(filename) {
+  let filenameStr = addressToString(filename)
+  debugger
+}
+
+
 function _glGenTextures(n, textures) {
 __glGenObject(n, textures, "createTexture", GL.textures);
+// TODO: engine is giving us address of where it will store texture name, also
+  EMGL.texFiles[HEAP32[textures >> 2]] = [textures, EMGL.previousImage]
+  if(EMGL.previousImage) {
+    HEAP32[(textures - 4*4) >> 2] = EMGL.previousImage.width
+    HEAP32[(textures - 3*4) >> 2] = EMGL.previousImage.height
+  }
 }
 
 function _glGenVertexArrays(n, arrays) {
@@ -1296,6 +1328,18 @@ debugger;
 }
 
 function _glTexImage2D(target, level, internalFormat, width, height, border, format, type, pixels) {
+  /*
+  if(width <= 2 || height <= 2) return
+  if(EMGL.previousImage && EMGL.previousImage.complete) {
+    GLctx.texImage2D(target, level, internalFormat, width, height, border, format, type, pixels ? EMGL.previousImage : null);
+    return
+  } else if (typeof EMGL.texFiles[EMGL.previousTex] != 'undefined'
+    && EMGL.texFiles[EMGL.previousTex][1]) {
+    console.log('whoops')
+    return
+  }
+  */
+
 if (true) {
   if (GLctx.currentPixelUnpackBufferBinding) {
   GLctx.texImage2D(target, level, internalFormat, width, height, border, format, type, pixels);
@@ -1319,6 +1363,17 @@ GLctx["texParameteri"](x0, x1, x2);
 }
 
 function _glTexSubImage2D(target, level, xoffset, yoffset, width, height, format, type, pixels) {
+  if(width <= 2 || height <= 2) return
+  if(EMGL.previousImage && EMGL.previousImage.complete) {
+    GLctx.texSubImage2D(target, level, xoffset, yoffset, width, height, format, type, EMGL.previousImage);
+    return
+  } else if (typeof EMGL.texFiles[EMGL.previousTex] != 'undefined'
+    && EMGL.texFiles[EMGL.previousTex][1]) {
+    console.log('whoops')
+    return
+  }
+
+
 if (true) {
   if (GLctx.currentPixelUnpackBufferBinding) {
   GLctx.texSubImage2D(target, level, xoffset, yoffset, width, height, format, type, pixels);
@@ -1440,8 +1495,13 @@ setTempRet0(val);
 var GLctx;
 
 var EMGL = {
+  previousName: '',
+  previousImage: null,
+  previousTex: 0,
+  texFiles: {},
   GL_GetProcAddress: function () {},
-
+  R_LoadPNG: R_LoadPNG,
+  R_LoadJPG: R_LoadJPG,
   "getTempRet0": _getTempRet0,
   "glActiveTexture": _glActiveTexture,
   "glAlphaFunc": _glAlphaFunc,
