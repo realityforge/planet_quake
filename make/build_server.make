@@ -75,30 +75,30 @@ endif
 endif
 
 
-INCLUDES := $(MOUNT_DIR)/qcommon
+SERVER_INCLUDES  := $(MOUNT_DIR)/qcommon
 
-CFILES   := $(foreach dir,$(SOURCES), $(wildcard $(dir)/sv_*.c)) \
+SERVER_CFILES    := $(foreach dir,$(SOURCES), $(wildcard $(dir)/sv_*.c)) \
             $(CLIPMAP) $(QCOMMON) $(VM) $(SYSTEM)
 ifneq ($(USE_BOTLIB_DLOPEN),1)
-CFILES   += $(foreach dir,$(SOURCES), $(wildcard $(dir)/be_*.c)) \
+SERVER_CFILES    += $(foreach dir,$(SOURCES), $(wildcard $(dir)/be_*.c)) \
             $(foreach dir,$(SOURCES), $(wildcard $(dir)/l_*.c))
 endif
 
 ifeq ($(USE_MEMORY_MAPS),1)
 SERVER_LDFLAGS   += $(BR)/$(CNAME)_q3map2_$(SHLIBNAME)
-CFILES   += cl_jpeg.o
+SERVER_CFILES    += cl_jpeg.o
 endif
 
-OBJS     := $(CFILES:.c=.o) 
-Q3OBJ    := $(addprefix $(B)/$(WORKDIR)/,$(notdir $(OBJS)))
+SERVER_OBJS      := $(SERVER_CFILES:.c=.o) 
+SERVER_Q3OBJ     := $(addprefix $(B)/$(WORKDIR)/,$(notdir $(SERVER_OBJS)))
 
 ifeq ($(USE_MEMORY_MAPS),1)
 ifeq ($(USE_INTERNAL_JPEG),1)
-Q3OBJ            += $(JPEGOBJS)
+SERVER_Q3OBJ            += $(JPEGOBJS)
 endif
 endif
 
-export INCLUDE  := $(foreach dir,$(INCLUDES),-I$(dir))
+export INCLUDE  := $(foreach dir,$(SERVER_INCLUDES),-I$(dir))
 
 SERVER_CFLAGS := $(BASE_CFLAGS) $(INCLUDE)
 
@@ -133,14 +133,16 @@ debug:
 	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) WORKDIRS="$(WORKDIR)" mkdirs
 	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) pre-build
 	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) -j 8 \
-    SERVER_CFLAGS="$(SERVER_CFLAGS) $(DEBUG_CFLAGS)" LDFLAGS="$(LDFLAGS) $(DEBUG_LDFLAGS)" $(BD)/$(TARGET_SERVER)
+    SERVER_CFLAGS="$(SERVER_CFLAGS) $(DEBUG_CFLAGS)" \
+    LDFLAGS="$(LDFLAGS) $(DEBUG_LDFLAGS)" $(BD)/$(TARGET_SERVER)
 
 release:
 	$(echo_cmd) "MAKE $(BR)/$(TARGET_SERVER)"
 	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) WORKDIRS="$(WORKDIR)" mkdirs
 	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) pre-build
 	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) -j 8 \
-    SERVER_CFLAGS="$(SERVER_CFLAGS) $(RELEASE_CFLAGS)" LDFLAGS="$(LDFLAGS) $(RELEASE_LDFLAGS)" $(BR)/$(TARGET_SERVER)
+    SERVER_CFLAGS="$(SERVER_CFLAGS) $(RELEASE_CFLAGS)" \
+    LDFLAGS="$(LDFLAGS) $(RELEASE_LDFLAGS)" $(BR)/$(TARGET_SERVER)
 
 clean:
 	@rm -rf ./$(BD)/$(WORKDIR) ./$(BD)/$(TARGET_SERVER)
@@ -176,7 +178,7 @@ $(B)/$(WORKDIR)/%.o: $(MOUNT_DIR)/server/%.c
 $(B)/$(WORKDIR)/%.o: $(MOUNT_DIR)/botlib/%.c
 	$(DO_BOT_CC)
 
-$(B)/$(TARGET_SERVER): $(Q3OBJ)
+$(B)/$(TARGET_SERVER): $(SERVER_Q3OBJ)
 	$(echo_cmd) "LD $@"
-	$(Q)$(CC) -o $@ $(Q3OBJ) $(SERVER_LDFLAGS) $(LDFLAGS) 
+	$(Q)$(CC) -o $@ $(SERVER_Q3OBJ) $(SERVER_LDFLAGS) $(LDFLAGS) 
 endif

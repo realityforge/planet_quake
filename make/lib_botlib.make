@@ -15,7 +15,7 @@ BOT_INCLUDES     :=
 BOT_CFILES       := $(foreach dir,$(BOT_SOURCES), $(wildcard $(dir)/*.c)) \
                     $(MOUNT_DIR)/qcommon/q_math.c $(MOUNT_DIR)/qcommon/q_shared.c 
 BOT_OBJS         := $(BOT_CFILES:.c=.o)
-BOT_Q3OBJ        := $(addprefix $(B)/$(BOT_WORKDIR)/,$(notdir $(OBJS)))
+BOT_Q3OBJ        := $(addprefix $(B)/$(BOT_WORKDIR)/,$(notdir $(BOT_OBJS)))
 
 export BOT_INCLUDE  := $(foreach dir,$(BOT_INCLUDES),-I$(dir))
 
@@ -30,13 +30,17 @@ debug:
 	$(echo_cmd) "MAKE $(BOT_TARGET)"
 	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) WORKDIRS=$(BOT_WORKDIR) mkdirs
 	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) pre-build
-	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) BOT_CFLAGS="$(BOT_CFLAGS) $(DEBUG_CFLAGS)" LDFLAGS="$(LDFLAGS) $(DEBUG_LDFLAGS)" $(BD)/$(BOT_TARGET)
+	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) -j 8 \
+		BOT_CFLAGS="$(BOT_CFLAGS) $(DEBUG_CFLAGS)" \
+		LDFLAGS="$(LDFLAGS) $(DEBUG_LDFLAGS)" $(BD)/$(BOT_TARGET)
 
 release:
 	$(echo_cmd) "MAKE $(BOT_TARGET)"
 	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) WORKDIRS=$(BOT_WORKDIR) mkdirs
 	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) pre-build
-	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) BOT_CFLAGS="$(BOT_CFLAGS) $(RELEASE_CFLAGS)" LDFLAGS="$(LDFLAGS) $(RELEASE_LDFLAGS)" $(BR)/$(BOT_TARGET)
+	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) -j 8 \
+		BOT_CFLAGS="$(BOT_CFLAGS) $(RELEASE_CFLAGS)" \
+		LDFLAGS="$(LDFLAGS) $(RELEASE_LDFLAGS)" $(BR)/$(BOT_TARGET)
 
 clean:
 	@rm -rf ./$(BD)/$(BOT_WORKDIR) ./$(BD)/$(BOT_TARGET)
@@ -49,7 +53,7 @@ $(B)/$(BOT_WORKDIR)/%.o: $(MOUNT_DIR)/qcommon/%.c
 $(B)/$(BOT_WORKDIR)/%.o: $(MOUNT_DIR)/botlib/%.c
 	$(DO_BOTLIB_CC)
 
-$(B)/$(BOT_TARGET): $(Q3OBJ) 
+$(B)/$(BOT_TARGET): $(BOT_Q3OBJ) 
 	$(echo_cmd) "LD $@"
-	$(Q)$(CC) -o $@ $(Q3OBJ) $(SHLIBCFLAGS) $(SHLIBLDFLAGS)
+	$(Q)$(CC) -o $@ $(BOT_Q3OBJ) $(SHLIBCFLAGS) $(SHLIBLDFLAGS)
 endif

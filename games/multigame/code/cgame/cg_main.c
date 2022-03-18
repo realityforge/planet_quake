@@ -1267,6 +1267,10 @@ static void CG_IconCache( void ) {
 	for ( i = 1 ; i < bg_numItems ; i++ ) {
 		if ( cg_items[ i ].registered && !cg_items[ i ].icon ) {
 			cg_items[ i ].icon_df = cg_items[ i ].icon = trap_R_RegisterShader( bg_itemlist[ i ].icon );
+			if ( bg_itemlist[ i ].giType == IT_WEAPON ) {
+				cg_weapons[ bg_itemlist[ i ].giTag ].weaponIcon = cg_items[ i ].icon;
+				cg_weapons[ bg_itemlist[ i ].giTag ].ammoIcon = cg_items[ i ].icon;
+			}
 		}
 	}
 
