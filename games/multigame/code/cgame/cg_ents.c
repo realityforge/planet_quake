@@ -201,7 +201,7 @@ static void CG_Speaker( centity_t *cent ) {
 
 
 #ifdef USE_ITEM_TIMERS
-#define USE_GUNNM_TIMER 1
+//#define USE_GUNNM_TIMER 1
 #define TIMER_SIZE 24
 /*
 ==================
@@ -430,13 +430,15 @@ static void CG_Item( centity_t *cent ) {
 
 #ifdef USE_ITEM_TIMERS
   if(es->frame
-    && (es->eFlags & EF_NODRAW)
+		&& (es->eFlags & EF_NODRAW)
     && (es->eFlags & EF_TIMER)) {
 #ifdef USE_GUNNM_TIMER
+#error problem
 		CG_ItemTimer(es, cent->lerpOrigin);
 #else
-    CG_ItemTimer( es->number, cent->lerpOrigin, es->time, es->frame * 1000 ); // save bandwidth
+		CG_ItemTimer( es->number, cent->lerpOrigin, es->time, es->frame * 1000 ); // save bandwidth
 #endif
+		return;
   }
 #endif
 
@@ -454,7 +456,10 @@ static void CG_Item( centity_t *cent ) {
 	}
 
 	item = &bg_itemlist[ es->modelindex ];
-	if ( cg_simpleItems.integer && item->giType != IT_TEAM ) {
+	if ( item->giType != IT_TEAM
+		&& cg_items[es->modelindex].icon_df
+		&& (cg_simpleItems.integer || !cg_items[es->modelindex].models[0])
+	) {
 		memset( &ent, 0, sizeof( ent ) );
 		ent.reType = RT_SPRITE;
 		VectorCopy( cent->lerpOrigin, ent.origin );

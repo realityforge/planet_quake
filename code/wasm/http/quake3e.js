@@ -174,6 +174,7 @@ function Sys_Print(message) {
 }
 
 function Sys_Exit(code) {
+  Q3e.exited = true
   GLimp_Shutdown();
   if(Q3e.frameInterval) {
     clearInterval(Q3e.frameInterval)
@@ -248,9 +249,11 @@ function Sys_Frame() {
     try {
       Com_Frame(false)
     } catch (e) {
-      console.log(e)
-      Sys_Exit(1)
-      throw e
+			console.log(e)
+      if(!Q3e.exited || e.message != 'unreachable') {
+        Sys_Exit(1)
+				throw e
+      }
     }
   })
 }

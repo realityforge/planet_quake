@@ -1233,7 +1233,6 @@ static void CG_MenuCache( void ) {
 
 static void CG_IconCache( void ) {
 	int			i;
-	gitem_t *item;
 
 	cgs.media.noammoShader = trap_R_RegisterShader( "icons/noammo" );
 #ifdef MISSIONPACK
@@ -1267,7 +1266,7 @@ static void CG_IconCache( void ) {
 	cgs.media.armorIcon  = trap_R_RegisterShaderNoMip( "icons/iconr_yellow" );
 	for ( i = 1 ; i < bg_numItems ; i++ ) {
 		if ( cg_items[ i ].registered && !cg_items[ i ].icon ) {
-			cg_items[ i ].icon = trap_R_RegisterShader( bg_itemlist[ i ].icon );
+			cg_items[ i ].icon_df = cg_items[ i ].icon = trap_R_RegisterShader( bg_itemlist[ i ].icon );
 		}
 	}
 

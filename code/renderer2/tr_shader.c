@@ -2018,7 +2018,7 @@ static qboolean ParseShader( const char **text )
 	const char *token;
 	int s;
 #ifdef USE_LAZY_LOAD
-	//qboolean failed = qfalse;
+	qboolean failed = qfalse;
 #endif
 
 
@@ -2060,7 +2060,7 @@ static qboolean ParseShader( const char **text )
 			if ( !ParseStage( &stages[s], text ) )
 			{
 #ifdef USE_LAZY_LOAD
-				//failed = qtrue;
+				failed = qtrue;
 				// continue parsing stages to look for more missing images, then fail later
 				if(!stages[s].bundle[0].image[0]) {
 					stages[s].bundle[0].image[0] = tr.defaultImage;
@@ -2468,9 +2468,9 @@ static qboolean ParseShader( const char **text )
 	}
 
 #ifdef USE_LAZY_LOAD
-//	if(failed) {
-//		return qfalse;
-//	}
+	if(failed) {
+		return qfalse;
+	}
 #endif
 
 	//
@@ -3860,10 +3860,7 @@ shader_t *R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImag
 			ri.Printf( PRINT_ALL, "*SHADER* %s\n", name );
 		}
 
-		if ( !ParseShader( &shaderText ) ) {
-			// had errors, so use default shader
-			shader.defaultShader = qtrue;
-		}
+		shader.defaultShader = !ParseShader( &shaderText );
 		sh = FinishShader();
 		return sh;
 	}
@@ -3899,6 +3896,8 @@ shader_t *R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImag
 			shader.defaultShader = qtrue;
 			shader.remappedShader = tr.defaultShader;
 #endif
+		} else {
+			shader.defaultShader = qfalse;
 		}
 	}
 

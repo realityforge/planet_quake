@@ -22,6 +22,7 @@ function startProgram(program) {
       //   something isn't cleared out, crash
       Q3e['sharedMemory'] = malloc(1024 * 1024) // store some strings and crap
       Q3e['sharedCounter'] = 0
+      Q3e['exited'] = false
 
       // Startup args is expecting a char **
       let startup = getQueryCommands()
