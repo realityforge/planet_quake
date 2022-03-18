@@ -186,9 +186,9 @@ jobs:
     - name: Build
       run: |
         mkdir bin
-        make -f make/build_client.make clean ${{ matrix.rule }}  ARCH=${{ matrix.arch }}    ${{ matrix.use_sdl }} USE_VULKAN=1 CNAME=quake3e-vulkan NO_MAKE_LOCAL=1
-        make -f make/build_client.make clean ${{ matrix.rule }}  ARCH=${{ matrix.arch }}    ${{ matrix.use_sdl }} USE_VULKAN_API=0 NO_MAKE_LOCAL=1
-        make -f make/build_server.make clean ${{ matrix.rule }}  ARCH=${{ matrix.arch }}    ${{ matrix.use_sdl }} NO_MAKE_LOCAL=1
+        make -f make/build_client.make clean ${{ matrix.rule }}  ARCH=${{ matrix.arch }}    ${{ matrix.use_sdl }} USE_VULKAN=1 CNAME=quake3e-vulkan NO_MAKE_LOCAL=1 V=1
+        make -f make/build_client.make clean ${{ matrix.rule }}  ARCH=${{ matrix.arch }}    ${{ matrix.use_sdl }} USE_VULKAN_API=0 NO_MAKE_LOCAL=1 V=1
+        make -f make/build_server.make clean ${{ matrix.rule }}  ARCH=${{ matrix.arch }}    ${{ matrix.use_sdl }} NO_MAKE_LOCAL=1 V=1
         if [ ${{ matrix.arch }} == "x86" ]; then
           cp build/release-linux-x86/quake3e bin/
           cp build/release-linux-x86/quake3e-vulkan bin/
