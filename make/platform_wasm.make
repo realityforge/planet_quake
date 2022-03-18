@@ -32,22 +32,22 @@ SHLIBLDFLAGS     := -Wl,--import-memory -Wl,--import-table -Wl,--error-limit=200
                     -Wl,--export-dynamic --no-standard-libraries \
                     -Wl,--no-entry -Wl,--allow-undefined-file=code/wasm/wasm.syms 
 
-LDFLAGS          := -Wl,--import-memory -Wl,--import-table -Wl,--error-limit=200 \
+CLIENT_LDFLAGS   := -Wl,--import-memory -Wl,--import-table -Wl,--error-limit=200 \
                     -Wl,--export-dynamic --no-standard-libraries \
                     -Wl,--no-entry 
                     #-Wl,--strip-all 
 
 ifeq ($(BUILD_CLIENT),1)
 SHLIBLDFLAGS     += -Wl,--allow-undefined-file=code/wasm/wasm.syms
-LDFLAGS          += -Wl,--allow-undefined-file=code/wasm/wasm.syms
+CLIENT_LDFLAGS   += -Wl,--allow-undefined-file=code/wasm/wasm.syms
 endif
 
 ifeq ($(BUILD_RENDERER_OPENGL),1)
 SHLIBLDFLAGS     += -Wl,--allow-undefined-file=code/wasm/wasm-nogl.syms
-LDFLAGS          += -Wl,--allow-undefined-file=code/wasm/wasm-nogl.syms
+CLIENT_LDFLAGS   += -Wl,--allow-undefined-file=code/wasm/wasm-nogl.syms
 endif
 
-CLIENT_LDFLAGS   := code/wasm/wasi/libclang_rt.builtins-wasm32.a
+CLIENT_LDFLAGS   += code/wasm/wasi/libclang_rt.builtins-wasm32.a
 
 # -fno-common -ffreestanding -nostdinc --no-standard-libraries
 
