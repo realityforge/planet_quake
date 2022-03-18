@@ -274,7 +274,7 @@ debug:
 	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) -j 8 \
 		WORKDIRS="$(WORKDIR) $(WORKDIRS)" \
 		CLIENT_CFLAGS="$(CLIENT_CFLAGS) $(DEBUG_CFLAGS)" \
-		LDFLAGS="$(LDFLAGS) $(DEBUG_LDFLAGS)" \
+		CLIENT_LDFLAGS="$(CLIENT_LDFLAGS) $(DEBUG_LDFLAGS)" \
 		$(BD)/$(TARGET_CLIENT)
 
 release:
@@ -284,7 +284,7 @@ release:
 	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) -j 8 \
 		WORKDIRS="$(WORKDIR) $(WORKDIRS)" \
 		CLIENT_CFLAGS="$(CLIENT_CFLAGS) $(RELEASE_CFLAGS)" \
-		LDFLAGS="$(LDFLAGS) $(RELEASE_LDFLAGS)" \
+		CLIENT_LDFLAGS="$(CLIENT_LDFLAGS) $(RELEASE_LDFLAGS)" \
 		$(BR)/$(TARGET_CLIENT)
 	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) post-build TARGET="$(TARGET_CLIENT)"
 
@@ -333,6 +333,6 @@ $(B)/$(WORKDIR)/%.o: $(MOUNT_DIR)/botlib/%.c
 
 $(B)/$(TARGET_CLIENT): $(Q3OBJ)
 	$(echo_cmd) "LD $@"
-	$(Q)$(CC) -o $@ $(Q3OBJ) $(CLIENT_LDFLAGS) $(LDFLAGS) 
+	$(Q)$(CC) -o $@ $(Q3OBJ) $(CLIENT_LDFLAGS)
 
 endif

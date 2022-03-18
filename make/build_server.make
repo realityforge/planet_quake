@@ -113,7 +113,7 @@ endif
 
 define DO_SERVER_CC
   $(echo_cmd) "SERVER_CC $<"
-  $(Q)$(CC) $(SERVER_CFLAGS) -o $@ -c $<
+  $(Q)$(CC) -o $@ $(SERVER_CFLAGS) -c $<
 endef
 
 ifdef WINDRES
@@ -134,7 +134,7 @@ debug:
 	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) pre-build
 	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) -j 8 \
     SERVER_CFLAGS="$(SERVER_CFLAGS) $(DEBUG_CFLAGS)" \
-    LDFLAGS="$(LDFLAGS) $(DEBUG_LDFLAGS)" $(BD)/$(TARGET_SERVER)
+    SERVER_LDFLAGS="$(SERVER_LDFLAGS) $(DEBUG_LDFLAGS)" $(BD)/$(TARGET_SERVER)
 
 release:
 	$(echo_cmd) "MAKE $(BR)/$(TARGET_SERVER)"
@@ -142,7 +142,7 @@ release:
 	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) pre-build
 	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) -j 8 \
     SERVER_CFLAGS="$(SERVER_CFLAGS) $(RELEASE_CFLAGS)" \
-    LDFLAGS="$(LDFLAGS) $(RELEASE_LDFLAGS)" $(BR)/$(TARGET_SERVER)
+    SERVER_LDFLAGS="$(SERVER_LDFLAGS) $(RELEASE_LDFLAGS)" $(BR)/$(TARGET_SERVER)
 
 clean:
 	@rm -rf ./$(BD)/$(WORKDIR) ./$(BD)/$(TARGET_SERVER)
@@ -180,5 +180,5 @@ $(B)/$(WORKDIR)/%.o: $(MOUNT_DIR)/botlib/%.c
 
 $(B)/$(TARGET_SERVER): $(SERVER_Q3OBJ)
 	$(echo_cmd) "LD $@"
-	$(Q)$(CC) -o $@ $(SERVER_Q3OBJ) $(SERVER_LDFLAGS) $(LDFLAGS) 
+	$(Q)$(CC) -o $@ $(SERVER_Q3OBJ) $(CLIENT_LDFLAGS) $(SERVER_LDFLAGS)
 endif
