@@ -2201,42 +2201,6 @@ static image_t *R_CreateImage2( const char *name, byte *pic, int width, int heig
 	image->lastTimeUsed = tr.lastRegistrationTime;
 	image->internalFormat = internalFormat;
 
-	if(!cubemap && !isLightmap && r_seeThroughWalls->integer) {
-		if(internalFormat == GL_RGB) {
-			byte *alphaPic = ri.Malloc(width * height * 4);
-			for (int y = 0; y < height; y++)
-			{
-				for (int x = 0; x < width; x++)
-				{
-					const byte *inbyte  = pic + y * width * 3 + x * 3;
-					byte       *outbyte = alphaPic + y * width * 4 + x * 4;
-					outbyte[0] = inbyte[0];
-					outbyte[1] = inbyte[1];
-					outbyte[2] = inbyte[2];
-					outbyte[3] = 128;
-					//outbyte[3] = 255;
-				}
-			}
-			//picFormat = GL_RGB8;
-			//pic = alphaPic;
-			internalFormat = GL_RGBA;
-		}
-		
-		if(internalFormat == GL_RGBA) {
-			// copy in to out
-			for (int y = 0; y < height; y++)
-			{
-				const byte *inbyte  = pic + y * width * 4;
-				byte       *outbyte = pic + y * width * 4;
-
-				for (int x = 0; x < width; x++)
-				{
-					outbyte[1] = inbyte[1] * 0.5;
-				}
-			}
-		}
-	}
-
 	// Possibly scale image before uploading.
 	// if not rgba8 and uploading an image, skip picmips.
 	if (!cubemap)
@@ -2357,6 +2321,8 @@ static image_t *R_CreateImage3( const char *name, GLenum picFormat, int numMips,
 	} else
 		image = tr.images[tr.numImages] = ri.Hunk_Alloc( sizeof( *image ) + MAX_QPATH, h_low );
 
+	image->imgName = (char *)( image + 1 );
+	strcpy( image->imgName, name );
 	image->width = 0;
 	image->height = 0;
 	qglGenTextures(1, &image->texnum);
@@ -2364,9 +2330,7 @@ static image_t *R_CreateImage3( const char *name, GLenum picFormat, int numMips,
 
 	image->type = type;
 	image->flags = flags;
-
-	image->imgName = (char *)( image + 1 );
-	strcpy( image->imgName, name );
+	image->lastTimeUsed = tr.lastRegistrationTime;
 
 	if ( namelen > 6 && Q_stristr( image->imgName, "maps/" ) == image->imgName && Q_stristr( image->imgName + 6, "/lm_" ) != NULL ) {
 		// external lightmap atlases stored in maps/<mapname>/lm_XXXX textures
@@ -2676,6 +2640,10 @@ void R_AddPalette(const char *name, int a, int r, int g, int b) {
 	int hash;
 	palette_t *palette;
 	char normalName[MAX_QPATH];
+	const char *s;
+	if((s = Q_stristr(name, ".pk3dir/"))) {
+		name = s + 8;
+	}
 	COM_StripExtension(name, normalName, MAX_QPATH);
 	int namelen = strlen(normalName);
 	palette = ri.Hunk_Alloc( sizeof( *palette ) + namelen + 1, h_low );
@@ -2698,7 +2666,7 @@ image_t *R_FindPalette(const char *name) {
 	COM_StripExtension(name, normalName, MAX_QPATH);
 	hash = generateHashValue(normalName);
 	for (palette=paletteTable[hash]; palette; palette=palette->next) {
-		if ( !strcmp( normalName, palette->imgName ) ) {
+		if ( !Q_stricmp( normalName, palette->imgName ) ) {
 			if(!palette->image) {
 				byte	data[16][16][4];
 				for(int x = 0; x < 16; x++) {
@@ -2713,12 +2681,14 @@ image_t *R_FindPalette(const char *name) {
 						data[x][y][0] = palette->r;
 					}
 				}
-				palette->image = R_CreateImage(va("*pal%i-%i-%i", palette->r, palette->g, palette->b), (byte *)data, 8, 8, IMGTYPE_COLORALPHA, IMGFLAG_NONE, 0);
+				palette->image = R_CreateImage2(
+					va("*pal%i-%i-%i-%i", palette->r, palette->g, palette->b, palette->a), 
+					(byte *)data, 16, 16, GL_RGBA8, IMGTYPE_COLORALPHA, 0, IMGFLAG_NONE, GL_RGBA8);
 			}
 			return palette->image;
 		}
 	}
-	return tr.defaultImage;
+	return NULL;
 }
 
 
@@ -2796,7 +2766,6 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, imgFlags_t flags )
 		picFormat = GL_RGBA8;
 		picNumMips = 0;
 		R_LoadPNG("gfx/2d/bigchars_backup", &pic, &width, &height);
-		name = "gfx/2d/bigchars.png";
 	}
 #endif
 
@@ -2931,7 +2900,7 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, imgFlags_t flags )
 #ifdef __WASM__
 	// we think the image is out there so register it in the system, then we can update
 	//   the glBind when it loads
-	image = R_CreateImage3( ( char * ) name, picFormat, picNumMips, type, flags, GL_RGBA );
+	image = R_CreateImage3( ( char * ) name, picFormat, picNumMips, type, flags & ~IMGFLAG_MIPMAP & ~IMGFLAG_PICMIP, GL_RGBA );
 #else
 	image = R_CreateImage2( ( char * ) name, pic, width, height, picFormat, picNumMips, type, flags, 0 );
 	ri.Free( pic );

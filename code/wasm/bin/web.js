@@ -1,16 +1,18 @@
 const { execSync } = require('child_process');
+const { response } = require('express');
 const fs = require('fs');
 const path = require('path');
-const { send } = require('process');
+const { findTypes, imageTypes } = require('./repack-whitelist');
 
 const GAME_DIRECTORY = 'multigame'
-const WEB_DIRECTORY = __dirname + '/../http'
-const ASSETS_DIRECTORY = __dirname + '/../../../games/multigame/assets/'
-const BUILD_DIRECTORY = __dirname + '/../../../build/'
+const WEB_DIRECTORY = path.resolve(__dirname + '/../http')
+const ASSETS_DIRECTORY = path.resolve(__dirname + '/../../../games/multigame/assets/')
+const BUILD_DIRECTORY = path.resolve(__dirname + '/../../../build/')
 const ALLOWED_DIRECTORIES = [
   WEB_DIRECTORY,
   ASSETS_DIRECTORY,
-  BUILD_DIRECTORY].map(dir => path.resolve(dir));
+  BUILD_DIRECTORY
+]
 
 const BUILD_ORDER = [
   'release-wasm-js',
@@ -141,6 +143,15 @@ function layeredDir(filename) {
       && fs.statSync(path.resolve(newPath)).isDirectory()) {
       list.push.apply(list, fs.readdirSync(path.resolve(newPath)))
     }
+
+    if(filename.endsWith('.pk3dir/scripts')) {
+      let maps = filename.substring(GAME_DIRECTORY.length, filename.indexOf('.pk3dir') + 7)
+      let newPath = path.join(ASSETS_DIRECTORY, maps, 'maps')
+      let bsps = fs.readdirSync(path.resolve(newPath))
+        .filter(dir => dir.endsWith('.bsp'))
+        .map(dir => dir.replace('.bsp', '.shader'))
+      list.push.apply(list, bsps)
+    }
   }
 
   let newPath = path.join(WEB_DIRECTORY, filename)
@@ -153,7 +164,17 @@ function layeredDir(filename) {
     list.push('version.json')
   }
 
-  return list.filter((p, i, l) => p[0] != '.' && l.indexOf(p) == i)
+  return list
+    .filter((p, i, l) => p[0] != '.' && l.indexOf(p) == i)
+    .reduce((list, i) => {
+      if(i.endsWith('.pcx') || i.endsWith('.tga')) {
+        list.push(i.replace(path.extname(i), '.png'))
+        list.push(i.replace(path.extname(i), '.jpg'))
+      } else {
+        list.push(i)
+      }
+      return list
+    }, [])
 }
 
 
@@ -205,6 +226,45 @@ function writeVersionFile(time) {
 
 }
 
+var MATCH_PALETTE = /palette\s"(.*?)"\s([0-9]+(,[0-9]+)*)/ig
+
+function makePaletteShader(localName, response) {
+  let newPath = localName.substring(GAME_DIRECTORY.length, localName.indexOf('.pk3dir') + 7)
+  let shaderPath = path.join(ASSETS_DIRECTORY, localName.substring(GAME_DIRECTORY.length))
+  let images = findTypes(imageTypes, path.join(ASSETS_DIRECTORY, newPath))
+  let palette = {}
+  let existingPalette = ''
+  if(fs.existsSync(shaderPath)) {
+    let m
+    existingPalette = fs.readFileSync(shaderPath)
+      .toString('utf-8')
+    while((m = (MATCH_PALETTE).exec(existingPalette)) !== null) {
+      palette[m[1]] = m[2]
+    }
+    existingPalette = existingPalette.replace(/palettes\/.*?\n*\{[\s\S]*?\}\n*/ig, '')
+  }
+
+  for(let i = 0; i < images.length; i++) {
+    let newPath = path.join(GAME_DIRECTORY, images[i].substring(ASSETS_DIRECTORY.length))
+    if(typeof palette[newPath] == 'undefined') {
+      // get average image color for palette
+      try {
+        colorCmd = execSync(`convert "${images[i]}" -resize 1x1\! -format "%[fx:int(255*a+.5)],%[fx:int(255*r+.5)],%[fx:int(255*g+.5)],%[fx:int(255*b+.5)]" info:-`, {stdio : 'pipe'}).toString('utf-8')
+        palette[newPath] = colorCmd
+      } catch (e) {
+        console.error(e.message, (e.output || '').toString('utf-8').substr(0, 1000))
+      }
+    }
+  }
+
+  // save palette to shader file
+  let imagePixels = Object.keys(palette)
+    .map(k => `  palette "${k}" ${palette[k]}`).join('\n')
+  existingPalette = `palettes/default\n{\n${imagePixels}\n}\n` + existingPalette
+  fs.writeFileSync(shaderPath, existingPalette)
+  return response.send(existingPalette)
+}
+
 
 //var fullUrl = req.protocol + '://' + req.get('host') + req.originalUrl;
 
@@ -225,7 +285,20 @@ function respondRequest(request, response) {
   //if(localName[0] == '/')
   //  localName = localName.substring(1)
 
+  // list palette images for pk3dirs
+  if(localName.includes('.pk3dir/scripts/')
+    && localName.endsWith('.shader')) {
+    let mapName = path.basename(localName.substring(0, localName.length - 7))
+    let newPath = path.join(ASSETS_DIRECTORY, 
+      localName.substring(GAME_DIRECTORY.length), '../../maps/', mapName + '.bsp')
+    if(fs.existsSync(newPath)) {
+      return makePaletteShader(localName, response)
+    }
+  }
+
+
   let file
+  // send files that exist in the layered file-system
   if((file = findFile(localName))) {
     // TODO: if loading a directory return a formatted file index HTML directory listing
     if(fs.statSync(file).isDirectory()) {

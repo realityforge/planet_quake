@@ -899,6 +899,8 @@ Com_Printf("updating files: %s -> %s\n", filename, tempname);
 		if(Q_stristr(tempname, ".pk3dir/")) {
 			FS_AddGameDirectory( Cvar_VariableString("fs_homepath"), FS_GetCurrentGameDir(), 0 );
 		}
+		// force download of map shaders from specific pk3dir
+		Sys_FileNeeded_real(va("scripts/%s.shader", Cvar_VariableString("mapname")), VFS_NOW);
 		if(Q_stristr(tempname, Cvar_VariableString("mapname")) && !com_sv_running->integer) {
 			Cbuf_AddText(va("wait; map %s;", Cvar_VariableString("mapname")));
 		}
@@ -1083,7 +1085,10 @@ void CL_CheckLazyUpdates( void ) {
 	// multigame has a special feature to reload an missing assets when INIT is called
 	if(((cls.uiStarted && uivm) || (cls.cgameStarted && cgvm))
 		&& !Q_stricmp(FS_GetCurrentGameDir(), "multigame")) {
-		//Cvar_Get("ui_breadCrumb", "", CVAR_ROM)->modificationCount++;
+		cl_lazyLoad->modificationCount++;
+		cl_lazyLoad->string = ready->downloadName;
+	} else {
+		cl_lazyLoad->string = "";
 	}
 #endif
 

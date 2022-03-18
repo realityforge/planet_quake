@@ -609,8 +609,12 @@ static qboolean R_LoadMD3(model_t * mod, int lod, void *buffer, int bufferSize, 
 			sh = R_FindShader(md3Shader->name, LIGHTMAP_NONE, qtrue);
 			if(sh->defaultShader)
 			{
+#ifdef USE_LAZY_LOAD
 				sh->remappedShader = tr.defaultShader;
         *shaderIndex = sh->index;
+#else
+        *shaderIndex = 0;
+#endif
 			}
 			else
 			{
@@ -1114,8 +1118,12 @@ static qboolean R_LoadMDR( model_t *mod, void *buffer, int filesize, const char 
 			// register the shaders
 			sh = R_FindShader(surf->shader, LIGHTMAP_NONE, qtrue);
 			if ( sh->defaultShader ) {
+#ifdef USE_LAZY_LOAD
 				sh->remappedShader = tr.defaultShader;
 				surf->shaderIndex = sh->index;
+#else
+        surf->shaderIndex = 0;
+#endif
 			} else {
 				surf->shaderIndex = sh->index;
 			}

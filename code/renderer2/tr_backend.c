@@ -55,7 +55,11 @@ void GL_BindToTMU( image_t *image, int tmu )
 			target = GL_TEXTURE_CUBE_MAP;
 
 		image->frameUsed = tr.frameCount;
-		texture = image->texnum;
+		if(image->width > 0 && image->height > 0) {
+			texture = image->texnum;
+		} else {
+			texture = 0;
+		}
 	}
 	else
 	{
@@ -928,8 +932,8 @@ const void	*RB_DrawSurfs( const void *data ) {
 			{
 				// If we're rendering directly to the screen, copy the depth to a texture
 				// This is incredibly slow on Intel Graphics, so just skip it on there
-				if (!glRefConfig.intelGraphics)
-					qglCopyTextureSubImage2DEXT(tr.renderDepthImage->texnum, GL_TEXTURE_2D, 0, 0, 0, 0, 0, glConfig.vidWidth, glConfig.vidHeight);
+				//if (!glRefConfig.intelGraphics)
+					//qglCopyTextureSubImage2DEXT(tr.renderDepthImage->texnum, GL_TEXTURE_2D, 0, 0, 0, 0, 0, glConfig.vidWidth, glConfig.vidHeight);
 			}
 
 			if (tr.hdrDepthFbo)

@@ -872,7 +872,6 @@ void CG_RegisterItemVisuals( int itemNum ) {
 	itemInfo->registered = qtrue;
 
 	itemInfo->models[0] = trap_R_RegisterModel( item->world_model[0] );
-	Com_Printf("wtf 2? %i -> %i, %s\n", itemNum, itemInfo->models[0], item->world_model[0]);
 
 	itemInfo->icon = trap_R_RegisterShaderNoMip( item->icon );
 

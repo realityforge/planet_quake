@@ -148,7 +148,6 @@ typedef struct {
 #ifdef BUILD_EXPERIMENTAL
   void (*FastCapture)(byte *data);
   void (*FastCaptureOld)(byte *captureBuffer, byte *encodeBuffer);
-	void (*ResetBannerSpy)( void );
 #endif
  #ifdef USE_LNBITS
 	qhandle_t  (*CreateShaderFromImageBytes)(const char* name, const byte *pic, int width, int height);

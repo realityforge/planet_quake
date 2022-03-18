@@ -1,7 +1,5 @@
-var glob = require('glob')
 var path = require('path')
 var fs = require('fs')
-var minimatch = require("minimatch")
 
 var imageTypes = [
   '.png',
@@ -210,10 +208,10 @@ console.log(entities)
 function findTypes(types, project) {
   if(Array.isArray(types)) types = `*+(${types.join('|')})`
   if(fs.existsSync(project)) {
-    return glob.sync(types, {nocase: true, cwd: project, matchBase: true})
+    return require('glob').sync(types, {nocase: true, cwd: project, matchBase: true})
       .map(f => path.join(project, f))
   } else if(Array.isArray(project)) {
-    return project.filter(minimatch.filter(types, {nocase: true, matchBase: true}))
+    return project.filter(require('minimatch').filter(types, {nocase: true, matchBase: true}))
   } else {
     throw new Error(`Don't know what to do with ${project}`)
   }

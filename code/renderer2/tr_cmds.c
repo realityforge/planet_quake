@@ -295,21 +295,6 @@ void	RE_SetColor( const float *rgba ) {
 }
 
 
-/*
-=============
-RE_StretchPic
-=============
-*/
-char banner[1024];
-int  bannerI;
-int  bannerResetTime;
-void RE_ResetBannerSpy( void ) {
-	bannerI = 0;
-	banner[0] = '\0';
-	bannerResetTime = 0;
-}
-
-
 #ifdef USE_RMLUI
 typedef struct {
   vec2_t		xy;

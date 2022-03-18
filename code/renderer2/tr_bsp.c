@@ -645,8 +645,11 @@ shader_t *ShaderForShaderNum( int shaderNum, int lightmapNum ) {
 
 	// if the shader had errors, just use default shader
 	if ( shader->defaultShader ) {
-		//return tr.defaultShader;
+#ifdef USE_LAZY_LOAD
 		shader->remappedShader = tr.defaultShader;
+#else
+		return tr.defaultShader;
+#endif
 	}
 
 	return shader;

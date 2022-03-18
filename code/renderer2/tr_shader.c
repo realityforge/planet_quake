@@ -742,8 +742,12 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 
 				if ( !stage->bundle[0].image[0] )
 				{
+#ifndef USE_LAZY_LOAD
 					ri.Printf( PRINT_WARNING, "WARNING: R_FindImageFile could not find '%s' in shader '%s'\n", token, shader.name );
 					return qfalse;
+#else
+					stage->bundle[0].image[0] = tr.defaultImage;
+#endif
 				}
 			}
 		}
@@ -786,8 +790,12 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 			stage->bundle[0].image[0] = R_FindImageFile( token, type, flags );
 			if ( !stage->bundle[0].image[0] )
 			{
+#ifndef USE_LAZY_LOAD
 				ri.Printf( PRINT_WARNING, "WARNING: R_FindImageFile could not find '%s' in shader '%s'\n", token, shader.name );
 				return qfalse;
+#else
+				stage->bundle[0].image[0] = tr.defaultImage;
+#endif
 			}
 		}
 		//
@@ -827,8 +835,12 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 					stage->bundle[0].image[num] = R_FindImageFile( token, IMGTYPE_COLORALPHA, flags );
 					if ( !stage->bundle[0].image[num] )
 					{
+#ifndef USE_LAZY_LOAD
 						ri.Printf( PRINT_WARNING, "WARNING: R_FindImageFile could not find '%s' in shader '%s'\n", token, shader.name );
 						return qfalse;
+#else
+						stage->bundle[0].image[num] = tr.defaultImage;
+#endif
 					}
 					stage->bundle[0].numImageAnimations++;
 				}
@@ -2006,7 +2018,7 @@ static qboolean ParseShader( const char **text )
 	const char *token;
 	int s;
 #ifdef USE_LAZY_LOAD
-	qboolean failed = qfalse;
+	//qboolean failed = qfalse;
 #endif
 
 
@@ -2048,9 +2060,12 @@ static qboolean ParseShader( const char **text )
 			if ( !ParseStage( &stages[s], text ) )
 			{
 #ifdef USE_LAZY_LOAD
-				failed = qtrue;
+				//failed = qtrue;
 				// continue parsing stages to look for more missing images, then fail later
-				stages[s].active = qfalse;
+				if(!stages[s].bundle[0].image[0]) {
+					stages[s].bundle[0].image[0] = tr.defaultImage;
+				}
+				stages[s].active = qtrue;
 				s++;
 				continue;
 #else
@@ -2404,16 +2419,28 @@ static qboolean ParseShader( const char **text )
         const char	*stageText = va("\nmap %s\n}", token);
         if ( !ParseStage( &stages[s], &stageText ) )
         {
+#ifdef USE_LAZY_LOAD
+					if(!stages[s].bundle[0].image[0]) {
+						stages[s].bundle[0].image[0] = tr.defaultImage;
+					}
+#else
           stages[s].active = qfalse;
           continue;
+#endif
         }
       } else
       {
         const char	*stageText = va("\nmap %s.tga\n}", shader.name);
         if ( !ParseStage( &stages[s], &stageText ) )
         {
+#ifdef USE_LAZY_LOAD
+					if(!stages[s].bundle[0].image[0]) {
+						stages[s].bundle[0].image[0] = tr.defaultImage;
+					}
+#else
           stages[s].active = qfalse;
           continue;
+#endif
         }
       }
       stages[s].active = qtrue;
@@ -2433,15 +2460,17 @@ static qboolean ParseShader( const char **text )
     }
 		else
 		{
+#ifndef USE_LAZY_LOAD
 			ri.Printf( PRINT_WARNING, "WARNING: unknown general shader parameter '%s' in '%s'\n", token, shader.name );
 			return qfalse;
+#endif
 		}
 	}
 
 #ifdef USE_LAZY_LOAD
-	if(failed) {
-		return qfalse;
-	}
+//	if(failed) {
+//		return qfalse;
+//	}
 #endif
 
 	//
@@ -2556,10 +2585,12 @@ static void ComputeVertexAttribs(void)
 	{
 		shaderStage_t *pStage = &stages[stage];
 
+#ifndef USE_LAZY_LOAD
 		if ( !pStage->active ) 
 		{
 			break;
 		}
+#endif
 
 		if (pStage->glslShaderGroup == tr.lightallShader)
 		{
@@ -2776,13 +2807,21 @@ static int CollapseStagesToGLSL(void)
 	{
 		skip = qtrue;
 	}
+#ifdef USE_LAZY_LOAD
+	skip = qtrue;
+#endif
 
+#ifndef USE_LAZY_LOAD
 	if (!skip)
+#endif
 	{
 		// if 2+ stages and first stage is lightmap, switch them
 		// this makes it easier for the later bits to process
-		if (stages[0].active && stages[0].bundle[0].tcGen == TCGEN_LIGHTMAP && stages[1].active)
-		{
+		if (stages[0].active && stages[0].bundle[0].tcGen == TCGEN_LIGHTMAP 
+#ifndef USE_LAZY_LOAD
+			&& stages[1].active 
+#endif
+		) {
 			int blendBits = stages[1].stateBits & ( GLS_DSTBLEND_BITS | GLS_SRCBLEND_BITS );
 
 			if (blendBits == (GLS_DSTBLEND_SRC_COLOR | GLS_SRCBLEND_ZERO)
@@ -2977,8 +3016,10 @@ static int CollapseStagesToGLSL(void)
 	{
 		shaderStage_t *pStage = &stages[i];
 
+#ifndef USE_LAZY_LOAD
 		if (!pStage->active)
 			continue;
+#endif
 
 		if (pStage->type == ST_NORMALMAP)
 		{
@@ -3000,8 +3041,9 @@ static int CollapseStagesToGLSL(void)
 	numStages = 0;
 	for (i = 0; i < MAX_SHADER_STAGES; i++)
 	{
-		if (!stages[i].active)
+		if (!stages[i].active) {
 			continue;
+		}
 
 		if (i == numStages)
 		{
@@ -3214,7 +3256,11 @@ static shader_t *GeneratePermanentShader( void ) {
 
 	for ( i = 0 ; i < newShader->numUnfoggedPasses ; i++ ) {
 		if ( !stages[i].active ) {
+#ifndef USE_LAZY_LOAD
 			break;
+#else
+			continue;
+#endif
 		}
 		newShader->stages[i] = ri.Hunk_Alloc( sizeof( stages[i] ), h_low );
 		*newShader->stages[i] = stages[i];
@@ -3297,7 +3343,11 @@ static void VertexLightingCollapse( void ) {
 			shaderStage_t *pStage = &stages[stage];
 
 			if ( !pStage->active ) {
+#ifndef USE_LAZY_LOAD
 				break;
+#else
+				continue;
+#endif
 			}
 			rank = 0;
 
@@ -3349,6 +3399,7 @@ static void VertexLightingCollapse( void ) {
 		}
 	}
 
+#ifndef USE_LAZY_LOAD
 	for ( stage = 1; stage < MAX_SHADER_STAGES; stage++ ) {
 		shaderStage_t *pStage = &stages[stage];
 
@@ -3358,6 +3409,7 @@ static void VertexLightingCollapse( void ) {
 
 		Com_Memset( pStage, 0, sizeof( *pStage ) );
 	}
+#endif
 }
 
 
@@ -3441,15 +3493,24 @@ static shader_t *FinishShader( void ) {
 		shaderStage_t *pStage = &stages[stage];
 
 		if ( !pStage->active ) {
+#ifndef USE_LAZY_LOAD
 			break;
+#endif
 		}
 
 		// check for a missing texture
 		if ( !pStage->bundle[0].image[0] ) {
+#ifndef USE_LAZY_LOAD
 			ri.Printf( PRINT_WARNING, "Shader %s has a stage with no image\n", shader.name );
 			pStage->active = qfalse;
 			stage++;
 			continue;
+#else
+			pStage->active = qfalse;
+			pStage->bundle[0].image[0] = tr.defaultImage;
+			stage++;
+			continue;
+#endif
 		}
 
 		//
@@ -3461,8 +3522,13 @@ static shader_t *FinishShader( void ) {
 			
 			for(index = stage + 1; index < MAX_SHADER_STAGES; index++)
 			{
+#ifdef USE_LAZY_LOAD
+				if(!stages[index].active)
+					continue;
+#else
 				if(!stages[index].active)
 					break;
+#endif
 			}
 			
 			if(index < MAX_SHADER_STAGES)
@@ -3825,10 +3891,14 @@ shader_t *R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImag
 
 		image = R_FindImageFile( name, IMGTYPE_COLORALPHA, flags );
 		if ( !image ) {
+#ifndef USE_LAZY_LOAD
 			ri.Printf( PRINT_DEVELOPER, "Couldn't find image file for shader %s\n", name );
+			return FinishShader();
+#else
+			image = tr.defaultImage;
 			shader.defaultShader = qtrue;
 			shader.remappedShader = tr.defaultShader;
-			return FinishShader();
+#endif
 		}
 	}
 

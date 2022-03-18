@@ -721,13 +721,14 @@ function loadImage(filename, pic, ext) {
   let length
   HEAP32[buf >> 2] = 0
   if (filenameStr.match('gfx/2d/bigchars_backup')) {
-    EMGL.previousName = filenameStr
+    EMGL.previousName = 'gfx/2d/bigchars'
     EMGL.previousImage = document.getElementById('bigchars')
     HEAP32[pic >> 2] = 1
     return
   } else if ((length = FS_ReadFile(filename, buf)) > 0 && HEAPU32[buf >> 2] > 0) {
+    let thisImage = document.createElement('IMG')
     EMGL.previousName = filenameStr
-    let thisImage = EMGL.previousImage = document.createElement('IMG')
+    EMGL.previousImage = thisImage
     thisImage.onload = function () {
       HEAP32[(thisImage.address - 4 * 4) >> 2] = thisImage.width
       HEAP32[(thisImage.address - 3 * 4) >> 2] = thisImage.height
@@ -760,14 +761,26 @@ function R_LoadJPG(filename, pic) {
 
 function _glGenTextures(n, textures) {
   __glGenObject(n, textures, "createTexture", GL.textures);
-  // TODO: engine is giving us address of where it will store texture name, also
-  EMGL.texFiles[HEAP32[textures >> 2]] = [textures, EMGL.previousImage]
-  if (EMGL.previousImage) {
-    EMGL.previousImage.address = textures
-    HEAP32[(textures - 4 * 4) >> 2] = EMGL.previousImage.width
-    HEAP32[(textures - 3 * 4) >> 2] = EMGL.previousImage.height
+  // engine is giving us address of where it will store texture name, also
+  let texture = HEAP32[textures >> 2]
+  EMGL.texFiles[texture] = [textures, null]
+  let newName = addressToString(HEAPU32[(EMGL.texFiles[texture][0] - 7*4) >> 2])
+  if(newName.length == 0) {
+    // using CreateImage2() not 3
+    return;
+  }
+  if(EMGL.previousImage 
+    && EMGL.previousName.replace(/\..*?$/, '') == newName.replace(/\..*?$/, '')) {
+    EMGL.previousImage.address = EMGL.texFiles[texture][0]
+    EMGL.texFiles[texture][1] = EMGL.previousImage
+    // copy width, height to C struct
+    if(EMGL.previousImage.width > 0 && EMGL.previousImage.height > 0) {
+      HEAP32[(textures - 4 * 4) >> 2] = EMGL.previousImage.width
+      HEAP32[(textures - 3 * 4) >> 2] = EMGL.previousImage.height
+    }
   }
   EMGL.previousImage = null
+  EMGL.previousName = ''
 }
 
 function _glGenVertexArrays(n, arrays) {
@@ -1354,8 +1367,10 @@ function _glTexEnvf() {
 
 function _glTexImage2D(target, level, internalFormat, width, height, border, format, type, pixels) {
   /*
-  if(width <= 2 || height <= 2) return
+  //if(width <= 2 || height <= 2) return
   if(EMGL.previousImage && EMGL.previousImage.complete) {
+    width = EMGL.previousImage.width
+    height = EMGL.previousImage.height
     GLctx.texImage2D(target, level, internalFormat, width, height, border, format, type, pixels ? EMGL.previousImage : null);
     return
   } else if (typeof EMGL.texFiles[EMGL.previousTex] != 'undefined'
@@ -1389,15 +1404,16 @@ function _glTexParameteri(x0, x1, x2) {
 
 function _glTexSubImage2D(target, level, xoffset, yoffset, width, height, format, type, pixels) {
   if (width <= 2 || height <= 2) return
-  if (EMGL.previousImage && EMGL.previousImage.complete) {
+  if (EMGL.previousImage) {
+    //width = EMGL.previousImage.width
+    //height = EMGL.previousImage.height
     GLctx.texSubImage2D(target, level, xoffset, yoffset, width, height, format, type, EMGL.previousImage);
     return
   } else if (typeof EMGL.texFiles[EMGL.previousTex] != 'undefined'
     && EMGL.texFiles[EMGL.previousTex][1]) {
-    console.log('whoops')
+    debugger
     return
   }
-
 
   if (true) {
     if (GLctx.currentPixelUnpackBufferBinding) {

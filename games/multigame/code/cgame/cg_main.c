@@ -15,6 +15,7 @@ static int enemyColorsModificationCount = -1;
 static int teamModelModificationCount  = -1;
 static int teamColorsModificationCount = -1;
 static int breadcrumbModificationCount = -1;
+static int lazyloadModificationCount = -1;
 
 void CG_Init( int serverMessageNum, int serverCommandSequence, int clientNum );
 void CG_Shutdown( void );
@@ -277,6 +278,7 @@ int cg_weaponsCount = -1; //WarZone
 
 vmCvar_t  cg_developer;
 vmCvar_t  cg_breadCrumb;
+vmCvar_t  cg_lazyLoad;
 vmCvar_t  cg_atmosphere;
 vmCvar_t  cg_atmosphericEffects;
 int atmosphereModificationCount = -1;
@@ -446,8 +448,9 @@ static const cvarTable_t cvarTable[] = {
   { &cgwp_flameCycle, "wp_flameCycle", "40", CVAR_SERVERINFO },
 #endif
 #endif
-	{ &cg_atmosphere, "g_atmosphere", "", CVAR_SERVERINFO },
-	{ &cg_breadCrumb, "ui_breadCrumb", "", CVAR_ROM },
+	{ &cg_atmosphere, "g_atmosphere", "", CVAR_SERVERINFO | CVAR_TEMP },
+	{ &cg_breadCrumb, "ui_breadCrumb", "", 0 },
+	{ &cg_lazyLoad, "cl_lazyLoad", "", 0 },
 	{ &cg_atmosphericEffects, "cg_atmosphericEffects", "1", CVAR_ARCHIVE },
 	{ &cg_smoothClients, "cg_smoothClients", "0", CVAR_USERINFO | CVAR_ARCHIVE },
 	{ &cg_cameraMode, "com_cameraMode", "0", CVAR_CHEAT },
@@ -496,6 +499,7 @@ void CG_RegisterCvars( void ) {
 	teamColorsModificationCount = cg_teamColors.modificationCount;
 	atmosphereModificationCount = cg_atmosphere.modificationCount;
 	breadcrumbModificationCount = cg_breadCrumb.modificationCount;
+	lazyloadModificationCount = cg_lazyLoad.modificationCount;
 
 	trap_Cvar_Register(NULL, "model", DEFAULT_MODEL, CVAR_USERINFO | CVAR_ARCHIVE );
 	trap_Cvar_Register(NULL, "headmodel", DEFAULT_MODEL, CVAR_USERINFO | CVAR_ARCHIVE );
@@ -611,6 +615,7 @@ void UpdateWeaponOrder (void)
 #endif
 
 void CG_LoadClientInfo( clientInfo_t *ci );
+static void CG_Register2D( void );
 
 /*
 =================
@@ -656,6 +661,13 @@ void CG_UpdateCvars( void ) {
 		CG_EffectParse(cg_atmosphere.string);
 	}
 
+	if(lazyloadModificationCount != cg_lazyLoad.modificationCount) {
+		lazyloadModificationCount = cg_lazyLoad.modificationCount;
+		if(Q_stristr(cg_lazyLoad.string, "gfx/2d") != NULL) {
+			CG_Register2D();
+		}
+	}
+
 	if(breadcrumbModificationCount != cg_breadCrumb.modificationCount) {
 		/*
 		char		items[MAX_ITEMS+1];
@@ -669,7 +681,6 @@ void CG_UpdateCvars( void ) {
 			CG_LoadClientInfo( &cgs.clientinfo[ cg.clientNum ] );
 		}
 
-		CG_LoadFonts();
 
 		Q_strncpyz( items, CG_ConfigString(CS_ITEMS), sizeof( items ) );
 		for ( i = 1 ; i < bg_numItems ; i++ ) {
@@ -1133,17 +1144,8 @@ static void CG_RegisterSounds( void ) {
 
 //===================================================================================
 
-
-/*
-=================
-CG_RegisterGraphics
-
-This function may execute for a couple of minutes with a slow disk.
-=================
-*/
-static void CG_RegisterGraphics( void ) {
-	int			i;
-	char		items[MAX_ITEMS+1];
+static void CG_Register2D( void ) {
+	int i;
 	static char		*sb_nums[11] = {
 		"gfx/2d/numbers/zero_32b",
 		"gfx/2d/numbers/one_32b",
@@ -1158,16 +1160,9 @@ static void CG_RegisterGraphics( void ) {
 		"gfx/2d/numbers/minus_32b",
 	};
 
-	// clear any references to old media
-	memset( &cg.refdef, 0, sizeof( cg.refdef ) );
-	trap_R_ClearScene();
+	CG_LoadFonts();
 
-	CG_LoadingString( cgs.mapname );
-
-	trap_R_LoadWorldMap( cgs.mapname );
-
-	// precache status bar pics
-	CG_LoadingString( "game media" );
+	cgs.media.charsetShader		= trap_R_RegisterShader( "gfx/2d/bigchars" );
 
 	for ( i = 0 ; i < ARRAY_LEN( sb_nums ) ; i++ ) {
 		cgs.media.numberShaders[i] = trap_R_RegisterShader( sb_nums[i] );
@@ -1179,6 +1174,45 @@ static void CG_RegisterGraphics( void ) {
   cgs.media.timerSlices[2] = trap_R_RegisterShader( "gfx/2d/timer/slice12" );
   cgs.media.timerSlices[3] = trap_R_RegisterShader( "gfx/2d/timer/slice24" );
 
+	cgs.media.backTileShader = trap_R_RegisterShader( "gfx/2d/backtile" );
+	cgs.media.deferShader = trap_R_RegisterShaderNoMip( "gfx/2d/defer.tga" );
+	cgs.media.selectShader = trap_R_RegisterShader( "gfx/2d/select" );
+
+	for ( i = 0 ; i < NUM_CROSSHAIRS ; i++ ) {
+		cgs.media.crosshairShader[i] = trap_R_RegisterShader( va("gfx/2d/crosshair%c", 'a'+i) );
+	}
+
+#ifdef MISSIONPACK
+	cgs.media.teamStatusBar = trap_R_RegisterShader( "gfx/2d/colorbar.tga" );
+#endif
+
+}
+
+
+/*
+=================
+CG_RegisterGraphics
+
+This function may execute for a couple of minutes with a slow disk.
+=================
+*/
+static void CG_RegisterGraphics( void ) {
+	int			i;
+	char		items[MAX_ITEMS+1];
+
+	// clear any references to old media
+	memset( &cg.refdef, 0, sizeof( cg.refdef ) );
+	trap_R_ClearScene();
+
+	CG_LoadingString( cgs.mapname );
+
+	trap_R_LoadWorldMap( cgs.mapname );
+
+	// precache status bar pics
+	CG_LoadingString( "game media" );
+
+	CG_Register2D();
+
 	cgs.media.botSkillShaders[0] = trap_R_RegisterShader( "menu/art/skill1.tga" );
 	cgs.media.botSkillShaders[1] = trap_R_RegisterShader( "menu/art/skill2.tga" );
 	cgs.media.botSkillShaders[2] = trap_R_RegisterShader( "menu/art/skill3.tga" );
@@ -1186,8 +1220,6 @@ static void CG_RegisterGraphics( void ) {
 	cgs.media.botSkillShaders[4] = trap_R_RegisterShader( "menu/art/skill5.tga" );
 
 	cgs.media.viewBloodShader = trap_R_RegisterShader( "viewBloodBlend" );
-
-	cgs.media.deferShader = trap_R_RegisterShaderNoMip( "gfx/2d/defer.tga" );
 
 	cgs.media.scoreboardName = trap_R_RegisterShaderNoMip( "menu/tab/name.tga" );
 	cgs.media.scoreboardPing = trap_R_RegisterShaderNoMip( "menu/tab/ping.tga" );
@@ -1209,16 +1241,10 @@ static void CG_RegisterGraphics( void ) {
 	cgs.media.waterBubbleShader = trap_R_RegisterShader( "waterBubble" );
 
 	cgs.media.tracerShader = trap_R_RegisterShader( "gfx/misc/tracer" );
-	cgs.media.selectShader = trap_R_RegisterShader( "gfx/2d/select" );
-
-	for ( i = 0 ; i < NUM_CROSSHAIRS ; i++ ) {
-		cgs.media.crosshairShader[i] = trap_R_RegisterShader( va("gfx/2d/crosshair%c", 'a'+i) );
-	}
 #ifdef USE_LASER_SIGHT
   cgs.media.laserShader = trap_R_RegisterShader( "sprites/laser" );
 #endif
 
-	cgs.media.backTileShader = trap_R_RegisterShader( "gfx/2d/backtile" );
 	cgs.media.noammoShader = trap_R_RegisterShader( "icons/noammo" );
 
 #if defined(USE_GAME_FREEZETAG) || defined(USE_REFEREE_CMDS)
@@ -1306,7 +1332,6 @@ static void CG_RegisterGraphics( void ) {
 	if ( cgs.gametype >= GT_TEAM || cg_buildScript.integer ) {
 		cgs.media.friendShader = trap_R_RegisterShader( "sprites/foe" );
 		cgs.media.redQuadShader = trap_R_RegisterShader("powerups/blueflag" );
-		cgs.media.teamStatusBar = trap_R_RegisterShader( "gfx/2d/colorbar.tga" );
 #ifdef MISSIONPACK
 		cgs.media.blueKamikazeShader = trap_R_RegisterShader( "models/weaphits/kamikblu" );
 #endif
@@ -2243,7 +2268,6 @@ void CG_Init( int serverMessageNum, int serverCommandSequence, int clientNum ) {
 	}
 
 	// load a few needed things before we do any screen updates
-	cgs.media.charsetShader		= trap_R_RegisterShader( "gfx/2d/bigchars" );
 	cgs.media.whiteShader		= trap_R_RegisterShader( "white" );
 	cgs.media.charsetProp		= trap_R_RegisterShaderNoMip( "menu/art/font1_prop.tga" );
 	cgs.media.charsetPropGlow	= trap_R_RegisterShaderNoMip( "menu/art/font1_prop_glo.tga" );

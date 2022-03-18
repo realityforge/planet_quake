@@ -1035,7 +1035,9 @@ image_t *R_FindPalette(const char *name) {
 						data[x][y][0] = palette->r;
 					}
 				}
-				palette->image = R_CreateImage(va("*pal%i-%i-%i", palette->r, palette->g, palette->b), NULL, (byte *)data, 16, 16, IMGFLAG_NONE);
+				palette->image = R_CreateImage(
+					va("*pal%i-%i-%i-%i", palette->r, palette->g, palette->b, palette->a), 
+					NULL, (byte *)data, 16, 16, IMGFLAG_NONE);
 			}
 			return palette->image;
 		}
