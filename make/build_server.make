@@ -13,6 +13,13 @@ ifeq ($(BUILD_EXPERIMENTAL),1)
 TARGET_SERVER    := $(DNAME)_experimental$(ARCHEXT)$(BINEXT)
 endif
 
+ifeq ($(USE_MEMORY_MAPS),1)
+ifeq ($(USE_INTERNAL_JPEG),1)
+BUILD_CLIENT     := 1
+include make/lib_jpeg.make
+endif
+endif
+
 SOURCES  := $(MOUNT_DIR)/server $(MOUNT_DIR)/botlib
 
 CLIPMAP  := cm_load.o cm_load_bsp2.o \
@@ -78,16 +85,29 @@ CFILES   += $(foreach dir,$(SOURCES), $(wildcard $(dir)/be_*.c)) \
 endif
 
 ifeq ($(USE_MEMORY_MAPS),1)
-CLIENT_LDFLAGS   += $(BR)/$(CNAME)_q3map2_$(SHLIBNAME)
+SERVER_LDFLAGS   += $(BR)/$(CNAME)_q3map2_$(SHLIBNAME)
 CFILES   += cl_jpeg.o
 endif
 
 OBJS     := $(CFILES:.c=.o) 
 Q3OBJ    := $(addprefix $(B)/$(WORKDIR)/,$(notdir $(OBJS)))
 
+ifeq ($(USE_MEMORY_MAPS),1)
+ifeq ($(USE_INTERNAL_JPEG),1)
+Q3OBJ            += $(JPEGOBJS)
+endif
+endif
+
 export INCLUDE  := $(foreach dir,$(INCLUDES),-I$(dir))
 
 SERVER_CFLAGS := $(BASE_CFLAGS) $(INCLUDE)
+
+ifeq ($(USE_MEMORY_MAPS),1)
+ifeq ($(USE_SYSTEM_JPEG),1)
+BASE_CFLAGS      += $(JPEG_CFLAGS)
+SERVER_LDFLAGS   += $(JPEG_LIBS)
+endif
+endif
 
 # TODO build server as a library that client can launch many instances
 
@@ -110,14 +130,14 @@ endef
 
 debug:
 	$(echo_cmd) "MAKE $(BD)/$(TARGET_SERVER)"
-	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) WORKDIRS=$(WORKDIR) mkdirs
+	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) WORKDIRS="$(WORKDIR)" mkdirs
 	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) pre-build
 	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) -j 8 \
     SERVER_CFLAGS="$(SERVER_CFLAGS) $(DEBUG_CFLAGS)" LDFLAGS="$(LDFLAGS) $(DEBUG_LDFLAGS)" $(BD)/$(TARGET_SERVER)
 
 release:
 	$(echo_cmd) "MAKE $(BR)/$(TARGET_SERVER)"
-	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) WORKDIRS=$(WORKDIR) mkdirs
+	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) WORKDIRS="$(WORKDIR)" mkdirs
 	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) pre-build
 	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) -j 8 \
     SERVER_CFLAGS="$(SERVER_CFLAGS) $(RELEASE_CFLAGS)" LDFLAGS="$(LDFLAGS) $(RELEASE_LDFLAGS)" $(BR)/$(TARGET_SERVER)
@@ -158,5 +178,5 @@ $(B)/$(WORKDIR)/%.o: $(MOUNT_DIR)/botlib/%.c
 
 $(B)/$(TARGET_SERVER): $(Q3OBJ)
 	$(echo_cmd) "LD $@"
-	$(Q)$(CC) -o $@ $(Q3OBJ) $(CLIENT_LDFLAGS) $(LDFLAGS) 
+	$(Q)$(CC) -o $@ $(Q3OBJ) $(SERVER_LDFLAGS) $(LDFLAGS) 
 endif

@@ -208,6 +208,7 @@ endif
 
 ifeq ($(USE_SYSTEM_JPEG),1)
   BASE_CFLAGS += -DUSE_SYSTEM_JPEG
+  USE_INTERNAL_JPEG :=
 endif
 
 ifeq ($(USE_INTERNAL_JPEG),1)

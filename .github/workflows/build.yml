@@ -69,9 +69,9 @@ jobs:
           cp build/release-mingw32-x86/quake3e.ded.exe bin/
         else
           #make -f make/lib_q3map2.make clean ${{ matrix.rule }}  NO_MAKE_LOCAL=1 V=1
-          #make -f make/build_client.make clean ${{ matrix.rule }}  ARCH=${{ matrix.arch }}    ${{ matrix.use_sdl }} USE_VULKAN_API=0 BUILD_EXPERIMENTAL=1 NO_MAKE_LOCAL=1
+          #make -f make/build_client.make clean ${{ matrix.rule }}  ARCH=${{ matrix.arch }}    ${{ matrix.use_sdl }} USE_VULKAN_API=0 BUILD_EXPERIMENTAL=1 USE_MEMORY_MAPS=1 NO_MAKE_LOCAL=1
           make -f make/build_client.make clean ${{ matrix.rule }}  ARCH=${{ matrix.arch }}    ${{ matrix.use_sdl }} USE_VULKAN_API=0 USE_MULTIVM_CLIENT=1 USE_MULTIVM_SERVER=1  NO_MAKE_LOCAL=1
-          #make -f make/build_server.make clean ${{ matrix.rule }}  ARCH=${{ matrix.arch }}    ${{ matrix.use_sdl }} BUILD_EXPERIMENTAL=1 NO_MAKE_LOCAL=1
+          #make -f make/build_server.make clean ${{ matrix.rule }}  ARCH=${{ matrix.arch }}    ${{ matrix.use_sdl }} BUILD_EXPERIMENTAL=1 USE_MEMORY_MAPS=1 NO_MAKE_LOCAL=1
           make -f make/build_server.make clean ${{ matrix.rule }}  ARCH=${{ matrix.arch }}    ${{ matrix.use_sdl }} USE_MULTIVM_SERVER=1 NO_MAKE_LOCAL=1
           make -f make/game_multi.make clean ${{ matrix.rule }} MISSIONPACK=1 USE_CLASSIC_HUD=1 USE_CLASSIC_MENU=1 BUILD_GAME_QVM=0 NO_MAKE_LOCAL=1
           cp build/release-mingw64-x86_64/quake3e.x64.exe bin/
@@ -195,9 +195,9 @@ jobs:
           cp build/release-linux-x86/quake3e.ded bin/
         else
           make -f make/lib_q3map2.make clean ${{ matrix.rule }}   NO_MAKE_LOCAL=1
-          make -f make/build_client.make clean ${{ matrix.rule }}  ARCH=${{ matrix.arch }}    ${{ matrix.use_sdl }} USE_VULKAN_API=0 BUILD_EXPERIMENTAL=1 NO_MAKE_LOCAL=1
+          make -f make/build_client.make clean ${{ matrix.rule }}  ARCH=${{ matrix.arch }}    ${{ matrix.use_sdl }} USE_VULKAN_API=0 BUILD_EXPERIMENTAL=1 USE_MEMORY_MAPS=1 NO_MAKE_LOCAL=1
           make -f make/build_client.make clean ${{ matrix.rule }}  ARCH=${{ matrix.arch }}    ${{ matrix.use_sdl }} USE_VULKAN_API=0 USE_MULTIVM_CLIENT=1 USE_MULTIVM_SERVER=1  NO_MAKE_LOCAL=1
-          make -f make/build_server.make clean ${{ matrix.rule }}  ARCH=${{ matrix.arch }}    ${{ matrix.use_sdl }} BUILD_EXPERIMENTAL=1 NO_MAKE_LOCAL=1
+          make -f make/build_server.make clean ${{ matrix.rule }}  ARCH=${{ matrix.arch }}    ${{ matrix.use_sdl }} BUILD_EXPERIMENTAL=1 USE_MEMORY_MAPS=1 NO_MAKE_LOCAL=1
           make -f make/build_server.make clean ${{ matrix.rule }}  ARCH=${{ matrix.arch }}    ${{ matrix.use_sdl }} USE_MULTIVM_SERVER=1 NO_MAKE_LOCAL=1
           make -f make/lib_q3lcc.make clean ${{ matrix.rule }}       NO_MAKE_LOCAL=1
           make -f make/game_multi.make clean ${{ matrix.rule }}      MISSIONPACK=1  USE_CLASSIC_HUD=1 USE_CLASSIC_MENU=1 NO_MAKE_LOCAL=1
@@ -347,10 +347,10 @@ jobs:
         make -f make/build_client.make clean ${{ matrix.rule }}      USE_VULKAN_API=0 USE_SDL=1 NO_MAKE_LOCAL=1
         make -f make/lib_q3map2.make clean ${{ matrix.rule }}   NO_MAKE_LOCAL=1
         make -f make/build_client.make clean ${{ matrix.rule }}      USE_VULKAN_API=0 USE_SDL=1 USE_MULTIVM_CLIENT=1 USE_MULTIVM_SERVER=1 NO_MAKE_LOCAL=1
-        make -f make/build_client.make clean ${{ matrix.rule }}      USE_VULKAN_API=0 USE_SDL=1 BUILD_EXPERIMENTAL=1 NO_MAKE_LOCAL=1
+        make -f make/build_client.make clean ${{ matrix.rule }}      USE_VULKAN_API=0 USE_SDL=1   BUILD_EXPERIMENTAL=1 USE_MEMORY_MAPS=1 NO_MAKE_LOCAL=1
         make -f make/build_client.make clean ${{ matrix.rule }}      USE_VULKAN_API=0 USE_SDL=1 NO_MAKE_LOCAL=1 BUILD_SLIM_CLIENT=1
         make -f make/build_server.make clean ${{ matrix.rule }}      NO_MAKE_LOCAL=1
-        make -f make/build_server.make clean ${{ matrix.rule }}      BUILD_EXPERIMENTAL=1 NO_MAKE_LOCAL=1
+        make -f make/build_server.make clean ${{ matrix.rule }}      BUILD_EXPERIMENTAL=1  USE_MEMORY_MAPS=1 NO_MAKE_LOCAL=1
         make -f make/build_server.make clean ${{ matrix.rule }}      USE_MULTIVM_SERVER=1 NO_MAKE_LOCAL=1
         make -f make/game_multi.make clean ${{ matrix.rule }}      MISSIONPACK=1 USE_CLASSIC_HUD=1 USE_CLASSIC_MENU=1 BUILD_GAME_QVM=0 NO_MAKE_LOCAL=1
         cp build/release-darwin-x86_64/quake3e bin/
