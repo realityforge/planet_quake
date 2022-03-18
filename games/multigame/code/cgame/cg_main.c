@@ -614,8 +614,13 @@ void UpdateWeaponOrder (void)
 //</WarZone>
 #endif
 
+
+
 void CG_LoadClientInfo( clientInfo_t *ci );
 static void CG_Register2D( void );
+static void CG_IconCache( void );
+
+
 
 /*
 =================
@@ -666,6 +671,10 @@ void CG_UpdateCvars( void ) {
 		if(Q_stristr(cg_lazyLoad.string, "gfx/2d") != NULL) {
 			CG_LoadFonts();
 			CG_Register2D();
+		}
+
+		if(Q_stristr(cg_lazyLoad.string, "icons") != NULL) {
+			CG_IconCache();
 		}
 	}
 
@@ -1223,6 +1232,9 @@ static void CG_MenuCache( void ) {
 
 
 static void CG_IconCache( void ) {
+	int			i;
+	gitem_t *item;
+
 	cgs.media.noammoShader = trap_R_RegisterShader( "icons/noammo" );
 #ifdef MISSIONPACK
 	if ( cgs.gametype == GT_CTF || cgs.gametype == GT_1FCTF || cgs.gametype == GT_HARVESTER || cg_buildScript.integer ) {
@@ -1253,6 +1265,12 @@ static void CG_IconCache( void ) {
 	}
 #endif
 	cgs.media.armorIcon  = trap_R_RegisterShaderNoMip( "icons/iconr_yellow" );
+	for ( i = 1 ; i < bg_numItems ; i++ ) {
+		if ( cg_items[ i ].registered && !cg_items[ i ].icon ) {
+			cg_items[ i ].icon = trap_R_RegisterShader( bg_itemlist[ i ].icon );
+		}
+	}
+
 }
 
 
@@ -1424,6 +1442,75 @@ static void CG_WeapMisc( void ) {
 }
 
 
+static void CG_ItemCache( void ) {
+	char		items[MAX_ITEMS+1];
+	int			i;
+
+	// only register the items that the server says we need
+	Q_strncpyz( items, CG_ConfigString(CS_ITEMS), sizeof( items ) );
+
+	for ( i = 1 ; i < bg_numItems ; i++ ) {
+		if ( items[ i ] == '1' || cg_buildScript.integer ) {
+			CG_LoadingItem( i );
+			CG_RegisterItemVisuals( i );
+		}
+	}
+
+
+	cg.skipDFshaders = qfalse;
+
+}
+
+
+static void CG_ModelCache( void ) {
+	int			i;
+	// register the inline models
+	cgs.numInlineModels = trap_CM_NumInlineModels();
+	for ( i = 1 ; i < cgs.numInlineModels ; i++ ) {
+		char	name[10];
+		vec3_t			mins, maxs;
+		int				j;
+
+		Com_sprintf( name, sizeof(name), "*%i", i );
+		cgs.inlineDrawModel[i] = trap_R_RegisterModel( name );
+		trap_R_ModelBounds( cgs.inlineDrawModel[i], mins, maxs );
+		for ( j = 0 ; j < 3 ; j++ ) {
+			cgs.inlineModelMidpoints[i][j] = mins[j] + 0.5 * ( maxs[j] - mins[j] );
+		}
+	}
+}
+
+
+static void CG_PlayerCache( void ) {
+	int			i;
+
+	// register all the server specified models
+	for (i=1 ; i<MAX_MODELS ; i++) {
+		const char		*modelName;
+
+		modelName = CG_ConfigString( CS_MODELS+i );
+		if ( !modelName[0] ) {
+			break;
+		}
+		cgs.gameModels[i] = trap_R_RegisterModel( modelName );
+	}
+	
+#ifdef MISSIONPACK
+
+	trap_R_RegisterModel( "models/players/james/lower.md3" );
+	trap_R_RegisterModel( "models/players/james/upper.md3" );
+	trap_R_RegisterModel( "models/players/heads/james/james.md3" );
+
+	trap_R_RegisterModel( "models/players/janet/lower.md3" );
+	trap_R_RegisterModel( "models/players/janet/upper.md3" );
+	trap_R_RegisterModel( "models/players/heads/janet/janet.md3" );
+
+#endif
+
+
+}
+
+
 /*
 =================
 CG_RegisterGraphics
@@ -1432,8 +1519,6 @@ This function may execute for a couple of minutes with a slow disk.
 =================
 */
 static void CG_RegisterGraphics( void ) {
-	int			i;
-	char		items[MAX_ITEMS+1];
 
 	// clear any references to old media
 	memset( &cg.refdef, 0, sizeof( cg.refdef ) );
@@ -1462,60 +1547,15 @@ static void CG_RegisterGraphics( void ) {
 
 	CG_WeapMisc();
 
-
-
 	memset( cg_items, 0, sizeof( cg_items ) );
 	memset( cg_weapons, 0, sizeof( cg_weapons ) );
 
-	// only register the items that the server says we need
-	Q_strncpyz( items, CG_ConfigString(CS_ITEMS), sizeof( items ) );
+	CG_ItemCache();
 
-	for ( i = 1 ; i < bg_numItems ; i++ ) {
-		if ( items[ i ] == '1' || cg_buildScript.integer ) {
-			CG_LoadingItem( i );
-			CG_RegisterItemVisuals( i );
-		}
-	}
+	CG_ModelCache();
 
-	cg.skipDFshaders = qfalse;
-
-	// register the inline models
-	cgs.numInlineModels = trap_CM_NumInlineModels();
-	for ( i = 1 ; i < cgs.numInlineModels ; i++ ) {
-		char	name[10];
-		vec3_t			mins, maxs;
-		int				j;
-
-		Com_sprintf( name, sizeof(name), "*%i", i );
-		cgs.inlineDrawModel[i] = trap_R_RegisterModel( name );
-		trap_R_ModelBounds( cgs.inlineDrawModel[i], mins, maxs );
-		for ( j = 0 ; j < 3 ; j++ ) {
-			cgs.inlineModelMidpoints[i][j] = mins[j] + 0.5 * ( maxs[j] - mins[j] );
-		}
-	}
-
-	// register all the server specified models
-	for (i=1 ; i<MAX_MODELS ; i++) {
-		const char		*modelName;
-
-		modelName = CG_ConfigString( CS_MODELS+i );
-		if ( !modelName[0] ) {
-			break;
-		}
-		cgs.gameModels[i] = trap_R_RegisterModel( modelName );
-	}
+	CG_PlayerCache();
 	
-#ifdef MISSIONPACK
-
-	trap_R_RegisterModel( "models/players/james/lower.md3" );
-	trap_R_RegisterModel( "models/players/james/upper.md3" );
-	trap_R_RegisterModel( "models/players/heads/james/james.md3" );
-
-	trap_R_RegisterModel( "models/players/janet/lower.md3" );
-	trap_R_RegisterModel( "models/players/janet/upper.md3" );
-	trap_R_RegisterModel( "models/players/heads/janet/janet.md3" );
-
-#endif
 	CG_ClearParticles ();
 /*
 	for (i=1; i<MAX_PARTICLES_AREAS; i++)

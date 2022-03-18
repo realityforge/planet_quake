@@ -380,7 +380,11 @@ void CG_DrawHead( float x, float y, float w, float h, int clientNum, vec3_t head
 		VectorAdd( origin, ci->headOffset, origin );
 
 		CG_Draw3DModelColor( x, y, w, h, ci->headModel, ci->headSkin, origin, headAngles, ci->headColor );
-	} else if ( cg_drawIcons.integer ) {
+	} 
+	
+	if ( cg_drawIcons.integer
+		&& (!cg_draw3dIcons.integer || !ci->headModel || !ci->headSkin)
+	) {
 		trap_R_SetColor ( NULL );
 		CG_DrawPic( x, y, w, h, ci->modelIcon );
 	}
@@ -406,6 +410,16 @@ void CG_DrawFlagModel( float x, float y, float w, float h, int team, qboolean fo
 	vec3_t			mins, maxs;
 	qhandle_t		handle;
 
+	if( team == TEAM_RED ) {
+		handle = cgs.media.redFlagModel;
+	} else if( team == TEAM_BLUE ) {
+		handle = cgs.media.blueFlagModel;
+	} else if( team == TEAM_FREE ) {
+		handle = cgs.media.neutralFlagModel;
+	} else {
+		return;
+	}
+
 	if ( !force2D && cg_draw3dIcons.integer ) {
 
 		VectorClear( angles );
@@ -425,17 +439,12 @@ void CG_DrawFlagModel( float x, float y, float w, float h, int team, qboolean fo
 
 		angles[YAW] = 60 * sin( ( cg.time % TMOD_2000 ) / 2000.0 );;
 
-		if( team == TEAM_RED ) {
-			handle = cgs.media.redFlagModel;
-		} else if( team == TEAM_BLUE ) {
-			handle = cgs.media.blueFlagModel;
-		} else if( team == TEAM_FREE ) {
-			handle = cgs.media.neutralFlagModel;
-		} else {
-			return;
-		}
 		CG_Draw3DModel( x, y, w, h, handle, 0, origin, angles );
-	} else if ( cg_drawIcons.integer ) {
+	} 
+	
+	if ( cg_drawIcons.integer
+		&& (!cg_draw3dIcons.integer || force2D || !handle) 
+	) {
 		gitem_t *item;
 
 		if( team == TEAM_RED ) {
@@ -666,7 +675,9 @@ static void CG_DrawStatusBar( void ) {
 			trap_R_SetColor( NULL );
 
 			// if we didn't draw a 3D icon, draw a 2D icon for ammo
-			if ( !cg_draw3dIcons.integer && cg_drawIcons.integer ) {
+			if ( cg_drawIcons.integer
+				&& (!cg_draw3dIcons.integer || !cg_weapons[ cg.predictedPlayerState.weapon ].ammoModel)
+			) {
 				qhandle_t	icon;
 
 				icon = cg_weapons[ cg.predictedPlayerState.weapon ].ammoIcon;
@@ -719,7 +730,9 @@ static void CG_DrawStatusBar( void ) {
 #endif
 		trap_R_SetColor( NULL );
 		// if we didn't draw a 3D icon, draw a 2D icon for armor
-		if ( !cg_draw3dIcons.integer && cg_drawIcons.integer ) {
+		if ( cg_drawIcons.integer
+			&& (!cg_draw3dIcons.integer || !cgs.media.armorModel)  
+		) {
 			CG_DrawPic( 370 + CHAR_WIDTH*3 + TEXT_ICON_SPACE, y, ICON_SIZE, ICON_SIZE, cgs.media.armorIcon );
 		}
 	}

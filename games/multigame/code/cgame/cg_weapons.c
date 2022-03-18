@@ -1808,9 +1808,9 @@ void CG_DrawWeaponSelect( void ) {
 #ifdef USE_3D_WEAPONS
     if(cg_draw3dIcons.integer > 1) {
       hud_weapons(x, y, &cg_weapons[i]);
-    } else
+    }
 #endif
-    {
+		if(cg_draw3dIcons.integer <= 1 || !cg_weapons[i].weaponModel) {
 		  CG_DrawPic( x, y, 32, 32, cg_weapons[i].weaponIcon );
     }
 

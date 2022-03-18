@@ -151,7 +151,10 @@ static void CG_DrawPlayerArmorIcon( rectDef_t *rect, qboolean draw2D ) {
 	cent = &cg_entities[cg.snap->ps.clientNum];
 	ps = &cg.snap->ps;
 
-	if ( draw2D || ( !cg_draw3dIcons.integer && cg_drawIcons.integer) ) { // bk001206 - parentheses
+	if ( draw2D 
+		|| (!cg_draw3dIcons.integer && cg_drawIcons.integer) 
+		|| (!cgs.media.armorModel && cgs.media.armorIcon)
+	) { // bk001206 - parentheses
 		CG_DrawPic( rect->x, rect->y + rect->h/2 + 1, rect->w, rect->h, cgs.media.armorIcon );
   } else if (cg_draw3dIcons.integer) {
 	  VectorClear( angles );
@@ -207,7 +210,10 @@ static void CG_DrawPlayerAmmoIcon( rectDef_t *rect, qboolean draw2D ) {
 	cent = &cg_entities[cg.snap->ps.clientNum];
 	ps = &cg.snap->ps;
 
-	if ( draw2D || (!cg_draw3dIcons.integer && cg_drawIcons.integer) ) { // bk001206 - parentheses
+	if ( draw2D 
+		|| (!cg_draw3dIcons.integer && cg_drawIcons.integer) 
+		|| (!cgs.media.armorModel && cgs.media.armorIcon)
+	) { // bk001206 - parentheses
 	  qhandle_t	icon;
     icon = cg_weapons[ cg.predictedPlayerState.weapon ].ammoIcon;
 		if ( icon ) {
@@ -551,7 +557,12 @@ static void CG_DrawSelectedPlayerHead( rectDef_t *rect, qboolean draw2D, qboolea
     	angles[ROLL] = 0;
   	
       CG_Draw3DModel( rect->x, rect->y, rect->w, rect->h, ci->headModel, ci->headSkin, origin, angles );
-  	} else if ( cg_drawIcons.integer ) {
+  	} 
+		
+		if ( draw2D
+			|| (!cg_draw3dIcons.integer && cg_drawIcons.integer)
+			|| (!ci->headModel && ci->modelIcon)
+		) {
 	  	CG_DrawPic( rect->x, rect->y, rect->w, rect->h, ci->modelIcon );
   	}
 
