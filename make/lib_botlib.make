@@ -1,54 +1,55 @@
-MKFILE       := $(lastword $(MAKEFILE_LIST)) 
-WORKDIR      := botlib
+BOT_WORKDIR      := botlib
 
 BUILD_BOTLIB := 1
+ifneq ($(BUILD_CLIENT),1)
+MKFILE       := $(lastword $(MAKEFILE_LIST)) 
 include make/platform.make
-
-TARGET       := $(CNAME)_libbots_$(SHLIBNAME)
-ifeq ($(USE_MULTIVM_SERVER),1)
-TARGET       := $(CNAME)_mw_libbots_$(SHLIBNAME)
 endif
-SOURCES      := $(MOUNT_DIR)/botlib
-INCLUDES     := 
-CFILES       := $(foreach dir,$(SOURCES), $(wildcard $(dir)/*.c)) \
-               $(MOUNT_DIR)/qcommon/q_math.c $(MOUNT_DIR)/qcommon/q_shared.c 
-OBJS         := $(CFILES:.c=.o)
-Q3OBJ        := $(addprefix $(B)/$(WORKDIR)/,$(notdir $(OBJS)))
 
-export INCLUDE  := $(foreach dir,$(INCLUDES),-I$(dir))
+BOT_TARGET       := $(CNAME)_libbots_$(SHLIBNAME)
+ifeq ($(USE_MULTIVM_SERVER),1)
+BOT_TARGET       := $(CNAME)_mw_libbots_$(SHLIBNAME)
+endif
+BOT_SOURCES      := $(MOUNT_DIR)/botlib
+BOT_INCLUDES     := 
+BOT_CFILES       := $(foreach dir,$(BOT_SOURCES), $(wildcard $(dir)/*.c)) \
+                    $(MOUNT_DIR)/qcommon/q_math.c $(MOUNT_DIR)/qcommon/q_shared.c 
+BOT_OBJS         := $(BOT_CFILES:.c=.o)
+BOT_Q3OBJ        := $(addprefix $(B)/$(BOT_WORKDIR)/,$(notdir $(OBJS)))
 
-CFLAGS  := $(INCLUDE) -fsigned-char -O2 -ftree-vectorize -g \
-          -ffast-math -fno-short-enums -DUSE_BOTLIB_DLOPEN
+export BOT_INCLUDE  := $(foreach dir,$(BOT_INCLUDES),-I$(dir))
+
+BOT_CFLAGS  := $(BASE_CFLAGS) $(INCLUDE) -DUSE_BOTLIB_DLOPEN
 
 define DO_BOTLIB_CC
   $(echo_cmd) "BOTLIB_CC $<"
-  $(Q)$(CC) $(SHLIBCFLAGS) $(CFLAGS) -DBOTLIB -o $@ -c $<
+  $(Q)$(CC) $(SHLIBCFLAGS) $(BOT_CFLAGS) -DBOTLIB -o $@ -c $<
 endef
 
 debug:
-	$(echo_cmd) "MAKE $(TARGET)"
-	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) WORKDIRS=$(WORKDIR) mkdirs
+	$(echo_cmd) "MAKE $(BOT_TARGET)"
+	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) WORKDIRS=$(BOT_WORKDIR) mkdirs
 	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) pre-build
-	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) CFLAGS="$(CFLAGS) $(DEBUG_CFLAGS)" LDFLAGS="$(LDFLAGS) $(DEBUG_LDFLAGS)" $(BD)/$(TARGET)
+	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) BOT_CFLAGS="$(BOT_CFLAGS) $(DEBUG_CFLAGS)" LDFLAGS="$(LDFLAGS) $(DEBUG_LDFLAGS)" $(BD)/$(BOT_TARGET)
 
 release:
-	$(echo_cmd) "MAKE $(TARGET)"
-	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) WORKDIRS=$(WORKDIR) mkdirs
+	$(echo_cmd) "MAKE $(BOT_TARGET)"
+	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) WORKDIRS=$(BOT_WORKDIR) mkdirs
 	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) pre-build
-	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) CFLAGS="$(CFLAGS) $(RELEASE_CFLAGS)" LDFLAGS="$(LDFLAGS) $(RELEASE_LDFLAGS)" $(BR)/$(TARGET)
+	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) BOT_CFLAGS="$(BOT_CFLAGS) $(RELEASE_CFLAGS)" LDFLAGS="$(LDFLAGS) $(RELEASE_LDFLAGS)" $(BR)/$(BOT_TARGET)
 
 clean:
-	@rm -rf ./$(BD)/$(WORKDIR) ./$(BD)/$(TARGET)
-	@rm -rf ./$(BR)/$(WORKDIR) ./$(BR)/$(TARGET)
+	@rm -rf ./$(BD)/$(BOT_WORKDIR) ./$(BD)/$(BOT_TARGET)
+	@rm -rf ./$(BR)/$(BOT_WORKDIR) ./$(BR)/$(BOT_TARGET)
 
 ifdef B
-$(B)/$(WORKDIR)/%.o: $(MOUNT_DIR)/qcommon/%.c
+$(B)/$(BOT_WORKDIR)/%.o: $(MOUNT_DIR)/qcommon/%.c
 	$(DO_BOTLIB_CC)
 
-$(B)/$(WORKDIR)/%.o: $(MOUNT_DIR)/botlib/%.c
+$(B)/$(BOT_WORKDIR)/%.o: $(MOUNT_DIR)/botlib/%.c
 	$(DO_BOTLIB_CC)
 
-$(B)/$(TARGET): $(Q3OBJ) 
+$(B)/$(BOT_TARGET): $(Q3OBJ) 
 	$(echo_cmd) "LD $@"
 	$(Q)$(CC) -o $@ $(Q3OBJ) $(SHLIBCFLAGS) $(SHLIBLDFLAGS)
 endif
