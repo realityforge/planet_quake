@@ -1052,14 +1052,14 @@ void CL_CheckLazyUpdates( void ) {
 	if(!Q_stricmp(ext, "md3") || !Q_stricmp(ext, "mdr")
 		|| !Q_stricmp(ext, "md5")) {
 		if(cls.rendererStarted) {
-			//re.UpdateModel(ready->loadingName);
+			re.UpdateModel(ready->loadingName);
 		}
 	}
 
 	if(!Q_stricmp(ext, "wav") || !Q_stricmp(ext, "ogg")
 		|| !Q_stricmp(ext, "mp3") || !Q_stricmp(ext, "opus")) {
 		if(cls.soundRegistered) {
-			//S_UpdateSound(ready->loadingName, qtrue);
+			S_UpdateSound(ready->loadingName, qtrue);
 		}
 	}
 
