@@ -618,6 +618,7 @@ static void CG_IconCache( void );
 static void CG_WeapMisc( const char * );
 static void CG_WeaphitsCache( void );
 static void CG_PlayerCache( const char * );
+static void CG_PowerupCache( const char * );
 
 
 
@@ -677,6 +678,7 @@ void CG_UpdateCvars( void ) {
 			CG_IconCache();
 		}
 
+/*
 		if((s = Q_stristr(cg_lazyLoad.string, "models/weaphits")) != NULL) {
 			CG_WeaphitsCache();
 		}
@@ -685,9 +687,14 @@ void CG_UpdateCvars( void ) {
 			CG_WeapMisc(s);
 		}
 
+		if((s = Q_stristr(cg_lazyLoad.string, "models/powerups")) != NULL) {
+			CG_PowerupCache(s);
+		}
+
 		if((s = Q_stristr(cg_lazyLoad.string, "models/players")) != NULL) {
 			//CG_PlayerCache(s);
 		}
+*/
 	}
 
 	if(breadcrumbModificationCount != cg_breadCrumb.modificationCount) {
@@ -1250,7 +1257,7 @@ static void CG_IconCache( void ) {
 		cgs.media.armorIcon  = trap_R_RegisterShaderNoMip( "icons/iconr_yellow" );
 	}
 	for ( i = 1 ; i < bg_numItems ; i++ ) {
-		if ( cg_items[ i ].registered && !cg_items[ i ].icon_df ) {
+		if ( !cg_items[ i ].icon ) {
 			cg_items[ i ].icon_df = cg_items[ i ].icon = trap_R_RegisterShader( bg_itemlist[ i ].icon );
 			if ( bg_itemlist[ i ].giType == IT_WEAPON ) {
 				cg_weapons[ bg_itemlist[ i ].giTag ].weaponIcon = cg_items[ i ].icon;
@@ -1262,21 +1269,37 @@ static void CG_IconCache( void ) {
 }
 
 
-static void CG_PowerupCache( void ) {
+static void CG_PowerupCache( const char *update ) {
+	int i;
 
 	// powerup shaders
-	cgs.media.quadShader = trap_R_RegisterShader("powerups/quad" );
-	cgs.media.quadWeaponShader = trap_R_RegisterShader("powerups/quadWeapon" );
-	cgs.media.battleSuitShader = trap_R_RegisterShader("powerups/battleSuit" );
-	cgs.media.battleWeaponShader = trap_R_RegisterShader("powerups/battleWeapon" );
-	cgs.media.invisShader = trap_R_RegisterShader("powerups/invisibility" );
-	cgs.media.regenShader = trap_R_RegisterShader("powerups/regen" );
-	cgs.media.hastePuffShader = trap_R_RegisterShader("hasteSmokePuff" );
+	if(!cgs.media.quadShader) {
+		cgs.media.quadShader = trap_R_RegisterShader("powerups/quad" );
+	}
+	if(!cgs.media.quadShader) {
+		cgs.media.quadWeaponShader = trap_R_RegisterShader("powerups/quadWeapon" );
+	}
+	if(!cgs.media.quadShader) {
+		cgs.media.battleSuitShader = trap_R_RegisterShader("powerups/battleSuit" );
+	}
+	if(!cgs.media.quadShader) {
+		cgs.media.battleWeaponShader = trap_R_RegisterShader("powerups/battleWeapon" );
+	}
+	if(!cgs.media.quadShader) {
+		cgs.media.invisShader = trap_R_RegisterShader("powerups/invisibility" );
+	}
+	if(!cgs.media.quadShader) {
+		cgs.media.regenShader = trap_R_RegisterShader("powerups/regen" );
+	}
+	if(!cgs.media.quadShader) {
+		cgs.media.hastePuffShader = trap_R_RegisterShader("hasteSmokePuff" );
+	}
+
+	if ( cgs.gametype == GT_CTF || cg_buildScript.integer 
 #ifdef MISSIONPACK
-	if ( cgs.gametype == GT_CTF || cgs.gametype == GT_1FCTF || cgs.gametype == GT_HARVESTER || cg_buildScript.integer ) {
-#else
-	if ( cgs.gametype == GT_CTF || cg_buildScript.integer ) {
+		|| cgs.gametype == GT_1FCTF || cgs.gametype == GT_HARVESTER
 #endif
+	) {
 		cgs.media.redCubeModel = trap_R_RegisterModel( "models/powerups/orb/r_orb.md3" );
 		cgs.media.blueCubeModel = trap_R_RegisterModel( "models/powerups/orb/b_orb.md3" );
 	}
@@ -1312,6 +1335,18 @@ static void CG_PowerupCache( void ) {
 		cgs.media.teleportEffectModel = trap_R_RegisterModel( "models/powerups/pop.md3" );
 	}
 
+	for ( i = 1 ; i < bg_numItems ; i++ ) {
+		if (bg_itemlist[ i ].giType != IT_WEAPON) {
+			if(Q_stricmpn(&bg_itemlist[ i ].world_model[0][16], &update[16], 6)
+				&& Q_stricmpn(&bg_itemlist[ i ].world_model[1][16], &update[16], 6)) {
+				continue;
+			}
+			if(!cg_items[ i ].models[0] || !cg_items[ i ].models[1]) {
+				cg_items[ i ].registered = qfalse;
+				CG_RegisterItemVisuals( i );
+			}
+		}
+	}
 }
 
 
@@ -1604,7 +1639,7 @@ static void CG_RegisterGraphics( void ) {
 
 	CG_IconCache();
 
-	CG_PowerupCache();
+	CG_PowerupCache(NULL);
 
 	CG_TeamCache();
 

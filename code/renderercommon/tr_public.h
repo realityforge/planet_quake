@@ -276,6 +276,8 @@ typedef struct {
 #endif
 #ifdef USE_LAZY_LOAD
 	int   (*FS_FOpenFileRead)( const char *filename, fileHandle_t *file, qboolean uniqueFILE );
+	char (*asyncShaderName);
+	char (*asyncModelName);
 #endif
 #ifdef USE_CURSOR_SPY
 	void (*Spy_CursorPosition)(float x, float y);

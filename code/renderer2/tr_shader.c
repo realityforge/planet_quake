@@ -1421,7 +1421,7 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 
 			continue;
 		}
-		else if ( !Q_stricmp( token, "depthFragment" ) && s_extendedShader )
+		else if ( !Q_stricmp( token, "depthFragment" ) )
 		{
 			//stage->depthFragment = qtrue;
 			continue;
@@ -3459,7 +3459,7 @@ static shader_t *FinishShader( void ) {
 	qboolean		vertexLightmap;
 
 #ifdef USE_LAZY_LOAD
-  ri.Cvar_Set("r_loadingShader", "");
+  ri.asyncShaderName[0] = '\0';
 #endif
 
 	hasLightmapStage = qfalse;
@@ -3832,7 +3832,7 @@ shader_t *R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImag
   shader.lastTimeUsed = tr.lastRegistrationTime;
 
 #ifdef USE_LAZY_LOAD
-  ri.Cvar_Set( "r_loadingShader", va("%12i;%s", lightmapIndex, name) );
+	Com_sprintf(ri.asyncShaderName, MAX_OSPATH*2, "%12i;%s", lightmapIndex, name);
 #endif
 
 	if ( r_ext_compressed_textures->integer == 2 ) {

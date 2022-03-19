@@ -3867,6 +3867,8 @@ void CL_ChangeNotifcations( void );
 
 #if defined(USE_LAZY_LOAD) || defined(USE_ASYNCHRONOUS)
 void CL_CheckLazyUpdates( void );
+extern char asyncModelName[MAX_OSPATH * 2];
+extern char asyncShaderName[MAX_OSPATH * 2];
 #endif
 
 /*
@@ -4118,11 +4120,11 @@ static __attribute__ ((format (printf, 2, 3))) void QDECL CL_RefPrintf( printPar
 	va_end( argptr );
 
 	switch ( level ) {
-#ifndef USE_LAZY_LOAD
+//#ifndef USE_LAZY_LOAD
 		default: Com_Printf( "%s", msg ); break;
-#else
-		default: Com_DPrintf( "%s", msg ); break;
-#endif
+//#else
+//		default: Com_DPrintf( "%s", msg ); break;
+//#endif
 		case PRINT_DEVELOPER: Com_DPrintf( "%s", msg ); break;
 		case PRINT_WARNING: Com_Printf( S_COLOR_YELLOW "%s", msg ); break;
 		case PRINT_ERROR: Com_Printf( S_COLOR_RED "%s", msg ); break;
@@ -4576,6 +4578,8 @@ static void CL_InitRef( void ) {
 #endif
 #ifdef USE_LAZY_LOAD
 	rimp.FS_FOpenFileRead = FS_FOpenFileRead;
+	rimp.asyncModelName = &asyncModelName[0];
+	rimp.asyncShaderName = &asyncShaderName[0];
 #endif
 #ifdef USE_CURSOR_SPY
 	rimp.Spy_CursorPosition = Spy_CursorPosition;

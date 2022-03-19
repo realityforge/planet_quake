@@ -39,8 +39,8 @@ MUSL_LOBJ        := string/stpcpy.o  string/memset.o  string/memcpy.o    \
                     stdio/sprintf.o  stdio/fprintf.o   stdio/vsnprintf.o \
                     stdio/vfprintf.o stdio/sscanf.o    stdio/fwrite.o    \
                     stdio/vsscanf.o  stdio/vfscanf.o   stdio/snprintf.o  \
-                    stdio/vsprintf.o stdio/setvbuf.o   \
-                    stdio/__toread.o stdio/__towrite.o \
+                    stdio/vsprintf.o stdio/setvbuf.o   stdio/__stdio_exit.o \
+                    stdio/__toread.o stdio/__towrite.o stdio/ofl.o \
                     stdio/__lockfile.o stdio/__uflow.o          \
                     \
                     internal/shgetc.o internal/floatscan.o internal/intscan.o \

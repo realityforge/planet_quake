@@ -3,6 +3,9 @@ const { response } = require('express');
 const fs = require('fs');
 const path = require('path');
 const { findTypes, imageTypes } = require('./repack-whitelist');
+var mime = require('mime')
+var zlib = require('zlib')
+
 
 const GAME_DIRECTORY = 'multigame'
 const WEB_DIRECTORY = path.resolve(__dirname + '/../http')
@@ -167,8 +170,11 @@ function layeredDir(filename) {
   return list
     .reduce((list, i) => {
       if(i.endsWith('.pcx') || i.endsWith('.tga')) {
-        list.push(i.replace(path.extname(i), '.png'))
-        list.push(i.replace(path.extname(i), '.jpg'))
+        if(!findFile(path.join(filename, i.replace(path.extname(i), '.png')))
+          && !findFile(path.join(filename, i.replace(path.extname(i), '.jpg')))) {
+          list.push(i.replace(path.extname(i), '.png'))
+          list.push(i.replace(path.extname(i), '.jpg'))
+        }
       } else {
         list.push(i)
       }
@@ -266,6 +272,42 @@ function makePaletteShader(localName, response) {
 }
 
 
+function sendCompressed(file, res, acceptEncoding) {
+  var readStream = fs.createReadStream(file)
+  res.setHeader('cache-control', 'public, max-age=31557600')
+  res.setHeader('content-type', mime.getType(file))
+  // if compressed version already exists, send it directly
+  if(acceptEncoding.includes('br')) {
+    res.append('content-encoding', 'br')
+    if(fs.existsSync(file + '.br')) {
+      res.append('content-length', fs.statSync(file + '.br').size)
+      readStream = fs.createReadStream(file + '.br')
+    } else {
+      readStream = readStream.pipe(zlib.createBrotliCompress())
+    }
+  } else if(acceptEncoding.includes('gzip')) {
+    res.append('content-encoding', 'gzip')
+    if(fs.existsSync(file + '.gz')) {
+      res.append('content-length', fs.statSync(file + '.gz').size)
+      readStream = fs.createReadStream(file + '.gz')
+    } else {
+      readStream = readStream.pipe(zlib.createGzip())
+    }
+  } else if(acceptEncoding.includes('deflate')) {
+    res.append('content-encoding', 'deflate')
+    if(fs.existsSync(file + '.df')) {
+      res.append('content-length', fs.statSync(file + '.df').size)
+      readStream = fs.createReadStream(file + '.df')
+    } else {
+      readStream = readStream.pipe(zlib.createDeflate())
+    }
+  } else {
+    res.append('content-length', fs.statSync(file).size)
+  }
+  
+  readStream.pipe(res)
+}
+
 //var fullUrl = req.protocol + '://' + req.get('host') + req.originalUrl;
 
 function respondRequest(request, response) {
@@ -308,6 +350,8 @@ function respondRequest(request, response) {
         let list = layeredDir(localName)
         return response.send(makeDirectoryHtml(localName, list))
       }
+    } else if(request.headers['accept-encoding']) {
+      return sendCompressed(path.resolve(file), response, request.headers['accept-encoding'])
     } else {
       return response.sendFile(path.resolve(file))
     }
@@ -336,7 +380,11 @@ function respondRequest(request, response) {
       execSync(`convert -strip -interlace Plane -sampling-factor 4:2:0 -quality 20% -auto-orient "${file}" "${path.resolve(newPath)}"`, {stdio : 'pipe'})
     }
     if(fs.existsSync(newPath)) {
-      return response.sendFile(path.resolve(newPath))
+      if(request.headers['accept-encoding']) {
+        return sendCompressed(path.resolve(file), response, request.headers['accept-encoding'])
+      } else {
+        return response.sendFile(path.resolve(newPath))
+      }
     }
   }
 

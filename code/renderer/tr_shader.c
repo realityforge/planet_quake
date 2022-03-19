@@ -2844,7 +2844,7 @@ static shader_t *FinishShader( void ) {
 	qboolean	depthMask;
 
 #ifdef USE_LAZY_LOAD
-  ri.Cvar_Set("r_loadingShader", "");
+  ri.asyncShaderName[0] = '\0';
 #endif
 
 	hasLightmapStage = qfalse;
@@ -3338,7 +3338,7 @@ shader_t *R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImag
 	//shader.needsColor = qtrue;
 
 #ifdef USE_LAZY_LOAD
-  ri.Cvar_Set( "r_loadingShader", va("%12i;%s", lightmapIndex, name) );
+	Com_sprintf(ri.asyncShaderName, MAX_OSPATH*2, "%12i;%s", lightmapIndex, name);
 #endif
 
 	//
@@ -3362,7 +3362,7 @@ shader_t *R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImag
 			if(!shader.stages[0]
 				//&& shader.stages[0]->bundle[0].isImplicit
 				|| shader.stages[0]->bundle[0].image[0] == NULL) {
-				ri.Cvar_Set("r_loadingShader", "");
+				ri.asyncShaderName[0] = '\0';
 				return tr.defaultShader;
 			}
 #endif
@@ -3371,7 +3371,7 @@ shader_t *R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImag
 		return sh;
 	} else if(Q_stristr(strippedName, "console")) {
 #ifdef USE_LAZY_LOAD
-		ri.Cvar_Set("r_loadingShader", "");
+		ri.asyncShaderName[0] = '\0';
 #endif
 		return tr.defaultShader;
 	}

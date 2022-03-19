@@ -276,6 +276,7 @@ debug:
 		CLIENT_CFLAGS="$(CLIENT_CFLAGS) $(DEBUG_CFLAGS)" \
 		CLIENT_LDFLAGS="$(CLIENT_LDFLAGS) $(DEBUG_LDFLAGS)" \
 		$(BD)/$(TARGET_CLIENT)
+	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) post-build TARGET="$(TARGET_CLIENT)"
 
 release:
 	$(echo_cmd) "MAKE $(TARGET_CLIENT)"

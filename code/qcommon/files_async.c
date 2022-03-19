@@ -39,6 +39,9 @@ static int secondTimer = 0;
 static int thirdTimer = 0;
 extern cvar_t *cl_lazyLoad;
 cvar_t *cl_dlSimultaneous;
+char asyncShaderName[MAX_OSPATH * 2];
+char asyncModelName[MAX_OSPATH * 2];
+char asyncSoundName[MAX_OSPATH * 2];
 
 #endif
 
@@ -296,12 +299,12 @@ printDebug = qtrue;
 
 	// force indexes to get downloaded first in line
 	// check index need to download
-	loading = Cvar_VariableString("r_loadingShader");
-	if(!loading[0]) {
-		loading = Cvar_VariableString("snd_loadingSound");
-		if(!loading[0]) {
-			loading = Cvar_VariableString("r_loadingModel");
-			if(!loading[0]) {
+	loading = &asyncShaderName[0];
+	if(!asyncShaderName[0]) {
+		loading = &asyncSoundName[0];
+		if(!asyncSoundName[0]) {
+			loading = &asyncModelName[0];
+			if(!asyncModelName[0]) {
 				loading = localName;
 			}
 		}
@@ -932,7 +935,7 @@ Com_Printf("updating files: %s -> %s\n", filename, tempname);
 			FS_AddGameDirectory( Cvar_VariableString("fs_homepath"), FS_GetCurrentGameDir(), 0 );
 		}
 		if(Q_stristr(tempname, Cvar_VariableString("mapname")) && !com_sv_running->integer) {
-			Cbuf_AddText(va("wait lazy; map %s;", Cvar_VariableString("mapname")));
+			Cbuf_AddText(va("wait lazy; devmap %s;", Cvar_VariableString("mapname")));
 		}
 	} else 
 
@@ -960,7 +963,7 @@ Com_Printf("updating files: %s -> %s\n", filename, tempname);
 	// try to reload UI with current game if needed
 	if(Q_stristr(tempname, "vm/qagame.qvm") && !com_sv_running->integer) {
 		if(Q_stricmp(Cvar_VariableString("mapname"), "nomap")) {
-			Cbuf_AddText(va("wait lazy; map %s;", Cvar_VariableString("mapname")));
+			Cbuf_AddText(va("wait lazy; devmap %s;", Cvar_VariableString("mapname")));
 		}
 	} else 
 #endif
@@ -1059,6 +1062,7 @@ void CL_CheckLazyUpdates( void ) {
 
 	// check for files that need to be downloaded, runs on separate thread!?
 	if(thirdTimer == newTime && downloadNeeded) {
+
 #if defined(USE_CURL) || defined(__WASM__)
 		// we don't care if the USE_ASYNCHRONOUS code in the call cancels 
 		//   because it is requeued 1.5 seconds later
@@ -1083,7 +1087,7 @@ void CL_CheckLazyUpdates( void ) {
 		|| !Q_stricmp(ext, "md5")) {
 		if(cls.rendererStarted) {
 			re.UpdateModel(ready->loadingName);
-			secondTimer += 100;
+			secondTimer += 10;
 		}
 	}
 
@@ -1098,6 +1102,7 @@ void CL_CheckLazyUpdates( void ) {
 		ready->loadingName[12] = '\0';
 		if(cls.rendererStarted) {
 			re.UpdateShader(&ready->loadingName[13], atoi(&ready->loadingName[0]));
+			secondTimer += 10;
 		}
 		ready->loadingName[12] = ';';
 	}
@@ -1106,7 +1111,6 @@ void CL_CheckLazyUpdates( void ) {
 	if(Q_stristr(&ready->loadingName[MAX_OSPATH], "/scripts/")
 		&& Q_stristr(&ready->loadingName[MAX_OSPATH], ".shader")) {
 		re.ReloadShaders(qfalse);
-		secondTimer += 100;
 	}
 #endif
 

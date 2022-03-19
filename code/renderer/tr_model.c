@@ -358,7 +358,7 @@ qhandle_t RE_RegisterModel( const char *name )
 	}
 
 #ifdef USE_LAZY_LOAD
-	ri.Cvar_Set("r_loadingModel", name);
+	strcpy(ri.asyncModelName, name);
 #endif
 
 	ext = COM_GetExtension( localName );
@@ -374,7 +374,7 @@ qhandle_t RE_RegisterModel( const char *name )
 #ifdef USE_LAZY_LOAD
 				if ( !updateModels ) {
 					if(ri.FS_FOpenFileRead(localName, NULL, qfalse)) {
-						ri.Cvar_Set("r_loadingModel", "");
+						ri.asyncModelName[0] = '\0';
 						return mod->index;
 					}
 				} else 
@@ -400,7 +400,7 @@ qhandle_t RE_RegisterModel( const char *name )
 			else
 			{
 #ifdef USE_LAZY_LOAD
-				ri.Cvar_Set("r_loadingModel", "");
+				ri.asyncModelName[0] = '\0';
 #endif
 				// Something loaded
 				return mod->index;
@@ -421,7 +421,7 @@ qhandle_t RE_RegisterModel( const char *name )
 #ifdef USE_LAZY_LOAD
 		if ( !updateModels ) {
 			if(ri.FS_FOpenFileRead(altName, NULL, qfalse)) {
-				ri.Cvar_Set("r_loadingModel", "");
+				ri.asyncModelName[0] = '\0';
 				return mod->index;
 			}
 		} else 
@@ -443,7 +443,7 @@ qhandle_t RE_RegisterModel( const char *name )
 	}
 
 #ifdef USE_LAZY_LOAD
-	ri.Cvar_Set("r_loadingModel", "");
+	ri.asyncModelName[0] = '\0';
 #endif
 	return hModel;
 }

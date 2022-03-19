@@ -55,6 +55,9 @@ function instantiateWasm(bytes) {
     INPUT: INPUT,
     STD: STD,
   }
+  if(!bytes) {
+    throw new Error('Couldn\'t find wasm!')
+  }
   // assign everything to env because this bullshit don't work
   Object.assign(Q3e, libraries)
   for(let i = 0; i < Object.keys(libraries).length; i++) {
@@ -71,19 +74,20 @@ function instantiateWasm(bytes) {
 
 function init() {
   Q3e['imports'] = Q3e
+  Q3e['cacheBuster'] = Date.now()
 
   // TODO: bootstrap download function so it saves binary to disk
-  fetch('./quake3e_mv.wasm')
+  fetch('./quake3e_mv.wasm?time=' + Q3e.cacheBuster)
   .catch(function (e) {})
   .then(function(response) {
     if(!response || response.status == 404) {
-      return fetch('./quake3e_slim.wasm')
+      return fetch('./quake3e_slim.wasm?time=' + Q3e.cacheBuster)
     }
   })
   .catch(function (e) {})
   .then(function(response) {
     if(!response || response.status == 404) {
-      return fetch('./quake3e.wasm')
+      return fetch('./quake3e.wasm?time=' + Q3e.cacheBuster)
     }
   })
   .catch(function (e) {})

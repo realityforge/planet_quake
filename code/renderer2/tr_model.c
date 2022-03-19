@@ -335,7 +335,7 @@ qhandle_t RE_RegisterModel( const char *name )
 	Q_strncpyz( localName, name, sizeof( localName ) );
 
 #ifdef USE_LAZY_LOAD
-	ri.Cvar_Set("r_loadingModel", name);
+	strcpy(ri.asyncModelName, name);
 #endif
 
 	ext = COM_GetExtension( localName );
@@ -376,7 +376,7 @@ qhandle_t RE_RegisterModel( const char *name )
 			else
 			{
 #ifdef USE_LAZY_LOAD
-				ri.Cvar_Set("r_loadingModel", "");
+				ri.asyncModelName[0] = '\0';
 #endif
 				// Something loaded
 				return mod->index;
@@ -418,7 +418,7 @@ qhandle_t RE_RegisterModel( const char *name )
 	}
 
 #ifdef USE_LAZY_LOAD
-	ri.Cvar_Set("r_loadingModel", "");
+	ri.asyncModelName[0] = '\0';
 #endif
   return 0;
 }

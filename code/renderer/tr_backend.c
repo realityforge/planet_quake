@@ -605,9 +605,9 @@ static void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 			if ( backEnd.refdef.numLitSurfs && oldShaderSort < INSERT_POINT && shader->sort >= INSERT_POINT ) {
 				//RB_BeginDrawingLitSurfs(); // no need, already setup in RB_BeginDrawingView()
 				if ( depthRange ) {
-					qglDepthRange( 0, 1 );
+					qglDepthRange( 0.0f, 1.0f );
 					RB_LightingPass();
-					qglDepthRange( 0, 0.3 );
+					qglDepthRange( 0.0f, 0.3f );
 				} else {
 					RB_LightingPass();
 				}

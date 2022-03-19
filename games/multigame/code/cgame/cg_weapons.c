@@ -916,6 +916,9 @@ void CG_RegisterItemVisuals( int itemNum ) {
 		item->giType == IT_ARMOR || item->giType == IT_HOLDABLE ) {
 		if ( item->world_model[1] ) {
 			itemInfo->models[1] = trap_R_RegisterModel( item->world_model[1] );
+			if(itemInfo->models[1]) {
+				Com_Printf("goddamnit: %s\n", item->world_model[1]);
+			}
 		}
 	}
 }

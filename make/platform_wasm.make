@@ -33,9 +33,10 @@ SHLIBLDFLAGS     := -Wl,--import-memory -Wl,--import-table -Wl,--error-limit=200
                     -Wl,--no-entry -Wl,--allow-undefined-file=code/wasm/wasm.syms 
 
 CLIENT_LDFLAGS   := -Wl,--import-memory -Wl,--import-table -Wl,--error-limit=200 \
-                    -Wl,--export-dynamic --no-standard-libraries \
-                    -Wl,--no-entry 
-                    #-Wl,--strip-all 
+                    -Wl,--no-entry --no-standard-libraries
+
+RELEASE_LDFLAGS  := -Wl,--strip-all 
+DEBUG_LDFLAGS    := -fvisibility=default -fno-inline -Wl,--export-dynamic
 
 ifeq ($(BUILD_CLIENT),1)
 SHLIBLDFLAGS     += -Wl,--allow-undefined-file=code/wasm/wasm.syms
@@ -72,8 +73,8 @@ BASE_CFLAGS      += -Wall --target=wasm32 \
                     -Ilibs/musl-1.2.2/include
 
 
-DEBUG_CFLAGS     := -fvisibility=default \
-                    -DDEBUG -D_DEBUG -O0 -g -g3 -fPIC -gdwarf -gfull -fno-inline
+DEBUG_CFLAGS     := -fvisibility=default -fno-inline \
+                    -DDEBUG -D_DEBUG -g -g3 -fPIC -gdwarf -gfull
 
 RELEASE_CFLAGS   := -fvisibility=hidden \
                     -DNDEBUG -Ofast -O3 -Oz -fPIC -ffast-math

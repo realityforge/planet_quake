@@ -48,23 +48,24 @@ function Sys_NET_MulticastLocal (net, length, data) {
 }
 
 function Com_DL_HeaderCallback(localName, response) {
-    //let type = response.headers.get('Content-Type')
-    if (!response || !(response.status >= 200 && response.status < 300 || response.status === 304)) {
-      Sys_FileReady(stringToAddress(localName), null) // failed state, not to retry
-      //throw new Error('Couldn\'t load ' + response.url + '. Status: ' + (response || {}).statusCode)
-      response.body.getReader().cancel()
-      // TODO: check for too big files!
-      //if(controller)
-        //controller.abort()
-      return
-    }
-    return response.arrayBuffer()
+  //let type = response.headers.get('Content-Type')
+  if (!response || !(response.status >= 200 && response.status < 300 || response.status === 304)) {
+    Sys_FileReady(stringToAddress(localName), null) // failed state, not to retry
+    //throw new Error('Couldn\'t load ' + response.url + '. Status: ' + (response || {}).statusCode)
+    response.body.getReader().cancel()
+    // TODO: check for too big files!
+    //if(controller)
+      //controller.abort()
+    return Promise.resolve()
+  }
+  return Promise.resolve(response.arrayBuffer())
 }
 
 function Com_DL_Begin(localName, remoteURL) {
   if(AbortController && !NET.controller) {
     NET.controller = new AbortController()
   }
+  remoteURL += (remoteURL.includes('?') ? '&' : '?') + 'time=' + Q3e.cacheBuster
   return fetch(remoteURL, {
     mode: 'cors',
     responseType: 'arraybuffer',
@@ -75,7 +76,9 @@ function Com_DL_Begin(localName, remoteURL) {
   .catch(function (error) {
     return
   })
-  .then(Com_DL_HeaderCallback.bind(null, localName))
+  .then(function (request) {
+    return Com_DL_HeaderCallback(localName, request)
+  })
   // this catches streaming errors, does everybody do this?
   .catch(function (error) {
     return
@@ -90,7 +93,8 @@ function Com_DL_Perform(nameStr, localName, responseData) {
   }
   // TODO: intercept this information here so we can invalidate the IDBFS storage
   if(localName.includes('version.json')) {
-
+    Q3e.cacheBuster = Date.parse(JSON.parse(Array.from(responseData)
+      .map(c => String.fromCharCode(c)).join(''))[0])
   }
 
   // don't store any index files, redownload every start
@@ -101,7 +105,7 @@ function Com_DL_Perform(nameStr, localName, responseData) {
     FS.virtual[tempName] = {
       timestamp: new Date(),
       mode: 33206,
-      contents: new Uint8Array(responseData)
+      contents: responseData
     }
     Sys_FileReady(stringToAddress(localName), stringToAddress(tempName));
   } else {
@@ -111,7 +115,7 @@ function Com_DL_Perform(nameStr, localName, responseData) {
     FS.virtual[nameStr] = {
       timestamp: new Date(),
       mode: 33206,
-      contents: new Uint8Array(responseData)
+      contents: responseData
     }
     // async to filesystem
     // does it REALLY matter if it makes it? wont it just redownload?
@@ -165,11 +169,17 @@ function CL_Download(cmd, name, auto) {
         // always redownload indexes in case the content has changed?
         if(!result || result.mode == 16895) {
           return Com_DL_Begin(localName, remoteURL)
+        // bust the caches!
+        } else if(result.timestamp.getTime() < Q3e.cacheBuster) {
+          return Com_DL_Begin(localName, remoteURL)
+        // valid from disk
         } else {
-          return Com_DL_Perform(nameStr, localName, result.contents)
+          return result.contents
         }
       })
-      .then(Com_DL_Perform.bind(null, nameStr, localName))
+      .then(function (responseData) {
+        Com_DL_Perform(nameStr, localName, new Uint8Array(responseData))
+      })
   } catch (e) {
     
   }

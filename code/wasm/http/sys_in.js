@@ -29,7 +29,8 @@ function GLimp_StartDriverAndSetMode(mode, modeFS, fullscreen, fallback) {
   let webGLContextAttributes = {
     failIfMajorPerformanceCaveat: true,
     alpha: false,
-    stencil: false,
+    stencil: true,
+    premultipliedAlpha: false,
   }
 
 
