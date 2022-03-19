@@ -55,10 +55,9 @@ void GL_BindToTMU( image_t *image, int tmu )
 			target = GL_TEXTURE_CUBE_MAP;
 
 		image->frameUsed = tr.frameCount;
-		if(image->width > 0 && image->height > 0) {
-			texture = image->texnum;
-		} else {
-			texture = 0;
+		texture = image->texnum;
+		if(!texture) {
+			texture = tr.defaultImage->texnum;
 		}
 	}
 	else

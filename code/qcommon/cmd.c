@@ -35,6 +35,12 @@ typedef struct {
 } cmd_t;
 
 static int    cmd_wait;
+#ifndef DEDICATED
+#ifdef USE_LAZY_LOAD
+int    cmd_lazy;
+#endif
+#endif
+
 static cmd_t  cmd_text[32];
 static byte   cmd_text_buf[32][MAX_CMD_BUFFER];
 int    insCmdI;
@@ -61,6 +67,13 @@ bind g "cmd use rocket ; +attack ; wait ; -attack ; cmd use blaster"
 static void Cmd_Wait_f( void ) {
 	if ( Cmd_Argc() == 2 ) {
 		cmd_wait = atoi( Cmd_Argv( 1 ) );
+#ifndef DEDICATED
+#ifdef USE_LAZY_LOAD
+		if(!Q_stricmp( Cmd_Argv( 1 ), "lazy" )) {
+			cmd_lazy = 1;
+		} else
+#endif
+#endif
 		if ( cmd_wait < 0 )
 			cmd_wait = 1; // ignore the argument
 	} else {
@@ -193,6 +206,7 @@ static void Cbuf_ExecuteInternal( cbufExec_t exec_when, const char *text )
 }
 
 
+
 /*
 ============
 Cbuf_Execute
@@ -225,6 +239,13 @@ void Cbuf_Execute( void )
 			cmd_wait--;
 			break;
 		}
+#ifndef DEDICATED
+#ifdef USE_LAZY_LOAD
+		if ( cmd_lazy > 0 ) {
+			break;
+		}
+#endif
+#endif
 
 		// find a \n or ; line break or comment: // or /* */
 		text = (char *)cmd_text[execCmdI].data;

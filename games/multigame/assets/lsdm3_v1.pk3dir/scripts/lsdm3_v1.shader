@@ -1,4 +1,4 @@
-palettes/default
+palettes/lsdm3_v1
 {
   palette "multigame/lsdm3_v1.pk3dir/levelshots/lsdm3_v1.jpg" 255,122,138,191
   palette "multigame/lsdm3_v1.pk3dir/models/mapobjects/el_tele/beam_fx.jpg" 255,3,5,6

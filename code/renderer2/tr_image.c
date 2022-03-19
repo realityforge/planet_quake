@@ -2294,6 +2294,7 @@ static image_t *R_CreateImage2( const char *name, byte *pic, int width, int heig
 }
 
 #ifdef __WASM__
+image_t *R_FindPalette(const char *name);
 void R_FinishImage3( image_t *, GLenum picFormat, int numMips );
 /*
 ================
@@ -2346,6 +2347,11 @@ static image_t *R_CreateImage3( const char *name, GLenum picFormat, int numMips,
 
 	if(image->width > 1 && image->height > 1) {
 		R_FinishImage3( image, picFormat, 0 );
+	} else {
+		//image->palette = R_FindPalette(name);
+		//if(!image->palette) {
+		//	ri.Error(ERR_FATAL, "goddamnit %s", name);
+		//}
 	}
 
 	hash = generateHashValue(name);
@@ -2639,17 +2645,23 @@ void R_LoadImage( const char *name, byte **pic, int *width, int *height, GLenum 
 void R_AddPalette(const char *name, int a, int r, int g, int b) {
 	int hash;
 	palette_t *palette;
-	char normalName[MAX_QPATH];
+	char normalName[MAX_OSPATH];
 	const char *s;
 	if((s = Q_stristr(name, ".pk3dir/"))) {
 		name = s + 8;
 	}
-	COM_StripExtension(name, normalName, MAX_QPATH);
+	COM_StripExtension(name, normalName, MAX_OSPATH);
+	hash = generateHashValue(normalName);
 	int namelen = strlen(normalName);
+	for (palette=paletteTable[hash]; palette; palette=palette->next) {
+		if ( !Q_stricmp( normalName, palette->imgName ) ) {
+			return; // found
+		}
+	}
+
 	palette = ri.Hunk_Alloc( sizeof( *palette ) + namelen + 1, h_low );
 	palette->imgName = (char *)( palette + 1 );
 	strcpy( palette->imgName, normalName );
-	hash = generateHashValue(normalName);
 	palette->a = a;
 	palette->r = r;
 	palette->g = g;
@@ -2662,8 +2674,8 @@ void R_AddPalette(const char *name, int a, int r, int g, int b) {
 image_t *R_FindPalette(const char *name) {
 	palette_t *palette;
 	long	hash;
-	char normalName[MAX_QPATH];
-	COM_StripExtension(name, normalName, MAX_QPATH);
+	char normalName[MAX_OSPATH];
+	COM_StripExtension(name, normalName, MAX_OSPATH);
 	hash = generateHashValue(normalName);
 	for (palette=paletteTable[hash]; palette; palette=palette->next) {
 		if ( !Q_stricmp( normalName, palette->imgName ) ) {
@@ -2725,7 +2737,7 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, imgFlags_t flags )
 			pic = NULL;
 			return R_FindPalette(name); // try to use palette in lazy loading mode as backup
 		} else {
-			return NULL;
+			return R_FindPalette(name);
 		}
   } else if ((flags & IMGFLAG_PALETTE) && r_paletteMode->integer 
     && name[0] != '*') {

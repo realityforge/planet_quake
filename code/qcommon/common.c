@@ -4610,7 +4610,9 @@ void Com_Frame( qboolean noDelay ) {
 	}
 
 	// waiting for incoming packets
+#ifndef __WASM__
 	if ( noDelay == qfalse )
+#endif
 	do {
 #ifndef BUILD_SLIM_CLIENT
 		if ( 
@@ -4639,8 +4641,6 @@ void Com_Frame( qboolean noDelay ) {
 #endif
 #ifndef __WASM__
 		NET_Sleep( sleepMsec * 1000 - 500 );
-#else
-		break;
 #endif
 	} while( Com_TimeVal( minMsec ) );
 

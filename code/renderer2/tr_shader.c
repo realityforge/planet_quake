@@ -133,6 +133,9 @@ void RE_RemapShader(const char *shaderName, const char *newShaderName, const cha
 #ifdef USE_LAZY_LOAD
       && (index == 0 || sh->lightmapSearchIndex == index) 
 #endif
+#ifdef USE_MULTIVM_CLIENT
+			&& tr.lastRegistrationTime == sh->lastTimeUsed
+#endif
     ) {
 			sh->defaultShader = qfalse;
 			if (sh != sh2) {
@@ -140,15 +143,12 @@ void RE_RemapShader(const char *shaderName, const char *newShaderName, const cha
 			} else {
 				sh->remappedShader = NULL;
 			}
+      sh2->timeOffset = sh->timeOffset;
 		}
 	}
 
 	if ( timeOffset ) {
-    if(sh) {
-      sh2->timeOffset = sh->timeOffset;
-    } else {
-  		sh2->timeOffset = Q_atof( timeOffset );
-    }
+		sh2->timeOffset = Q_atof( timeOffset );
 	}
 }
 
@@ -742,12 +742,8 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 
 				if ( !stage->bundle[0].image[0] )
 				{
-#ifndef USE_LAZY_LOAD
 					ri.Printf( PRINT_WARNING, "WARNING: R_FindImageFile could not find '%s' in shader '%s'\n", token, shader.name );
 					return qfalse;
-#else
-					stage->bundle[0].image[0] = tr.defaultImage;
-#endif
 				}
 			}
 		}
@@ -790,12 +786,8 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 			stage->bundle[0].image[0] = R_FindImageFile( token, type, flags );
 			if ( !stage->bundle[0].image[0] )
 			{
-#ifndef USE_LAZY_LOAD
 				ri.Printf( PRINT_WARNING, "WARNING: R_FindImageFile could not find '%s' in shader '%s'\n", token, shader.name );
 				return qfalse;
-#else
-				stage->bundle[0].image[0] = tr.defaultImage;
-#endif
 			}
 		}
 		//
@@ -835,12 +827,8 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 					stage->bundle[0].image[num] = R_FindImageFile( token, IMGTYPE_COLORALPHA, flags );
 					if ( !stage->bundle[0].image[num] )
 					{
-#ifndef USE_LAZY_LOAD
 						ri.Printf( PRINT_WARNING, "WARNING: R_FindImageFile could not find '%s' in shader '%s'\n", token, shader.name );
 						return qfalse;
-#else
-						stage->bundle[0].image[num] = tr.defaultImage;
-#endif
 					}
 					stage->bundle[0].numImageAnimations++;
 				}
@@ -1431,6 +1419,11 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 			depthMaskBits = GLS_DEPTHMASK_TRUE;
 			depthMaskExplicit = qtrue;
 
+			continue;
+		}
+		else if ( !Q_stricmp( token, "depthFragment" ) && s_extendedShader )
+		{
+			//stage->depthFragment = qtrue;
 			continue;
 		}
 		else
@@ -2062,9 +2055,9 @@ static qboolean ParseShader( const char **text )
 #ifdef USE_LAZY_LOAD
 				failed = qtrue;
 				// continue parsing stages to look for more missing images, then fail later
-				if(!stages[s].bundle[0].image[0]) {
-					stages[s].bundle[0].image[0] = tr.defaultImage;
-				}
+				//if(!stages[s].bundle[0].image[0]) {
+				//	stages[s].bundle[0].image[0] = tr.defaultImage;
+				//}
 				stages[s].active = qtrue;
 				s++;
 				continue;
@@ -2335,7 +2328,7 @@ static qboolean ParseShader( const char **text )
 		}
     // parse palette colors for filename
     else if ( !Q_stricmp( token, "palette" ) ) {
-      char file[MAX_QPATH];
+      char file[MAX_OSPATH];
       token = COM_ParseExt( text, qfalse );
       memcpy(file, token, sizeof(file));
       const char *colors = COM_ParseExt( text, qfalse );
@@ -2420,9 +2413,9 @@ static qboolean ParseShader( const char **text )
         if ( !ParseStage( &stages[s], &stageText ) )
         {
 #ifdef USE_LAZY_LOAD
-					if(!stages[s].bundle[0].image[0]) {
-						stages[s].bundle[0].image[0] = tr.defaultImage;
-					}
+					//if(!stages[s].bundle[0].image[0]) {
+					//	stages[s].bundle[0].image[0] = tr.defaultImage;
+					//}
 #else
           stages[s].active = qfalse;
           continue;
@@ -2434,9 +2427,9 @@ static qboolean ParseShader( const char **text )
         if ( !ParseStage( &stages[s], &stageText ) )
         {
 #ifdef USE_LAZY_LOAD
-					if(!stages[s].bundle[0].image[0]) {
-						stages[s].bundle[0].image[0] = tr.defaultImage;
-					}
+					//if(!stages[s].bundle[0].image[0]) {
+					//	stages[s].bundle[0].image[0] = tr.defaultImage;
+					//}
 #else
           stages[s].active = qfalse;
           continue;
@@ -3860,7 +3853,9 @@ shader_t *R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImag
 			ri.Printf( PRINT_ALL, "*SHADER* %s\n", name );
 		}
 
-		shader.defaultShader = !ParseShader( &shaderText );
+		if( !ParseShader( &shaderText ) ) {
+			shader.defaultShader = qtrue;
+		}
 		sh = FinishShader();
 		return sh;
 	}
@@ -3888,16 +3883,9 @@ shader_t *R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImag
 
 		image = R_FindImageFile( name, IMGTYPE_COLORALPHA, flags );
 		if ( !image ) {
-#ifndef USE_LAZY_LOAD
 			ri.Printf( PRINT_DEVELOPER, "Couldn't find image file for shader %s\n", name );
-			return FinishShader();
-#else
-			image = tr.defaultImage;
 			shader.defaultShader = qtrue;
-			shader.remappedShader = tr.defaultShader;
-#endif
-		} else {
-			shader.defaultShader = qfalse;
+			return FinishShader();
 		}
 	}
 
@@ -3980,6 +3968,12 @@ qhandle_t RE_RegisterShaderFromImage(const char *name, int lightmapIndex, image_
 		if ( (sh->lightmapSearchIndex == lightmapIndex || sh->defaultShader) && !Q_stricmp(sh->name, name)
 #if defined(USE_MULTIVM_CLIENT) || defined(USE_LAZY_LOAD)
 			&& sh->lastTimeUsed == tr.lastRegistrationTime
+#endif
+#ifdef USE_LAZY_LOAD
+			// if not mapping shaders and lightmaps match, leave default index
+			//   out of this decision because the default shader might be 
+			//   replaced this round if all images load
+      && (!mapShaders && sh->lightmapSearchIndex == lightmapIndex)
 #endif
 		) {
 			// match found
@@ -4457,15 +4451,15 @@ static void ScanAndLoadShaderFiles( void )
 		hash = generateHashValue(token, MAX_SHADERTEXT_HASH);
 		shaderTextHashTable[hash][--shaderTextHashTableSizes[hash]] = (char*)oldp;
 
+		if(Q_stristr(token, "palettes/"))
+		{
+			const char *previous = p;
+			ParseShader( &p );
+			p = previous;
+		}
+
 		SkipBracedSection(&p, 0);
 	}
-  
-  const char *shaderText = FindShaderInShaderText("palettes/default");
-	if ( !shaderText ) {
-    ri.Printf(PRINT_WARNING, "Error: parsing default palette\n");
-  } else {
-    ParseShader( &shaderText );
-  }
 }
 
 

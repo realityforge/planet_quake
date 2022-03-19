@@ -165,7 +165,6 @@ function layeredDir(filename) {
   }
 
   return list
-    .filter((p, i, l) => p[0] != '.' && l.indexOf(p) == i)
     .reduce((list, i) => {
       if(i.endsWith('.pcx') || i.endsWith('.tga')) {
         list.push(i.replace(path.extname(i), '.png'))
@@ -175,6 +174,7 @@ function layeredDir(filename) {
       }
       return list
     }, [])
+    .filter((p, i, l) => p[0] != '.' && l.indexOf(p) == i)
 }
 
 
@@ -229,9 +229,9 @@ function writeVersionFile(time) {
 var MATCH_PALETTE = /palette\s"(.*?)"\s([0-9]+(,[0-9]+)*)/ig
 
 function makePaletteShader(localName, response) {
-  let newPath = localName.substring(GAME_DIRECTORY.length, localName.indexOf('.pk3dir') + 7)
+  let pk3dir = localName.substring(GAME_DIRECTORY.length, localName.indexOf('.pk3dir') + 7)
   let shaderPath = path.join(ASSETS_DIRECTORY, localName.substring(GAME_DIRECTORY.length))
-  let images = findTypes(imageTypes, path.join(ASSETS_DIRECTORY, newPath))
+  let images = findTypes(imageTypes, path.join(ASSETS_DIRECTORY, pk3dir))
   let palette = {}
   let existingPalette = ''
   if(fs.existsSync(shaderPath)) {
@@ -260,7 +260,7 @@ function makePaletteShader(localName, response) {
   // save palette to shader file
   let imagePixels = Object.keys(palette)
     .map(k => `  palette "${k}" ${palette[k]}`).join('\n')
-  existingPalette = `palettes/default\n{\n${imagePixels}\n}\n` + existingPalette
+  existingPalette = `palettes\/${pk3dir.substr(1, pk3dir.length - 8)}\n{\n${imagePixels}\n}\n` + existingPalette
   fs.writeFileSync(shaderPath, existingPalette)
   return response.send(existingPalette)
 }
@@ -329,7 +329,7 @@ function respondRequest(request, response) {
 
   // if loading an image in a different format convert it
   if((file = findAltFile(localName))) {
-    let newPath = path.join(ASSETS_DIRECTORY, localName)
+    let newPath = path.join(ASSETS_DIRECTORY, localName.substring(GAME_DIRECTORY.length))
     let alpha = hasAlpha(file)
     if((!alpha && localName.includes('.jpeg'))
       || (alpha && localName.includes('.png'))) {

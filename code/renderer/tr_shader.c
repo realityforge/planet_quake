@@ -136,7 +136,7 @@ void RE_RemapShader(const char *shaderName, const char *newShaderName, const cha
 	for (sh = hashTable[hash]; sh; sh = sh->next) {
 		if (Q_stricmp(sh->name, strippedName) == 0
 #ifdef USE_LAZY_LOAD
-      && (index == 0 || sh->lightmapSearchIndex == index) 
+      && (index <= 0 || sh->lightmapSearchIndex == index) 
 #endif
 #ifdef USE_MULTIVM_CLIENT
 			&& tr.lastRegistrationTime == sh->lastTimeUsed
@@ -1157,6 +1157,7 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 		else if ( !Q_stricmp( token, "depthFragment" ) && s_extendedShader )
 		{
 			stage->depthFragment = qtrue;
+			continue;
 		}
 		else
 		{
@@ -3396,6 +3397,7 @@ shader_t *R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImag
 		image = R_FindImageFile( name, flags );
 		if ( !image ) {
 			ri.Printf( PRINT_DEVELOPER, "Couldn't find image file for shader %s\n", name );
+			shader.defaultShader = qtrue;
 #ifdef USE_LAZY_LOAD
 			// TODO: shortcut the reloading thing by keeping shader indexes for internal uses, and returning
 			//   0 index for missing shaders to external like from UI/CGAME
@@ -3404,10 +3406,14 @@ shader_t *R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImag
 			//   shader reservations.
 			// Provide remap because it could replace it with a pallete shader
 			//   until the image arrives, but for now, just return the default
-			shader.remappedShader = tr.defaultShader;
-#endif
-			shader.defaultShader = qtrue;
+			if(mipRawImage) {
+				shader.remappedShader = tr.defaultShader;
+			} else {
+				return FinishShader();
+			}
+#else
 			return FinishShader();
+#endif
 		}
 	}
 

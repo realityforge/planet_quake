@@ -223,7 +223,10 @@ static	void R_LoadLightmaps( lump_t *l, lump_t *surfs ) {
 	}
 
 	len = l->filelen;
-	if ( !len ) {
+#ifndef __WASM__
+	if ( !len ) 
+#endif
+	{
     tr.worldDeluxeMapping = qfalse;
     r_mergeLightmaps->integer = 0;
     r_deluxeMapping->integer = 0;
@@ -641,7 +644,14 @@ shader_t *ShaderForShaderNum( int shaderNum, int lightmapNum ) {
 		lightmapNum = LIGHTMAP_WHITEIMAGE;
 	}
 
+#ifdef __WASM__
+	int lazyWas = r_lazyLoad->integer;
+	r_lazyLoad->integer = 2; // temporarily disable image loading
+#endif
 	shader = R_FindShader( dsh->shader, lightmapNum, qtrue );
+#ifdef __WASM__
+	r_lazyLoad->integer = lazyWas;
+#endif
 
 	// if the shader had errors, just use default shader
 	if ( shader->defaultShader ) {

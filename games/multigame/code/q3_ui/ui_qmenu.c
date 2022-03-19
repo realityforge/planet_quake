@@ -1798,5 +1798,8 @@ void Menu_Cache( void )
 	sliderBar = trap_R_RegisterShaderNoMip( "menu/art/slider2" );
 	sliderButton_0 = trap_R_RegisterShaderNoMip( "menu/art/sliderbutt_0" );
 	sliderButton_1 = trap_R_RegisterShaderNoMip( "menu/art/sliderbutt_1" );
+	if(Q_stristr(ui_lazyLoad.string, "crosshair")) {
+		Preferences_Cache();
+	}
 }
 	

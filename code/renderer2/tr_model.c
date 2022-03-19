@@ -605,8 +605,15 @@ static qboolean R_LoadMD3(model_t * mod, int lod, void *buffer, int bufferSize, 
 		for(j = 0; j < md3Surf->numShaders; j++, shaderIndex++, md3Shader++)
 		{
 			shader_t       *sh;
+#ifdef __WASM__
+			int lazyWas = r_lazyLoad->integer;
+			r_lazyLoad->integer = 2; // temporarily disable image loading
+#endif
 
 			sh = R_FindShader(md3Shader->name, LIGHTMAP_NONE, qtrue);
+#ifdef __WASM__
+			r_lazyLoad->integer = lazyWas;
+#endif
 			if(sh->defaultShader)
 			{
 #ifdef USE_LAZY_LOAD

@@ -1403,8 +1403,8 @@ function _glTexParameteri(x0, x1, x2) {
 }
 
 function _glTexSubImage2D(target, level, xoffset, yoffset, width, height, format, type, pixels) {
-  if (width <= 2 || height <= 2) return
   if (EMGL.previousImage) {
+    if (width <= 2 || height <= 2) return
     //width = EMGL.previousImage.width
     //height = EMGL.previousImage.height
     GLctx.texSubImage2D(target, level, xoffset, yoffset, width, height, format, type, EMGL.previousImage);

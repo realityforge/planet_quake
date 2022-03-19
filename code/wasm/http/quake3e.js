@@ -245,10 +245,13 @@ function CL_ModifyMenu(event) {
 }
 
 function Sys_Frame() {
+  Q3e.running = true
   requestAnimationFrame(function () {
     try {
-      Com_Frame(false)
+      Com_Frame(Q3e.running)
+      Q3e.running = false
     } catch (e) {
+      Q3e.running = false
 			console.log(e)
       if(!Q3e.exited || e.message != 'unreachable') {
         Sys_Exit(1)

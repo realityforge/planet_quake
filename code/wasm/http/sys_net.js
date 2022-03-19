@@ -92,8 +92,9 @@ function Com_DL_Perform(nameStr, localName, responseData) {
   if(localName.includes('version.json')) {
 
   }
+
   // don't store any index files, redownload every start
-  if(localName.endsWith('/')) {
+  if(nameStr.endsWith('/')) {
     let tempName = nameStr + '.' // yes this is where it always looks for temp files
       + Math.round(Math.random() * 0xFFFFFFFF).toString(16) + '.tmp'
     FS_CreatePath(stringToAddress(nameStr))

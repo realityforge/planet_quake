@@ -4118,7 +4118,11 @@ static __attribute__ ((format (printf, 2, 3))) void QDECL CL_RefPrintf( printPar
 	va_end( argptr );
 
 	switch ( level ) {
+#ifndef USE_LAZY_LOAD
 		default: Com_Printf( "%s", msg ); break;
+#else
+		default: Com_DPrintf( "%s", msg ); break;
+#endif
 		case PRINT_DEVELOPER: Com_DPrintf( "%s", msg ); break;
 		case PRINT_WARNING: Com_Printf( S_COLOR_YELLOW "%s", msg ); break;
 		case PRINT_ERROR: Com_Printf( S_COLOR_RED "%s", msg ); break;
@@ -5383,7 +5387,8 @@ void CL_Init( void ) {
 #endif
 
 #ifdef USE_LAZY_LOAD
-#ifdef USE_ASYNCHRONOUS
+#if defined(USE_ASYNCHRONOUS) || defined(__WASM__)
+	// we have no choice because even IDBFS is asynchronous
 	cl_lazyLoad = Cvar_Get( "cl_lazyLoad", "1", CVAR_TEMP );
 #else
   cl_lazyLoad = Cvar_Get( "cl_lazyLoad", "0", CVAR_TEMP );
@@ -5393,12 +5398,12 @@ void CL_Init( void ) {
 #endif
 
 #ifdef __WASM__
-#ifdef _DEBUG
+//#ifdef _DEBUG
 	cl_dlURL = Cvar_Get( "cl_dlURL", "http://local.games:8080/multigame", CVAR_ARCHIVE_ND );
-#else
-	cl_dlURL = Cvar_Get( "cl_dlURL", "https://www.googleapis.com/download/storage/v1/b/nightly.quake.games/o/assets%2Fmultigame%2F%1", CVAR_ARCHIVE_ND );
+//#else
+	//cl_dlURL = Cvar_Get( "cl_dlURL", "https://www.googleapis.com/download/storage/v1/b/nightly.quake.games/o/assets%2Fmultigame%2F%1", CVAR_ARCHIVE_ND );
 	//cl_dlURL = Cvar_Get( "cl_dlURL", "https://nightly.quake.games/assets/multigame", CVAR_ARCHIVE_ND );
-#endif
+//#endif
 #else
 	cl_dlURL = Cvar_Get( "cl_dlURL", "http://ws.q3df.org/maps/download/%1", CVAR_ARCHIVE_ND );
 #endif

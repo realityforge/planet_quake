@@ -614,7 +614,9 @@ static qboolean CG_RegisterClientModelname( clientInfo_t *ci, const char *modelN
 	if ( CG_FindClientHeadFile( filename, sizeof(filename), ci, teamName, headName, headSkinName, "icon", "skin" ) ) {
 		ci->modelIcon = trap_R_RegisterShaderNoMip( filename );
 	}
-	else if ( CG_FindClientHeadFile( filename, sizeof(filename), ci, teamName, headName, headSkinName, "icon", "tga" ) ) {
+
+	if ( !ci->modelIcon ) {
+		CG_FindClientHeadFile( filename, sizeof(filename), ci, teamName, headName, headSkinName, "icon", "tga" );
 		ci->modelIcon = trap_R_RegisterShaderNoMip( filename );
 	}
 	//else if ( CG_FindClientHeadFile( filename, sizeof(filename), ci, teamName, headName, headSkinName, "icon", "png" ) ) {
@@ -2642,17 +2644,17 @@ void CG_Player( centity_t *cent ) {
 	CG_AddRefEntityWithPowerups( &legs, cent, ci->team );
 
 	// if the model failed, allow the default nullmodel to be displayed
-	if (!legs.hModel) {
-		return;
-	}
+	//if (!legs.hModel) {
+	//	return;
+	//}
 
 	//
 	// add the torso
 	//
 	torso.hModel = ci->torsoModel;
-	if (!torso.hModel) {
-		return;
-	}
+	//if (!torso.hModel) {
+	//	return;
+	//}
 
 	torso.customSkin = ci->torsoSkin;
 

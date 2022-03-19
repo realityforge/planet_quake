@@ -146,6 +146,7 @@ vmCvar_t	ui_server16;
 
 vmCvar_t	ui_cdkeychecked;
 vmCvar_t  ui_breadCrumb;
+vmCvar_t  ui_lazyLoad;
 vmCvar_t  ui_developer;
 
 // bk001129 - made static to avoid aliasing.
@@ -207,6 +208,7 @@ static cvarTable_t		cvarTable[] = {
 
 	{ &ui_cdkeychecked, "ui_cdkeychecked", "0", CVAR_ROM },
 	{ &ui_breadCrumb, "ui_breadCrumb", "", CVAR_ROM },
+	{ &ui_lazyLoad, "cl_lazyLoad", "", 0 },
 	{ &ui_developer, "developer", "", 0 },
 
 };
@@ -228,7 +230,8 @@ void UI_RegisterCvars( void ) {
 		trap_Cvar_Register( cv->vmCvar, cv->cvarName, cv->defaultString, cv->cvarFlags );
 	}
 
-	//breadcrumbModificationCount = ui_breadCrumb.modificationCount;
+	breadcrumbModificationCount = ui_breadCrumb.modificationCount;
+	lazyloadModificationCount = ui_lazyLoad.modificationCount;
 }
 
 /*

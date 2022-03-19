@@ -113,6 +113,7 @@ const char *UI_GetBreadCrumb( void ) {
 }
 
 static int breadcrumbModificationCount = -1;
+static int lazyloadModificationCount = -1;
 
 void UI_SetBreadCrumb( void ) {
 	const char *breadcrumb = UI_GetBreadCrumb();
@@ -1280,18 +1281,19 @@ void UI_Refresh( int realtime )
 
 	UI_UpdateCvars();
 
+	if(ui_lazyLoad.modificationCount > lazyloadModificationCount)
+	{
+		lazyloadModificationCount = ui_lazyLoad.modificationCount;
+		if(((menuframework_s *)uis.activemenu)->init) {
+			((menuframework_s *)uis.activemenu)->init();
+		} else {
+			Menu_Cache();
+		}
+	}
+
 	if(ui_breadCrumb.modificationCount > breadcrumbModificationCount)
 	{
-		/*
 		breadcrumbModificationCount = ui_breadCrumb.modificationCount;
-		if(!Q_stricmp(ui_breadCrumb.string, UI_GetBreadCrumb())) {
-			if(((menuframework_s *)uis.activemenu)->init) {
-				((menuframework_s *)uis.activemenu)->init();
-			} else {
-				Menu_Cache();
-			}
-		} 
-		*/
 		// TODO: UI_SetActiveMenu(UIMENU_MAIN);
 	}
 

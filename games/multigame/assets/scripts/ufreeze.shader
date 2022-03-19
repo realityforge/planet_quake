@@ -4,7 +4,7 @@ models/powerups/instant/sight
 		map textures/effects/envmapyel.tga
 		blendfunc GL_ONE GL_ZERO
 		tcGen environment
-                rgbGen const ( 1.0 0.9 0.8 )
+		rgbGen const ( 1.0 0.9 0.8 )
 	}
 }
 
