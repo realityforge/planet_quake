@@ -47,6 +47,8 @@ MUSL_LOBJ        := string/stpcpy.o  string/memset.o  string/memcpy.o    \
                     \
                     errno/strerror.o errno/__errno_location.o locale/__lctrans.o \
                     \
+                    network/ntohs.o  network/htons.o \
+                    \
                     math/__signbit.o    math/__signbitf.o    math/__signbitl.o \
                     math/__fpclassify.o math/__fpclassifyf.o math/__fpclassifyl.o \
                     math/frexpl.o       math/scalbn.o        math/copysignl.o \

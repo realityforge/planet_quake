@@ -18,7 +18,8 @@ function getQueryCommands() {
     '+set', 'r_mode', '-1',
     '+set', 'r_ext_framebuffer_object', '0',
     '+set', 'bot_enable', '0',
-
+    '+set', 'net_socksServer', window.location.hostname,
+    '+set', 'net_socksPort', window.location.port,
     //'+set', 'r_ext_multitexture', '0',
     //'+set', 'r_ext_framebuffer_multisample', '0',
     // this prevents lightmap from being wrong when switching maps

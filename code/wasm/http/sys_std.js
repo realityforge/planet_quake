@@ -167,8 +167,6 @@ var STD = {
 var MATHS = {
   srand: function srand() {}, // TODO: highly under-appreciated game dynamic
   rand: Math.random,
-  htons: function (c) { return c ? (n<<8 | n>>8) : n },
-  ntohs: function (c) { return c ? (n<<8 | n>>8) : n },
   exp2: function (c) { return Math.pow(2, c) },
   exp2f: function (c) { return Math.pow(2, c) },
 }

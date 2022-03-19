@@ -144,6 +144,7 @@ function Server(opts) {
         self._timeoutUDP(k)
     })
   }, 100)
+  return self
 }
 
 Server.prototype._onErrorNoop = function(err) {
@@ -234,7 +235,7 @@ Server.prototype._onRequest = async function(socket, onData, onEnd, reqInfo) {
     })
     return socket
   } else {
-    //console.log('Requesting', reqInfo.cmd, reqInfo.dstAddr, ':', reqInfo.dstPort)
+    console.log('Requesting', reqInfo.cmd, reqInfo.dstAddr, ':', reqInfo.dstPort)
 		if(socket._socket.resume)
 			socket._socket.resume()
     await this.proxyCommand.apply(this, [socket, reqInfo, onData])
@@ -312,6 +313,7 @@ function convertPrintable(message) {
 
 function SHOWNET(message, socket, client, websocket) {
   var unzipped
+  return
 	if(message === true) return
   if(message[0] === 255 && message[1] === 255
     && message[2] === 255 && message[3] === 255) {

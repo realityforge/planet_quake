@@ -30,7 +30,6 @@ logf
 abs
 fprintf
 round
-ntohs
 acos
 qsort
 atol
@@ -52,6 +51,7 @@ Sys_RandomBytes
 Sys_Milliseconds
 SDL_StopTextInput
 NET_GetPacket
+NET_AdrToString
 Sys_IsLANAddress
 Sys_SendPacket
 Sys_StringToAdr

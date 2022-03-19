@@ -626,6 +626,7 @@ qboolean NET_CompareBaseAdr( const netadr_t *a, const netadr_t *b )
 }
 
 
+#ifndef __WASM__
 const char *NET_AdrToString( const netadr_t *a )
 {
 	static char s[NET_ADDRSTRMAXLEN];
@@ -640,21 +641,22 @@ const char *NET_AdrToString( const netadr_t *a )
 	else if (a->type == NA_IP)
 #endif
 	{
-#ifndef __WASM__
 		sockaddr_t sadr;
 		NetadrToSockadr( a, &sadr );
 		Sys_SockaddrToString( s, sizeof(s), &sadr );
-#endif
 	}
 
 	return s;
 }
+#else
+const char *NET_AdrToString( const netadr_t *a );
+
+#endif
 
 
 const char *NET_AdrToStringwPort( const netadr_t *a )
 {
 	static char s[NET_ADDRSTRMAXLEN];
-
 	if (a->type == NA_LOOPBACK)
 		strcpy( s, "localhost" );
 	else if (a->type == NA_BOT)

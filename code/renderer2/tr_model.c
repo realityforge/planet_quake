@@ -75,7 +75,7 @@ qhandle_t R_RegisterMD3(const char *name, model_t *mod)
 		if (ident == MD3_IDENT)
 			loaded = R_LoadMD3(mod, lod, buf.u, size, name);
 		else
-			ri.Printf(PRINT_WARNING,"R_RegisterMD3: unknown fileid for %s\n", name);
+			ri.Error(ERR_FATAL,"R_RegisterMD3: unknown fileid for %i, %i, %s\n", size, buf.v, name);
 		
 		ri.FS_FreeFile(buf.v);
 

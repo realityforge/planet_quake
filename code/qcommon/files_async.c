@@ -775,7 +775,7 @@ void Sys_FileReady(const char *filename, const char* tempname) {
 	char localName[ MAX_OSPATH ];
 	const char *s;
 	int length;
-	qboolean found = qfalse;
+	downloadLazy_t *found = NULL;
 	qboolean isDirectory = filename[strlen(filename) - 1] == '/';
 	int lengthGame = strlen(FS_GetCurrentGameDir());
 	memset(localName, 0, sizeof(localName));
@@ -823,7 +823,7 @@ void Sys_FileReady(const char *filename, const char* tempname) {
 			s = Q_stristr(download->downloadName, ".pk3dir/");
 			// find an exact match
 			if( i == hash && !Q_stricmp( download->downloadName, localName ) ) {
-				found = qtrue;
+				found = download;
 				if(tempname) {
 					download->state = VFS_READY;
 					strcpy(&download->loadingName[MAX_OSPATH], tempname);
@@ -878,6 +878,12 @@ void Sys_FileReady(const char *filename, const char* tempname) {
 	if(!found && tempname) {
 		// should never happen!
 		Com_Error(ERR_FATAL, "WARNING: %i %s not found in download list.\n", hash, localName);
+	}
+
+	if(Q_stristr(localName, "lsdm3_v1.pk3dir/scripts/models.shader")) {
+		if(!found || found->state != VFS_FAIL) {
+			Com_Error(ERR_FATAL, "should never happen!");
+		}
 	}
 
 }
@@ -1113,6 +1119,10 @@ void CL_CheckLazyUpdates( void ) {
 		re.ReloadShaders(qfalse);
 	}
 #endif
+
+	if(Q_stristr(ready->downloadName, "lsdm3_v1.pk3dir/scripts/models.shader")) {
+		Com_Error(ERR_FATAL, "goddamnit");
+	}
 
 	ready->loadingName[MAX_OSPATH - 1] = '\0';
 	FS_UpdateFiles(ready->downloadName, &ready->loadingName[MAX_OSPATH]);

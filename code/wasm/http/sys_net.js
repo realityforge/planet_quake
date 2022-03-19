@@ -1,19 +1,86 @@
 
+function NET_AdrToString(net) {
+  if(HEAPU32[net >> 2] == 2) {
+    return stringToAddress('localhost')
+  } else
+
+  if(HEAPU32[net >> 2] == 4) {
+    return stringToAddress(HEAPU8[net + 4] + '.'
+      + HEAPU8[net + 5] + '.' + HEAPU8[net + 6] + '.'
+      + HEAPU8[net + 7])
+  }
+}
+
 function Sys_SockaddrToString() {
   // DNS doesn't work in the browser, but UDP works with SOCKS
   //   How complicated to add DNS lookup through SOCK?
+  debugger
 }
 
-function Sys_StringToAdr() {
+function Sys_StringToAdr(addr, net) {
+  let addrStr = addressToString(addr)
+  if(addrStr.match(/localhost/i)) {
+    HEAPU32[net >> 2] = 2 /* NA_LOOPBACK */
+    NET.lookup[addrStr] = [127, 0, 0, 1]
+  } else
 
+  if(typeof NET.lookup[addrStr] == 'undefined') {
+    if(NET.lookupCount1 == 256) {
+      NET.lookupCount2++;
+      NET.lookupCount1 = 1;
+    } else {
+      NET.lookupCount1++;
+    }
+    HEAPU32[net >> 2] = 4 /* NA_IP */
+		let ip = addrStr.match(/^([0-9]+)\.([0-9]+)\.([0-9]+)\.([0-9]+)$/)
+		if(ip) {
+			NET.lookup[addrStr] = [
+				parseInt(ip[1]), parseInt(ip[2]), 
+				parseInt(ip[3]), parseInt(ip[4]), 
+			]
+		} else {
+			NET.lookup[addrStr] = [10, 0, NET.lookupCount2, NET.lookupCount1]
+		}
+  }
+  HEAPU8[net + 4] = NET.lookup[addrStr][0];
+  HEAPU8[net + 5] = NET.lookup[addrStr][1];
+  HEAPU8[net + 6] = NET.lookup[addrStr][2];
+  HEAPU8[net + 7] = NET.lookup[addrStr][3];
+  return true
 }
 
 function Sys_StringToSockaddr() {
   
 }
 
-function Sys_SendPacket() {
-  debugger
+function Sys_SendPacket(length, data, to) {
+  let nameStr = addressToString(to + 8*8)
+	let fullMessage = new Uint8Array(
+		4
+		+ (nameStr.length ? (nameStr.length + 1) : 4)
+		+ 2 + length)
+	fullMessage[0] = 0x00 // reserved 0x05
+	fullMessage[1] = 0x00 // reserved 0x01
+	fullMessage[2] = 0x00
+	if(nameStr.length) {
+		fullMessage[3] = 0x03
+		fullMessage.set(nameStr.split('').map(c => c.charCodeAt(0)), 4)
+	} else {
+		fullMessage[3] = 0x01
+		fullMessage[4] = HEAPU8[to + 4]
+		fullMessage[5] = HEAPU8[to + 5]
+		fullMessage[6] = HEAPU8[to + 6]
+		fullMessage[7] = HEAPU8[to + 7]
+	}
+	fullMessage[8] = HEAPU8[to + 8]
+	fullMessage[9] = HEAPU8[to + 9]
+	fullMessage.set(HEAPU8.slice(data, data + length), fullMessage.length - length);
+	if(NET.socket1) {
+		NET.socket1.send(fullMessage)
+	}
+	if(NET.socket2) {
+		NET.socket2.send(fullMessage)
+	}
 }
 
 function NET_GetPacket() {
@@ -24,12 +91,141 @@ function NET_Sleep() {
 
 }
 
-function NET_OpenIP() {
+function sendHeartbeat(sock) {
+  if(sock.readyState == sock.OPEN) {
+		sock.fresh = 4
+    sock.send(Uint8Array.from([0x05, 0x01, 0x00, 0x00]),
+      { binary: true })
+  } else if(sock.readyState == sock.CLOSED) {
+    if(sock == NET.socket1) {
+      NET.socket1 = null
+      NET_OpenIP(true)
+    } else {
+      NET.socket2 = null
+      NET_OpenIP(true)
+    }
+  }
+}
 
+
+function socketOpen(reconnect, socket, port) {
+	socket.fresh = 1
+	socket.send(Uint8Array.from([
+    0x05, 0x01, 0x00, // no password caps?
+  ]))
+	if(!NET.heartbeat) {
+		NET.heartbeat = setInterval(function () {
+			sendHeartbeat(NET.socket1)
+			NET.heartbeatTimeout = setTimeout(function () {
+				sendHeartbeat(NET.socket2)
+			}, 8000)
+		}, 10000)
+	}
+  if(!reconnect) return
+  socket.send(Uint8Array.from([
+    0xFF, 0xFF, 0xFF, 0xFF,
+    'p'.charCodeAt(0), 'o'.charCodeAt(0), 'r'.charCodeAt(0), 't'.charCodeAt(0),
+    (port & 0xFF00) >> 8, (port & 0xFF)
+  ]))
+}
+
+function socketMessage(socket, port, evt) {
+  let message = new Uint8Array(evt.data)
+  switch(socket.fresh) {
+    case 1:
+      if(message.length != 2) {
+        throw new Error('wtf? this socket no worky')
+      } else
+
+      if(message[1] != 0) {
+        throw new Error('this socket requires a password, dude')
+      }
+
+      // send the UDP associate request
+      socket.send(Uint8Array.from([
+				0x05, 0x03, 0x00, 0x01, 
+				0x00, 0x00, 0x00, 0x00, // ip address
+				(port & 0xFF00) >> 8, (port & 0xFF)
+			]))
+      socket.fresh = 2
+    break
+		case 2:
+			if(message.length < 5) {
+				throw new Error('denied, can\'t have ports')
+			}
+
+			if(message[3] != 1) {
+				throw new Error('relay address is not IPV4')
+			}
+
+			socket.fresh = 3
+		break
+		case 3:
+		case 4:
+			// add messages to queue for processing
+			if(socket.fresh == 4 && message.length == 2) {
+				socket.fresh = 3
+				return
+			}
+			debugger
+		break
+  }
+}
+
+function socketError(socket) {
+  debugger
+}
+
+function NET_OpenIP(reconnect) {
+  let port = addressToString(Cvar_VariableString(stringToAddress('net_port')))
+  let peerAddress = addressToString(Cvar_VariableString(stringToAddress('net_socksServer')))
+  let peerPort = addressToString(Cvar_VariableString(stringToAddress('net_socksPort')))
+  if(!NET.buffer) {
+    NET.buffer = malloc(16384 + 8 + 24) // from NET_Event() + netmsg_t
+  }
+  if(!NET.queue) {
+    NET.queue = []
+  }
+  let fullAddress = 'ws' 
+    + (window.location.protocol.length > 5 ? 's' : '')
+    + '://' + peerAddress + ':' + peerPort
+  if(!NET.socket1) {
+    NET.socket1 = new WebSocket(fullAddress)
+    NET.socket1.binaryType = 'arraybuffer';
+    NET.socket1.addEventListener('open', socketOpen.bind(null, reconnect, NET.socket1, port), false)
+    NET.socket1.addEventListener('message', socketMessage.bind(null, NET.socket1, port), false)
+    NET.socket1.addEventListener('error', socketError.bind(null, NET.socket2, port), false)
+  }
+  if(!NET.socket2) {
+    NET.socket2 = new WebSocket(fullAddress)
+    NET.socket2.binaryType = 'arraybuffer';
+    NET.socket2.addEventListener('open', socketOpen.bind(null, reconnect, NET.socket2, port), false)
+    NET.socket2.addEventListener('message', socketMessage.bind(null, NET.socket2, port), false)
+    NET.socket2.addEventListener('error', socketError.bind(null, NET.socket2, port), false)
+  }
 }
 
 function NET_Close() {
-
+  if(NET.heartbeat) {
+    clearInterval(NET.heartbeat)
+  }
+  if(NET.heartbeatTimeout) {
+    clearTimeout(NET.heartbeatTimeout)
+  }
+  if(NET.socket1) {
+    NET.socket1.removeEventListener('open', null)
+    NET.socket1.removeEventListener('message', null)
+    NET.socket1.removeEventListener('close', null)
+    NET.socket1.close()
+    NET.socket1 = null
+  }
+  if(NET.socket2) {
+    NET.socket2.removeEventListener('open', null)
+    NET.socket2.removeEventListener('message', null)
+    NET.socket2.removeEventListener('close', null)
+    NET.socket2.close()
+    NET.socket2 = null
+  }
 }
 
 function Sys_IsLANAddress() {
@@ -93,7 +289,7 @@ function Com_DL_Perform(nameStr, localName, responseData) {
   }
   // TODO: intercept this information here so we can invalidate the IDBFS storage
   if(localName.includes('version.json')) {
-    Q3e.cacheBuster = Date.parse(JSON.parse(Array.from(responseData)
+    Q3e.cacheBuster = Date.parse(JSON.parse(Array.from(new Uint8Array(responseData))
       .map(c => String.fromCharCode(c)).join(''))[0])
   }
 
@@ -105,7 +301,7 @@ function Com_DL_Perform(nameStr, localName, responseData) {
     FS.virtual[tempName] = {
       timestamp: new Date(),
       mode: 33206,
-      contents: responseData
+      contents: new Uint8Array(responseData)
     }
     Sys_FileReady(stringToAddress(localName), stringToAddress(tempName));
   } else {
@@ -115,7 +311,7 @@ function Com_DL_Perform(nameStr, localName, responseData) {
     FS.virtual[nameStr] = {
       timestamp: new Date(),
       mode: 33206,
-      contents: responseData
+      contents: new Uint8Array(responseData)
     }
     // async to filesystem
     // does it REALLY matter if it makes it? wont it just redownload?
@@ -174,11 +370,11 @@ function CL_Download(cmd, name, auto) {
           return Com_DL_Begin(localName, remoteURL)
         // valid from disk
         } else {
-          return result.contents
+          return Promise.resolve(result.contents)
         }
       })
       .then(function (responseData) {
-        Com_DL_Perform(nameStr, localName, new Uint8Array(responseData))
+        Com_DL_Perform(nameStr, localName, responseData)
       })
   } catch (e) {
     
@@ -192,8 +388,12 @@ function CL_Download(cmd, name, auto) {
 }
 
 var NET = {
+  lookup: {},
+  lookupCount1: 1,
+  lookupCount2: 127,
   downloadCount: 0,
   controller: null,
+  NET_AdrToString: NET_AdrToString,
   Sys_Offline: Sys_Offline,
   Sys_SockaddrToString: Sys_SockaddrToString,
   Sys_StringToSockaddr: Sys_StringToSockaddr,

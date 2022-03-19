@@ -276,7 +276,7 @@ typedef struct {
 #ifdef USE_IPV6
 	unsigned long	scope_id;	// Needed for IPv6 link-local addresses
 #endif
-	char name[MAX_STRING_CHARS];
+	char name[256];
 	char protocol[10];
 #ifdef USE_MULTIVM_SERVER
   // the socket the connection came in on, 

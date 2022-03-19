@@ -399,22 +399,37 @@ function respondRequest(request, response) {
 
 }
 
-let runServer = false
+var runServer = false
+var forwardIP = ''
 for(var i = 0; i < process.argv.length; i++) {
   var a = process.argv[i]
   if(a.match(__filename)) {
     runServer = true
+  } else if (a == '--proxy-ip') {
+    console.log('Forwarding ip address: ', process.argv[i+1])
+    forwardIP = process.argv[i+1]
+    i++
   }
 }
 
 if(runServer) {
-  const app = require('express')()
-
+  const WebSocketServer = require('ws').Server
+  const {Server} = require('../lib/socks.server.js')
+  const express = require('express')
+  const app = express()
+  const http = require('http')
+  app.enable('etag')
+  app.set('etag', 'strong')
   app.use(respondRequest)
-  
-  app.listen(8080, ()=> {
-    console.log(`Server is running on 8080` )
-  })
+  express.static.mime.types['wasm'] = 'application/wasm'
+  express.static.mime.types['pk3'] = 'application/octet-stream'
+  express.static.mime.types['bsp'] = 'application/octet-stream'
+
+  let socks = new Server({forwardIP})
+  let httpServer = http.createServer(app)
+  httpServer.listen(8080, console.log.bind(null, `Server is running on 8080` ))
+  let wss = new WebSocketServer({server: httpServer})
+  wss.on('connection', socks._onConnection.bind(socks))
 
   startFileWatcher()
 }
