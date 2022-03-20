@@ -678,7 +678,6 @@ void CG_UpdateCvars( void ) {
 			CG_IconCache();
 		}
 
-/*
 		if((s = Q_stristr(cg_lazyLoad.string, "models/weaphits")) != NULL) {
 			CG_WeaphitsCache();
 		}
@@ -691,6 +690,7 @@ void CG_UpdateCvars( void ) {
 			CG_PowerupCache(s);
 		}
 
+/*
 		if((s = Q_stristr(cg_lazyLoad.string, "models/players")) != NULL) {
 			//CG_PlayerCache(s);
 		}

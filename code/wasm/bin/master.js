@@ -122,8 +122,10 @@ function sendGetServersResponse(conn, servers) {
 		msg += String.fromCharCode(octets[1] & 0xff)
 		msg += String.fromCharCode(octets[2] & 0xff)
 		msg += String.fromCharCode(octets[3] & 0xff)
-		msg += String.fromCharCode((server.port & 0xff))
+		//msg += String.fromCharCode((server.port & 0xff00) >> 8)
+		//msg += String.fromCharCode((server.port & 0xff))
 		msg += String.fromCharCode((server.port & 0xff00) >> 8)
+		msg += String.fromCharCode((server.port & 0xff))
 	}
 	msg += '\\EOT'
 
@@ -149,6 +151,10 @@ function updateServer(addr, port) {
 		server = servers[id] = { addr: addr, port: port }
 	}
 	server.lastUpdate = Date.now()
+
+if(port == 14445) {
+	debugger
+}
 
 	// send partial update to all clients
 	for (var i = 0; i < clients.length; i++) {

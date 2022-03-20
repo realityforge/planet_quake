@@ -42,7 +42,6 @@ extern void Cvar_SetNetDescriptions( void );
 
 int NET_OpenIP(void);
 uint16_t ntohs(uint16_t n);
-int NET_Close(void);
 void Sys_SendPacket( int length, const void *data, const netadr_t *to );
 static void	NET_Restart_f( void );
 void Sys_SockaddrToString(char *dest, int destlen, const void *input);
@@ -683,11 +682,11 @@ const char *NET_AdrToStringwPortandProtocol( const netadr_t *a )
 		strcpy( s, "bot" );
 	else if(a->type == NA_IP)
     Com_sprintf(s, sizeof(s), "%s%s:%hu", a->protocol[0] 
-      ? "ws://" : "", NET_AdrToString(a), LittleShort(a->port));
+      ? "ws://" : "", NET_AdrToString(a), ntohs(a->port));
 #ifdef USE_IPV6
 	else if(a->type == NA_IP6)
     Com_sprintf(s, sizeof(s), "%s[%s]:%hu", a->protocol[0] 
-      ? "ws://" : "", NET_AdrToString(a), LittleShort(a->port));
+      ? "ws://" : "", NET_AdrToString(a), ntohs(a->port));
 #endif
   
 	return s;
@@ -1978,24 +1977,6 @@ void NET_Init( void ) {
 
 
 #ifndef __WASM__
-
-/*
-====================
-NET_Shutdown
-====================
-*/
-void NET_Shutdown( void ) {
-	if ( !networkingEnabled ) {
-		return;
-	}
-
-	NET_Config( qfalse );
-
-#ifdef _WIN32
-	WSACleanup();
-	winsockInitialized = qfalse;
-#endif
-}
 
 
 /*

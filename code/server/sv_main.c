@@ -1228,6 +1228,8 @@ void SV_PacketEvent( const netadr_t *from, msg_t *msg ) {
 	if ( msg->cursize < 6 ) // too short for anything
 		return;
 
+Com_Printf("goddamnit\n");
+
 	// check for connectionless packet (0xffffffff) first
 	if ( *(int32_t *)msg->data == -1 ) {
 		SV_ConnectionlessPacket( from, msg );

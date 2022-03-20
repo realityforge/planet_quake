@@ -2,6 +2,9 @@
 
 function startProgram(program) {
   // share the game with window for hackers
+  if(!program) {
+    throw new Error("no program!")
+  }
   Q3e['program'] = program
   Q3e['instance'] = program.instance
   Q3e['exports'] = program.instance.exports

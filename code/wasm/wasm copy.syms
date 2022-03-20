@@ -55,7 +55,6 @@ GL_GetProcAddress
 Sys_FreeFileList
 CL_Download
 CL_MenuModified
-NET_Close
 Sys_SetStatus
 Sys_UnloadLibrary
 Sys_Remove

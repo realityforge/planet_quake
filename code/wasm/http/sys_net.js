@@ -1,24 +1,30 @@
 const MAX_MSGLEN = 16384
 
 
+function reverseLookup(ipSlice) {
+  let reverseLookup = Object.keys(NET.lookup).filter(function (addr) {
+    if(  NET.lookup[addr][0] == ipSlice[0]
+      && NET.lookup[addr][1] == ipSlice[1]
+      && NET.lookup[addr][2] == ipSlice[2]
+      && NET.lookup[addr][3] == ipSlice[3]) {
+      return true
+    }
+    return false
+  })
+  if(reverseLookup.length) {
+    return reverseLookup[0]
+  }
+  return null
+}
+
 function NET_AdrToString(net) {
   if(HEAPU32[net >> 2] == 2) {
     return stringToAddress('localhost')
   } else
-
   if(HEAPU32[net >> 2] == 4) {
-		let reverseLookup = Object.keys(NET.lookup).filter(function (addr) {
-			if(NET.lookup[addr][0] == HEAPU8[net + 4]
-				&& NET.lookup[addr][1] == HEAPU8[net + 5]
-				&& NET.lookup[addr][2] == HEAPU8[net + 6]
-				&& NET.lookup[addr][3] == HEAPU8[net + 7]) {
-				return true
-			}
-			return false
-		})
-		if(reverseLookup.length) {
-			//return stringToAddress(reverseLookup[0])
-		}
+    let lookup = reverseLookup(HEAPU8.slice(net + 4, net + 8))
+    if(lookup)
+      return stringToAddress(lookup)
     return stringToAddress(
 			  HEAPU8[net + 4] + '.'
       + HEAPU8[net + 5] + '.' 
@@ -78,6 +84,7 @@ function Sys_StringToSockaddr() {
 
 function Sys_SendPacket(length, data, to) {
   let nameStr = addressToString(to + 10)
+    || reverseLookup(HEAPU8.slice(to + 4, to + 8))
 	let fullMessage = new Uint8Array(
 		4 + (nameStr.length ? (nameStr.length + 2) : 4)
 		+ 2 + length)
@@ -88,16 +95,16 @@ function Sys_SendPacket(length, data, to) {
 		fullMessage[3] = 0x03
 		fullMessage[4] = nameStr.length + 1
 		fullMessage.set(nameStr.split('').map(c => c.charCodeAt(0)), 5)
-		fullMessage[5 + nameStr.length + 1] = HEAPU8[to + 9]
-		fullMessage[5 + nameStr.length + 2] = HEAPU8[to + 8]
+		fullMessage[5 + nameStr.length + 1] = HEAPU8[to + 8]
+		fullMessage[5 + nameStr.length + 2] = HEAPU8[to + 9]
 	} else {
 		fullMessage[3] = 0x01
 		fullMessage[4] = HEAPU8[to + 4]
 		fullMessage[5] = HEAPU8[to + 5]
 		fullMessage[6] = HEAPU8[to + 6]
 		fullMessage[7] = HEAPU8[to + 7]
-		fullMessage[8] = HEAPU8[to + 9]
-		fullMessage[9] = HEAPU8[to + 8]
+		fullMessage[8] = HEAPU8[to + 8]
+		fullMessage[9] = HEAPU8[to + 9]
 	}
 	fullMessage.set(HEAPU8.slice(data, data + length), fullMessage.length - length);
 	if(NET.socket1 && NET.socket1.readyState == WebSocket.OPEN
@@ -131,9 +138,10 @@ function NET_Sleep() {
 		HEAPU32[(netmsg >> 2) + 5] = MAX_MSGLEN * 8
 		HEAPU32[(netmsg >> 2) + 6] = packet[2].length
 		HEAPU8.set(packet[2], data)
-
     HEAPU32[from >> 2] = 4 /* NA_IP */
-		HEAPU16[(from + 8) >> 1] = packet[1] // port
+    HEAPU8[from + 8] = packet[1][1]
+    HEAPU8[from + 9] = packet[1][0]
+		//HEAPU16[(from + 8) >> 1] = (packet[1][0] << 8) + packet[1][1] // port
 		if(typeof packet[0] == 'string') {
 			Sys_StringToAdr(stringToAddress(packet[0]), from)
 		} else {
@@ -153,13 +161,13 @@ function sendHeartbeat(sock) {
     sock.send(Uint8Array.from([0x05, 0x01, 0x00, 0x00]),
       { binary: true })
   } else if(sock.readyState == WebSocket.CLOSED) {
+    NET.reconnect = true
     if(sock == NET.socket1) {
       NET.socket1 = null
-      NET_OpenIP(true)
     } else {
       NET.socket2 = null
-      NET_OpenIP(true)
     }
+    NET_OpenIP()
   }
 }
 
@@ -174,7 +182,8 @@ function sendLegacyEmscriptenConnection(socket, port) {
 }
 
 
-function socketOpen(reconnect, socket, port) {
+function socketOpen() {
+  let socket = this
 	socket.fresh = 1
 	socket.send(Uint8Array.from([
     0x05, 0x01, 0x00, // no password caps?
@@ -187,12 +196,13 @@ function socketOpen(reconnect, socket, port) {
 			}, 8000)
 		}, 10000)
 	}
-  if(!reconnect) return
-	sendLegacyEmscriptenConnection(socket, port)
+  if(!NET.reconnect) return
+	sendLegacyEmscriptenConnection(socket, NET.net_port)
 }
 
 
-function socketMessage(socket, port, evt) {
+function socketMessage(evt) {
+  let socket = this
   let message = new Uint8Array(evt.data)
   switch(socket.fresh) {
     case 1:
@@ -208,7 +218,7 @@ function socketMessage(socket, port, evt) {
       socket.send(Uint8Array.from([
 				0x05, 0x03, 0x00, 0x01, 
 				0x00, 0x00, 0x00, 0x00, // ip address
-				(port & 0xFF00) >> 8, (port & 0xFF)
+				(NET.net_port & 0xFF00) >> 8, (NET.net_port & 0xFF)
 			]))
       socket.fresh = 2
     break
@@ -221,7 +231,7 @@ function socketMessage(socket, port, evt) {
 				throw new Error('relay address is not IPV4')
 			}
 
-			sendLegacyEmscriptenConnection(socket, port)
+			sendLegacyEmscriptenConnection(socket, NET.net_port)
 			socket.fresh = 3
 			/*if(socket == NET.socket1) {
 				for(let i = 0, count = NET.socket1Queue.length; i < count; i++) {
@@ -251,13 +261,13 @@ function socketMessage(socket, port, evt) {
 			let addr, remotePort, msg
 			if(message[3] == 1) {
 				addr = message.slice(4, 8)
-				remotePort = (message[9] << 8) + message[8]
+				remotePort = message.slice(8, 10)
 				msg = Array.from(message.slice(10))
 			} else if (message[3] == 3) {
 				addr = Array.from(message.slice(5, 5 + message[4])).map(function (c) {
 					return String.fromCharCode(c)
 				}).join('')
-				remotePort = (message[5 + message[4] + 1] << 8) + message[5 + message[4]]
+				remotePort = message.slice(5 + message[4], 5 + message[4] + 2)
 				msg = Array.from(message.slice(5 + addr.length + 2))
 			} else {
 				throw new Error('don\' know what to do mate')
@@ -270,14 +280,20 @@ function socketMessage(socket, port, evt) {
   }
 }
 
-function socketError(socket) {
-  debugger
+function socketError() {
+  NET.reconnect = true
+  if(this == NET.socket1) {
+    NET.socket1 = NULL
+  }
+  if(this == NET.socket2) {
+    NET.socket2 = NULL
+  }
 }
 
-function NET_OpenIP(reconnect) {
-  let port = addressToString(Cvar_VariableString(stringToAddress('net_port')))
-  let peerAddress = addressToString(Cvar_VariableString(stringToAddress('net_socksServer')))
-  let peerPort = addressToString(Cvar_VariableString(stringToAddress('net_socksPort')))
+function NET_OpenIP() {
+  NET.net_port = addressToString(Cvar_VariableString(stringToAddress('net_port')))
+  NET.net_socksServer = addressToString(Cvar_VariableString(stringToAddress('net_socksServer')))
+  NET.net_socksPort = addressToString(Cvar_VariableString(stringToAddress('net_socksPort')))
   if(!NET.buffer) {
     NET.buffer = malloc(MAX_MSGLEN + 8 + 24 + 1024) // from NET_Event() + netmsg_t + netadr_t
   }
@@ -286,24 +302,24 @@ function NET_OpenIP(reconnect) {
   }
   let fullAddress = 'ws' 
     + (window.location.protocol.length > 5 ? 's' : '')
-    + '://' + peerAddress + ':' + peerPort
+    + '://' + NET.net_socksServer + ':' + NET.net_socksPort
   if(!NET.socket1) {
     NET.socket1 = new WebSocket(fullAddress)
     NET.socket1.binaryType = 'arraybuffer';
-    NET.socket1.addEventListener('open', socketOpen.bind(null, reconnect, NET.socket1, port), false)
-    NET.socket1.addEventListener('message', socketMessage.bind(null, NET.socket1, port), false)
-    NET.socket1.addEventListener('error', socketError.bind(null, NET.socket2, port), false)
+    NET.socket1.addEventListener('open', socketOpen, false)
+    NET.socket1.addEventListener('message', socketMessage, false)
+    NET.socket1.addEventListener('error', socketError, false)
   }
   if(!NET.socket2) {
     NET.socket2 = new WebSocket(fullAddress)
     NET.socket2.binaryType = 'arraybuffer';
-    NET.socket2.addEventListener('open', socketOpen.bind(null, reconnect, NET.socket2, port), false)
-    NET.socket2.addEventListener('message', socketMessage.bind(null, NET.socket2, port), false)
-    NET.socket2.addEventListener('error', socketError.bind(null, NET.socket2, port), false)
+    NET.socket2.addEventListener('open', socketOpen, false)
+    NET.socket2.addEventListener('message', socketMessage, false)
+    NET.socket2.addEventListener('error', socketError, false)
   }
 }
 
-function NET_Close() {
+function NET_Shutdown() {
   if(NET.heartbeat) {
     clearInterval(NET.heartbeat)
   }
@@ -311,16 +327,16 @@ function NET_Close() {
     clearTimeout(NET.heartbeatTimeout)
   }
   if(NET.socket1) {
-    NET.socket1.removeEventListener('open', null)
-    NET.socket1.removeEventListener('message', null)
-    NET.socket1.removeEventListener('close', null)
+    NET.socket1.removeEventListener('open', socketOpen)
+    NET.socket1.removeEventListener('message', socketMessage)
+    NET.socket1.removeEventListener('close', socketError)
     NET.socket1.close()
     NET.socket1 = null
   }
   if(NET.socket2) {
-    NET.socket2.removeEventListener('open', null)
-    NET.socket2.removeEventListener('message', null)
-    NET.socket2.removeEventListener('close', null)
+    NET.socket2.removeEventListener('open', socketOpen)
+    NET.socket2.removeEventListener('message', socketMessage)
+    NET.socket2.removeEventListener('close', socketError)
     NET.socket2.close()
     NET.socket2 = null
   }
@@ -486,6 +502,7 @@ function CL_Download(cmd, name, auto) {
 }
 
 var NET = {
+  reconnect: false,
 	socket1Queue: [],
 	socket2Queue: [],
   lookup: {},
@@ -499,7 +516,6 @@ var NET = {
   Sys_StringToSockaddr: Sys_StringToSockaddr,
   NET_Sleep: NET_Sleep,
   NET_OpenIP: NET_OpenIP,
-  NET_Close: NET_Close,
   Sys_StringToAdr: Sys_StringToAdr,
   Sys_SendPacket: Sys_SendPacket,
   Sys_IsLANAddress: Sys_IsLANAddress,

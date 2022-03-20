@@ -73,7 +73,6 @@ Sys_FreeFileList
 CL_Download
 CL_MenuModified
 Com_MaxFPSChanged
-NET_Close
 Sys_SetStatus
 Sys_UnloadLibrary
 Sys_Remove

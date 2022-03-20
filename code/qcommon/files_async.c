@@ -890,7 +890,7 @@ void Sys_FileReady(const char *filename, const char* tempname) {
 
 
 void FS_UpdateFiles(const char *filename, const char *tempname) {
-Com_Printf("updating files: %s -> %s\n", filename, tempname);
+Com_DPrintf("updating files: %s -> %s\n", filename, tempname);
 
 	// do some extra processing, restart UI if default.cfg is found
 	if(Q_stristr(tempname, "default.cfg")) {
@@ -901,6 +901,11 @@ Com_Printf("updating files: %s -> %s\n", filename, tempname);
 		// TODO: check on networking, shaderlist, anything else we skipped, etc again
 		com_fullyInitialized = qtrue;
 		Cbuf_AddText("exec default.cfg; vid_restart lazy;");
+		Com_Printf("wtf? %i, %s\n", cls.state, Cvar_VariableString("cl_reconnectArgs"));
+		if(cls.state < CA_CONNECTED && *Cvar_VariableString("cl_reconnectArgs") != '\0') {
+			cls.state = CA_AUTHORIZING;
+			Cbuf_AddText( va( "wait lazy; connect %s\n", Cvar_VariableString("cl_reconnectArgs") ) );
+		}
 	} else 
 	
 #if defined(USE_LIVE_RELOAD) || defined(__WASM__)
@@ -1124,7 +1129,7 @@ void CL_CheckLazyUpdates( void ) {
 #endif
 
 	if(Q_stristr(ready->downloadName, "lsdm3_v1.pk3dir/scripts/models.shader")) {
-		Com_Error(ERR_FATAL, "goddamnit");
+		Com_Error(ERR_FATAL, "goddamnit 5");
 	}
 
 	ready->loadingName[MAX_OSPATH - 1] = '\0';

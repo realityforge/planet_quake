@@ -264,6 +264,9 @@ typedef enum {
 
 #define NET_ADDRSTRMAXLEN 48	// maximum length of an IPv6 address string including trailing '\0'
 
+#ifdef __WASM__
+QALIGN(sizeof(int32_t))
+#endif
 typedef struct {
 	netadrtype_t	type;
 	union {
@@ -286,7 +289,6 @@ typedef struct {
 } netadr_t;
 
 void		NET_Init( void );
-void		NET_Shutdown( void );
 void		NET_FlushPacketQueue(void);
 void		NET_SendPacket( netsrc_t sock, int length, const void *data, const netadr_t *to );
 void		QDECL NET_OutOfBandPrint( netsrc_t net_socket, const netadr_t *adr, const char *format, ...) __attribute__ ((format (printf, 3, 4)));

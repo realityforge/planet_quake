@@ -48,7 +48,6 @@ Sys_NET_MulticastLocal
 GL_GetProcAddress
 Sys_FreeFileList
 CL_Download
-NET_Close
 Sys_SetStatus
 Sys_UnloadLibrary
 Sys_Remove

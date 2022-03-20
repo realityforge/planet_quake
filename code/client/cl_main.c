@@ -2126,7 +2126,7 @@ static void CL_Connect_f( void ) {
 #else
 
 	if(addr.type != NA_LOOPBACK && (!strcmp (server, "127.0.0.1")
-		|| !strcmp (server, va("127.0.0.1:%i", PORT_SERVER)))) {
+		|| !strcmp (server, va("127.0.0.1:%i", BigShort(PORT_SERVER))))) {
 		NET_StringToAdr("localhost", &addr, NA_LOOPBACK);
 	}
 	// if we were already connected to the local server, don't reconnect
@@ -3358,12 +3358,12 @@ static void CL_ServersResponsePacket( const netadr_t* from, msg_t *msg, qboolean
 	int	*max = &cls.numglobalservers;
 	qboolean websocket = qfalse;
 
-	
+
 	// check if server response is from a specific list
 #ifdef USE_MASTER_LAN
+	netadr_t addr;
 	if(cls.pingUpdateSource == AS_LOCAL) {
 		for (i = 0; i < MAX_MASTER_SERVERS; i++) {
-			netadr_t addr;
 			memset(&addr, 0, sizeof(addr));
 			if(!cl_master[i]->string[0]) {
 				continue;
@@ -3372,14 +3372,6 @@ static void CL_ServersResponsePacket( const netadr_t* from, msg_t *msg, qboolean
 			if(!NET_StringToAdr(cl_master[i]->string, &addr, NA_UNSPEC)) {
 				continue;
 			}
-
-
-Com_Printf("(%i) %i.%i.%i.%i:%hu != (%i, %s) %i.%i.%i.%i:%hu == %i\n", from->type,
-	from->ipv._4[0], from->ipv._4[1], from->ipv._4[2], from->ipv._4[3], from->port,
-	addr.type, cl_master[i]->string,
-	addr.ipv._4[0], addr.ipv._4[1], addr.ipv._4[2], addr.ipv._4[3], addr.port,
-	NET_CompareAdr(from, &addr));
-
 
 			if (NET_CompareAdr(from, &addr)) {
 				servers = &cls.localServers[0];
@@ -3455,6 +3447,7 @@ Com_Printf("(%i) %i.%i.%i.%i:%hu != (%i, %s) %i.%i.%i.%i:%hu == %i\n", from->typ
 		addresses[numservers].port += *buffptr++;
 		addresses[numservers].port = BigShort( addresses[numservers].port );
 		
+
 		if(websocket) {
 			Q_strncpyz(addresses[numservers].protocol, "ws", 3);
 		} 
@@ -3485,6 +3478,7 @@ Com_Printf("(%i) %i.%i.%i.%i:%hu != (%i, %s) %i.%i.%i.%i:%hu == %i\n", from->typ
 
 		CL_InitServerInfo( server, &addresses[i] );
 		// advance to next slot
+
 		count++;
 	}
 
@@ -3537,44 +3531,45 @@ static qboolean CL_ConnectionlessPacket( const netadr_t *from, msg_t *msg ) {
 	}
 
 	// challenge from the server we are connecting to
-	if (!Q_stricmp(c, "challengeResponse"))
-	{
-		char *strver;
-		int ver;
-	
-		if ( cls.state != CA_CONNECTING )
-		{
+	if ( !Q_stricmp(c, "challengeResponse" ) ) {
+
+		if ( cls.state != CA_CONNECTING ) {
 			Com_DPrintf( "Unwanted challenge response received. Ignored.\n" );
 			return qfalse;
 		}
-		
+
 		c = Cmd_Argv( 2 );
-		if ( *c )
+		if ( *c != '\0' )
 			challenge = atoi( c );
 
- 		clc.compat = qtrue;
-		strver = Cmd_Argv( 3 ); // analyze server protocol version
-		if ( *strver ) {
-			ver = atoi( strver );
-			if ( ver != OLD_PROTOCOL_VERSION ) {
-				if ( ver == NEW_PROTOCOL_VERSION ) {
+		clc.compat = qtrue;
+		s = Cmd_Argv( 3 ); // analyze server protocol version
+		if ( *s != '\0' ) {
+			int sv_proto = atoi( s );
+			if ( sv_proto > OLD_PROTOCOL_VERSION ) {
+				if ( sv_proto == NEW_PROTOCOL_VERSION || sv_proto == com_protocol->integer ) {
 					clc.compat = qfalse;
 				} else {
+					int cl_proto = com_protocol->integer;
+					if ( cl_proto == DEFAULT_PROTOCOL_VERSION ) {
+						// we support new protocol features by default
+						cl_proto = NEW_PROTOCOL_VERSION;
+					}
 					Com_Printf( S_COLOR_YELLOW "Warning: Server reports protocol version %d, "
-						   "we have %d. Trying legacy protocol %d.\n",
-						   ver, NEW_PROTOCOL_VERSION, OLD_PROTOCOL_VERSION );
+						"we have %d. Trying legacy protocol %d.\n",
+						sv_proto, cl_proto, OLD_PROTOCOL_VERSION );
 				}
 			}
 		}
-		
+
 		if ( clc.compat )
 		{
-			if( !NET_CompareAdr( from, &clc.serverAddress ) )
+			if ( !NET_CompareAdr( from, &clc.serverAddress ) )
 			{
 				// This challenge response is not coming from the expected address.
 				// Check whether we have a matching client challenge to prevent
 				// connection hi-jacking.
-				if( !*c || challenge != clc.challenge )
+				if ( *c == '\0' || challenge != clc.challenge )
 				{
 					Com_DPrintf( "Challenge response received from unexpected source. Ignored.\n" );
 					return qfalse;
@@ -3583,7 +3578,7 @@ static qboolean CL_ConnectionlessPacket( const netadr_t *from, msg_t *msg ) {
 		}
 		else
 		{
-			if( !*c || challenge != clc.challenge )
+			if ( *c == '\0' || challenge != clc.challenge )
 			{
 				Com_Printf( "Bad challenge for challengeResponse. Ignored.\n" );
 				return qfalse;
@@ -3619,33 +3614,41 @@ static qboolean CL_ConnectionlessPacket( const netadr_t *from, msg_t *msg ) {
 			return qfalse;
 		}
 
-		if ( !clc.compat )
-		{
-			c = Cmd_Argv(1);
-
-			if(*c)
-				challenge = atoi(c);
-			else
-			{
-				Com_Printf("Bad connectResponse received. Ignored.\n");
+		if ( !clc.compat ) {
+			// first argument: challenge response
+			c = Cmd_Argv( 1 );
+			if ( *c != '\0' ) {
+				challenge = atoi( c );
+			} else {
+				Com_Printf( "Bad connectResponse received. Ignored.\n" );
 				return qfalse;
 			}
-			
-			if(challenge != clc.challenge)
-			{
-				Com_Printf("ConnectResponse with bad challenge received. Ignored.\n");
+
+			if ( challenge != clc.challenge ) {
+				Com_Printf( "ConnectResponse with bad challenge received. Ignored.\n" );
 				return qfalse;
 			}
-		}
-		
-#ifdef USE_LOCAL_DED
-		if(clc.serverAddress.type == NA_LOOPBACK) {
-			Cvar_Set( "sv_running", "1" );
-		}
-#endif
 
-		Netchan_Setup( NS_CLIENT, &clc.netchan, from, Cvar_VariableIntegerValue("net_qport"),
-			clc.challenge, clc.compat );
+			if ( com_protocolCompat ) {
+				// enforce dm68-compatible stream for legacy/unknown servers
+				clc.compat = qtrue;
+			}
+
+			// second (optional) argument: actual protocol version used on server-side
+			c = Cmd_Argv( 2 );
+			if ( *c != '\0' ) {
+				int protocol = atoi( c );
+				if ( protocol > 0 ) {
+					if ( protocol <= OLD_PROTOCOL_VERSION ) {
+						clc.compat = qtrue;
+					} else {
+						clc.compat = qfalse;
+					}
+				}
+			}
+		}
+
+		Netchan_Setup( NS_CLIENT, &clc.netchan, from, Cvar_VariableIntegerValue( "net_qport" ), clc.challenge, clc.compat );
 
 		cls.state = CA_CONNECTED;
 		clc.lastPacketSentTime = -9999;		// send first packet immediately
@@ -3791,8 +3794,7 @@ static void CL_CheckTimeout( void ) {
 	//
 	// check timeout
 	//
-	if ( ( !CL_CheckPaused() || !sv_paused->integer ) 
-		&& !*clc.downloadName
+	if ( ( !CL_CheckPaused() || !sv_paused->integer )
 		&& cls.state >= CA_CONNECTED && cls.state != CA_CINEMATIC
 		&& cls.realtime - clc.lastPacketTime > cl_timeout->integer * 1000 ) {
 		if ( ++cl.timeoutcount > 5 ) { // timeoutcount saves debugger
@@ -3801,7 +3803,12 @@ static void CL_CheckTimeout( void ) {
 			if ( !CL_Disconnect( qfalse, qtrue ) ) { // restart client if not done already
 				CL_FlushMemory();
 			}
-			if ( FS_Initialized() && uivm ) {
+#ifdef USE_ASYNCHRONOUS
+			if(!FS_Initialized()) {
+				return;
+			}
+#endif
+			if ( uivm ) {
 				VM_Call( uivm, 1, UI_SET_ACTIVE_MENU, UIMENU_MAIN );
 			}
 			return;
@@ -4143,12 +4150,17 @@ static __attribute__ ((format (printf, 2, 3))) void QDECL CL_RefPrintf( printPar
 	va_end( argptr );
 
 	switch ( level ) {
-//#ifndef USE_LAZY_LOAD
+#ifndef USE_LAZY_LOAD
 		default: Com_Printf( "%s", msg ); break;
-//#else
-//		default: Com_DPrintf( "%s", msg ); break;
-//#endif
+#else
+		default: 
+			if(!com_developer->integer)
+				Com_DPrintf( "%s", msg ); 
+			break;
+#endif
+#ifndef __WASM__
 		case PRINT_DEVELOPER: Com_DPrintf( "%s", msg ); break;
+#endif
 		case PRINT_WARNING: Com_Printf( S_COLOR_YELLOW "%s", msg ); break;
 		case PRINT_ERROR: Com_Printf( S_COLOR_RED "%s", msg ); break;
 	}
@@ -5736,9 +5748,8 @@ static void CL_ServerInfoPacket( const netadr_t *from, msg_t *msg ) {
 	
 	if(from->type == NA_LOOPBACK) {
 		// emulate a local address instead of loopback to not hold up the list
-		NET_StringToAdr( va("127.0.0.1:%i", PORT_SERVER), &addr, NA_UNSPEC );
+		NET_StringToAdr( va("127.0.0.1:%i", BigShort(PORT_SERVER)), &addr, NA_UNSPEC );
 		addr.type = NA_IP;
-		addr.port = BigShort((short)PORT_SERVER);
 	}
 
 	infoString = MSG_ReadString( msg );
@@ -5855,6 +5866,7 @@ static void CL_ServerInfoPacket( const netadr_t *from, msg_t *msg ) {
 	}
 
 	for ( i = 0 ; i < MAX_OTHER_SERVERS ; i++ ) {
+
 		// empty slot
 		if ( cls.localServers[i].adr.port == 0 ) {
 			break;
@@ -6108,9 +6120,8 @@ static void CL_LocalServers_f( void ) {
 
 #ifdef USE_MASTER_LAN
 	// emulate localhost
-	NET_StringToAdr( va("127.0.0.1:%i", PORT_SERVER), &to, NA_UNSPEC );
+	NET_StringToAdr( va("127.0.0.1:%i", BigShort(PORT_SERVER)), &to, NA_UNSPEC );
 	to.type = NA_IP;
-	to.port = BigShort((short)PORT_SERVER);
 	cls.numlocalservers = -1;
 	for ( i = 0; i < MAX_MASTER_SERVERS; i++ ) {
 		if(cls.numGlobalServerAddresses < MAX_GLOBAL_SERVERS) {
@@ -6525,6 +6536,7 @@ qboolean CL_UpdateVisiblePings_f(int source) {
 				if (server[i].ping == -1) {
 					int j;
 
+
 					if (slots >= MAX_PINGREQUESTS) {
 						break;
 					}
@@ -6532,7 +6544,8 @@ qboolean CL_UpdateVisiblePings_f(int source) {
 						if (!cl_pinglist[j].adr.port) {
 							continue;
 						}
-						if (NET_CompareAdr( &cl_pinglist[j].adr, &server[i].adr)) {
+
+							if (NET_CompareAdr( &cl_pinglist[j].adr, &server[i].adr)) {
 							// already on the list
 							break;
 						}

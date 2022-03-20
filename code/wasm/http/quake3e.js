@@ -177,6 +177,7 @@ function Sys_Print(message) {
 function Sys_Exit(code) {
   Q3e.exited = true
   GLimp_Shutdown();
+  NET_Shutdown();
   if(Q3e.frameInterval) {
     clearInterval(Q3e.frameInterval)
     Q3e.frameInterval = null
@@ -246,13 +247,11 @@ function CL_ModifyMenu(event) {
 }
 
 function Sys_Frame() {
-  Q3e.running = true
+  Q3e.running = !Q3e.running
   requestAnimationFrame(function () {
     try {
       Com_Frame(Q3e.running)
-      Q3e.running = false
     } catch (e) {
-      Q3e.running = false
 			console.log(e)
       if(!Q3e.exited || e.message != 'unreachable') {
         Sys_Exit(1)

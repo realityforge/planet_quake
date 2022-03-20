@@ -235,7 +235,7 @@ Server.prototype._onRequest = async function(socket, onData, onEnd, reqInfo) {
     })
     return socket
   } else {
-    console.log('Requesting', reqInfo.cmd, reqInfo.dstAddr, ':', reqInfo.dstPort)
+    //console.log('Requesting', reqInfo.cmd, reqInfo.dstAddr, ':', reqInfo.dstPort)
 		if(socket._socket.resume)
 			socket._socket.resume()
     await this.proxyCommand.apply(this, [socket, reqInfo, onData])
@@ -813,8 +813,10 @@ Server.prototype.proxyCommand = async function(socket, reqInfo, onData) {
     var remoteAddr = dstIP+':'+reqInfo.dstPort
     if (reqInfo.cmd == Parser.CMD.UDP) {
 			var onClose = () => {
-				socket.dstSock.off('close', onClose)
-				delete socket.dstSock
+        if(socket.dstSock) {
+          socket.dstSock.off('close', onClose)
+          delete socket.dstSock
+        }
 				socket.close()
 			}
       socket.parser.authed = true

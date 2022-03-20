@@ -35,7 +35,8 @@ SHLIBLDFLAGS     := -Wl,--import-memory -Wl,--import-table -Wl,--error-limit=200
 CLIENT_LDFLAGS   := -Wl,--import-memory -Wl,--import-table -Wl,--error-limit=200 \
                     -Wl,--no-entry --no-standard-libraries
 
-RELEASE_LDFLAGS  := -Wl,--strip-all 
+RELEASE_LDFLAGS  := -Wl,--export-dynamic
+# -Wl,--strip-all 
 DEBUG_LDFLAGS    := -fvisibility=default -fno-inline -Wl,--export-dynamic
 
 ifeq ($(BUILD_CLIENT),1)

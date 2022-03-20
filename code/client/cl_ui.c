@@ -278,6 +278,7 @@ static void LAN_GetServerAddressString( int source, int n, char *buf, int buflen
 		case AS_LOCAL :
 			if (n >= 0 && n < MAX_OTHER_SERVERS) {
 				Q_strncpyz(buf, NET_AdrToStringwPortandProtocol( &cls.localServers[n].adr) , buflen );
+
 				return;
 			}
 			break;
