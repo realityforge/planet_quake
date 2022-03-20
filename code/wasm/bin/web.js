@@ -420,8 +420,8 @@ if(runServer) {
   const http = require('http')
   const master = require('./master.js')
   master(27950)
-  app.enable('etag')
-  app.set('etag', 'strong')
+  //app.enable('etag')
+  //app.set('etag', 'strong')
   app.use(respondRequest)
   express.static.mime.types['wasm'] = 'application/wasm'
   express.static.mime.types['pk3'] = 'application/octet-stream'

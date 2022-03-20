@@ -491,9 +491,6 @@ typedef enum {
 #endif
 	EV_GLOBAL_ITEM_PICKUP,	// powerup / team sounds are broadcast to everyone
   EV_SINGLE_ITEM_PICKUP,
-#ifdef USE_ITEM_TIMERS
-  EV_ITEM_TIMER,
-#endif
 
 	EV_NOAMMO,
 	EV_CHANGE_WEAPON,
