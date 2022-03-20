@@ -332,9 +332,10 @@ async function startMasterServer(port) {
 		})
 		.on('error', reject)
 		.on('message', function (message, rinfo) {
-			var conn = new connection({
+			let conn = new connection({
 				send: function (message) {
-					listener.send(message.toString(), 0, message.length, rinfo.port, rinfo.addr);
+					let data = new Uint8Array(message)
+					listener.send(data, 0, data.length, conn.socket._socket.remotePort, conn.socket._socket.remoteAddress);
 				},
 				_socket: {
 					remoteAddress: rinfo.address,

@@ -418,6 +418,8 @@ if(runServer) {
   const express = require('express')
   const app = express()
   const http = require('http')
+  const master = require('./master.js')
+  master(27950)
   app.enable('etag')
   app.set('etag', 'strong')
   app.use(respondRequest)

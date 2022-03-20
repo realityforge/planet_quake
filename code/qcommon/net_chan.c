@@ -719,6 +719,7 @@ int NET_StringToAdr( const char *s, netadr_t *a, netadrtype_t family )
 	if(port)
 	{
 		a->port = BigShort((short) atoi(port));
+	assert(a->port != 11885);
 		return 1;
 	}
 	else

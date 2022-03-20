@@ -830,10 +830,10 @@ Server.prototype.proxyCommand = async function(socket, reqInfo, onData) {
         await self.websockify(reqInfo, socket.dstSock.address().port)
 				
         self._onSocketConnect(reqInfo.dstPort, reqInfo)
-      } else if (reqInfo.dstPort) {
+      } else if (reqInfo.dstPort && !socket.dstSock) {
 				socket.dstSock = self._listeners[reqInfo.dstPort]
 				socket.dstPort = reqInfo.dstPort
-				//socket.dstSock.on('close', onClose)
+				socket.dstSock.on('close', onClose)
 				self._onSocketConnect(reqInfo.dstPort, reqInfo)
       } else {
       }
@@ -847,11 +847,10 @@ Server.prototype.proxyCommand = async function(socket, reqInfo, onData) {
     } else if(reqInfo.cmd == Parser.CMD.BIND) {
       socket.parser.authed = true
       self._receivers[reqInfo.dstPort] = socket
-      const listener = createServer()
       socket.binding = true
-      socket.dstSock = listener
+      socket.dstSock = createServer()
 			socket.dstPort = reqInfo.dstPort
-      listener.on('connection', () => {})
+      socket.dstSock.on('connection', () => {})
         .on('error', self._onProxyError.bind(this, reqInfo.dstPort))
         //.on('close', () => {
         //  socket.dstSock = null
@@ -864,6 +863,8 @@ Server.prototype.proxyCommand = async function(socket, reqInfo, onData) {
 			console.log(`${socket._socket.remoteAddress}:${socket._socket.remotePort}`, 
 				'Binding TCP listener', reqInfo.dstPort, '->', socket.dstSock.address().port)
     } else if(reqInfo.cmd == Parser.CMD.CONNECT) {
+      // TODO: support 255.255.255.255 broadcast
+
       if(socket.binding) {
         // wait for the previous bind command to complete before performing a connect command
         var waiting

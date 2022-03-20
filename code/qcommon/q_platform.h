@@ -253,6 +253,9 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #error "Endianness defined as both big and little"
 
 #elif defined( Q3_BIG_ENDIAN )
+#ifdef __WASM__
+#error goddamnit
+#endif
 
 #define CopyLittleShort(dest, src) CopyShortSwap(dest, src)
 #define CopyLittleLong(dest, src) CopyLongSwap(dest, src)

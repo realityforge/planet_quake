@@ -943,6 +943,9 @@ Com_Printf("updating files: %s -> %s\n", filename, tempname);
 		if(Q_stristr(tempname, Cvar_VariableString("mapname")) && !com_sv_running->integer) {
 			Cbuf_AddText(va("wait lazy; devmap %s;", Cvar_VariableString("mapname")));
 		}
+		if(cls.state == CA_CONNECTED) {
+			Cbuf_AddText( va( "wait lazy; connect %s\n", Cvar_VariableString("cl_reconnectArgs") ) );
+		}
 	} else 
 
 	// TODO:

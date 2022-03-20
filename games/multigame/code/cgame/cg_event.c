@@ -1484,7 +1484,7 @@ Com_Printf("global item pickup\n");
 		break;
 
 	default:
-		CG_Error( "Unknown event: %i", event );
+		CG_Error( "Unknown event: %i > %i", event, EV_MAX );
 		break;
 	}
 }

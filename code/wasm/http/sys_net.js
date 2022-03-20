@@ -7,8 +7,22 @@ function NET_AdrToString(net) {
   } else
 
   if(HEAPU32[net >> 2] == 4) {
-    return stringToAddress(HEAPU8[net + 4] + '.'
-      + HEAPU8[net + 5] + '.' + HEAPU8[net + 6] + '.'
+		let reverseLookup = Object.keys(NET.lookup).filter(function (addr) {
+			if(NET.lookup[addr][0] == HEAPU8[net + 4]
+				&& NET.lookup[addr][1] == HEAPU8[net + 5]
+				&& NET.lookup[addr][2] == HEAPU8[net + 6]
+				&& NET.lookup[addr][3] == HEAPU8[net + 7]) {
+				return true
+			}
+			return false
+		})
+		if(reverseLookup.length) {
+			return stringToAddress(reverseLookup[0])
+		}
+    return stringToAddress(
+			  HEAPU8[net + 4] + '.'
+      + HEAPU8[net + 5] + '.' 
+			+ HEAPU8[net + 6] + '.'
       + HEAPU8[net + 7])
   }
 }
@@ -43,7 +57,9 @@ function Sys_StringToAdr(addr, net) {
 		} else {
 			NET.lookup[addrStr] = [10, 0, NET.lookupCount2, NET.lookupCount1]
 		}
-  }
+  } else {
+		HEAPU32[net >> 2] = 4 /* NA_IP */
+	}
   HEAPU8[net + 4] = NET.lookup[addrStr][0];
   HEAPU8[net + 5] = NET.lookup[addrStr][1];
   HEAPU8[net + 6] = NET.lookup[addrStr][2];
@@ -56,38 +72,43 @@ function Sys_StringToSockaddr() {
 }
 
 function Sys_SendPacket(length, data, to) {
-  let nameStr = addressToString(to + 8*8)
+  let nameStr = addressToString(to + 10)
 	let fullMessage = new Uint8Array(
-		4
-		+ (nameStr.length ? (nameStr.length + 1) : 4)
+		4 + (nameStr.length ? (nameStr.length + 2) : 4)
 		+ 2 + length)
 	fullMessage[0] = 0x00 // 0x05
 	fullMessage[1] = 0x00 // 0x01
 	fullMessage[2] = 0x00 // reserved
 	if(nameStr.length) {
 		fullMessage[3] = 0x03
-		fullMessage.set(nameStr.split('').map(c => c.charCodeAt(0)), 4)
+		fullMessage[4] = nameStr.length + 1
+		fullMessage.set(nameStr.split('').map(c => c.charCodeAt(0)), 5)
+		fullMessage[5 + nameStr.length + 1] = HEAPU8[to + 8]
+		fullMessage[5 + nameStr.length + 2] = HEAPU8[to + 9]
 	} else {
 		fullMessage[3] = 0x01
 		fullMessage[4] = HEAPU8[to + 4]
 		fullMessage[5] = HEAPU8[to + 5]
 		fullMessage[6] = HEAPU8[to + 6]
 		fullMessage[7] = HEAPU8[to + 7]
+		fullMessage[8] = HEAPU8[to + 8]
+		fullMessage[9] = HEAPU8[to + 9]
 	}
-	fullMessage[8] = HEAPU8[to + 8]
-	fullMessage[9] = HEAPU8[to + 9]
 	fullMessage.set(HEAPU8.slice(data, data + length), fullMessage.length - length);
-	if(NET.socket1) {
+	if(NET.socket1 && NET.socket1.readyState == WebSocket.OPEN
+		&& NET.socket1.fresh >= 3) {
 		NET.socket1.send(fullMessage)
+	} else {
+		NET.socket1Queue.push(fullMessage)
 	}
-	if(NET.socket2) {
+	if(NET.socket2 && NET.socket2.readyState == WebSocket.OPEN
+		&& NET.socket2.fresh >= 3) {
 		NET.socket2.send(fullMessage)
+	} else {
+		NET.socket2Queue.push(fullMessage)
 	}
 }
 
-function NET_GetPacket() {
-  debugger
-}
 
 function NET_Sleep() {
 	let sv_running = Cvar_VariableIntegerValue(stringToAddress('sv_running'))
@@ -103,10 +124,16 @@ function NET_Sleep() {
 		HEAPU32[(netmsg >> 2) + 3] = data
 		HEAPU32[(netmsg >> 2) + 4] = MAX_MSGLEN
 		HEAPU32[(netmsg >> 2) + 5] = MAX_MSGLEN * 8
-		HEAPU32[(netmsg >> 2) + 6] = packet[1].length
-		HEAPU8.set(packet[1], data)
+		HEAPU32[(netmsg >> 2) + 6] = packet[2].length
+		HEAPU8.set(packet[2], data)
+
     HEAPU32[from >> 2] = 4 /* NA_IP */
-		HEAPU8.set(packet[0], from + 4)
+		HEAPU16[(from + 8) >> 1] = packet[1] // port
+		if(typeof packet[0] == 'string') {
+			Sys_StringToAdr(stringToAddress(packet[0]), from)
+		} else {
+			HEAPU8.set(packet[0], from + 4)
+		}
 
 		if ( sv_running || sv_dedicated )
 			Com_RunAndTimeServerPacket( from, netmsg );
@@ -116,11 +143,11 @@ function NET_Sleep() {
 }
 
 function sendHeartbeat(sock) {
-  if(sock.readyState == sock.OPEN) {
+  if(sock.readyState == WebSocket.OPEN) {
 		sock.fresh = 5
     sock.send(Uint8Array.from([0x05, 0x01, 0x00, 0x00]),
       { binary: true })
-  } else if(sock.readyState == sock.CLOSED) {
+  } else if(sock.readyState == WebSocket.CLOSED) {
     if(sock == NET.socket1) {
       NET.socket1 = null
       NET_OpenIP(true)
@@ -159,6 +186,7 @@ function socketOpen(reconnect, socket, port) {
 	sendLegacyEmscriptenConnection(socket, port)
 }
 
+
 function socketMessage(socket, port, evt) {
   let message = new Uint8Array(evt.data)
   switch(socket.fresh) {
@@ -188,25 +216,48 @@ function socketMessage(socket, port, evt) {
 				throw new Error('relay address is not IPV4')
 			}
 
-			socket.fresh = 3
 			sendLegacyEmscriptenConnection(socket, port)
+			socket.fresh = 3
+			/*if(socket == NET.socket1) {
+				for(let i = 0, count = NET.socket1Queue.length; i < count; i++) {
+					socket.send(NET.socket1Queue.shift())
+				}
+			} else {
+				for(let i = 0, count = NET.socket1Queue.length; i < count; i++) {
+					socket.send(NET.socket2Queue.shift())
+				}
+			}*/
+
 		break
 		case 3:
-			if(message.length != 10) {
-				throw new Error('unknown port binding')
+			if(message.length == 10) {
+				socket.fresh = 4
+				break
 			}
 
-			socket.fresh = 4
-		break
 		case 4:
 		case 5:
 				// add messages to queue for processing
-			if(message.length == 2) {
+			if(message.length == 2 || message.length == 10) {
 				socket.fresh = 4
 				return
 			}
 
-			NET.queue.push([Array.from(message.slice(4, 10)), Array.from(message.slice(10))])
+			let addr, remotePort, msg
+			if(message[3] == 1) {
+				addr = message.slice(4, 8)
+				remotePort = (message[9] << 8) + message[8]
+				msg = Array.from(message.slice(10))
+			} else if (message[3] == 3) {
+				addr = Array.from(message.slice(5, 5 + message[4])).map(function (c) {
+					return String.fromCharCode(c)
+				}).join('')
+				remotePort = (message[5 + message[4] + 1] << 8) + message[5 + message[4]]
+				msg = Array.from(message.slice(5 + addr.length + 2))
+			} else {
+				throw new Error('don\' know what to do mate')
+			}
+			NET.queue.push([addr, remotePort, msg])
 		break
   }
 }
@@ -427,6 +478,8 @@ function CL_Download(cmd, name, auto) {
 }
 
 var NET = {
+	socket1Queue: [],
+	socket2Queue: [],
   lookup: {},
   lookupCount1: 1,
   lookupCount2: 127,
@@ -436,7 +489,6 @@ var NET = {
   Sys_Offline: Sys_Offline,
   Sys_SockaddrToString: Sys_SockaddrToString,
   Sys_StringToSockaddr: Sys_StringToSockaddr,
-  NET_GetPacket: NET_GetPacket,
   NET_Sleep: NET_Sleep,
   NET_OpenIP: NET_OpenIP,
   NET_Close: NET_Close,

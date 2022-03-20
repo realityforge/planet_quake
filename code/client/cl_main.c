@@ -141,6 +141,7 @@ extern void CL_MenuModified(char *oldValue, char *newValue, cvar_t *cv);
 #endif
 
 #ifdef USE_LAZY_LOAD
+void Sys_FileNeeded(const char *filename, int state);
 cvar_t  *cl_lazyLoad;
 #endif
 
@@ -2793,6 +2794,15 @@ static void CL_DownloadsComplete( void ) {
 	}
 #endif
 
+#ifdef USE_LAZY_LOAD
+	// make sure we have a map by now
+	const char *map = va("maps/%s.bsp", Info_ValueForKey( cl.gameState.stringData + cl.gameState.stringOffsets[ CS_SERVERINFO ], "mapname" ));
+	if(FS_ReadFile(map, NULL) <= 0) {
+		Sys_FileNeeded(map, VFS_NOW);
+		return;
+	}
+#endif
+
 #ifdef USE_CURL
 	// if we downloaded with cURL
 	if(clc.cURLUsed) { 
@@ -3362,6 +3372,14 @@ static void CL_ServersResponsePacket( const netadr_t* from, msg_t *msg, qboolean
 				continue;
 			}
 
+
+Com_Printf("(%i) %i.%i.%i.%i:%hu != (%i) %i.%i.%i.%i:%hu == %i\n", from->type,
+	from->ipv._4[0], from->ipv._4[1], from->ipv._4[2], from->ipv._4[3], from->port,
+	addr.type,
+	addr.ipv._4[0], addr.ipv._4[1], addr.ipv._4[2], addr.ipv._4[3], addr.port,
+	NET_CompareAdr(from, &addr));
+
+
 			if (NET_CompareAdr(from, &addr)) {
 				servers = &cls.localServers[0];
 				max = &cls.numlocalservers;
@@ -3468,6 +3486,7 @@ static void CL_ServersResponsePacket( const netadr_t* from, msg_t *msg, qboolean
 		// advance to next slot
 		count++;
 	}
+
 
 	// if getting the global list
 	if ( count >= MAX_GLOBAL_SERVERS && cls.numGlobalServerAddresses < MAX_GLOBAL_SERVERS )
@@ -5329,9 +5348,9 @@ void CL_Init( void ) {
 	rconAddress = Cvar_Get ("rconAddress", "", 0);
 
 #ifdef USE_MASTER_LAN
-	cl_master[0] = Cvar_Get("cl_master1", va("127.0.0.1:%i", PORT_SERVER), CVAR_ARCHIVE);
-	cl_master[1] = Cvar_Get("cl_master2", "207.246.91.235:27950", CVAR_ARCHIVE);
-	cl_master[2] = Cvar_Get("cl_master3", "ws://master.quakejs.com:27950", CVAR_ARCHIVE);
+#ifdef __WASM__
+	cl_master[3] = Cvar_Get("cl_master3", va("ws://master.quakejs.com:%i", PORT_MASTER), CVAR_ARCHIVE);
+#endif
 	for ( int index = 0; index < MAX_MASTER_SERVERS; index++ ) {
     cl_master[index] = Cvar_Get(va("cl_master%d", index + 1), "", CVAR_ARCHIVE);
   }
@@ -6095,7 +6114,6 @@ static void CL_LocalServers_f( void ) {
 	to.type = NA_IP;
 	to.port = BigShort((short)PORT_SERVER);
 	cls.numlocalservers = -1;
-	hash_reset();
 	for ( i = 0; i < MAX_MASTER_SERVERS; i++ ) {
 		if(cls.numGlobalServerAddresses < MAX_GLOBAL_SERVERS) {
 			netadr_t *addr = &cls.globalServerAddresses[cls.numGlobalServerAddresses];
@@ -6108,11 +6126,11 @@ static void CL_LocalServers_f( void ) {
 			}
 			// only add localhost if its in the list of cl_master
 			if (NET_CompareAdr(&to, addr)) {
-				for(j = 0; j < cls.numlocalservers; j++) {
-					if ( NET_CompareAdr( addr, &cls.localServers[j].adr ) ) {
-						break;
-					}
-				}
+				//for(j = 0; j < cls.numlocalservers; j++) {
+				//	if ( NET_CompareAdr( addr, &cls.localServers[j].adr ) ) {
+				//		break;
+				//	}
+				//}
 			} else {
 				Com_Printf( "Requesting servers from %s (%s)...\n", cl_master[i]->string, NET_AdrToStringwPort(addr) );
 				NET_OutOfBandPrint( NS_CLIENT, addr, "getservers 68 " );
