@@ -59,9 +59,9 @@ function Sys_SendPacket(length, data, to) {
 		4
 		+ (nameStr.length ? (nameStr.length + 1) : 4)
 		+ 2 + length)
-	fullMessage[0] = 0x00 // reserved 0x05
-	fullMessage[1] = 0x00 // reserved 0x01
-	fullMessage[2] = 0x00
+	fullMessage[0] = 0x00 // 0x05
+	fullMessage[1] = 0x00 // 0x01
+	fullMessage[2] = 0x00 // reserved
 	if(nameStr.length) {
 		fullMessage[3] = 0x03
 		fullMessage.set(nameStr.split('').map(c => c.charCodeAt(0)), 4)
@@ -93,7 +93,7 @@ function NET_Sleep() {
 
 function sendHeartbeat(sock) {
   if(sock.readyState == sock.OPEN) {
-		sock.fresh = 4
+		sock.fresh = 5
     sock.send(Uint8Array.from([0x05, 0x01, 0x00, 0x00]),
       { binary: true })
   } else if(sock.readyState == sock.CLOSED) {
@@ -105,6 +105,16 @@ function sendHeartbeat(sock) {
       NET_OpenIP(true)
     }
   }
+}
+
+
+function sendLegacyEmscriptenConnection(socket, port) {
+  socket.send(Uint8Array.from([
+    0xFF, 0xFF, 0xFF, 0xFF,
+    'p'.charCodeAt(0), 'o'.charCodeAt(0), 'r'.charCodeAt(0), 't'.charCodeAt(0),
+    (port & 0xFF00) >> 8, (port & 0xFF)
+  ]))
+
 }
 
 
@@ -122,11 +132,7 @@ function socketOpen(reconnect, socket, port) {
 		}, 10000)
 	}
   if(!reconnect) return
-  socket.send(Uint8Array.from([
-    0xFF, 0xFF, 0xFF, 0xFF,
-    'p'.charCodeAt(0), 'o'.charCodeAt(0), 'r'.charCodeAt(0), 't'.charCodeAt(0),
-    (port & 0xFF00) >> 8, (port & 0xFF)
-  ]))
+	sendLegacyEmscriptenConnection(socket, port)
 }
 
 function socketMessage(socket, port, evt) {
@@ -159,14 +165,23 @@ function socketMessage(socket, port, evt) {
 			}
 
 			socket.fresh = 3
+			sendLegacyEmscriptenConnection(socket, port)
 		break
 		case 3:
+			if(message.length != 10) {
+				throw new Error('unknown port binding')
+			}
+
+			socket.fresh = 4
+		break
 		case 4:
-			// add messages to queue for processing
-			if(socket.fresh == 4 && message.length == 2) {
-				socket.fresh = 3
+		case 5:
+				// add messages to queue for processing
+			if(message.length == 2) {
+				socket.fresh = 4
 				return
 			}
+
 			debugger
 		break
   }

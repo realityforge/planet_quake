@@ -833,8 +833,7 @@ Server.prototype.proxyCommand = async function(socket, reqInfo, onData) {
       } else if (reqInfo.dstPort) {
 				socket.dstSock = self._listeners[reqInfo.dstPort]
 				socket.dstPort = reqInfo.dstPort
-				socket.dstSock.on('close', onClose)
-				
+				//socket.dstSock.on('close', onClose)
 				self._onSocketConnect(reqInfo.dstPort, reqInfo)
       } else {
       }
