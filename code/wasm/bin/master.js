@@ -123,7 +123,7 @@ function sendGetServersResponse(conn, servers) {
 		msg += String.fromCharCode(octets[2] & 0xff)
 		msg += String.fromCharCode(octets[3] & 0xff)
 		msg += String.fromCharCode((server.port & 0xff00) >> 8)
-		msg += String.fromCharCode(server.port & 0xff)
+		msg += String.fromCharCode((server.port & 0xff))
 	}
 	msg += '\\EOT'
 

@@ -664,7 +664,7 @@ void CG_EntityEvent( centity_t *cent, vec3_t position, int entityNum ) {
 	event = es->event & ~EV_EVENT_BITS;
 
 	if ( (unsigned) event >= EV_MAX ) {
-		CG_Error( "Unknown event: %i", event );
+		CG_Error( "Unknown event 2: %i > %i", event, EV_MAX );
 		return;
 	}
 

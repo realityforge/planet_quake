@@ -249,6 +249,9 @@ LAN_GetServerCount
 ====================
 */
 static int LAN_GetServerCount( int source ) {
+
+	Com_Printf("queried servers: %i\n", cls.numlocalservers);
+
 	switch (source) {
 		case AS_LOCAL :
 			return cls.numlocalservers;

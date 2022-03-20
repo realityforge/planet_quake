@@ -170,7 +170,7 @@ function captureClipBoard () {
   text.focus()
   setTimeout(function () {
     INPUT.paste = text.value
-    Q3e.webgl.focus()
+    document.body.focus()
     if(INPUT.field) {
       INPUT.paste.split('').forEach(function (k) {
         Field_CharEvent(INPUT.field, k.charCodeAt(0))

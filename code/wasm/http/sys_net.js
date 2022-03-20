@@ -17,7 +17,7 @@ function NET_AdrToString(net) {
 			return false
 		})
 		if(reverseLookup.length) {
-			return stringToAddress(reverseLookup[0])
+			//return stringToAddress(reverseLookup[0])
 		}
     return stringToAddress(
 			  HEAPU8[net + 4] + '.'
@@ -35,6 +35,11 @@ function Sys_SockaddrToString() {
 
 function Sys_StringToAdr(addr, net) {
   let addrStr = addressToString(addr)
+
+//if(addrStr.includes("local.games")) {
+//	debugger
+//}
+
   if(addrStr.match(/localhost/i)) {
     HEAPU32[net >> 2] = 2 /* NA_LOOPBACK */
     NET.lookup[addrStr] = [127, 0, 0, 1]
@@ -83,16 +88,16 @@ function Sys_SendPacket(length, data, to) {
 		fullMessage[3] = 0x03
 		fullMessage[4] = nameStr.length + 1
 		fullMessage.set(nameStr.split('').map(c => c.charCodeAt(0)), 5)
-		fullMessage[5 + nameStr.length + 1] = HEAPU8[to + 8]
-		fullMessage[5 + nameStr.length + 2] = HEAPU8[to + 9]
+		fullMessage[5 + nameStr.length + 1] = HEAPU8[to + 9]
+		fullMessage[5 + nameStr.length + 2] = HEAPU8[to + 8]
 	} else {
 		fullMessage[3] = 0x01
 		fullMessage[4] = HEAPU8[to + 4]
 		fullMessage[5] = HEAPU8[to + 5]
 		fullMessage[6] = HEAPU8[to + 6]
 		fullMessage[7] = HEAPU8[to + 7]
-		fullMessage[8] = HEAPU8[to + 8]
-		fullMessage[9] = HEAPU8[to + 9]
+		fullMessage[8] = HEAPU8[to + 9]
+		fullMessage[9] = HEAPU8[to + 8]
 	}
 	fullMessage.set(HEAPU8.slice(data, data + length), fullMessage.length - length);
 	if(NET.socket1 && NET.socket1.readyState == WebSocket.OPEN
@@ -257,6 +262,9 @@ function socketMessage(socket, port, evt) {
 			} else {
 				throw new Error('don\' know what to do mate')
 			}
+			//if(addr.includes('local.games')) {
+			//	debugger
+			//}
 			NET.queue.push([addr, remotePort, msg])
 		break
   }

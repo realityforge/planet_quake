@@ -3364,6 +3364,7 @@ static void CL_ServersResponsePacket( const netadr_t* from, msg_t *msg, qboolean
 	if(cls.pingUpdateSource == AS_LOCAL) {
 		for (i = 0; i < MAX_MASTER_SERVERS; i++) {
 			netadr_t addr;
+			memset(&addr, 0, sizeof(addr));
 			if(!cl_master[i]->string[0]) {
 				continue;
 			}
@@ -3373,9 +3374,9 @@ static void CL_ServersResponsePacket( const netadr_t* from, msg_t *msg, qboolean
 			}
 
 
-Com_Printf("(%i) %i.%i.%i.%i:%hu != (%i) %i.%i.%i.%i:%hu == %i\n", from->type,
+Com_Printf("(%i) %i.%i.%i.%i:%hu != (%i, %s) %i.%i.%i.%i:%hu == %i\n", from->type,
 	from->ipv._4[0], from->ipv._4[1], from->ipv._4[2], from->ipv._4[3], from->port,
-	addr.type,
+	addr.type, cl_master[i]->string,
 	addr.ipv._4[0], addr.ipv._4[1], addr.ipv._4[2], addr.ipv._4[3], addr.port,
 	NET_CompareAdr(from, &addr));
 
@@ -5348,9 +5349,6 @@ void CL_Init( void ) {
 	rconAddress = Cvar_Get ("rconAddress", "", 0);
 
 #ifdef USE_MASTER_LAN
-#ifdef __WASM__
-	cl_master[3] = Cvar_Get("cl_master3", va("ws://master.quakejs.com:%i", PORT_MASTER), CVAR_ARCHIVE);
-#endif
 	for ( int index = 0; index < MAX_MASTER_SERVERS; index++ ) {
     cl_master[index] = Cvar_Get(va("cl_master%d", index + 1), "", CVAR_ARCHIVE);
   }
@@ -6131,7 +6129,7 @@ static void CL_LocalServers_f( void ) {
 				//		break;
 				//	}
 				//}
-			} else {
+			} else if (addr->port != BigShort((short)PORT_SERVER)) {
 				Com_Printf( "Requesting servers from %s (%s)...\n", cl_master[i]->string, NET_AdrToStringwPort(addr) );
 				NET_OutOfBandPrint( NS_CLIENT, addr, "getservers 68 " );
 				NET_OutOfBandPrint( NS_CLIENT, addr, "getservers 72 " );

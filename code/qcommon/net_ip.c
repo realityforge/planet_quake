@@ -683,11 +683,11 @@ const char *NET_AdrToStringwPortandProtocol( const netadr_t *a )
 		strcpy( s, "bot" );
 	else if(a->type == NA_IP)
     Com_sprintf(s, sizeof(s), "%s%s:%hu", a->protocol[0] 
-      ? "ws://" : "", NET_AdrToString(a), ntohs(a->port));
+      ? "ws://" : "", NET_AdrToString(a), LittleShort(a->port));
 #ifdef USE_IPV6
 	else if(a->type == NA_IP6)
     Com_sprintf(s, sizeof(s), "%s[%s]:%hu", a->protocol[0] 
-      ? "ws://" : "", NET_AdrToString(a), ntohs(a->port));
+      ? "ws://" : "", NET_AdrToString(a), LittleShort(a->port));
 #endif
   
 	return s;
