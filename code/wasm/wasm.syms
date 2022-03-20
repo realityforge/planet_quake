@@ -56,6 +56,7 @@ Sys_IsLANAddress
 Sys_SendPacket
 Sys_StringToAdr
 NET_OpenIP
+NET_Sleep
 Sys_FTell
 Sys_FSeek
 Sys_FClose

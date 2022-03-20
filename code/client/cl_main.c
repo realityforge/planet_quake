@@ -3700,6 +3700,9 @@ CL_PacketEvent
 A packet has arrived from the main event loop
 =================
 */
+#ifdef __WASM__
+Q_EXPORT
+#endif
 void CL_PacketEvent( const netadr_t *from, msg_t *msg ) {
 	int		headerBytes;
 #ifdef USE_MULTIVM_CLIENT

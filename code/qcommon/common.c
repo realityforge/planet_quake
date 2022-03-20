@@ -3116,6 +3116,9 @@ static sysEvent_t Com_GetEvent( void ) {
 Com_RunAndTimeServerPacket
 =================
 */
+#ifdef __WASM__
+Q_EXPORT
+#endif
 void Com_RunAndTimeServerPacket( const netadr_t *evFrom, msg_t *buf ) {
 	int		t1, t2, msec;
 
@@ -4639,9 +4642,7 @@ void Com_Frame( qboolean noDelay ) {
 		if ( timeVal > sleepMsec )
 			Com_EventLoop();
 #endif
-#ifndef __WASM__
 		NET_Sleep( sleepMsec * 1000 - 500 );
-#endif
 	} while( Com_TimeVal( minMsec ) );
 
 

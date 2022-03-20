@@ -1,3 +1,5 @@
+const MAX_MSGLEN = 16384
+
 
 function NET_AdrToString(net) {
   if(HEAPU32[net >> 2] == 2) {
@@ -88,7 +90,29 @@ function NET_GetPacket() {
 }
 
 function NET_Sleep() {
+	let sv_running = Cvar_VariableIntegerValue(stringToAddress('sv_running'))
+	let sv_dedicated = Cvar_VariableIntegerValue(stringToAddress('dedicated'))
+	let count = NET.queue.length
+	for(let i = 0; i < count; i++) {
+		let packet = NET.queue.shift()
+		let from = NET.buffer
+		let netmsg = NET.buffer + 512
+		let data = NET.buffer + 1024
+		HEAPU8.fill(0, from, from + 512)
+		HEAPU8.fill(0, netmsg, netmsg + 512)
+		HEAPU32[(netmsg >> 2) + 3] = data
+		HEAPU32[(netmsg >> 2) + 4] = MAX_MSGLEN
+		HEAPU32[(netmsg >> 2) + 5] = MAX_MSGLEN * 8
+		HEAPU32[(netmsg >> 2) + 6] = packet[1].length
+		HEAPU8.set(packet[1], data)
+    HEAPU32[from >> 2] = 4 /* NA_IP */
+		HEAPU8.set(packet[0], from + 4)
 
+		if ( sv_running || sv_dedicated )
+			Com_RunAndTimeServerPacket( from, netmsg );
+		else
+			CL_PacketEvent( from, netmsg );
+	}
 }
 
 function sendHeartbeat(sock) {
@@ -182,7 +206,7 @@ function socketMessage(socket, port, evt) {
 				return
 			}
 
-			debugger
+			NET.queue.push([Array.from(message.slice(4, 10)), Array.from(message.slice(10))])
 		break
   }
 }
@@ -196,7 +220,7 @@ function NET_OpenIP(reconnect) {
   let peerAddress = addressToString(Cvar_VariableString(stringToAddress('net_socksServer')))
   let peerPort = addressToString(Cvar_VariableString(stringToAddress('net_socksPort')))
   if(!NET.buffer) {
-    NET.buffer = malloc(16384 + 8 + 24) // from NET_Event() + netmsg_t
+    NET.buffer = malloc(MAX_MSGLEN + 8 + 24 + 1024) // from NET_Event() + netmsg_t + netadr_t
   }
   if(!NET.queue) {
     NET.queue = []
