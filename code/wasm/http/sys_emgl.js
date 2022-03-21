@@ -719,13 +719,18 @@ function loadImage(filename, pic, ext) {
   let filenameStr = addressToString(filename)
   let buf = stringToAddress('DEADBEEF') // pointer to pointer
   let length
+  EMGL.previousImage = null
+  EMGL.previousName = ''
   HEAP32[buf >> 2] = 0
-  if (filenameStr.match('gfx/2d/bigchars_backup')) {
+  if (filenameStr.match('gfx/2d/bigchars_backup')
+    || filenameStr.match('gfx/2d/bigchars.png')) {
     EMGL.previousName = 'gfx/2d/bigchars'
     EMGL.previousImage = document.getElementById('bigchars')
     HEAP32[pic >> 2] = 1
     return
-  } else if ((length = FS_ReadFile(filename, buf)) > 0 && HEAPU32[buf >> 2] > 0) {
+  } 
+  
+  if ((length = FS_ReadFile(filename, buf)) > 0 && HEAPU32[buf >> 2] > 0) {
     let thisImage = document.createElement('IMG')
     EMGL.previousName = filenameStr
     EMGL.previousImage = thisImage
@@ -740,6 +745,7 @@ function loadImage(filename, pic, ext) {
     //thisImage.src = URL.createObjectURL(
     //  new Blob([utfEncoded], {type: 'image/' + ext + ';charset=utf8'}))
     thisImage.src = 'data:image/' + ext + ';base64,' + btoa(utfEncoded)
+    thisImage.name = filenameStr
     HEAP32[pic >> 2] = 1
     FS_FreeFile(HEAPU32[buf >> 2])
     return
@@ -1411,7 +1417,7 @@ function _glTexSubImage2D(target, level, xoffset, yoffset, width, height, format
     return
   } else if (typeof EMGL.texFiles[EMGL.previousTex] != 'undefined'
     && EMGL.texFiles[EMGL.previousTex][1]) {
-    debugger
+    //debugger
     return
   }
 

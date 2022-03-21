@@ -485,7 +485,7 @@ static void ParseJSONFileList(char *buf, int len, char *list, int *count, int *m
 	// count <tr/<li/<td/<ol/<ul/<div/<h
 	//   until default.cfg is found, then add all the detected file names
 	//   to the pk3cache.dat file. This will make it easy for the server
-	//   provided q3cache.dat to checked at the same time.
+	//   provided pk3cache.dat to checked at the same time.
 	char link[MAX_OSPATH];
 	int lenLink = 0;
 	int length = strlen(FS_GetCurrentGameDir());
@@ -548,7 +548,7 @@ static void ParseHTMLFileList(char *buf, int len, char *list, int *count, int *m
 	// count <tr/<li/<td/<ol/<ul/<div/<h
 	//   until default.cfg is found, then add all the detected file names
 	//   to the pk3cache.dat file. This will make it easy for the server
-	//   provided q3cache.dat to checked at the same time.
+	//   provided pk3cache.dat to checked at the same time.
 	char link[MAX_OSPATH];
 	int lenLink = 0;
 	int length = strlen(FS_GetCurrentGameDir());
@@ -901,7 +901,6 @@ Com_DPrintf("updating files: %s -> %s\n", filename, tempname);
 		// TODO: check on networking, shaderlist, anything else we skipped, etc again
 		com_fullyInitialized = qtrue;
 		Cbuf_AddText("exec default.cfg; vid_restart lazy;");
-		Com_Printf("wtf? %i, %s\n", cls.state, Cvar_VariableString("cl_reconnectArgs"));
 		if(cls.state < CA_CONNECTED && *Cvar_VariableString("cl_reconnectArgs") != '\0') {
 			cls.state = CA_AUTHORIZING;
 			Cbuf_AddText( va( "wait lazy; connect %s\n", Cvar_VariableString("cl_reconnectArgs") ) );
@@ -982,7 +981,7 @@ Com_DPrintf("updating files: %s -> %s\n", filename, tempname);
 	} else 
 #endif
 
-	// scan index files for HTTP directories and add links to q3cache.dat
+	// scan index files for HTTP directories and add links to pk3cache.dat
 	if ((Q_stristr(tempname, ".tmp") && Q_stristr(tempname, "/."))
 		|| Q_stristr(tempname, "maps/maplist.json")) {
 		// left in the temp directory, must be an index file

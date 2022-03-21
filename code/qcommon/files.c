@@ -2264,9 +2264,6 @@ int FS_ReadFile( const char *qpath, void **buffer ) {
 
 	// look for it in the filesystem or pack files
 	len = FS_FOpenFileRead( qpath, &h, qfalse );
-	if(Q_stristr(qpath, "banner5.md3")) {
-		Com_Printf("wtf? %i, %i, \n", len, h, buffer);
-	}
 	if ( h == FS_INVALID_HANDLE ) {
 		if ( buffer ) {
 			*buffer = NULL;

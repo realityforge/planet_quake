@@ -78,6 +78,8 @@ function instantiateWasm(bytes) {
 function init() {
   Q3e['imports'] = Q3e
   Q3e['cacheBuster'] = Date.now()
+  // might as well start this early, transfer IndexedDB from disk/memory to application memory
+  readAll()
 
   // TODO: bootstrap download function so it saves binary to disk
   fetch('./quake3e_mv.wasm?time=' + Q3e.cacheBuster)

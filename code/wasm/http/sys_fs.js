@@ -40,15 +40,47 @@ function openDatabase(noWait) {
   }
 }
 
+
+function readAll() {
+  return openDatabase()
+  .then(function(db) {
+    let transaction = db.transaction([DB_STORE_NAME], 'readonly')
+    let objStore = transaction.objectStore(DB_STORE_NAME)
+    let tranCursor = objStore.openCursor()
+    return new Promise(function (resolve) {
+      tranCursor.onsuccess = function loadItems(event) {
+        let cursor = event.target.result
+        if(!cursor) {
+          return resolve()
+        }
+        FS.virtual[cursor.key] = {
+          timestamp: cursor.value.timestamp,
+          mode: cursor.value.mode,
+          contents: cursor.value.contents
+        }
+        return cursor.continue()
+      }
+      tranCursor.onerror = function (error) {
+        console.error(error)
+        resolve(error)
+      }
+    }).then(function () { tranCursor.commit() })
+  })
+  .catch(function (e) {})
+  
+  
+}
+
+
 function readStore(key) {
   return openDatabase()
   .then(function (db) {
-    var transaction = db.transaction([DB_STORE_NAME], 'readwrite');
-    var objStore = transaction.objectStore(DB_STORE_NAME);
+    let transaction = db.transaction([DB_STORE_NAME], 'readwrite');
+    let objStore = transaction.objectStore(DB_STORE_NAME);
     return new Promise(function (resolve) {
       let tranCursor = objStore.get(key)
-      tranCursor.onsuccess = function () {
-        resolve(tranCursor.result)
+      tranCursor.onsuccess = function (event) {
+        resolve(event.target.result)
       }
       tranCursor.onerror = function (error) {
         console.error(error)
@@ -73,8 +105,8 @@ function writeStore(value, key) {
         storeValue = objStore.put(value, key)
       }
       storeValue.onsuccess = function () {}
-      transaction.oncomplete = function () {
-        resolve(storeValue.result)
+      transaction.oncomplete = function (event) {
+        resolve(event.target.result)
         //FS.database.close()
         //FS.database = null
         //FS.open = null
@@ -157,8 +189,8 @@ function Sys_FOpen(filename, mode) {
     // open the file successfully
     return createFP()
   } else if (modeStr.includes('w')
-    && (parentDirectory = localName.substring(0, localName.lastIndexOf('/')))
-    && typeof FS.virtual[parentDirectory] != 'undefined') {
+    && (!(parentDirectory = localName.substring(0, localName.lastIndexOf('/')).length)
+    || typeof FS.virtual[parentDirectory] != 'undefined')) {
     // create the file for write because the parent directory exists
     FS.virtual[localName] = {
       timestamp: new Date(),

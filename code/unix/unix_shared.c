@@ -115,7 +115,7 @@ qboolean Sys_RandomBytes( byte *string, int len )
 #ifdef USE_ASYNCHRONOUS
 void Sys_Offline( void )
 {
-  // TODO: read q3cache and download all files
+  // TODO: read pk3cache and download all files
 }
 #endif
 
