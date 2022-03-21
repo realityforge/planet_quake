@@ -2728,22 +2728,10 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, imgFlags_t flags )
 		return NULL;
 	}
 
-// TODO: skip this entirely and upload directly to openGL then insert the image handle here for future use
-
-#ifdef USE_LAZY_LOAD
-	if((flags & IMGFLAG_FORCELAZY) && name[0] != '*') {
-		R_LoadImage( name, &pic, &width, &height, &picFormat, &picNumMips, qtrue );
-		if(pic == &ONE) {
-			pic = NULL;
-			return R_FindPalette(name); // try to use palette in lazy loading mode as backup
-		} else {
-			return R_FindPalette(name);
-		}
-  } else if ((flags & IMGFLAG_PALETTE) && r_paletteMode->integer 
+	if ((flags & IMGFLAG_PALETTE) && r_paletteMode->integer 
     && name[0] != '*') {
     return R_FindPalette(name);
 	}
-#endif
 
 	hash = generateHashValue(name);
 
@@ -2779,6 +2767,12 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, imgFlags_t flags )
 		picNumMips = 0;
 		R_LoadPNG("gfx/2d/bigchars_backup", &pic, &width, &height);
 	}
+#endif
+
+#ifdef USE_LAZY_LOAD
+	if(pic == NULL && (flags & IMGFLAG_FORCELAZY) && name[0] != '*') {
+		return R_FindPalette(name);
+  } 
 #endif
 
 
@@ -2910,6 +2904,7 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, imgFlags_t flags )
 	}
 
 #ifdef __WASM__
+	// skip this entirely and upload directly to openGL then insert the image handle here for future use
 	// we think the image is out there so register it in the system, then we can update
 	//   the glBind when it loads
 	image = R_CreateImage3( ( char * ) name, picFormat, picNumMips, type, flags & ~IMGFLAG_MIPMAP & ~IMGFLAG_PICMIP, GL_RGBA );
