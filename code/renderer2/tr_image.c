@@ -2759,16 +2759,6 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, imgFlags_t flags )
   R_LoadImage( name, &pic, &width, &height, &picFormat, &picNumMips );
 #endif
 
-#ifdef USE_ASYNCHRONOUS
-	// use built in font
-	if(pic == NULL && (!Q_stricmp(name, "gfx/2d/bigchars")
-		|| !Q_stricmp(name, "gfx/2d/bigchars.tga"))) {
-		picFormat = GL_RGBA8;
-		picNumMips = 0;
-		R_LoadPNG("gfx/2d/bigchars_backup", &pic, &width, &height);
-	}
-#endif
-
 #ifdef USE_LAZY_LOAD
 	if(pic == NULL && (flags & IMGFLAG_FORCELAZY) && name[0] != '*') {
 		return R_FindPalette(name);

@@ -49,6 +49,23 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #endif
 
 /*
+TODO: make a virtual file-system of files included with page load
+#ifdef USE_ASYNCHRONOUS
+#ifndef __WASM__
+#define INCBIN_SILENCE_BITCODE_WARNING
+#include "../qcommon/incbin.h"
+#include "incbin.h"
+INCBIN(_bigchars, "../renderercommon/bigchars.png");
+#else // is __WASM__
+Q_EXPORT int g_bigcharsSize = 0;
+Q_EXPORT char *g_bigcharsData = NULL;
+#endif
+#endif
+*/
+
+
+
+/*
 =============================================================================
 
 QUAKE3 FILESYSTEM

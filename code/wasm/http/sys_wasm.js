@@ -61,6 +61,9 @@ function instantiateWasm(bytes) {
   if(!bytes) {
     throw new Error('Couldn\'t find wasm!')
   }
+  if(typeof bytes == 'string') {
+    bytes = new Uint8Array(bytes.split('').map(function (b) { return b.charCodeAt(0) }))
+  }
   // assign everything to env because this bullshit don't work
   Object.assign(Q3e, libraries)
   for(let i = 0; i < Object.keys(libraries).length; i++) {
@@ -82,32 +85,36 @@ function init() {
   readAll()
 
   // TODO: bootstrap download function so it saves binary to disk
-  fetch('./quake3e_mv.wasm?time=' + Q3e.cacheBuster)
-  .catch(function (e) {})
-  .then(function(response) {
-    if(!response || response.status == 404) {
-      return fetch('./quake3e_slim.wasm?time=' + Q3e.cacheBuster)
-    }
-  })
-  .catch(function (e) {})
-  .then(function(response) {
-    if(!response || response.status == 404) {
-      return fetch('./quake3e.wasm?time=' + Q3e.cacheBuster)
-    }
-  })
-  .catch(function (e) {})
-  .then(function (response) {
-    if(response && response.status == 200) {
-      return response.arrayBuffer()
-    }
-  })
-    .then(instantiateWasm)
-    // TODO: change when hot reloading works
-    .then(startProgram);
+  if(typeof programBytes == 'string') {
+    return Promise.resolve(programBytes)
+  } else {
+    return fetch('./quake3e_mv.wasm?time=' + Q3e.cacheBuster)
+    .catch(function (e) {})
+    .then(function(response) {
+      if(!response || response.status == 404) {
+        return fetch('./quake3e_slim.wasm?time=' + Q3e.cacheBuster)
+      }
+    })
+    .catch(function (e) {})
+    .then(function(response) {
+      if(!response || response.status == 404) {
+        return fetch('./quake3e.wasm?time=' + Q3e.cacheBuster)
+      }
+    })
+    .catch(function (e) {})
+    .then(function (response) {
+      if(response && response.status == 200) {
+        return response.arrayBuffer()
+      }
+    })
+  }
 }
 
+// TODO: change when hot reloading works
 window.addEventListener('load', function () {
   if(typeof Q3e.imports == 'undefined') {
     init()
+    .then(instantiateWasm)
+    .then(startProgram);
   }
 }, false)

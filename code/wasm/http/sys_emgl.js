@@ -722,10 +722,10 @@ function loadImage(filename, pic, ext) {
   EMGL.previousImage = null
   EMGL.previousName = ''
   HEAP32[buf >> 2] = 0
-  if (filenameStr.match('gfx/2d/bigchars_backup')
-    || filenameStr.match('gfx/2d/bigchars.png')) {
-    EMGL.previousName = 'gfx/2d/bigchars'
-    EMGL.previousImage = document.getElementById('bigchars')
+  let preloadedImage = document.querySelector(`IMG[title="${filenameStr}"]`)
+  if (preloadedImage) {
+    EMGL.previousName = filenameStr
+    EMGL.previousImage = preloadedImage
     HEAP32[pic >> 2] = 1
     return
   } 
@@ -734,16 +734,13 @@ function loadImage(filename, pic, ext) {
     let thisImage = document.createElement('IMG')
     EMGL.previousName = filenameStr
     EMGL.previousImage = thisImage
-    thisImage.onload = function () {
-      HEAP32[(thisImage.address - 4 * 4) >> 2] = thisImage.width
-      HEAP32[(thisImage.address - 3 * 4) >> 2] = thisImage.height
-      R_FinishImage3(thisImage.address - 7 * 4, 0x1908 /* GL_RGBA */, 0)
+    thisImage.onload = function (evt) {
+      HEAP32[(evt.target.address - 4 * 4) >> 2] = evt.target.width
+      HEAP32[(evt.target.address - 3 * 4) >> 2] = evt.target.height
+      R_FinishImage3(evt.target.address - 7 * 4, 0x1908 /* GL_RGBA */, 0)
     }
     let imageView = Array.from(HEAPU8.slice(HEAPU32[buf >> 2], HEAPU32[buf >> 2] + length))
     let utfEncoded = imageView.map(function (c) { return String.fromCharCode(c) }).join('')
-    //var b64encoded = 
-    //thisImage.src = URL.createObjectURL(
-    //  new Blob([utfEncoded], {type: 'image/' + ext + ';charset=utf8'}))
     thisImage.src = 'data:image/' + ext + ';base64,' + btoa(utfEncoded)
     thisImage.name = filenameStr
     HEAP32[pic >> 2] = 1

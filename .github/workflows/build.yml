@@ -270,6 +270,7 @@ jobs:
         mkdir bin
         make -f make/build_client.make clean ${{ matrix.rule }}  ARCH=${{ matrix.arch }}    ${{ matrix.use_sdl }} USE_VULKAN_API=0 CNAME=quake3e NO_MAKE_LOCAL=1 USE_ASYNCHRONOUS=1 USE_LAZY_LOAD=1 PLATFORM=wasm CC=/home/runner/work/planet_quake/wasi-sdk-14.0/bin/clang V=1
         cp build/release-wasm-js/quake3e.wasm bin/
+        cp build/release-wasm-js/index.html bin/
 #        cp build/release-js-js/quake3e.js bin/
 
     - uses: actions/upload-artifact@v2

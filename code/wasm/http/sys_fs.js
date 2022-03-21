@@ -42,6 +42,8 @@ function openDatabase(noWait) {
 
 
 function readAll() {
+  let startTime = Date.now()
+  console.log('sync started at ', new Date())
   return openDatabase()
   .then(function(db) {
     let transaction = db.transaction([DB_STORE_NAME], 'readonly')
@@ -64,9 +66,20 @@ function readAll() {
         console.error(error)
         resolve(error)
       }
-    }).then(function () { tranCursor.commit() })
+    }).then(function () { 
+      transaction.commit()
+      let tookTime = Date.now() - startTime
+      console.log('sync completed', new Date())
+      console.log('sync took', 
+        (tookTime > 60 * 1000 ? (Math.floor(tookTime / 1000 / 60) + ' minutes, ') : '')
+        + Math.floor(tookTime / 1000) % 60 + ' seconds, '
+        + (tookTime % 1000) + ' milliseconds')
+    })
   })
-  .catch(function (e) {})
+  .catch(function (e) {
+    console.log(e)
+    debugger
+  })
   
   
 }

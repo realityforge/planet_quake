@@ -35,6 +35,7 @@
     "mime": "^2.5.2",
     "node-stream-zip": "^1.13.2",
     "serve-index": "^1.9.1",
+    "uglify-js": "^3.15.3",
     "unionfs": "^4.4.0",
     "ws": "^7.4.4"
   },

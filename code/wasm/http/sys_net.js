@@ -182,10 +182,9 @@ function sendLegacyEmscriptenConnection(socket, port) {
 }
 
 
-function socketOpen() {
-  let socket = this
-	socket.fresh = 1
-	socket.send(Uint8Array.from([
+function socketOpen(evt) {
+	evt.target.fresh = 1
+	evt.target.send(Uint8Array.from([
     0x05, 0x01, 0x00, // no password caps?
   ]))
 	if(!NET.heartbeat) {
@@ -197,14 +196,13 @@ function socketOpen() {
 		}, 10000)
 	}
   if(!NET.reconnect) return
-	sendLegacyEmscriptenConnection(socket, NET.net_port)
+	sendLegacyEmscriptenConnection(evt.target, NET.net_port)
 }
 
 
 function socketMessage(evt) {
-  let socket = this
   let message = new Uint8Array(evt.data)
-  switch(socket.fresh) {
+  switch(evt.target.fresh) {
     case 1:
       if(message.length != 2) {
         throw new Error('wtf? this socket no worky')
@@ -215,12 +213,12 @@ function socketMessage(evt) {
       }
 
       // send the UDP associate request
-      socket.send(Uint8Array.from([
+      evt.target.send(Uint8Array.from([
 				0x05, 0x03, 0x00, 0x01, 
 				0x00, 0x00, 0x00, 0x00, // ip address
 				(NET.net_port & 0xFF00) >> 8, (NET.net_port & 0xFF)
 			]))
-      socket.fresh = 2
+      evt.target.fresh = 2
     break
 		case 2:
 			if(message.length < 5) {
@@ -231,8 +229,8 @@ function socketMessage(evt) {
 				throw new Error('relay address is not IPV4')
 			}
 
-			sendLegacyEmscriptenConnection(socket, NET.net_port)
-			socket.fresh = 3
+			sendLegacyEmscriptenConnection(evt.target, NET.net_port)
+			evt.target.fresh = 3
 			/*if(socket == NET.socket1) {
 				for(let i = 0, count = NET.socket1Queue.length; i < count; i++) {
 					socket.send(NET.socket1Queue.shift())
@@ -246,7 +244,7 @@ function socketMessage(evt) {
 		break
 		case 3:
 			if(message.length == 10) {
-				socket.fresh = 4
+				evt.target.fresh = 4
 				break
 			}
 
@@ -254,7 +252,7 @@ function socketMessage(evt) {
 		case 5:
 				// add messages to queue for processing
 			if(message.length == 2 || message.length == 10) {
-				socket.fresh = 4
+				evt.target.fresh = 4
 				return
 			}
 
@@ -280,12 +278,12 @@ function socketMessage(evt) {
   }
 }
 
-function socketError() {
+function socketError(evt) {
   NET.reconnect = true
-  if(this == NET.socket1) {
+  if(evt.target == NET.socket1) {
     NET.socket1 = NULL
   }
-  if(this == NET.socket2) {
+  if(evt.target == NET.socket2) {
     NET.socket2 = NULL
   }
 }
@@ -299,6 +297,9 @@ function NET_OpenIP() {
   }
   if(!NET.queue) {
     NET.queue = []
+  }
+  if(window.location.protocol == 'file:') {
+    return
   }
   let fullAddress = 'ws' 
     + (window.location.protocol.length > 5 ? 's' : '')

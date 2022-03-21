@@ -52,6 +52,7 @@ Finally, I want to use multiworld for streaming game content to clients. Where t
   * Fix multiworld deltas... again... or make no-delta the requirement.
   * Fix scene rendering, skipping, and replaying entity cmds between frames. Not critical because I haven't seen a drop in FPS since I made the trWorld_t change.
   * Fix sv_mvOmnipresent 1, send all gamestates up-front or wait until network settles on client. When omnipresent changes, update all the clients on the server.
+  * sv_mvOmnicient 1, allow Godmod enabled players to take a birds eye view of the arena and move people around like an all powerful being in the sky. So sac-relig
   * Multiworld CGame interaction, load all the cameras from entities by name using splines.c, and set the cameras in game using the camera API so that CGame is guaranteed to draw entities in place correctly. Automatically move cameras to load any map with the same lobby/rotating camera like that door in Doctor Strange.
   * Add rendering to a texture http://www.opengl-tutorial.org/intermediate-tutorials/tutorial-14-render-to-texture/
   * Add `target_microphone` that speakers can target in different worlds, spatial and volume controls close to projected surfaces. Then go back and automatically add it for misc_portal_surface and misc_portal_cameras in an extra field.

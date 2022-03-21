@@ -20,6 +20,11 @@ NO_MAKE_LOCAL    := 1
 
 include make/configure.make
 
+NODE             := node
+UGLIFY           := uglifyjs
+COPY             := cp
+UNLINK           := rm
+MOVE             := mv
 OPT              := wasm-opt
 LD               := libs/$(COMPILE_PLATFORM)/wasi-sdk-14.0/bin/wasm-ld
 CC               := libs/$(COMPILE_PLATFORM)/wasi-sdk-14.0/bin/clang
@@ -86,11 +91,102 @@ export INCLUDE   := -Icode/wasm/include
 
 ifdef B
 
+WASM_MIN         := quake3e.min.js
+WASM_HTTP        := code/wasm/http
+WASM_OBJS        := quake3e.js sys_emgl.js sys_fs.js sys_in.js \
+                    sys_net.js sys_std.js sys_wasm.js nipplejs.js
+WASM_JS          := $(addprefix $(WASM_HTTP)/,$(notdir $(WASM_OBJS)))
+WASM_ASSETS      := games/multigame/assets
+WASM_IMG_ASSETS  := gfx/2d/bigchars.png
+WASM_VFS         := $(addprefix $(WASM_ASSETS)/,$(WASM_IMG_ASSETS))
+WASM_INDEX       := $(B)/$(TARGET) $(B)/$(TARGET).opt $(WASM_HTTP)/$(WASM_MIN).ugly \
+                    $(WASM_HTTP)/index.html $(B)/index.html \
+                    $(WASM_VFS)
+WASM_VFSOBJ      := $(addprefix $(B)/assets/,$(WASM_IMG_ASSETS)) \
+                    $(B)/assets/index.css $(B)/assets/$(WASM_MIN) \
+                    $(B)/assets/$(TARGET)
+
+
+define DO_OPT_CC
+	$(echo_cmd) "OPT_CC $<"
+	$(Q)$(OPT) -Os --no-validation -o $@ $<
+	$(Q)$(MOVE) $< $<.bak && $(MOVE) $@ $< && $(UNLINK) $<.bak
+endef
+
+define DO_UGLY_CC
+	$(echo_cmd) "UGLY_CC $<"
+	$(Q)$(UGLIFY) $(WASM_JS) -o $@ -c -m
+	$(Q)$(MOVE) $(WASM_HTTP)/$(WASM_MIN) $(WASM_HTTP)/$(WASM_MIN).bak \
+    && $(MOVE) $@ $(WASM_HTTP)/$(WASM_MIN) && $(UNLINK) $(WASM_HTTP)/$(WASM_MIN).bak
+endef
+
+define DO_BASE64_CC
+	$(echo_cmd) "BASE64_CC $<"
+	$(Q)$(NODE) -e "let b64encoded=fs.readFileSync('$<', 'base64');fs.writeFileSync('$(B)/index.html', fs.readFileSync('$(B)/index.html').toString('utf-8').replace('<\!-- BEGIN VFS INCLUDES -->', '<\!-- BEGIN VFS INCLUDES -->\n<img title=\"${subst $(WASM_ASSETS)/,,$<}\" src=\"data:image/png;base64,'+b64encoded+'\" />'))"
+endef
+
+define DO_CSS_EMBED
+	$(echo_cmd) "CSS_EMBED $<"
+	$(Q)$(NODE) -e "fs.writeFileSync('$(B)/index.html', fs.readFileSync('$(B)/index.html').toString('utf-8').replace('<link rel=\"stylesheet\" href=\"${subst $(WASM_HTTP)/,,$<}\" />', '<style type=\"text/css\">\n/* <\!-- ${subst $(WASM_ASSETS)/,,$<} */\n'+fs.readFileSync('$<', 'utf-8')+'\n/* --> */\n</style>'))"
+endef
+
+define DO_JS_EMBED
+	$(echo_cmd) "JS_EMBED $<"
+	$(Q)$(NODE) -e "fs.writeFileSync('$(B)/index.html', fs.readFileSync('$(B)/index.html').toString('utf-8').replace('<script async type=\"text/javascript\" src=\"${subst $(WASM_HTTP)/,,$<}\"></script>', '<script async type=\"text/javascript\">\n/* <\!-- ${subst $(WASM_ASSETS)/,,$<} */\n'+fs.readFileSync('$<', 'utf-8')+'\n/* --> */\n</script>'))"
+endef
+
+define DO_WASM_EMBED
+	$(echo_cmd) "WASM_EMBED $<"
+	$(Q)$(NODE) -e "fs.writeFileSync('$(B)/index.html', fs.readFileSync('$(B)/index.html').toString('utf-8').replace('</body>', '</body>\n<script async type=\"text/javascript\">\n/* <\!-- ${subst $(B)/,,$<} */\nwindow.programBytes=atob(\\''+fs.readFileSync('$<', 'base64')+'\\')\n/* --> */\n</script>'))"
+endef
+
+
+define DO_INDEX_CC
+	$(echo_cmd) "INDEX_CC $<"
+	$(Q)$(COPY) $(WASM_HTTP)/index.html $(B)/index.html
+	$(Q)$(MAKE) -f $(MKFILE) B=$(B) V=$(V) $(B)/index.html.pak
+endef
+
+$(B)/$(TARGET).opt: $(B)/$(TARGET)
+	$(DO_OPT_CC)
+
+$(WASM_HTTP)/$(WASM_MIN).ugly: $(WASM_JS)
+	$(DO_UGLY_CC)
+
+$(B)/index.html: $(WASM_INDEX)
+	$(DO_INDEX_CC)
+
+$(B)/index.html.pak: $(WASM_VFSOBJ)
+	@:
+
+$(B)/assets/%: $(WASM_ASSETS)/%
+	$(DO_BASE64_CC)
+
+$(B)/assets/%.css: $(WASM_HTTP)/%.css
+	$(DO_CSS_EMBED)
+
+$(B)/assets/%.js: $(WASM_HTTP)/%.js
+	$(DO_JS_EMBED)
+
+$(B)/assets/%.wasm: $(B)/%.wasm
+	$(DO_WASM_EMBED)
+
 pre-build:
 	@:
 
+ifeq ($(B),$(BD))
 post-build:
-	$(Q)$(OPT) -Os --no-validation -o $(B)/$(TARGET) $(B)/$(TARGET)
+	@:
+
+else
+post-build:
+	$(echo_cmd) "PACKING $(TARGET_CLIENT)"
+	@$(MAKE) -f $(MKFILE) B=$(B) V=$(V) $(B)/index.html
+
+#	
+#	new Buffer(dataUrl, 'base64');
+
+endif
 
 # TODO: compile all js files into one/minify/webpack
 # TODO: insert bigchars font into index page, insert all javascript and wasm into index page

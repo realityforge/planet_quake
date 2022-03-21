@@ -2779,6 +2779,8 @@ Called when all downloading has been completed
 =================
 */
 static void CL_DownloadsComplete( void ) {
+#ifdef USE_MULTIVM_CLIENT
+	int igs = clientGames[cgvmi];
 
 	Com_Printf("Downloads complete\n");
 	if(uivm)
