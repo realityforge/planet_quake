@@ -25,24 +25,24 @@ MOVE             := mv
 include make/platform.make
 
 ifndef SRCDIR
-SRCDIR :=
+SRCDIR := games/multigame/assets
 endif
-ifeq ($(SRCDIR),)
-ifeq ($(PLATFORM),darwin)
-SRCDIR := /Applications/ioquake3/baseq3
-else
 
-endif
-endif
+#ifeq ($(SRCDIR),)
+#ifeq ($(PLATFORM),darwin)
+#SRCDIR := /Applications/ioquake3/baseq3
+#else
+#endif
+#endif
 
 ifeq ($(SRCDIR),)
 $(error No SRCDIR!)
 endif
 
 BASEMOD          := $(notdir $(SRCDIR))
-WORKDIRS         := $(BASEMOD)-converted
+WORKDIRS         := $(BASEMOD)-sounds $(BASEMOD)-images
 PK3DIRS          := $(wildcard $(SRCDIR)/*.pk3)
-PK3OBJS          := $(patsubst $(SRCDIR)/%,$(B)/$(BASEMOD)-converted/%,$(PK3DIRS))
+PK3OBJS          := $(patsubst $(SRCDIR)/%,$(B)/$(BASEMOD)-unpacked/%,$(PK3DIRS))
 
 define DO_CONVERT_CC
 	$(echo_cmd) "CONVERT $(subst $(SRCDIR)/,,$<)"
@@ -95,7 +95,7 @@ release:
 
 ifdef B
 
-$(B)/$(BASEMOD)-converted/%.pk3: $(SRCDIR)/%.pk3
+$(B)/$(BASEMOD)-unpacked/%.pk3: $(SRCDIR)/%.pk3
 	$(DO_UNPACK_CC)
 
 $(B)/$(BASEMOD).unpacked: $(PK3OBJS)
@@ -116,36 +116,36 @@ ALLFILES         := $(wildcard $(SRCDIR)/*) \
 										$(wildcard $(SRCDIR)/*/*/*/*) \
 										$(wildcard $(SRCDIR)/*/*/*/*/*)
 ALL_STRIPPED     := $(subst $(SRCDIR)/,,$(ALLFILES))
-DONEFILES        := $(wildcard $(B)/$(BASEMOD)-converted/*) \
-                    $(wildcard $(B)/$(BASEMOD)-converted/*/*) \
-										$(wildcard $(B)/$(BASEMOD)-converted/*/*/*) \
-										$(wildcard $(B)/$(BASEMOD)-converted/*/*/*/*) \
-										$(wildcard $(B)/$(BASEMOD)-converted/*/*/*/*/*)
-DONE_STRIPPED    := $(subst $(B)/$(BASEMOD)-converted/,,$(DONEFILES))
+DONEFILES        := $(wildcard $(B)/$(BASEMOD)-*/*) \
+                    $(wildcard $(B)/$(BASEMOD)-*/*/*) \
+										$(wildcard $(B)/$(BASEMOD)-*/*/*/*) \
+										$(wildcard $(B)/$(BASEMOD)-*/*/*/*/*) \
+										$(wildcard $(B)/$(BASEMOD)-*/*/*/*/*/*)
+DONE_STRIPPED    := $(subst $(B)/$(BASEMOD)-images/,,$(DONEFILES)) \
+										$(subst $(B)/$(BASEMOD)-sounds/,,$(DONEFILES))
 
 
 # skip checking image for transparency
-VALID_IMG_EXT    := %.jpg %.png
-CONVERT_IMG_EXT  := %.dds %.tga %.bmp %.pcx
-VALID_EXT        := $(VALID_IMG_EXT)
-CONVERT_EXT      := $(CONVERT_IMG_EXT)
+VALID_IMG_EXT    := jpg png
+CONVERT_IMG_EXT  := dds tga bmp pcx
+VALID_EXT        := $(addprefix %.,$(VALID_IMG_EXT))
+CONVERT_EXT      := $(addprefix %.,$(CONVERT_IMG_EXT))
 include make/difflist.make
-IMG_NEEDED       := $(DIFFLIST_NEEDED)
-IMG_OBJS         := $(DIFFLIST_OBJS)
+IMG_NEEDED       := $(addprefix $(B)/$(BASEMOD)-images/,$(DIFFLIST_CONVERT))
+IMG_OBJS         := $(addprefix $(B)/$(BASEMOD)-images/,$(DIFFLIST_INCLUDED))
 
 
-VALID_SND_EXT    := %.mp3 %.ogg
-CONVERT_SND_EXT  := %.wav 
-VALID_EXT        := $(VALID_SND_EXT)
-CONVERT_EXT      := $(CONVERT_SND_EXT)
+VALID_SND_EXT    := mp3 ogg
+CONVERT_SND_EXT  := wav 
+VALID_EXT        := $(addprefix %.,$(VALID_SND_EXT))
+CONVERT_EXT      := $(addprefix %.,$(CONVERT_SND_EXT))
 include make/difflist.make
-SND_NEEDED       := $(DIFFLIST_NEEDED)
-SND_OBJS         := $(DIFFLIST_OBJS)
+SND_NEEDED       := $(addprefix $(B)/$(BASEMOD)-sounds/,$(DIFFLIST_CONVERT))
+SND_OBJS         := $(addprefix $(B)/$(BASEMOD)-sounds/,$(DIFFLIST_INCLUDED))
 
-VALID_FILE_EXT   := %.cfg %.skin %.menu %.shader %.shaderx %.mtr %.arena %.bot $.txt
-FILE_INCLUDED    := $(foreach vext,$(VALID_EXT), $(filter $(vext), $(DONE_STRIPPED)))
-FILE_OBJS        := $(addprefix $(B)/$(BASEMOD)-converted/,$(FILE_INCLUDED))
 
+VALID_FILE_EXT   := cfg skin menu shaderx mtr arena bot txt shader
+FILE_INCLUDED    := $(foreach vext,$(addprefix %.,$(VALID_FILE_EXT)), $(filter $(vext), $(ALLFILES)))
 
 
 ifneq ($(IMG_NEEDED),)
@@ -157,50 +157,33 @@ endif
 
 ifdef CONVERSION_NEEDED
 
-$(B)/$(BASEMOD)-converted/%: $(SRCDIR)/%
-	$(DO_COPY_CC)
-
-$(B)/$(BASEMOD)-converted/%.tga: $(SRCDIR)/%.tga
+$(B)/$(BASEMOD)-images/%: $(SRCDIR)/%
 	$(DO_CONVERT_CC)
 
-$(B)/$(BASEMOD)-converted/%.wav: $(SRCDIR)/%.wav
+$(B)/$(BASEMOD)-sounds/%: $(SRCDIR)/%
 	$(DO_ENCODE_CC)
 
-$(B)/$(BASEMOD).collect: $(IMG_NEEDED) $(IMG_OBJS) $(SND_NEEDED) $(SND_OBJS) $(FILE_OBJS)
+$(B)/$(BASEMOD).collect: $(IMG_NEEDED) $(IMG_OBJS) $(SND_NEEDED) $(SND_OBJS) $(FILE_INCLUDED)
 	$(echo_cmd) "DONE COLLECTING $@"
 
-$(B)/$(BASEMOD).zip: $(IMG_OBJS) $(SND_OBJS) $(FILE_OBJS)
-	@echo 
+$(B)/$(BASEMOD).zip: $(IMG_OBJS) $(SND_OBJS) $(FILE_INCLUDED)
+	@echo $(IMG_NEEDED)
 	@echo "something went wrong because there are still files to convert"
 	exit 1
 
 else
 
-$(B)/$(BASEMOD).collect: $(IMG_NEEDED) $(IMG_OBJS) $(SND_NEEDED) $(SND_OBJS) $(FILE_OBJS)
+$(B)/$(BASEMOD).collect: $(IMG_NEEDED) $(IMG_OBJS) $(SND_NEEDED) $(SND_OBJS) $(FILE_INCLUDED)
 	$(echo_cmd) "DONE COLLECTING $@"
 
-$(B)/$(BASEMOD).zip: $(IMG_OBJS) $(SND_OBJS) $(FILE_OBJS)
+$(B)/$(BASEMOD).zip: $(IMG_OBJS) $(SND_OBJS) $(FILE_INCLUDED)
 	$(echo_cmd) "ZIPPING $<"
 	$(Q)$(ZIP) -o $@ $(IMG_OBJS) $(SND_OBJS)
-	$(Q)$(MOVE) $(B)/$(BASEMOD).pk3 $(B)/$(BASEMOD).pk3.bak
+	-$(Q)$(MOVE) $(B)/$(BASEMOD).pk3 $(B)/$(BASEMOD).pk3.bak
 	$(Q)$(MOVE) $(B)/$(BASEMOD).zip $(B)/$(BASEMOD).pk3
-	$(Q)$(UNLINK) $(B)/$(BASEMOD).pk3.bak
+	-$(Q)$(UNLINK) $(B)/$(BASEMOD).pk3.bak
 endif
 
 endif
 
 
-
-
-
-
-#DONE_SOUNDS      := $(filter %.mp3, $(DONEFILES)) $(filter %.ogg, $(DONEFILES))
-#DONE_STRIPPED2   := $(subst $(B)/$(BASEMOD)-converted/,,$(DONE_SOUNDS))
-#DONE_WAVS        := $(patsubst %.ogg,%.wav,$(patsubst %.mp3,%.wav,$(DONE_STRIPPED2)))
-#WAVS             := $(filter %.wav, $(ALLFILES))
-#WAVS_STRIPPED    := $(subst $(SRCDIR)/,,$(WAVS))
-#CONVERT_WAVS     := $(filter-out $(DONE_WAVS),$(WAVS_STRIPPED))
-#WAVS_NEEDED      := $(addprefix $(B)/$(BASEMOD)-converted/,$(CONVERT_WAVS))
-#WAVS_INCLUDED    := $(filter $(WAVS_STRIPPED:.wav=.mp3),$(DONE_STRIPPED2)) \
-#                    $(filter $(WAVS_STRIPPED:.wav=.ogg),$(DONE_STRIPPED2))
-#WAVOBJS          := $(addprefix $(B)/$(BASEMOD)-converted/,$(WAVS_INCLUDED))

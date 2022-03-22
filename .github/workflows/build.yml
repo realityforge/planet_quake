@@ -264,7 +264,7 @@ jobs:
         #./emsdk activate latest
         #source ./emsdk_env.sh
         cd ..
-        npm install uglifyjs -g
+        npm install -g uglify-js
 
     - name: Build
       run: |

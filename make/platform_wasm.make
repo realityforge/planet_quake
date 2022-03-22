@@ -110,14 +110,17 @@ WASM_VFSOBJ      := $(addprefix $(B)/assets/,$(WASM_IMG_ASSETS)) \
 define DO_OPT_CC
 	$(echo_cmd) "OPT_CC $<"
 	$(Q)$(OPT) -Os --no-validation -o $@ $<
-	$(Q)$(MOVE) $< $<.bak && $(MOVE) $@ $< && $(UNLINK) $<.bak
+	-$(Q)$(MOVE) $< $<.bak 
+	$(Q)$(MOVE) $@ $< 
+	-$(Q)$(UNLINK) $<.bak
 endef
 
 define DO_UGLY_CC
 	$(echo_cmd) "UGLY_CC $<"
 	$(Q)$(UGLIFY) $(WASM_JS) -o $@ -c -m
-	$(Q)$(MOVE) $(WASM_HTTP)/$(WASM_MIN) $(WASM_HTTP)/$(WASM_MIN).bak \
-    && $(MOVE) $@ $(WASM_HTTP)/$(WASM_MIN) && $(UNLINK) $(WASM_HTTP)/$(WASM_MIN).bak
+	-$(Q)$(MOVE) $(WASM_HTTP)/$(WASM_MIN) $(WASM_HTTP)/$(WASM_MIN).bak
+  $(Q)$(MOVE) $@ $(WASM_HTTP)/$(WASM_MIN)
+	-$(Q)$(UNLINK) $(WASM_HTTP)/$(WASM_MIN).bak
 endef
 
 define DO_BASE64_CC
