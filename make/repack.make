@@ -11,12 +11,16 @@
 MKFILE           := $(lastword $(MAKEFILE_LIST))
 ZIP              := zip
 CONVERT          := convert -strip -interlace Plane -sampling-factor 4:2:0 -quality 15% -auto-orient 
+ENCODE           := oggenc --downmix --resample 22050 --quiet 
 UNZIP            := unzip -n 
 IDENTIFY         := identify -format '%[opaque]'
 REPACK_MOD       := 1
 NO_OVERWRITE     ?= 1
 GETEXT            = $(if $(filter "%True%",$(shell $(IDENTIFY) "$(1)")),jpg,png)
 #BOTH              = $(1).png $(1).jpg
+COPY             := cp
+UNLINK           := rm
+MOVE             := mv
 
 include make/platform.make
 
@@ -51,36 +55,56 @@ define DO_UNPACK_CC
 	$(Q)$(UNZIP) "$<" -d "$@dir/"
 endef
 
+define DO_ENCODE_CC
+	$(echo_cmd) "ENCODE $(subst $(SRCDIR)/,,$<)"
+	$(Q)$(MKDIR) "$(dir $@)"
+	$(Q)$(ENCODE) "$<" -n "$(basename $@).ogg"
+endef
+
+define DO_COPY_CC
+	$(echo_cmd) "COPY $(subst $(SRCDIR)/,,$<)"
+	$(Q)$(MKDIR) "$(dir $@)"
+	$(Q)$(COPY) -n "$<" "$@"
+endef
+
 
 debug:
 	$(echo_cmd) "REPACK $(SRCDIR)"
 	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) WORKDIRS="$(WORKDIRS)" mkdirs
 	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) pre-build
-	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) $(BD)/$(BASEMOD).unpacked
+#	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) $(BD)/$(BASEMOD).unpacked
 	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) -j 16 \
-		TARGET_MOD="$(BASEMOD).pk3" $(BD)/$(BASEMOD).collect
+		TARGET_MOD="$(BASEMOD).zip" $(BD)/$(BASEMOD).collect
 	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) \
-		TARGET_MOD="$(BASEMOD).pk3" $(BD)/$(BASEMOD).pk3
+		TARGET_MOD="$(BASEMOD).zip" $(BD)/$(BASEMOD).zip
 
 release:
 	$(echo_cmd) "REPACK $(WORKDIR)"
 	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) WORKDIRS="$(WORKDIRS)" mkdirs
 	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) pre-build
-	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) $(BR)/$(BASEMOD).unpacked
+#	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) $(BR)/$(BASEMOD).unpacked
 	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) -j 16 \
-		TARGET_MOD="$(BASEMOD).pk3" $(BR)/$(BASEMOD).collect
+		TARGET_MOD="$(BASEMOD).zip" $(BR)/$(BASEMOD).collect
 	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) \
-		TARGET_MOD="$(BASEMOD).pk3" $(BR)/$(BASEMOD).pk3
+		TARGET_MOD="$(BASEMOD).zip" $(BR)/$(BASEMOD).zip
 
 # have to do this first and it runs with no replace 
 #   so it's not expensive to repeat every time
 
+
+
+ifdef B
+
 $(B)/$(BASEMOD)-converted/%.pk3: $(SRCDIR)/%.pk3
 	$(DO_UNPACK_CC)
-$(BR)/$(BASEMOD).unpacked: $(PK3OBJS)
+
+$(B)/$(BASEMOD).unpacked: $(PK3OBJS)
 	$(echo_cmd) "UNPACKED $@"
-$(BD)/$(BASEMOD).unpacked: $(PK3OBJS)
-	$(echo_cmd) "UNPACKED $@"
+
+#BOTHLIST := $(foreach x,$(LIST),$(call BOTH,$(x)))
+
+endif
+
 
 
 ifdef TARGET_MOD
@@ -91,40 +115,92 @@ ALLFILES         := $(wildcard $(SRCDIR)/*) \
 										$(wildcard $(SRCDIR)/*/*/*) \
 										$(wildcard $(SRCDIR)/*/*/*/*) \
 										$(wildcard $(SRCDIR)/*/*/*/*/*)
+ALL_STRIPPED     := $(subst $(SRCDIR)/,,$(ALLFILES))
 DONEFILES        := $(wildcard $(B)/$(BASEMOD)-converted/*) \
                     $(wildcard $(B)/$(BASEMOD)-converted/*/*) \
 										$(wildcard $(B)/$(BASEMOD)-converted/*/*/*) \
 										$(wildcard $(B)/$(BASEMOD)-converted/*/*/*/*) \
 										$(wildcard $(B)/$(BASEMOD)-converted/*/*/*/*/*)
+DONE_STRIPPED    := $(subst $(B)/$(BASEMOD)-converted/,,$(DONEFILES))
+
 
 # skip checking image for transparency
-DONE             := $(filter %.jpg, $(DONEFILES)) $(filter %.png, $(DONEFILES))
-DONE_STRIPPED    := $(subst $(B)/$(BASEMOD)-converted/,,$(DONE))
-DONE_TGAS        := $(patsubst %.png,%.tga,$(patsubst %.jpg,%.tga,$(DONE_STRIPPED)))
-IMAGES           := $(filter %.tga, $(ALLFILES))
-IMAGES_STRIPPED  := $(subst $(SRCDIR)/,,$(IMAGES))
+VALID_IMG_EXT    := %.jpg %.png
+CONVERT_IMG_EXT  := %.dds %.tga %.bmp %.pcx
+VALID_EXT        := $(VALID_IMG_EXT)
+CONVERT_EXT      := $(CONVERT_IMG_EXT)
+include make/difflist.make
+IMG_NEEDED       := $(DIFFLIST_NEEDED)
+IMG_OBJS         := $(DIFFLIST_OBJS)
 
-CONVERTIMAGES    := $(filter-out $(DONE_TGAS),$(IMAGES_STRIPPED))
-IMAGES_NEEDED    := $(addprefix $(B)/$(BASEMOD)-converted/,$(CONVERTIMAGES))
-IMAGES_INCLUDED  := $(filter $(IMAGES_STRIPPED:.tga=.png),$(DONE_STRIPPED)) \
-                    $(filter $(IMAGES_STRIPPED:.tga=.jpg),$(DONE_STRIPPED))
-IMAGEOBJS        := $(addprefix $(B)/$(BASEMOD)-converted/,$(IMAGES_INCLUDED))
+
+VALID_SND_EXT    := %.mp3 %.ogg
+CONVERT_SND_EXT  := %.wav 
+VALID_EXT        := $(VALID_SND_EXT)
+CONVERT_EXT      := $(CONVERT_SND_EXT)
+include make/difflist.make
+SND_NEEDED       := $(DIFFLIST_NEEDED)
+SND_OBJS         := $(DIFFLIST_OBJS)
+
+VALID_FILE_EXT   := %.cfg %.skin %.menu %.shader %.shaderx %.mtr %.arena %.bot $.txt
+FILE_INCLUDED    := $(foreach vext,$(VALID_EXT), $(filter $(vext), $(DONE_STRIPPED)))
+FILE_OBJS        := $(addprefix $(B)/$(BASEMOD)-converted/,$(FILE_INCLUDED))
+
+
+
+ifneq ($(IMG_NEEDED),)
+CONVERSION_NEEDED := 1
+endif
+ifneq ($(SND_NEEDED),)
+CONVERSION_NEEDED := 1
+endif
+
+ifdef CONVERSION_NEEDED
+
+$(B)/$(BASEMOD)-converted/%: $(SRCDIR)/%
+	$(DO_COPY_CC)
 
 $(B)/$(BASEMOD)-converted/%.tga: $(SRCDIR)/%.tga
-	@:
-# $(DO_CONVERT_CC)
+	$(DO_CONVERT_CC)
 
-#BOTHLIST := $(foreach x,$(LIST),$(call BOTH,$(x)))
+$(B)/$(BASEMOD)-converted/%.wav: $(SRCDIR)/%.wav
+	$(DO_ENCODE_CC)
 
-$(B)/$(BASEMOD).collect: $(IMAGES_NEEDED) $(IMAGEOBJS)
+$(B)/$(BASEMOD).collect: $(IMG_NEEDED) $(IMG_OBJS) $(SND_NEEDED) $(SND_OBJS) $(FILE_OBJS)
 	$(echo_cmd) "DONE COLLECTING $@"
 
-ifneq ($(IMAGES_NEEDED),)
-$(B)/$(TARGET_MOD): $(IMAGEOBJS)
-	@error something didn't work because image conversion is still needed
+$(B)/$(BASEMOD).zip: $(IMG_OBJS) $(SND_OBJS) $(FILE_OBJS)
+	@echo 
+	@echo "something went wrong because there are still files to convert"
+	exit 1
+
 else
-$(B)/$(TARGET_MOD): $(IMAGEOBJS)
-	$(Q)$(ZIP) -o $@ $(IMAGEOBJS)
+
+$(B)/$(BASEMOD).collect: $(IMG_NEEDED) $(IMG_OBJS) $(SND_NEEDED) $(SND_OBJS) $(FILE_OBJS)
+	$(echo_cmd) "DONE COLLECTING $@"
+
+$(B)/$(BASEMOD).zip: $(IMG_OBJS) $(SND_OBJS) $(FILE_OBJS)
+	$(echo_cmd) "ZIPPING $<"
+	$(Q)$(ZIP) -o $@ $(IMG_OBJS) $(SND_OBJS)
+	$(Q)$(MOVE) $(B)/$(BASEMOD).pk3 $(B)/$(BASEMOD).pk3.bak
+	$(Q)$(MOVE) $(B)/$(BASEMOD).zip $(B)/$(BASEMOD).pk3
+	$(Q)$(UNLINK) $(B)/$(BASEMOD).pk3.bak
 endif
 
 endif
+
+
+
+
+
+
+#DONE_SOUNDS      := $(filter %.mp3, $(DONEFILES)) $(filter %.ogg, $(DONEFILES))
+#DONE_STRIPPED2   := $(subst $(B)/$(BASEMOD)-converted/,,$(DONE_SOUNDS))
+#DONE_WAVS        := $(patsubst %.ogg,%.wav,$(patsubst %.mp3,%.wav,$(DONE_STRIPPED2)))
+#WAVS             := $(filter %.wav, $(ALLFILES))
+#WAVS_STRIPPED    := $(subst $(SRCDIR)/,,$(WAVS))
+#CONVERT_WAVS     := $(filter-out $(DONE_WAVS),$(WAVS_STRIPPED))
+#WAVS_NEEDED      := $(addprefix $(B)/$(BASEMOD)-converted/,$(CONVERT_WAVS))
+#WAVS_INCLUDED    := $(filter $(WAVS_STRIPPED:.wav=.mp3),$(DONE_STRIPPED2)) \
+#                    $(filter $(WAVS_STRIPPED:.wav=.ogg),$(DONE_STRIPPED2))
+#WAVOBJS          := $(addprefix $(B)/$(BASEMOD)-converted/,$(WAVS_INCLUDED))
