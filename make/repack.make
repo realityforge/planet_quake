@@ -39,6 +39,7 @@ ifeq ($(SRCDIR),)
 $(error No SRCDIR!)
 endif
 
+PK3_PREFIX       := xxx-multigame
 BASEMOD          := $(notdir $(SRCDIR))
 WORKDIRS         := $(BASEMOD)-sounds $(BASEMOD)-images
 PK3DIRS          := $(wildcard $(SRCDIR)/*.pk3)
@@ -74,9 +75,9 @@ debug:
 	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) pre-build
 #	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) $(BD)/$(BASEMOD).unpacked
 	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) -j 16 \
-		TARGET_MOD="$(BASEMOD).zip" $(BD)/$(BASEMOD).collect
-	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) \
-		TARGET_MOD="$(BASEMOD).zip" $(BD)/$(BASEMOD).zip
+		TARGET_MOD="$(PK3_PREFIX).zip" $(BD)/$(BASEMOD).collect
+	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) -j 1 \
+		TARGET_MOD="$(PK3_PREFIX).zip" $(BD)/$(PK3_PREFIX).zip
 
 release:
 	$(echo_cmd) "REPACK $(WORKDIR)"
@@ -84,9 +85,9 @@ release:
 	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) pre-build
 #	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) $(BR)/$(BASEMOD).unpacked
 	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) -j 16 \
-		TARGET_MOD="$(BASEMOD).zip" $(BR)/$(BASEMOD).collect
-	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) \
-		TARGET_MOD="$(BASEMOD).zip" $(BR)/$(BASEMOD).zip
+		TARGET_MOD="$(PK3_PREFIX).zip" $(BR)/$(BASEMOD).collect
+	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) -j 1 \
+		TARGET_MOD="$(PK3_PREFIX).zip" $(BR)/$(PK3_PREFIX).zip
 
 # have to do this first and it runs with no replace 
 #   so it's not expensive to repeat every time
@@ -110,19 +111,31 @@ endif
 ifdef TARGET_MOD
 
 # does it help to store file searches down here?
-ALLFILES         := $(wildcard $(SRCDIR)/*) \
+PK3DIR_FILES     := $(wildcard $(SRCDIR)/*.pk3dir) \
+                    $(wildcard $(SRCDIR)/*.pk3dir/*) \
+                    $(wildcard $(SRCDIR)/*.pk3dir/*/*) \
+                    $(wildcard $(SRCDIR)/*.pk3dir/*/*/*) \
+                    $(wildcard $(SRCDIR)/*.pk3dir/*/*/*/*)
+SOURCE_FILES     := $(wildcard $(SRCDIR)/*) \
                     $(wildcard $(SRCDIR)/*/*) \
-										$(wildcard $(SRCDIR)/*/*/*) \
-										$(wildcard $(SRCDIR)/*/*/*/*) \
-										$(wildcard $(SRCDIR)/*/*/*/*/*)
-ALL_STRIPPED     := $(subst $(SRCDIR)/,,$(ALLFILES))
-DONEFILES        := $(wildcard $(B)/$(BASEMOD)-*/*) \
+                    $(wildcard $(SRCDIR)/*/*/*) \
+                    $(wildcard $(SRCDIR)/*/*/*/*) \
+                    $(wildcard $(SRCDIR)/*/*/*/*/*)
+SOURCE_STRIPPED  := $(subst $(SRCDIR)/,,$(filter $(PK3DIR_FILES),$(SOURCE_FILES)))
+
+DONEPK3_FILES    := $(wildcard $(B)/$(BASEMOD)-*.pk3dir/*) \
+                    $(wildcard $(B)/$(BASEMOD)-*.pk3dir/*/*) \
+                    $(wildcard $(B)/$(BASEMOD)-*.pk3dir/*/*/*) \
+                    $(wildcard $(B)/$(BASEMOD)-*.pk3dir/*/*/*/*) \
+                    $(wildcard $(B)/$(BASEMOD)-*.pk3dir/*/*/*/*/*)
+DONE_FILES       := $(wildcard $(B)/$(BASEMOD)-*/*) \
                     $(wildcard $(B)/$(BASEMOD)-*/*/*) \
-										$(wildcard $(B)/$(BASEMOD)-*/*/*/*) \
-										$(wildcard $(B)/$(BASEMOD)-*/*/*/*/*) \
-										$(wildcard $(B)/$(BASEMOD)-*/*/*/*/*/*)
-DONE_STRIPPED    := $(subst $(B)/$(BASEMOD)-images/,,$(DONEFILES)) \
-										$(subst $(B)/$(BASEMOD)-sounds/,,$(DONEFILES))
+                    $(wildcard $(B)/$(BASEMOD)-*/*/*/*) \
+                    $(wildcard $(B)/$(BASEMOD)-*/*/*/*/*) \
+                    $(wildcard $(B)/$(BASEMOD)-*/*/*/*/*/*)
+DONENOPK3_FILES  := $(filter $(PK3DIR_FILES), $(DONE_FILES))
+DONE_STRIPPED    := $(subst $(B)/$(BASEMOD)-images/,,$(DONENOPK3_FILES)) \
+                    $(subst $(B)/$(BASEMOD)-sounds/,,$(DONENOPK3_FILES))
 
 
 # skip checking image for transparency
@@ -166,7 +179,7 @@ $(B)/$(BASEMOD)-sounds/%: $(SRCDIR)/%
 $(B)/$(BASEMOD).collect: $(IMG_NEEDED) $(IMG_OBJS) $(SND_NEEDED) $(SND_OBJS) $(FILE_INCLUDED)
 	$(echo_cmd) "DONE COLLECTING $@"
 
-$(B)/$(BASEMOD).zip: $(IMG_OBJS) $(SND_OBJS) $(FILE_INCLUDED)
+$(B)/$(PK3_PREFIX).zip: $(IMG_OBJS) $(SND_OBJS) $(FILE_INCLUDED)
 	@echo $(IMG_NEEDED)
 	@echo "something went wrong because there are still files to convert"
 	exit 1
@@ -176,14 +189,43 @@ else
 $(B)/$(BASEMOD).collect: $(IMG_NEEDED) $(IMG_OBJS) $(SND_NEEDED) $(SND_OBJS) $(FILE_INCLUDED)
 	$(echo_cmd) "DONE COLLECTING $@"
 
-$(B)/$(BASEMOD).zip: $(IMG_OBJS) $(SND_OBJS) $(FILE_INCLUDED)
+$(B)/$(PK3_PREFIX)-files.zip: $(FILE_INCLUDED)
 	$(echo_cmd) "ZIPPING $<"
-	$(Q)$(ZIP) -o $@ $(IMG_OBJS) $(SND_OBJS)
-	-$(Q)$(MOVE) $(B)/$(BASEMOD).pk3 $(B)/$(BASEMOD).pk3.bak
-	$(Q)$(MOVE) $(B)/$(BASEMOD).zip $(B)/$(BASEMOD).pk3
-	-$(Q)$(UNLINK) $(B)/$(BASEMOD).pk3.bak
-endif
+	pushd $(SRCDIR) && \
+	$(Q)$(ZIP) -o $(PK3_PREFIX)-files.zip $(subst $(SRCDIR)/,,$(FILE_INCLUDED)) && \
+	popd
+	-@$(MOVE) $(B)/$(PK3_PREFIX)-files.pk3 $(B)/$(PK3_PREFIX)-files.pk3.bak
+	$(Q)$(MOVE) $(SRCDIR)/$(PK3_PREFIX)-files.zip $(B)/$(PK3_PREFIX)-files.pk3
+	-@$(UNLINK) $(B)/$(PK3_PREFIX)-files.pk3.bak
 
+$(B)/$(PK3_PREFIX)-images.zip: $(IMG_OBJS)
+	$(echo_cmd) "ZIPPING $<"
+	pushd $(B)/$(BASEMOD)-images && \
+	$(Q)$(ZIP) -o $(PK3_PREFIX)-images.zip $(subst $(B)/$(BASEMOD)-images/,,$(IMG_OBJS)) && \
+	popd
+	-@$(MOVE) $(B)/$(PK3_PREFIX)-images.pk3 $(B)/$(PK3_PREFIX)-images.pk3.bak
+	$(Q)$(MOVE) $(B)/$(BASEMOD)-images/$(PK3_PREFIX)-images.zip $(B)/$(PK3_PREFIX)-images.pk3
+	-@$(UNLINK) $(B)/$(PK3_PREFIX)-images.pk3.bak
+
+$(B)/$(PK3_PREFIX)-sounds.zip: $(SND_OBJS)
+	$(echo_cmd) "ZIPPING $<"
+	pushd $(B)/$(BASEMOD)-sounds && \
+	$(Q)$(ZIP) -o $(PK3_PREFIX)-sounds.zip $(subst $(B)/$(BASEMOD)-sounds/,,$(SND_OBJS)) && \
+	popd
+	-@$(MOVE) $(B)/$(PK3_PREFIX)-sounds.pk3 $(B)/$(PK3_PREFIX)-sounds.pk3.bak
+	$(Q)$(MOVE) $(B)/$(BASEMOD)-sounds/$(PK3_PREFIX)-sounds.zip $(B)/$(PK3_PREFIX)-sounds.pk3
+	-@$(UNLINK) $(B)/$(PK3_PREFIX)-sounds.pk3.bak
+
+
+ALL_ZIPS := $(B)/$(PK3_PREFIX)-sounds.zip $(B)/$(PK3_PREFIX)-images.zip \
+           $(B)/$(PK3_PREFIX)-files.zip
+
+$(B)/$(PK3_PREFIX).zip: $(ALL_ZIPS)
+	@:
+
+
+
+endif
 endif
 
 

@@ -722,13 +722,16 @@ function loadImage(filename, pic, ext) {
   EMGL.previousImage = null
   EMGL.previousName = ''
   HEAP32[buf >> 2] = 0
+  // TODO: merge with virtual filesystem...
+  //   But doing it this way, it's possible for images to load with the page
+  //   If I switch back to FS.virtual mode, this part will always reload async
   let preloadedImage = document.querySelector(`IMG[title="${filenameStr}"]`)
   if (preloadedImage) {
     EMGL.previousName = filenameStr
     EMGL.previousImage = preloadedImage
     HEAP32[pic >> 2] = 1
     return
-  } 
+  }
   
   if ((length = FS_ReadFile(filename, buf)) > 0 && HEAPU32[buf >> 2] > 0) {
     let thisImage = document.createElement('IMG')

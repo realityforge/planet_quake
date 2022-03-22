@@ -157,6 +157,18 @@ function InputPushMovedEvent (evt) {
   }
 }
 
+/*
+document.querySelector('element').bind('copy', function(event) {
+  var selectedText = window.getSelection().toString(); 
+  selectedText = selectedText.replace(/\u200B/g, "");
+
+  clipboardData = event.clipboardData || window.clipboardData || event.originalEvent.clipboardData;
+  clipboardData.setData('text/html', selectedText);
+
+  event.preventDefault();
+});
+*/
+
 function captureClipBoard () {
   // this is the same method I used on StudySauce
   var text = document.createElement('TEXTAREA')

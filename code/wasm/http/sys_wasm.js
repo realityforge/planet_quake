@@ -61,9 +61,7 @@ function instantiateWasm(bytes) {
   if(!bytes) {
     throw new Error('Couldn\'t find wasm!')
   }
-  if(typeof bytes == 'string') {
-    bytes = new Uint8Array(bytes.split('').map(function (b) { return b.charCodeAt(0) }))
-  }
+
   // assign everything to env because this bullshit don't work
   Object.assign(Q3e, libraries)
   for(let i = 0; i < Object.keys(libraries).length; i++) {
@@ -84,11 +82,24 @@ function init() {
   // might as well start this early, transfer IndexedDB from disk/memory to application memory
   readAll()
 
-  // TODO: bootstrap download function so it saves binary to disk
-  if(typeof programBytes == 'string') {
-    return Promise.resolve(programBytes)
-  } else {
-    return fetch('./quake3e_mv.wasm?time=' + Q3e.cacheBuster)
+  // TODO: offline download so it saves binary to IndexedDB
+  if(typeof window.preFS != 'undefined') {
+    let preloadedPaths = Object.keys(window.preFS)
+    for(let i = 0; i < preloadedPaths.length; i++) {
+      FS.virtual[preloadedPaths[i]] = {
+        timestamp: new Date(),
+        mode: 33206,
+        contents: new Uint8Array(atob(window.preFS[preloadedPaths[i]]).split('')
+          .map(function (b) { return b.charCodeAt(0) }))
+      }
+    }
+
+    if(typeof FS.virtual['quake3e.wasm'] != 'undefined') {
+      return Promise.resolve(FS.virtual['quake3e.wasm'].contents)
+    }
+  }
+
+  return fetch('./quake3e_mv.wasm?time=' + Q3e.cacheBuster)
     .catch(function (e) {})
     .then(function(response) {
       if(!response || response.status == 404) {
@@ -107,7 +118,6 @@ function init() {
         return response.arrayBuffer()
       }
     })
-  }
 }
 
 // TODO: change when hot reloading works
