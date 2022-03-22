@@ -4,9 +4,12 @@
 MKFILE           := $(lastword $(MAKEFILE_LIST))
 ZIP              := zip
 CONVERT          := convert -strip -interlace Plane -sampling-factor 4:2:0 -quality 15% -auto-orient 
+UNZIP            := unzip -n 
 IDENTIFY         := identify -format '%[opaque]'
 REPACK_MOD       := 1
 NO_OVERWRITE     ?= 1
+GETEXT            = $(if $(filter "%True%",$(shell $(IDENTIFY) "$(1)")),jpg,png)
+#BOTH              = $(1).png $(1).jpg
 
 include make/platform.make
 
@@ -21,58 +24,68 @@ else
 endif
 endif
 
-WORKDIR          := $(notdir $(SRCDIR))
-
-ifeq ($(WORKDIR),)
+ifeq ($(SRCDIR),)
 $(error No SRCDIR!)
 endif
 
-WORKDIRS         := $(WORKDIR)-c $(WORKDIR)-cc
-TARGET_MOD       := $(WORKDIR).pk3
-IMAGES           := $(wildcard $(SRCDIR)/*.tga) \
-                    $(wildcard $(SRCDIR)/*/*.tga) \
-										$(wildcard $(SRCDIR)/*/*/*.tga) \
-										$(wildcard $(SRCDIR)/*/*/*/*.tga) \
-										$(wildcard $(SRCDIR)/*/*/*/*/*.tga)
+BASEMOD          := $(notdir $(SRCDIR))
+WORKDIRS         := $(BASEMOD)-converted
+TARGET_MOD       := $(notdir $(SRCDIR)).pk3
 
-#TODO: skip checking image for transparency
-#both = $(1).ml $(1).mli
-#BOTHLIST := $(foreach x,$(LIST),$(call both,$(x)))
-
-
-debug:
-	$(echo_cmd) "REPACK $(WORKDIR)"
-	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) WORKDIRS="$(WORKDIR) $(WORKDIRS)" mkdirs
-	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) pre-build
-	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) -j 8 \
-		WORKDIRS="$(WORKDIR) $(WORKDIRS)" \
-		CFLAGS="$(CFLAGS) $(DEBUG_CFLAGS)" \
-		LDFLAGS="$(LDFLAGS) $(DEBUG_LDFLAGS)" \
-		$(BD)/$(TARGET_MOD)
-
-release:
-	$(echo_cmd) "REPACK $(WORKDIR)"
-	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) WORKDIRS="$(WORKDIR) $(WORKDIRS)" mkdirs
-	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) pre-build
-	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) -j 8 \
-		WORKDIRS="$(WORKDIR) $(WORKDIRS)" \
-		CFLAGS="$(CFLAGS) $(RELEASE_CFLAGS)" \
-		LDFLAGS="$(LDFLAGS) $(RELEASE_LDFLAGS)" \
-		$(BR)/$(TARGET_MOD)
-
-ifdef B
-FILES            := $(IMAGES)
-MODOBJS          := $(patsubst $(SRCDIR)/%,$(B)/$(WORKDIR)-cc/%,$(FILES))
-GETEXT            = $(if $(filter "%False%",$(shell $(IDENTIFY) "$(1)")),png,jpg)
-
-$(B)/$(WORKDIR)-cc/%.tga: $(SRCDIR)/%.tga
+define DO_CONVERT_CC
 	$(echo_cmd) "CONVERT $<"
 	$(Q)$(MKDIR) "$(dir $@)"
 	$(Q)$(CONVERT) "$<" "$(basename $@).$(call GETEXT,$<)"
+endef
 
-$(B)/$(WORKDIR)-cc: $(MODOBJS)
+define DO_UNPACK_CC
+	$(echo_cmd) "UNPACK $<"
+	$(Q)$(UNZIP) "$<" -d "$@dir/"
+endef
 
-$(B)/$(TARGET_MOD): $(B)/$(WORKDIR)-cc
+
+debug:
+	$(echo_cmd) "REPACK $(SRCDIR)"
+	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) WORKDIRS="$(WORKDIRS)" mkdirs
+	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) pre-build
+	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) $(BD)/$(TARGET_MOD).unpacked
+	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) -j 16 $(BD)/$(TARGET_MOD)
+
+release:
+	$(echo_cmd) "REPACK $(WORKDIR)"
+	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) WORKDIRS="$(WORKDIRS)" mkdirs
+	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) pre-build
+	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) $(BR)/$(TARGET_MOD).unpacked
+	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) -j 16 $(BR)/$(TARGET_MOD)
+
+ifdef B
+PK3DIRS          := $(wildcard $(SRCDIR)/*.pk3)
+PK3OBJS          := $(patsubst $(SRCDIR)/%,$(B)/$(BASEMOD)-converted/%,$(PK3DIRS))
+
+ALLFILES         := $(wildcard $(SRCDIR)/*) \
+                    $(wildcard $(SRCDIR)/*/*) \
+										$(wildcard $(SRCDIR)/*/*/*) \
+										$(wildcard $(SRCDIR)/*/*/*/*) \
+										$(wildcard $(SRCDIR)/*/*/*/*/*)
+IMAGES           := $(filter-out /%.tga, $(ALLFILES))
+FILES            := $(IMAGES)
+MODOBJS          := $(patsubst $(SRCDIR)/%,$(B)/$(BASEMOD)-converted/%,$(FILES))
+
+$(B)/$(BASEMOD)-converted/%.tga: $(SRCDIR)/%.tga
+	$(DO_CONVERT_CC)
+
+$(B)/$(BASEMOD)-converted/%.pk3: $(SRCDIR)/%.pk3
+	$(DO_UNPACK_CC)
+
+#TODO: skip checking image for transparency
+#BOTHLIST := $(foreach x,$(LIST),$(call BOTH,$(x)))
+
+# have to do this first and it runs with no replace 
+#   so it's not expensive to repeat every time
+$(B)/$(TARGET_MOD).unpacked: $(PK3OBJS)
+	$(echo_cmd) "UNPACKED $@"
+
+$(B)/$(TARGET_MOD): $(MODOBJS)
 	$(echo_cmd) "ZIP $@"
-	$(Q)$(ZIP) -o $@ $(MODOBJS) 
+	$(Q)$(ZIP) -o $@ -u $(MODOBJS)
 endif
