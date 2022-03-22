@@ -25,7 +25,8 @@ MOVE             := mv
 include make/platform.make
 
 ifndef SRCDIR
-SRCDIR := games/multigame/assets
+SRCDIR           := games/multigame/assets
+PK3_PREFIX       := xxx-multigame
 endif
 
 #ifeq ($(SRCDIR),)
@@ -39,10 +40,12 @@ ifeq ($(SRCDIR),)
 $(error No SRCDIR!)
 endif
 
-PK3_PREFIX       := xxx-multigame
-BASEMOD          := $(notdir $(SRCDIR))
-WORKDIRS         := $(BASEMOD)-sounds $(BASEMOD)-images
-PK3DIRS          := $(wildcard $(SRCDIR)/*.pk3)
+BASEMOD          := $(subst .pk3dir,,$(notdir $(SRCDIR)))
+ifndef PK3_PREFIX
+PK3_PREFIX       := $(BASEMOD)
+endif
+WORKDIRS         := $(BASEMOD)-sounds $(BASEMOD)-images $(BASEMOD)-unpacked
+PK3_FILES        := $(wildcard $(SRCDIR)/*.pk3)
 PK3OBJS          := $(patsubst $(SRCDIR)/%,$(B)/$(BASEMOD)-unpacked/%,$(PK3DIRS))
 
 define DO_CONVERT_CC
@@ -73,21 +76,25 @@ debug:
 	$(echo_cmd) "REPACK $(SRCDIR)"
 	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) WORKDIRS="$(WORKDIRS)" mkdirs
 	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) pre-build
-#	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) $(BD)/$(BASEMOD).unpacked
+	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) $(BD)/$(BASEMOD).unpacked
 	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) -j 16 \
 		TARGET_MOD="$(PK3_PREFIX).zip" $(BD)/$(BASEMOD).collect
 	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) -j 1 \
 		TARGET_MOD="$(PK3_PREFIX).zip" $(BD)/$(PK3_PREFIX).zip
+	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) -j 1 \
+		TARGET_MOD="$(PK3_PREFIX).zip" $(BD)/$(BASEMOD).pk3dirs
 
 release:
 	$(echo_cmd) "REPACK $(WORKDIR)"
 	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) WORKDIRS="$(WORKDIRS)" mkdirs
 	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) pre-build
-#	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) $(BR)/$(BASEMOD).unpacked
+	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) $(BR)/$(BASEMOD).unpacked
 	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) -j 16 \
 		TARGET_MOD="$(PK3_PREFIX).zip" $(BR)/$(BASEMOD).collect
 	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) -j 1 \
 		TARGET_MOD="$(PK3_PREFIX).zip" $(BR)/$(PK3_PREFIX).zip
+	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) -j 1 \
+		TARGET_MOD="$(PK3_PREFIX).zip" $(BR)/$(BASEMOD).pk3dirs
 
 # have to do this first and it runs with no replace 
 #   so it's not expensive to repeat every time
@@ -123,7 +130,6 @@ SOURCE_FILES     := $(wildcard $(SRCDIR)/*) \
                     $(wildcard $(SRCDIR)/*/*/*/*/*)
 ALL_FILES        := $(filter-out $(PK3DIR_FILES),$(SOURCE_FILES))
 SOURCE_STRIPPED  := $(subst $(SRCDIR)/,,$(ALL_FILES))
-
 DONEPK3_FILES    := $(wildcard $(B)/$(BASEMOD)-*.pk3dir/*) \
                     $(wildcard $(B)/$(BASEMOD)-*.pk3dir/*/*) \
                     $(wildcard $(B)/$(BASEMOD)-*.pk3dir/*/*/*) \
@@ -158,9 +164,10 @@ SND_NEEDED       := $(addprefix $(B)/$(BASEMOD)-sounds/,$(DIFFLIST_CONVERT))
 SND_OBJS         := $(filter-out  ,$(addprefix $(B)/$(BASEMOD)-sounds/,$(DIFFLIST_INCLUDED)))
 
 
-VALID_FILE_EXT   := cfg skin menu shaderx mtr arena bot txt shader
+VALID_FILE_EXT   := cfg skin menu shaderx mtr arena bot txt shader $(INCLUDE_EXTS)
 FILE_INCLUDED    := 
 FILE_INCLUDED    := $(filter-out  ,$(foreach vext,$(addprefix %.,$(VALID_FILE_EXT)), $(filter $(vext), $(ALL_FILES))))
+PK3_DIRECTORIES  := $(addprefix $(B)/pk3dirs/,$(subst $(SRCDIR)/,,$(wildcard $(SRCDIR)/*.pk3dir)))
 
 
 ifneq ($(IMG_NEEDED),)
@@ -193,7 +200,7 @@ $(B)/$(BASEMOD).collect: $(IMG_NEEDED) $(IMG_OBJS) $(SND_NEEDED) $(SND_OBJS) $(F
 
 ifneq ($(FILE_INCLUDED),)
 $(B)/$(PK3_PREFIX)-files.zip: $(FILE_INCLUDED)
-	$(echo_cmd) "ZIPPING $< \"$(FILE_INCLUDED)\""
+	$(echo_cmd) "ZIPPING $<"
 	$(Q)pushd $(SRCDIR) && \
 		$(ZIP) -o $(PK3_PREFIX)-files.zip $(subst $(SRCDIR)/,,$(FILE_INCLUDED)) && \
 		popd
@@ -233,13 +240,40 @@ $(B)/$(PK3_PREFIX)-sounds.zip: $(SND_OBJS)
 	$(echo_cmd) "SKIPPING, no sounds $<"
 endif
 
-ALL_ZIPS := $(B)/$(PK3_PREFIX)-files.zip
-
-#ALL_ZIPS := $(B)/$(PK3_PREFIX)-sounds.zip $(B)/$(PK3_PREFIX)-images.zip \
-#            $(B)/$(PK3_PREFIX)-files.zip
+ALL_ZIPS := $(B)/$(PK3_PREFIX)-sounds.zip $(B)/$(PK3_PREFIX)-images.zip \
+            $(B)/$(PK3_PREFIX)-files.zip
 
 $(B)/$(PK3_PREFIX).zip: $(ALL_ZIPS)
-	@:
+	$(echo_cmd) "DONE PACKING $<"
+
+$(B)/pk3dirs/%.pk3dir: $(SRCDIR)/%.pk3dir
+	$(echo_cmd) "MAKING $<"
+	$(Q)$(MAKE) -f $(MKFILE) B=$(B) V=$(V) -j 1 \
+		SRCDIR="$(SRCDIR)/${subst $(B)/pk3dirs/,,$@}" \
+		TARGET_MOD="${subst .pk3dir,,${subst $(B)/pk3dirs/,,$@}}.zip" \
+		INCLUDE_EXTS="bsp" \
+		$(B)/${subst .pk3dir,,${subst $(B)/pk3dirs/,,$@}}.collect
+	$(Q)$(MAKE) -f $(MKFILE) B=$(B) V=$(V) -j 1 \
+		SRCDIR="$(SRCDIR)/${subst $(B)/pk3dirs/,,$@}" \
+		TARGET_MOD="${subst .pk3dir,,${subst $(B)/pk3dirs/,,$@}}.zip" \
+		INCLUDE_EXTS="bsp" \
+		$(B)/${subst .pk3dir,,${subst $(B)/pk3dirs/,,$@}}.zip
+
+$(B)/pk3dirs/%.pk3dir: $(B)/$(BASEMOD)-unpacked/%.pk3dir
+	$(echo_cmd) "MAKING $<"
+	$(Q)$(MAKE) -f $(MKFILE) B=$(B) V=$(V) -j 1 \
+		SRCDIR="$(B)/$(BASEMOD)-unpacked/${subst $(B)/pk3dirs/,,$@}" \
+		TARGET_MOD="${subst .pk3dir,,${subst $(B)/pk3dirs/,,$@}}.zip" \
+		INCLUDE_EXTS="bsp" \
+		$(B)/${subst .pk3dir,,${subst $(B)/pk3dirs/,,$@}}.collect
+	$(Q)$(MAKE) -f $(MKFILE) B=$(B) V=$(V) -j 1 \
+		SRCDIR="$(B)/$(BASEMOD)-unpacked/${subst $(B)/pk3dirs/,,$@}" \
+		TARGET_MOD="${subst .pk3dir,,${subst $(B)/pk3dirs/,,$@}}.zip" \
+		INCLUDE_EXTS="bsp" \
+		$(B)/${subst .pk3dir,,${subst $(B)/pk3dirs/,,$@}}.zip
+
+$(B)/$(BASEMOD).pk3dirs: $(PK3_DIRECTORIES)
+	$(echo_cmd) "DONE PACKING PK3S $(PK3_DIRECTORIES)"
 
 
 
