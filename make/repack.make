@@ -121,7 +121,8 @@ SOURCE_FILES     := $(wildcard $(SRCDIR)/*) \
                     $(wildcard $(SRCDIR)/*/*/*) \
                     $(wildcard $(SRCDIR)/*/*/*/*) \
                     $(wildcard $(SRCDIR)/*/*/*/*/*)
-SOURCE_STRIPPED  := $(subst $(SRCDIR)/,,$(filter $(PK3DIR_FILES),$(SOURCE_FILES)))
+ALL_FILES        := $(filter-out $(PK3DIR_FILES),$(SOURCE_FILES))
+SOURCE_STRIPPED  := $(subst $(SRCDIR)/,,$(ALL_FILES))
 
 DONEPK3_FILES    := $(wildcard $(B)/$(BASEMOD)-*.pk3dir/*) \
                     $(wildcard $(B)/$(BASEMOD)-*.pk3dir/*/*) \
@@ -133,7 +134,7 @@ DONE_FILES       := $(wildcard $(B)/$(BASEMOD)-*/*) \
                     $(wildcard $(B)/$(BASEMOD)-*/*/*/*) \
                     $(wildcard $(B)/$(BASEMOD)-*/*/*/*/*) \
                     $(wildcard $(B)/$(BASEMOD)-*/*/*/*/*/*)
-DONENOPK3_FILES  := $(filter $(PK3DIR_FILES), $(DONE_FILES))
+DONENOPK3_FILES  := $(filter-out $(DONEPK3_FILES), $(DONE_FILES))
 DONE_STRIPPED    := $(subst $(B)/$(BASEMOD)-images/,,$(DONENOPK3_FILES)) \
                     $(subst $(B)/$(BASEMOD)-sounds/,,$(DONENOPK3_FILES))
 
@@ -145,7 +146,7 @@ VALID_EXT        := $(addprefix %.,$(VALID_IMG_EXT))
 CONVERT_EXT      := $(addprefix %.,$(CONVERT_IMG_EXT))
 include make/difflist.make
 IMG_NEEDED       := $(addprefix $(B)/$(BASEMOD)-images/,$(DIFFLIST_CONVERT))
-IMG_OBJS         := $(addprefix $(B)/$(BASEMOD)-images/,$(DIFFLIST_INCLUDED))
+IMG_OBJS         := $(filter-out  ,$(addprefix $(B)/$(BASEMOD)-images/,$(DIFFLIST_INCLUDED)))
 
 
 VALID_SND_EXT    := mp3 ogg
@@ -154,11 +155,12 @@ VALID_EXT        := $(addprefix %.,$(VALID_SND_EXT))
 CONVERT_EXT      := $(addprefix %.,$(CONVERT_SND_EXT))
 include make/difflist.make
 SND_NEEDED       := $(addprefix $(B)/$(BASEMOD)-sounds/,$(DIFFLIST_CONVERT))
-SND_OBJS         := $(addprefix $(B)/$(BASEMOD)-sounds/,$(DIFFLIST_INCLUDED))
+SND_OBJS         := $(filter-out  ,$(addprefix $(B)/$(BASEMOD)-sounds/,$(DIFFLIST_INCLUDED)))
 
 
 VALID_FILE_EXT   := cfg skin menu shaderx mtr arena bot txt shader
-FILE_INCLUDED    := $(foreach vext,$(addprefix %.,$(VALID_FILE_EXT)), $(filter $(vext), $(ALLFILES)))
+FILE_INCLUDED    := 
+FILE_INCLUDED    := $(filter-out  ,$(foreach vext,$(addprefix %.,$(VALID_FILE_EXT)), $(filter $(vext), $(ALL_FILES))))
 
 
 ifneq ($(IMG_NEEDED),)
@@ -189,36 +191,52 @@ else
 $(B)/$(BASEMOD).collect: $(IMG_NEEDED) $(IMG_OBJS) $(SND_NEEDED) $(SND_OBJS) $(FILE_INCLUDED)
 	$(echo_cmd) "DONE COLLECTING $@"
 
+ifneq ($(FILE_INCLUDED),)
 $(B)/$(PK3_PREFIX)-files.zip: $(FILE_INCLUDED)
-	$(echo_cmd) "ZIPPING $<"
-	pushd $(SRCDIR) && \
-	$(Q)$(ZIP) -o $(PK3_PREFIX)-files.zip $(subst $(SRCDIR)/,,$(FILE_INCLUDED)) && \
-	popd
+	$(echo_cmd) "ZIPPING $< \"$(FILE_INCLUDED)\""
+	$(Q)pushd $(SRCDIR) && \
+		$(ZIP) -o $(PK3_PREFIX)-files.zip $(subst $(SRCDIR)/,,$(FILE_INCLUDED)) && \
+		popd
 	-@$(MOVE) $(B)/$(PK3_PREFIX)-files.pk3 $(B)/$(PK3_PREFIX)-files.pk3.bak
 	$(Q)$(MOVE) $(SRCDIR)/$(PK3_PREFIX)-files.zip $(B)/$(PK3_PREFIX)-files.pk3
 	-@$(UNLINK) $(B)/$(PK3_PREFIX)-files.pk3.bak
+else
+$(B)/$(PK3_PREFIX)-files.zip: $(IMG_OBJS)
+	$(echo_cmd) "SKIPPING, no files $<"
+endif
 
+ifneq ($(IMG_OBJS),)
 $(B)/$(PK3_PREFIX)-images.zip: $(IMG_OBJS)
 	$(echo_cmd) "ZIPPING $<"
-	pushd $(B)/$(BASEMOD)-images && \
-	$(Q)$(ZIP) -o $(PK3_PREFIX)-images.zip $(subst $(B)/$(BASEMOD)-images/,,$(IMG_OBJS)) && \
-	popd
+	$(Q)pushd $(B)/$(BASEMOD)-images && \
+		$(ZIP) -o $(PK3_PREFIX)-images.zip $(subst $(B)/$(BASEMOD)-images/,,$(IMG_OBJS)) && \
+		popd
 	-@$(MOVE) $(B)/$(PK3_PREFIX)-images.pk3 $(B)/$(PK3_PREFIX)-images.pk3.bak
 	$(Q)$(MOVE) $(B)/$(BASEMOD)-images/$(PK3_PREFIX)-images.zip $(B)/$(PK3_PREFIX)-images.pk3
 	-@$(UNLINK) $(B)/$(PK3_PREFIX)-images.pk3.bak
+else
+$(B)/$(PK3_PREFIX)-images.zip: $(IMG_OBJS)
+	$(echo_cmd) "SKIPPING, no images $<"
+endif
 
+ifneq ($(SND_OBJS),)
 $(B)/$(PK3_PREFIX)-sounds.zip: $(SND_OBJS)
 	$(echo_cmd) "ZIPPING $<"
-	pushd $(B)/$(BASEMOD)-sounds && \
-	$(Q)$(ZIP) -o $(PK3_PREFIX)-sounds.zip $(subst $(B)/$(BASEMOD)-sounds/,,$(SND_OBJS)) && \
-	popd
+	$(Q)pushd $(B)/$(BASEMOD)-sounds && \
+		$(ZIP) -o $(PK3_PREFIX)-sounds.zip $(subst $(B)/$(BASEMOD)-sounds/,,$(SND_OBJS)) && \
+		popd
 	-@$(MOVE) $(B)/$(PK3_PREFIX)-sounds.pk3 $(B)/$(PK3_PREFIX)-sounds.pk3.bak
 	$(Q)$(MOVE) $(B)/$(BASEMOD)-sounds/$(PK3_PREFIX)-sounds.zip $(B)/$(PK3_PREFIX)-sounds.pk3
 	-@$(UNLINK) $(B)/$(PK3_PREFIX)-sounds.pk3.bak
+else
+$(B)/$(PK3_PREFIX)-sounds.zip: $(SND_OBJS)
+	$(echo_cmd) "SKIPPING, no sounds $<"
+endif
 
+ALL_ZIPS := $(B)/$(PK3_PREFIX)-files.zip
 
-ALL_ZIPS := $(B)/$(PK3_PREFIX)-sounds.zip $(B)/$(PK3_PREFIX)-images.zip \
-           $(B)/$(PK3_PREFIX)-files.zip
+#ALL_ZIPS := $(B)/$(PK3_PREFIX)-sounds.zip $(B)/$(PK3_PREFIX)-images.zip \
+#            $(B)/$(PK3_PREFIX)-files.zip
 
 $(B)/$(PK3_PREFIX).zip: $(ALL_ZIPS)
 	@:
