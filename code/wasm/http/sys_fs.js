@@ -233,8 +233,10 @@ function Sys_FSeek(pointer, position, mode) {
     FS.pointers[pointer][0] += position
   } else if (mode == 2 /* SEEK_END */) {
     FS.pointers[pointer][0] = FS.pointers[pointer][2].contents.length + position
+  } else {
+    return -1 // POSIX?
   }
-  return FS.pointers[pointer][0]
+  return 0
 }
 
 function Sys_FClose(pointer) {
@@ -272,12 +274,13 @@ function Sys_FRead(bufferAddress, byteSize, count, pointer) {
   }
   let i = 0
   for(; i < count * byteSize; i++ ) {
-    if(FS.pointers[pointer][0] + i >= FS.pointers[pointer][2].contents.length) {
+    if(FS.pointers[pointer][0] >= FS.pointers[pointer][2].contents.length) {
       break
     }
-    HEAP8[bufferAddress + i] = FS.pointers[pointer][2].contents[FS.pointers[pointer][0] + i]
+    HEAP8[bufferAddress + i] = FS.pointers[pointer][2].contents[FS.pointers[pointer][0]]
+    FS.pointers[pointer][0]++
   }
-  return i
+  return (i - (i % byteSize)) / byteSize
 }
 
 function Sys_Remove(file) {

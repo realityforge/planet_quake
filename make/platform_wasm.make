@@ -99,11 +99,21 @@ WASM_JS          := $(addprefix $(WASM_HTTP)/,$(notdir $(WASM_OBJS)))
 WASM_ASSETS      := games/multigame/assets
 WASM_IMG_ASSETS  := gfx/2d/bigchars.png
 WASM_VFS         := $(addprefix $(WASM_ASSETS)/,$(WASM_IMG_ASSETS))
+ifeq ($(B),$(BD))
+WASM_INDEX       := $(B)/$(TARGET) $(B)/$(TARGET).opt \
+                    $(WASM_HTTP)/index.html $(WASM_VFS)
+WASM_VFSOBJ      := $(addprefix $(B)/assets/,$(WASM_IMG_ASSETS)) \
+                    $(B)/assets/index.css \
+                    $(B)/assets/$(TARGET) $(B)/assets/xxx-multigame-files.pk3 \
+                    $(B)/assets/lsdm3_v1-files.pk3 $(B)/assets/lsdm3_v1-images.pk3 
+else
 WASM_INDEX       := $(B)/$(TARGET) $(B)/$(TARGET).opt $(WASM_HTTP)/$(WASM_MIN).ugly \
                     $(WASM_HTTP)/index.html $(WASM_VFS)
 WASM_VFSOBJ      := $(addprefix $(B)/assets/,$(WASM_IMG_ASSETS)) \
                     $(B)/assets/index.css $(B)/assets/$(WASM_MIN) \
-                    $(B)/assets/$(TARGET) $(B)/assets/xxx-multigame-files.pk3
+                    $(B)/assets/$(TARGET) $(B)/assets/xxx-multigame-files.pk3 \
+                    $(B)/assets/lsdm3_v1-files.pk3 $(B)/assets/lsdm3_v1-images.pk3 
+endif
 
 
 define DO_OPT_CC
@@ -132,9 +142,14 @@ define DO_CSS_EMBED
 	$(Q)$(NODE) -e "fs.writeFileSync('$(B)/index.html', fs.readFileSync('$(B)/index.html').toString('utf-8').replace('<link rel=\"stylesheet\" href=\"${subst $(WASM_HTTP)/,,$<}\" />', '<style type=\"text/css\">\n/* <\!-- ${subst $(WASM_ASSETS)/,,$<} */\n'+fs.readFileSync('$<', 'utf-8')+'\n/* --> */\n</style>'))"
 endef
 
+define DO_JS_LIST
+	$(echo_cmd) "JS_LIST $<"
+	$(Q)$(NODE) -e "fs.writeFileSync('$(B)/index.html', fs.readFileSync('$(B)/index.html').toString('utf-8').replace('<script async type=\"text/javascript\" src=\"quake3e.min.js\"></script>', '$(WASM_OBJS)'.split(' ').map(jsFile => '<script async type=\"text/javascript\">\n/* <\!-- '+jsFile+' */\n'+fs.readFileSync('$(WASM_HTTP)/'+jsFile, 'utf-8')+'\n/* --> */\n</script>').join('')))"
+endef
+
 define DO_JS_EMBED
 	$(echo_cmd) "JS_EMBED $<"
-	$(Q)$(NODE) -e "fs.writeFileSync('$(B)/index.html', fs.readFileSync('$(B)/index.html').toString('utf-8').replace('<script async type=\"text/javascript\" src=\"${subst $(WASM_HTTP)/,,$<}\"></script>', '<script async type=\"text/javascript\">\n/* <\!-- ${subst $(WASM_ASSETS)/,,$<} */\n'+fs.readFileSync('$<', 'utf-8')+'\n/* --> */\n</script>'))"
+	$(Q)$(NODE) -e "fs.writeFileSync('$(B)/index.html', fs.readFileSync('$(B)/index.html').toString('utf-8').replace('<script async type=\"text/javascript\" src=\"${subst $(WASM_HTTP)/,,$<}\"></script>', '<script async type=\"text/javascript\">\n/* <\!-- ${subst $(WASM_HTTP)/,,$<} */\n'+fs.readFileSync('$<', 'utf-8')+'\n/* --> */\n</script>'))"
 endef
 
 define DO_WASM_EMBED
@@ -146,7 +161,6 @@ define DO_ASSET_EMBED
 	$(echo_cmd) "ASSET_EMBED $<"
 	$(Q)$(NODE) -e "fs.writeFileSync('$(B)/index.html', fs.readFileSync('$(B)/index.html').toString('utf-8').replace('</body>', '</body>\n<script async type=\"text/javascript\">\n/* <\!-- ${subst $(B)/,,$<} */\nwindow.preFS[\\'multigame/${notdir $<}\\']=\\''+fs.readFileSync('$<', 'base64')+'\\'\n/* --> */\n</script>'))"
 endef
-
 
 define DO_INDEX_CC
 	$(echo_cmd) "INDEX_CC $<"
@@ -163,10 +177,19 @@ $(WASM_HTTP)/$(WASM_MIN).ugly: $(WASM_JS)
 $(B)/index.html: $(WASM_INDEX)
 	$(DO_INDEX_CC)
 
+ifeq ($(B),$(BD))
+
+$(B)/index.html.pak: $(WASM_VFSOBJ)
+	$(DO_JS_LIST)
+
+else
+
 $(B)/index.html.pak: $(WASM_VFSOBJ)
 	@:
 
-$(B)/assets/%: $(WASM_ASSETS)/%
+endif
+
+$(B)/assets/%.png: $(WASM_ASSETS)/%.png
 	$(DO_BASE64_CC)
 
 $(B)/assets/%.css: $(WASM_HTTP)/%.css
@@ -186,7 +209,8 @@ pre-build:
 
 ifeq ($(B),$(BD))
 post-build:
-	@:
+	$(echo_cmd) "PACKING $(TARGET_CLIENT)"
+	@$(MAKE) -f $(MKFILE) B=$(B) V=$(V) $(B)/index.html
 
 else
 post-build:

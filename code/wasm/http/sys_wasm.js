@@ -75,6 +75,15 @@ function instantiateWasm(bytes) {
   return WebAssembly.instantiate(bytes, Q3e)
 }
 
+function _base64ToArrayBuffer(base64) {
+  var binary_string = window.atob(base64);
+  var len = binary_string.length;
+  var bytes = new Uint8Array(len);
+  for (var i = 0; i < len; i++) {
+      bytes[i] = binary_string.charCodeAt(i);
+  }
+  return bytes;
+}
 
 function init() {
   Q3e['imports'] = Q3e
@@ -86,11 +95,11 @@ function init() {
   if(typeof window.preFS != 'undefined') {
     let preloadedPaths = Object.keys(window.preFS)
     for(let i = 0; i < preloadedPaths.length; i++) {
+
       FS.virtual[preloadedPaths[i]] = {
         timestamp: new Date(),
         mode: 33206,
-        contents: new Uint8Array(atob(window.preFS[preloadedPaths[i]]).split('')
-          .map(function (b) { return b.charCodeAt(0) }))
+        contents: _base64ToArrayBuffer(window.preFS[preloadedPaths[i]])
       }
     }
 

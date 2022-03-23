@@ -1257,9 +1257,10 @@ extern uLong unzlocal_SearchCentralDir(FILE *fin)
 	uLong uBackRead;
 	uLong uMaxBack=0xffff; /* maximum size of global comment */
 	uLong uPosFound=0;
-	
-	if (fseek(fin,0,SEEK_END) != 0)
+
+	if (fseek(fin,0,SEEK_END) != 0) {
 		return 0;
+  }
 
 
 	uSizeFile = ftell( fin );
