@@ -18,8 +18,8 @@ function getQueryCommands() {
     '+set', 'r_mode', '-1',
     '+set', 'r_ext_framebuffer_object', '0',
     '+set', 'bot_enable', '0',
-    '+set', 'net_socksServer', window.location.hostname,
-    '+set', 'net_socksPort', window.location.port,
+    '+set', 'net_socksServer', window.location.hostname || '',
+    '+set', 'net_socksPort', window.location.port || '0',
     //'+set', 'r_ext_multitexture', '0',
     //'+set', 'r_ext_framebuffer_multisample', '0',
     // this prevents lightmap from being wrong when switching maps
@@ -41,6 +41,7 @@ function getQueryCommands() {
     val[0] = (val[0][0] != '+' ? '+' : '') + val[0]
     startup.push.apply(startup, val)
   }
+  startup.push.apply(startup, window.preStart)
   startup.unshift.apply(startup, [
     '+set', 'r_fullscreen', window.fullscreen ? '1' : '0',
     '+set', 'r_customHeight', '' + window.innerHeight || 0,
@@ -78,6 +79,9 @@ function addressToString(addr, length) {
 
 function stringToAddress(str, addr) {
   let start = Q3e.sharedMemory + Q3e.sharedCounter
+  if(typeof str != 'string') {
+    str = str + ''
+  }
   if(addr) start = addr
   for(let j = 0; j < str.length; j++) {
     HEAPU8[start+j] = str.charCodeAt(j)
@@ -229,14 +233,13 @@ function CL_MenuModified(oldValue, newValue, cvar) {
   }
   let newValueStr = addressToString(newValue)
   let newLocation = newValueStr.replace(/[^a-z0-9]/gi, '')
-  //if(newValueStr.includes('MAIN MENU')) {
   if(!Q3e.initialized) {
     Q3e.initialized = true
     document.body.className += ' done-loading '
   }
-  //}
   if(window.location.pathname.toString().includes(newLocation)) {
-    return // don't add to stack because it creates a lot of annoying back pushes
+    // don't add to stack because it creates a lot of annoying back pushes
+    return
   }
   history.pushState(
     {location: window.location.pathname}, 

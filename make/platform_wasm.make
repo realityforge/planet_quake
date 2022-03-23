@@ -88,6 +88,7 @@ RELEASE_CFLAGS   := -fvisibility=hidden \
 
 export INCLUDE   := -Icode/wasm/include 
 
+STARTUP_COMMAND  := +devmap\\', \\'lsdm3_v1
 
 ifdef B
 
@@ -172,6 +173,7 @@ define DO_INDEX_CC
 	$(echo_cmd) "INDEX_CC $<"
 	$(Q)$(COPY) $(WASM_HTTP)/index.html $(B)/index.html
 	$(Q)$(MAKE) -f $(MKFILE) B=$(B) V=$(V) $(B)/index.html.pak
+	$(Q)$(NODE) -e "fs.writeFileSync('$(B)/index.html', fs.readFileSync('$(B)/index.html').toString('utf-8').replace('</body>', '</body>\n<script async type=\"text/javascript\">\nwindow.preStart=[\\'$(STARTUP_COMMAND)\\'];\n/* --> */\n</script>'))"
 endef
 
 $(B)/$(TARGET).opt: $(B)/$(TARGET)

@@ -43,7 +43,7 @@ PK3_PREFIX       := $(BASEMOD)
 endif
 WORKDIRS         := $(BASEMOD)-sounds $(BASEMOD)-images $(BASEMOD)-unpacked
 PK3_FILES        := $(wildcard $(SRCDIR)/*.pk3)
-PK3OBJS          := $(patsubst $(SRCDIR)/%,$(B)/$(BASEMOD)-unpacked/%,$(PK3DIRS))
+PK3_OBJS         := $(patsubst $(SRCDIR)/%,$(B)/$(BASEMOD)-unpacked/%,$(PK3DIRS))
 
 define DO_CONVERT_CC
 	$(echo_cmd) "CONVERT $(subst $(SRCDIR)/,,$<)"
@@ -103,7 +103,7 @@ ifdef B
 $(B)/$(BASEMOD)-unpacked/%.pk3: $(SRCDIR)/%.pk3
 	$(DO_UNPACK_CC)
 
-$(B)/$(BASEMOD).unpacked: $(PK3OBJS)
+$(B)/$(BASEMOD).unpacked: $(PK3_OBJS)
 	$(echo_cmd) "UNPACKED $@"
 
 #BOTHLIST := $(foreach x,$(LIST),$(call BOTH,$(x)))
