@@ -104,15 +104,21 @@ WASM_INDEX       := $(B)/$(TARGET) $(B)/$(TARGET).opt \
                     $(WASM_HTTP)/index.html $(WASM_VFS)
 WASM_VFSOBJ      := $(addprefix $(B)/assets/,$(WASM_IMG_ASSETS)) \
                     $(B)/assets/index.css \
-                    $(B)/assets/$(TARGET) $(B)/assets/xxx-multigame-files.pk3 \
-                    $(B)/assets/lsdm3_v1-files.pk3 $(B)/assets/lsdm3_v1-images.pk3 
+                    $(B)/assets/$(TARGET) \
+										$(B)/assets/xxx-multigame-files.pk3 \
+										$(B)/assets/xxx-multigame-vms.pk3 \
+                    $(B)/assets/lsdm3_v1-files.pk3 \
+										$(B)/assets/lsdm3_v1-images.pk3 
 else
 WASM_INDEX       := $(B)/$(TARGET) $(B)/$(TARGET).opt $(WASM_HTTP)/$(WASM_MIN).ugly \
                     $(WASM_HTTP)/index.html $(WASM_VFS)
 WASM_VFSOBJ      := $(addprefix $(B)/assets/,$(WASM_IMG_ASSETS)) \
                     $(B)/assets/index.css $(B)/assets/$(WASM_MIN) \
-                    $(B)/assets/$(TARGET) $(B)/assets/xxx-multigame-files.pk3 \
-                    $(B)/assets/lsdm3_v1-files.pk3 $(B)/assets/lsdm3_v1-images.pk3 
+                    $(B)/assets/$(TARGET) \
+										$(B)/assets/xxx-multigame-files.pk3 \
+										$(B)/assets/xxx-multigame-vms.pk3 \
+                    $(B)/assets/lsdm3_v1-files.pk3 \
+										$(B)/assets/lsdm3_v1-images.pk3 
 endif
 
 

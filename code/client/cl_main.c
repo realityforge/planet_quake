@@ -1501,6 +1501,7 @@ void CL_MapLoading( void ) {
 #endif
 	Key_SetCatcher( 0 );
 
+
 	// if we are already connected to the local host, stay connected
 	if ( cls.state >= CA_CONNECTED && !Q_stricmp( cls.servername, "localhost" ) ) {
 		cls.state = CA_CONNECTED;		// so the connect screen is drawn

@@ -29,18 +29,15 @@ SRCDIR           := games/multigame/assets
 PK3_PREFIX       := xxx-multigame
 endif
 
-#ifeq ($(SRCDIR),)
-#ifeq ($(PLATFORM),darwin)
-#SRCDIR := /Applications/ioquake3/baseq3
-#else
-#endif
-#endif
-
 ifeq ($(SRCDIR),)
 $(error No SRCDIR!)
 endif
 
 BASEMOD          := $(subst .pk3dir,,$(notdir $(SRCDIR)))
+ifeq ($(BASEMOD),multigame)
+PK3_PREFIX       := xxx-multigame
+endif
+
 ifndef PK3_PREFIX
 PK3_PREFIX       := $(BASEMOD)
 endif
@@ -165,9 +162,9 @@ SND_OBJS         := $(filter-out  ,$(addprefix $(B)/$(BASEMOD)-sounds/,$(DIFFLIS
 
 
 VALID_FILE_EXT   := cfg skin menu shaderx mtr arena bot txt shader $(INCLUDE_EXTS)
-FILE_INCLUDED    := 
 FILE_INCLUDED    := $(filter-out  ,$(foreach vext,$(addprefix %.,$(VALID_FILE_EXT)), $(filter $(vext), $(ALL_FILES))))
 PK3_DIRECTORIES  := $(addprefix $(B)/pk3dirs/,$(subst $(SRCDIR)/,,$(wildcard $(SRCDIR)/*.pk3dir)))
+VMS_INCLUDED    := $(filter-out  ,$(filter %.qvm, $(ALL_FILES)))
 
 
 ifneq ($(IMG_NEEDED),)
@@ -185,18 +182,36 @@ $(B)/$(BASEMOD)-images/%: $(SRCDIR)/%
 $(B)/$(BASEMOD)-sounds/%: $(SRCDIR)/%
 	$(DO_ENCODE_CC)
 
-$(B)/$(BASEMOD).collect: $(IMG_NEEDED) $(IMG_OBJS) $(SND_NEEDED) $(SND_OBJS) $(FILE_INCLUDED)
+$(B)/$(BASEMOD).collect: $(IMG_NEEDED) $(IMG_OBJS) $(SND_NEEDED) $(SND_OBJS) $(FILE_INCLUDED) $(VMS_INCLUDED)
 	$(echo_cmd) "DONE COLLECTING $@"
 
-$(B)/$(PK3_PREFIX).zip: $(IMG_OBJS) $(SND_OBJS) $(FILE_INCLUDED)
+$(B)/$(PK3_PREFIX).zip: $(IMG_OBJS) $(SND_OBJS) $(FILE_INCLUDED) $(VMS_INCLUDED)
 	@echo $(IMG_NEEDED)
 	@echo "something went wrong because there are still files to convert"
 	exit 1
 
+
+
 else
 
-$(B)/$(BASEMOD).collect: $(IMG_NEEDED) $(IMG_OBJS) $(SND_NEEDED) $(SND_OBJS) $(FILE_INCLUDED)
+
+
+$(B)/$(BASEMOD).collect: $(IMG_NEEDED) $(IMG_OBJS) $(SND_NEEDED) $(SND_OBJS) $(FILE_INCLUDED) $(VMS_INCLUDED)
 	$(echo_cmd) "DONE COLLECTING $@"
+
+ifneq ($(VMS_INCLUDED),)
+$(B)/$(PK3_PREFIX)-vms.zip: $(VMS_INCLUDED)
+	$(echo_cmd) "ZIPPING $<"
+	$(Q)pushd $(SRCDIR) && \
+		$(ZIP) -o $(PK3_PREFIX)-vms.zip $(subst $(SRCDIR)/,,$(VMS_INCLUDED)) && \
+		popd
+	-@$(MOVE) $(B)/$(PK3_PREFIX)-vms.pk3 $(B)/$(PK3_PREFIX)-vms.pk3.bak
+	$(Q)$(MOVE) $(SRCDIR)/$(PK3_PREFIX)-vms.zip $(B)/$(PK3_PREFIX)-vms.pk3
+	-@$(UNLINK) $(B)/$(PK3_PREFIX)-vms.pk3.bak
+else
+$(B)/$(PK3_PREFIX)-vms.zip: $(IMG_OBJS)
+	$(echo_cmd) "SKIPPING, no VMs $<"
+endif
 
 ifneq ($(FILE_INCLUDED),)
 $(B)/$(PK3_PREFIX)-files.zip: $(FILE_INCLUDED)
@@ -241,7 +256,7 @@ $(B)/$(PK3_PREFIX)-sounds.zip: $(SND_OBJS)
 endif
 
 ALL_ZIPS := $(B)/$(PK3_PREFIX)-sounds.zip $(B)/$(PK3_PREFIX)-images.zip \
-            $(B)/$(PK3_PREFIX)-files.zip
+            $(B)/$(PK3_PREFIX)-files.zip $(B)/$(PK3_PREFIX)-vms.zip
 
 $(B)/$(PK3_PREFIX).zip: $(ALL_ZIPS)
 	$(echo_cmd) "DONE PACKING $<"

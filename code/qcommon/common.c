@@ -4075,9 +4075,12 @@ void Com_Init( char *commandLine ) {
 #endif
 
 #ifdef USE_ASYNCHRONOUS
-	if(FS_SV_FileExists(va("%s/default.cfg", FS_GetCurrentGameDir())))
-#endif
+	if(FS_ReadFile(va("%s/default.cfg", FS_GetCurrentGameDir()), NULL) <= 0) {
+		Com_ExecuteCfg();
+	}
+#else
 	Com_ExecuteCfg();
+#endif
 
 	// override anything from the config files with command line args
 	Com_StartupVariable( NULL );
@@ -4321,7 +4324,7 @@ void Com_Init( char *commandLine ) {
 #endif
 
 #ifdef USE_ASYNCHRONOUS
-	if(FS_SV_FileExists(va("%s/default.cfg", FS_GetCurrentGameDir()))) {
+	if(FS_ReadFile(va("%s/default.cfg", FS_GetCurrentGameDir()), NULL) <= 0) {
 		com_fullyInitialized = qtrue;
 		// run this again, because it wouldn't have started UI or Cgame the first time
 		CL_StartHunkUsers();
@@ -4615,9 +4618,7 @@ void Com_Frame( qboolean noDelay ) {
 	}
 
 	// waiting for incoming packets
-#ifndef __WASM__
 	if ( noDelay == qfalse )
-#endif
 	do {
 #ifndef BUILD_SLIM_CLIENT
 		if ( 

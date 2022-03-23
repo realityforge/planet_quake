@@ -472,6 +472,7 @@ static void NET_SendLoopPacket( netsrc_t sock, int length, const void *data )
 
 	Com_Memcpy (loop->msgs[i].data, data, length);
 	loop->msgs[i].datalen = length;
+
 	/*
 #ifdef __WASM__
 	// TODO: server to server communication, multiple server

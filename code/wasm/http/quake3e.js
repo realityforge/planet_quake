@@ -224,6 +224,9 @@ function CL_MenuModified(oldValue, newValue, cvar) {
   if(INPUT.modifyingCrumb) {
     return // called from ourselves below from a user action
   }
+  if(window.location.orgin == null) {
+    return
+  }
   let newValueStr = addressToString(newValue)
   let newLocation = newValueStr.replace(/[^a-z0-9]/gi, '')
   //if(newValueStr.includes('MAIN MENU')) {
@@ -247,8 +250,8 @@ function CL_ModifyMenu(event) {
 }
 
 function Sys_Frame() {
-  Q3e.running = !Q3e.running
   requestAnimationFrame(function () {
+    Q3e.running = !Q3e.running
     try {
       Com_Frame(Q3e.running)
     } catch (e) {
