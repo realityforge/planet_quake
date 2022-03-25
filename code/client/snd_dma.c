@@ -45,6 +45,9 @@ static char		s_backgroundLoop[MAX_QPATH];
 
 static byte		buffer2[ 0x10000 ]; // for muted painting
 
+#ifdef __WASM__
+Q_EXPORT
+#endif
 byte			*dma_buffer2;
 
 // =======================================================================
@@ -63,9 +66,17 @@ channel_t   s_channels[MAX_CHANNELS];
 channel_t   loop_channels[MAX_CHANNELS];
 int			numLoopChannels;
 
-static		qboolean	s_soundStarted;
+#ifdef __WASM__
+Q_EXPORT
+#else
+static		
+#endif
+qboolean	s_soundStarted;
 static		qboolean	s_soundMuted;
 
+#ifdef __WASM__
+Q_EXPORT
+#endif
 dma_t		dma;
 
 static int			listener_number;
@@ -1569,7 +1580,9 @@ qboolean S_Base_Init( soundInterface_t *si ) {
 	r = SNDDMA_Init();
 
 	if ( r ) {
+#ifndef __WASM__
 		s_soundStarted = qtrue;
+#endif
 		s_soundMuted = qtrue;
 //		s_numSfx = 0;
 
@@ -1592,6 +1605,8 @@ qboolean S_Base_Init( soundInterface_t *si ) {
 		return qfalse;
 #endif
 	}
+
+DebugBreak();
 
 	si->Shutdown = S_Base_Shutdown;
 	si->StartSound = S_Base_StartSound;

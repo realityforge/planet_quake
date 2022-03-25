@@ -2,6 +2,7 @@ function GLimp_StartDriverAndSetMode(mode, modeFS, fullscreen, fallback) {
   //let win = malloc(8)
   // TODO: multiple windows like a DVR?
   //   what kind of game needs two screens for one player to switch back and forth?
+  
   /*
   SDL.windows[handle] = {
     x: x,
@@ -60,11 +61,6 @@ function GLimp_StartDriverAndSetMode(mode, modeFS, fullscreen, fallback) {
   } else {
     SDL_ShowCursor()
   }
-
-  if(Cvar_VariableIntegerValue(stringToAddress('in_joystick'))) {
-    InitNippleJoysticks()
-  }
-  InputInit()
 
   return 0 // no error
 }
@@ -134,7 +130,7 @@ function InputPushFocusEvent (evt) {
 
 function InputPushMovedEvent (evt) {
   if (evt.toElement === null && evt.relatedTarget === null) {
-    INPUT.firstClick = false
+    INPUT.firstClick = true
     HEAP32[gw_active >> 2] = false;
     if(Q3e.frameInterval) {
       clearInterval(Q3e.frameInterval)
@@ -160,7 +156,7 @@ function InputPushMovedEvent (evt) {
 /*
 document.querySelector('element').bind('copy', function(event) {
   var selectedText = window.getSelection().toString(); 
-  selectedText = selectedText.replace(/\u200B/g, "");
+  selectedText = selectedText.replace(/\u200B/g, '');
 
   clipboardData = event.clipboardData || window.clipboardData || event.originalEvent.clipboardData;
   clipboardData.setData('text/html', selectedText);
@@ -300,10 +296,6 @@ function InputPushKeyEvent(evt) {
 }
 
 function InputPushTextEvent (evt) {
-  if(!INPUT.consoleKeys) {
-    INPUT.consoleKeys = addressToString(Cvar_VariableString(stringToAddress('cl_consoleKeys')))
-      .split(' ').map(c => c[0] == '0' && c[1] == 'x' ? String.fromCharCode(parseInt(c.substr(2), 16)) : c)
-  }
   if ( INPUT.consoleKeys.includes(String.fromCharCode(evt.charCode)) )
   {
     Sys_QueEvent( Sys_Milliseconds(), SE_KEY, INPUT.keystrings['CONSOLE'], true, 0, null )
@@ -368,7 +360,10 @@ function InputPushMouseEvent (evt) {
       // TODO: start sound, capture mouse
       HEAP32[gw_active >> 2] = true
       Q3e.canvas.requestPointerLock();
-      INPUT.firstClick = false
+      if(INPUT.firstClick) {
+        INPUT.firstClick = false
+        SNDDMA_Init()
+      }
       if(Q3e.frameInterval) {
         clearInterval(Q3e.frameInterval)
       }
@@ -383,15 +378,81 @@ function InputPushMouseEvent (evt) {
 }
 
 function Com_MaxFPSChanged() {
-  INPUT.fpsUnfocused = Cvar_VariableIntegerValue(stringToAddress("com_maxfpsUnfocused"));
-  INPUT.fps = Cvar_VariableIntegerValue(stringToAddress("com_maxfps"));
+  INPUT.fpsUnfocused = Cvar_VariableIntegerValue(stringToAddress('com_maxfpsUnfocused'));
+  INPUT.fps = Cvar_VariableIntegerValue(stringToAddress('com_maxfps'));
   if(Q3e.frameInterval) {
     clearInterval(Q3e.frameInterval)
   }
   Q3e.frameInterval = setInterval(Sys_Frame, 1000.0 / INPUT.fps)
 }
 
-function InputInit () {
+function Sys_ConsoleInput() {
+  let command = window.location.hash
+  window.location.hash = ''
+  return command.length ? stringToAddress(command) : null
+}
+
+
+const CVAR_ARCHIVE = 0x0001
+const CVAR_NODEFAULT = 0x4000
+const CVAR_LATCH =  0x0020
+const CVAR_ARCHIVE_ND = (CVAR_ARCHIVE|CVAR_NODEFAULT)
+const CV_INTEGER = 2
+
+
+function IN_Init() {
+
+	console.log( '\n------- Input Initialization -------\n' );
+
+  if(Cvar_VariableIntegerValue(stringToAddress('in_joystick'))) {
+    InitNippleJoysticks()
+  }
+
+	let in_keyboardDebug = Cvar_Get( stringToAddress('in_keyboardDebug'), stringToAddress('0'), CVAR_ARCHIVE );
+	let in_mouse = Cvar_Get( stringToAddress('in_mouse'), stringToAddress('1'), CVAR_ARCHIVE );
+	Cvar_CheckRange( in_mouse, stringToAddress('-1'), stringToAddress('1'), CV_INTEGER );
+
+  /*
+	in_joystick = Cvar_Get( 'in_joystick', '0', CVAR_ARCHIVE );
+	in_joystickThreshold = Cvar_Get( 'joy_threshold', '0.15', CVAR_ARCHIVE );
+	j_pitch =        Cvar_Get( 'j_pitch',        '0.022', CVAR_ARCHIVE_ND );
+	j_yaw =          Cvar_Get( 'j_yaw',          '-0.022', CVAR_ARCHIVE_ND );
+	j_forward =      Cvar_Get( 'j_forward',      '-0.25', CVAR_ARCHIVE_ND );
+	j_side =         Cvar_Get( 'j_side',         '0.25', CVAR_ARCHIVE_ND );
+	j_up =           Cvar_Get( 'j_up',           '0', CVAR_ARCHIVE_ND );
+
+	j_pitch_axis =   Cvar_Get( 'j_pitch_axis',   '3', CVAR_ARCHIVE_ND );
+	j_yaw_axis =     Cvar_Get( 'j_yaw_axis',     '2', CVAR_ARCHIVE_ND );
+	j_forward_axis = Cvar_Get( 'j_forward_axis', '1', CVAR_ARCHIVE_ND );
+	j_side_axis =    Cvar_Get( 'j_side_axis',    '0', CVAR_ARCHIVE_ND );
+	j_up_axis =      Cvar_Get( 'j_up_axis',      '4', CVAR_ARCHIVE_ND );
+
+	Cvar_CheckRange( j_pitch_axis,   '0', va('%i',MAX_JOYSTICK_AXIS-1), CV_INTEGER );
+	Cvar_CheckRange( j_yaw_axis,     '0', va('%i',MAX_JOYSTICK_AXIS-1), CV_INTEGER );
+	Cvar_CheckRange( j_forward_axis, '0', va('%i',MAX_JOYSTICK_AXIS-1), CV_INTEGER );
+	Cvar_CheckRange( j_side_axis,    '0', va('%i',MAX_JOYSTICK_AXIS-1), CV_INTEGER );
+	Cvar_CheckRange( j_up_axis,      '0', va('%i',MAX_JOYSTICK_AXIS-1), CV_INTEGER );
+  */
+
+	// ~ and `, as keys and characters
+	Cvar_Get( stringToAddress('cl_consoleKeys'), stringToAddress('~ ` \u007e \u0060'), CVAR_ARCHIVE );
+  if(!INPUT.consoleKeys) {
+    INPUT.consoleKeys = addressToString(Cvar_VariableString(stringToAddress('cl_consoleKeys')))
+      .split(' ').map(function (c) {
+        return c[0] == '0' && c[1] == 'x' 
+          ? String.fromCharCode(parseInt(c.substr(2), 16)) 
+          : c
+      })
+  }
+
+	// TODO: activate text input for text fields
+	//SDL_StartTextInput();
+
+  //let in_nograb = Cvar_Get( 'in_nograb', '0', CVAR_ARCHIVE );
+  //let r_allowSoftwareGL = Cvar_Get( 'r_allowSoftwareGL', '0', CVAR_LATCH );
+  //let r_swapInterval = Cvar_Get( 'r_swapInterval', '0', CVAR_ARCHIVE | CVAR_LATCH );
+  //let r_stereoEnabled = Cvar_Get( 'r_stereoEnabled', '0', CVAR_ARCHIVE | CVAR_LATCH );
+
   for(let i = 0; i < 1024; i++) {
     let name = addressToString(Key_KeynumToString(i))
     if(name.length == 0) continue
@@ -416,7 +477,7 @@ function InputInit () {
   //document.addEventListener('dragenter', SYSI.dragEnterHandler, false)
   //document.addEventListener('dragover', SYSI.dragOverHandler, false)
 
-  document.addEventListener('pointerlockchange', InputPushFocusEvent, false);
+  document.addEventListener('pointerlockchange', InputPushFocusEvent, false)
 
   /*
   let nipple handle touch events
@@ -425,6 +486,8 @@ function InputInit () {
   SYSI.canvas.addEventListener('touchmove', SYSI.InputPushTouchEvent, false)
   SYSI.canvas.addEventListener('touchcancel', SYSI.InputPushTouchEvent, false)
   */
+
+  console.log( '------------------------------------\n' )
 }
 
 function InitNippleJoysticks () {
@@ -520,21 +583,16 @@ function GLimp_Shutdown(destroy) {
 var INPUT = {
   keystrings: {},
   firstClick: true,
+  IN_Init: IN_Init,
   GLimp_Shutdown: GLimp_Shutdown,
   GLimp_StartDriverAndSetMode:GLimp_StartDriverAndSetMode,
   SDL_WasInit: function (device) { return 1; },
-  SDL_Init: function () {},
   SDL_StartTextInput: SDL_StartTextInput,
-  SDL_OpenAudioDevice: function () {},
-  SDL_PauseAudioDevice: function () {},
-  SDL_CloseAudioDevice: function () {},
   SDL_StopTextInput: SDL_StopTextInput,
   SDL_ShowCursor: SDL_ShowCursor,
   SDL_SetWindowGrab: SDL_SetWindowGrab,
-  GL_GetDrawableSize: function (width, height) {
-    HEAP32[(width+0)>>2] = Q3e.canvas.width
-    HEAP32[(height+0)>>2] = Q3e.canvas.height
-  },
   Com_MaxFPSChanged: Com_MaxFPSChanged,
+  Sys_ConsoleInput: Sys_ConsoleInput,
+  
 }
 

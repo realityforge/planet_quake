@@ -491,6 +491,8 @@ S_Shutdown
 */
 void S_Shutdown( void )
 {
+DebugBreak();
+Com_Printf("goddamnit: %i\n", si.Shutdown);
 	if ( si.StopAllSounds ) {
 		si.StopAllSounds();
 	}

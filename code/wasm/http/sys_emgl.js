@@ -1539,6 +1539,11 @@ function _setTempRet0(val) {
   setTempRet0(val);
 }
 
+function GL_GetDrawableSize(width, height) {
+  HEAP32[(width+0)>>2] = Q3e.canvas.width
+  HEAP32[(height+0)>>2] = Q3e.canvas.height
+}
+
 var GLctx;
 
 var EMGL = {
@@ -1546,6 +1551,7 @@ var EMGL = {
   previousImage: null,
   previousTex: 0,
   texFiles: {},
+  GL_GetDrawableSize: GL_GetDrawableSize,
   GL_GetProcAddress: function () { },
   R_LoadPNG: R_LoadPNG,
   R_LoadJPG: R_LoadJPG,

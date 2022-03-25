@@ -20,6 +20,8 @@ function getQueryCommands() {
     '+set', 'bot_enable', '0',
     '+set', 'net_socksServer', window.location.hostname || '',
     '+set', 'net_socksPort', window.location.port || '0',
+    '+set', 'sv_fps', '100',
+    '+set', 'snaps', '100',
     //'+set', 'r_ext_multitexture', '0',
     //'+set', 'r_ext_framebuffer_multisample', '0',
     // this prevents lightmap from being wrong when switching maps
@@ -29,9 +31,7 @@ function getQueryCommands() {
     //'+set', 'r_deluxeMapping', '0',
     //'+set', 'r_normalMapping', '0',
     //'+set', 'r_specularMapping', '0',
-
-
-  ];
+  ]
   var search = /([^&=]+)/g
   var query  = window.location.search.substring(1)
   var match
@@ -49,6 +49,16 @@ function getQueryCommands() {
   ])
   return startup
 }
+
+/*
+function get_string(memory, addr) {
+  let buffer = new Uint8Array(memory.buffer, addr, memory.buffer.byteLength - addr);
+  let term = buffer.indexOf(0);
+
+  return new TextDecoder().decode(buffer.subarray(0, term));
+}
+*/
+
 
 function addressToString(addr, length) {
   let newString = ''

@@ -63,7 +63,7 @@ BASE_CFLAGS      += -Wall --target=wasm32 \
                     -ftree-vectorize -fsigned-char -MMD \
                     -ffast-math -fno-short-enums \
                      -pedantic \
-										 -Wno-extra-semi \
+                     -Wno-extra-semi \
                     -DGL_GLEXT_PROTOTYPES=1 \
                     -DGL_ARB_ES2_compatibility=1 \
                     -DGL_EXT_direct_state_access=1 \
@@ -95,7 +95,7 @@ ifdef B
 WASM_MIN         := quake3e.min.js
 WASM_HTTP        := code/wasm/http
 WASM_OBJS        := quake3e.js sys_emgl.js sys_fs.js sys_in.js \
-                    sys_net.js sys_std.js sys_wasm.js nipplejs.js
+                    sys_net.js sys_std.js sys_wasm.js sys_snd.js nipplejs.js
 WASM_JS          := $(addprefix $(WASM_HTTP)/,$(notdir $(WASM_OBJS)))
 WASM_ASSETS      := games/multigame/assets
 WASM_IMG_ASSETS  := gfx/2d/bigchars.png
@@ -105,21 +105,21 @@ WASM_INDEX       := $(B)/$(TARGET) $(B)/$(TARGET).opt \
                     $(WASM_HTTP)/index.html $(WASM_VFS)
 WASM_VFSOBJ      := $(addprefix $(B)/assets/,$(WASM_IMG_ASSETS)) \
                     $(B)/assets/index.css \
-                    $(B)/assets/$(TARGET) \
-										$(B)/assets/xxx-multigame-files.pk3 \
-										$(B)/assets/xxx-multigame-vms.pk3 \
-                    $(B)/assets/lsdm3_v1-files.pk3 \
-										$(B)/assets/lsdm3_v1-images.pk3 
+                    $(B)/assets/$(TARGET)
+#                    $(B)/assets/xxx-multigame-files.pk3 \
+#                    $(B)/assets/xxx-multigame-vms.pk3 \
+#                    $(B)/assets/lsdm3_v1-files.pk3 \
+#                    $(B)/assets/lsdm3_v1-images.pk3 
 else
 WASM_INDEX       := $(B)/$(TARGET) $(B)/$(TARGET).opt $(WASM_HTTP)/$(WASM_MIN).ugly \
                     $(WASM_HTTP)/index.html $(WASM_VFS)
 WASM_VFSOBJ      := $(addprefix $(B)/assets/,$(WASM_IMG_ASSETS)) \
                     $(B)/assets/index.css $(B)/assets/$(WASM_MIN) \
-                    $(B)/assets/$(TARGET) \
-										$(B)/assets/xxx-multigame-files.pk3 \
-										$(B)/assets/xxx-multigame-vms.pk3 \
-                    $(B)/assets/lsdm3_v1-files.pk3 \
-										$(B)/assets/lsdm3_v1-images.pk3 
+                    $(B)/assets/$(TARGET)
+#                    $(B)/assets/xxx-multigame-files.pk3 \
+#                    $(B)/assets/xxx-multigame-vms.pk3 \
+#                    $(B)/assets/lsdm3_v1-files.pk3 \
+#                    $(B)/assets/lsdm3_v1-images.pk3 
 endif
 
 

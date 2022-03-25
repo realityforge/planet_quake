@@ -69,6 +69,13 @@ Sys_ListFiles
 Sys_SockaddrToString
 Sys_NET_MulticastLocal
 GL_GetProcAddress
+SNDDMA_Init
+IN_Init
+Sys_ConsoleInput
+SNDDMA_Shutdown
+SNDDMA_BeginPainting
+SNDDMA_Submit
+SNDDMA_GetDMAPos
 Sys_FreeFileList
 CL_Download
 CL_MenuModified
