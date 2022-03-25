@@ -115,8 +115,12 @@ portable_samplepair_t	s_rawsamples[MAX_RAW_SAMPLES];
 // User-setable variables
 // ====================================================================
 
-
-static void S_Base_SoundInfo( void ) {
+#ifndef __WASM__
+static 
+#else
+Q_EXPORT
+#endif
+void S_Base_SoundInfo( void ) {
 	Com_Printf( "----- Sound Info -----\n" );
 	if ( !s_soundStarted ) {
 		Com_Printf( "sound system not started\n" );
@@ -1492,8 +1496,10 @@ void S_FreeOldestSound( void ) {
 // =======================================================================
 // Shutdown sound engine
 // =======================================================================
-
-static void S_Base_Shutdown( void ) {
+#ifndef __WASM__
+static 
+#endif
+void S_Base_Shutdown( void ) {
 
 	if ( !s_soundStarted ) {
 		return;
@@ -1579,9 +1585,11 @@ qboolean S_Base_Init( soundInterface_t *si ) {
 
 	r = SNDDMA_Init();
 
-	if ( r ) {
 #ifndef __WASM__
+	if ( r ) {
 		s_soundStarted = qtrue;
+#else
+		s_soundStarted = r;
 #endif
 		s_soundMuted = qtrue;
 //		s_numSfx = 0;
@@ -1600,13 +1608,11 @@ qboolean S_Base_Init( soundInterface_t *si ) {
 			dma_buffer2 = malloc( dma.samples * dma.samplebits/8 );
 			memset( dma_buffer2, 0, dma.samples * dma.samplebits/8 );
 		}
-	} else {
 #ifndef __WASM__
+	} else {
 		return qfalse;
-#endif
 	}
-
-DebugBreak();
+#endif
 
 	si->Shutdown = S_Base_Shutdown;
 	si->StartSound = S_Base_StartSound;

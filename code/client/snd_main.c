@@ -33,7 +33,7 @@ cvar_t *s_muteWhenMinimized;
 cvar_t *s_muteWhenUnfocused;
 cvar_t *s_debug;
 
-static soundInterface_t si;
+soundInterface_t si;
 
 extern void Cvar_SetSoundDescriptions( void );
 extern void Cmd_SetSoundDescriptions( void );
@@ -143,6 +143,9 @@ S_StopAllSounds
 */
 void S_StopAllSounds( void )
 {
+#ifdef __WASM__
+	return;
+#endif
 	if( si.StopAllSounds ) {
 		si.StopAllSounds();
 	}
@@ -229,7 +232,7 @@ void S_UpdateEntityPosition( int entityNum, const vec3_t origin )
 	}
 }
 
-
+qboolean goddamnit = qfalse;
 /*
 =================
 S_Update
@@ -250,6 +253,9 @@ S_DisableSounds
 */
 void S_DisableSounds( void )
 {
+#ifdef __WASM__
+	return;
+#endif
 	if( si.DisableSounds ) {
 		si.DisableSounds();
 	}
@@ -471,6 +477,7 @@ void S_Init( void )
 			}
 
 			S_SoundInfo();
+			goddamnit = qtrue;
 			Com_Printf( "Sound initialization successful.\n" );
 		} else {
 			Com_Printf( "Sound initialization failed.\n" );
@@ -484,6 +491,10 @@ void S_Init( void )
 }
 
 
+#ifdef __WASM__
+void S_Base_Shutdown( void );
+#endif
+
 /*
 =================
 S_Shutdown
@@ -491,8 +502,9 @@ S_Shutdown
 */
 void S_Shutdown( void )
 {
-DebugBreak();
-Com_Printf("goddamnit: %i\n", si.Shutdown);
+#ifdef __WASM__
+	S_Base_Shutdown();
+#else
 	if ( si.StopAllSounds ) {
 		si.StopAllSounds();
 	}
@@ -500,6 +512,7 @@ Com_Printf("goddamnit: %i\n", si.Shutdown);
 	if( si.Shutdown ) {
 		si.Shutdown();
 	}
+#endif
 
 	Com_Memset( &si, 0, sizeof( soundInterface_t ) );
 

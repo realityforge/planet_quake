@@ -55,7 +55,7 @@ function SNDDMA_Init() {
   SND.audioOutput = new Audio()
   // can't start sound until user clicks on the page
   if(INPUT.firstClick) {
-    return 1
+    return 0
   }
 
   if (!SND.audioContext) {
@@ -67,7 +67,6 @@ function SNDDMA_Init() {
 
   if (!SND.audioContext) throw new Error('Web Audio API is not available!')
 
-  HEAPU32[s_soundStarted >> 2] = 1
   SND.nextPlayTime = 0
   let channelsName = stringToAddress('s_sdlChannels')
   Cvar_CheckRange( Cvar_Get( channelsName, stringToAddress('2'), 
@@ -101,6 +100,9 @@ function SNDDMA_Init() {
   HEAPU32[(dma >> 2) + 6] /* speed */ = 44100
   HEAPU32[(dma >> 2) + 7] /* buffer */ = dma_buffer2
   HEAPU32[(dma >> 2) + 8] /* driver */ = stringToAddress(AudioContext.toString())
+
+  HEAPU32[s_soundStarted >> 2] = 1
+  S_Base_SoundInfo();
 
   return 1
 }

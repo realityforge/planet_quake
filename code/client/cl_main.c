@@ -1382,6 +1382,8 @@ static void CL_ShutdownVMs( void )
 	CL_ShutdownUI();
 }
 
+#include "snd_local.h"
+extern soundInterface_t si;
 
 /*
 =====================
@@ -3910,6 +3912,7 @@ extern char asyncShaderName[MAX_OSPATH * 2];
 CL_Frame
 ==================
 */
+extern qboolean goddamnit;
 
 void CL_Frame( int msec, int realMsec ) {
 	float fps;
@@ -3919,6 +3922,7 @@ void CL_Frame( int msec, int realMsec ) {
 	cgvmi = clc.currentView;
 	CM_SwitchMap(clientMaps[cgvmi]);
 #endif
+
 
 #ifdef USE_CURL	
 	if ( download.cURL ) {
@@ -4190,9 +4194,6 @@ static void CL_ShutdownRef( refShutdownCode_t code ) {
 		code = REF_UNLOAD_DLL;
 	}
 #endif
-
-	// clear and mute all sounds until next registration
-	// S_DisableSounds();
 
 	if ( code >= REF_DESTROY_WINDOW ) { // +REF_UNLOAD_DLL
 		// shutdown sound system before renderer
