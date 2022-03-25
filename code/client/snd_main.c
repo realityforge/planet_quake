@@ -143,9 +143,6 @@ S_StopAllSounds
 */
 void S_StopAllSounds( void )
 {
-#ifdef __WASM__
-	return;
-#endif
 	if( si.StopAllSounds ) {
 		si.StopAllSounds();
 	}
@@ -253,9 +250,6 @@ S_DisableSounds
 */
 void S_DisableSounds( void )
 {
-#ifdef __WASM__
-	return;
-#endif
 	if( si.DisableSounds ) {
 		si.DisableSounds();
 	}

@@ -688,8 +688,10 @@ static void S_Base_ClearSoundBuffer( void ) {
 
 	SNDDMA_BeginPainting();
 	
+#ifndef __WASM__
 	if ( dma.buffer )
 		Com_Memset(dma.buffer, clear, dma.samples * dma.samplebits/8);
+#endif
 
 	SNDDMA_Submit();
 }
