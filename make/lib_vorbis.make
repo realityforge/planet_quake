@@ -1,93 +1,89 @@
-MKFILE       := $(lastword $(MAKEFILE_LIST))
-WORKDIR      := libogg
-WORKDIR2     := libvorbis
+WORKOGG        := libogg
+WORKVORBIS     := libvorbis
+BUILD_VORBIS   := 1
+BUILD_OGG      := 1
 
-BUILD_VORBIS := 1
-BUILD_OGG    := 1
+ifndef BUILD_CLIENT
+MKFILE        := $(lastword $(MAKEFILE_LIST))
 include make/platform.make
+endif
 
-TARGET	     := libogg_$(SHLIBNAME)
-TARGET2	     := libvorbis_$(SHLIBNAME)
-SOURCES      := libs/libogg-1.3.4/src
-SOURCES2     := libs/libvorbis-1.3.7/lib
-INCLUDES     := 
-LIBS 				 :=
+TARGET_OGG     := libogg_$(SHLIBNAME)
+TARGET_VORBIS  := libvorbis_$(SHLIBNAME)
+SOURCES_OGG    := libs/libogg-1.3.4/src
+SOURCES_VORBIS := libs/libvorbis-1.3.7/lib
+INCLUDES       := libs/libogg-1.3.4/include libs/libvorbis-1.3.7/include
 
-OGGOBJS     := bitwise.o \
-               framing.o
+OGGOBJS        := bitwise.o framing.o
+VORBISOBJS     := analysis.o bitrate.o block.o \
+                  codebook.o envelope.o floor0.o \
+                  floor1.o info.o lookup.o \
+                  lpc.o lsp.o mapping0.o \
+                  mdct.o psy.o registry.o \
+                  res0.o smallft.o sharedbook.o \
+                  synthesis.o vorbisfile.o window.o
 
-VORBISOBJS  := analysis.o \
-							 bitrate.o \
-							 block.o \
-							 codebook.o \
-							 envelope.o \
-							 floor0.o \
-							 floor1.o \
-							 info.o \
-							 lookup.o \
-							 lpc.o \
-							 lsp.o \
-							 mapping0.o \
-							 mdct.o \
-							 psy.o \
-							 registry.o \
-							 res0.o \
-							 smallft.o \
-							 sharedbook.o \
-							 synthesis.o \
-							 vorbisfile.o \
-							 window.o
+OGG_OBJ        := $(addprefix $(B)/$(WORKOGG)/,$(notdir $(OGGOBJS)))
+VORBIS_OBJ     := $(addprefix $(B)/$(WORKVORBIS)/,$(notdir $(VORBISOBJS)))
 
-Q3OBJ       := $(addprefix $(B)/$(WORKDIR)/,$(notdir $(OGGOBJS)))
-Q3OBJ2       := $(addprefix $(B)/$(WORKDIR2)/,$(notdir $(VORBISOBJS)))
+export OGG_INCLUDE := $(foreach dir,$(INCLUDES),-I$(dir))
 
-export INCLUDE	:= $(foreach dir,$(INCLUDES),-I$(dir))
+LIBVOR_CFLAGS  := $(OGG_INCLUDE) $(BASE_CFLAGS) $(SHLIBCFLAGS) $(OGG_CFLAGS)
+LIBVOR_LDFLAGS := $(OGG_INCLUDE) $(SHLIBLDFLAGS) $(OGG_LIBS)
+LIBOGG_CFLAGS  := $(OGG_INCLUDE) $(BASE_CFLAGS) $(SHLIBCFLAGS)
+LIBOGG_LDFLAGS := $(OGG_INCLUDE) $(SHLIBLDFLAGS)
 
-CFLAGS      := $(INCLUDE) -fsigned-char -MMD \
-               -O2 -ftree-vectorize -ffast-math -fno-short-enums
 
 define DO_OGG_CC
-  $(echo_cmd) "OGG_CC $<"
-  $(Q)$(CC) $(SHLIBCFLAGS) $(CFLAGS) -o $@ -c $<
+	$(echo_cmd) "OGG_CC $<"
+	$(Q)$(CC) -o $@ $(LIBOGG_CFLAGS) -c $<
 endef
 
 define DO_VORBIS_CC
-  $(echo_cmd) "VORBIS_CC $<"
-  $(Q)$(CC) $(SHLIBCFLAGS) $(CFLAGS) -o $@ -c $<
+	$(echo_cmd) "VORBIS_CC $<"
+	$(Q)$(CC) -o $@ $(LIBVOR_CFLAGS) -c $<
 endef
 
 debug:
-	$(echo_cmd) "MAKE $(TARGET)"
-	@$(MAKE) -f $(MKFILE) B=$(BD) WORKDIRS=$(WORKDIR) mkdirs
-	@$(MAKE) -f $(MKFILE) B=$(BD) WORKDIRS=$(WORKDIR2) mkdirs
+	$(echo_cmd) "MAKE $(TARGET_OGG)"
+	@$(MAKE) -f $(MKFILE) B=$(BD) WORKDIRS="$(WORKOGG) $(WORKVORBIS)" mkdirs
 	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) pre-build
-	@$(MAKE) -f $(MKFILE) B=$(BD) BUILD_LIBOGG=1 $(BD)/$(TARGET)
-	@$(MAKE) -f $(MKFILE) B=$(BD) BUILD_LIBVORBIS=1 $(BD)/$(TARGET2)
+	@$(MAKE) -f $(MKFILE) B=$(BD) -j 8 \
+		LIBVOR_CFLAGS="$(LIBVOR_CFLAGS) $(DEBUG_CFLAGS)" \
+		LIBVOR_LDFLAGS="$(LIBVOR_LDFLAGS) $(DEBUG_LDFLAGS)" \
+		LIBOGG_CFLAGS="$(LIBOGG_CFLAGS) $(DEBUG_CFLAGS)" \
+		LIBOGG_LDFLAGS="$(LIBOGG_LDFLAGS) $(DEBUG_LDFLAGS)" \
+		$(BD)/$(TARGET_OGG) $(BD)/$(TARGET_VORBIS)
 
 release:
-	$(echo_cmd) "MAKE $(TARGET)"
-	@$(MAKE) -f $(MKFILE) B=$(BR) WORKDIRS=$(WORKDIR) mkdirs
-	@$(MAKE) -f $(MKFILE) B=$(BR) WORKDIRS=$(WORKDIR2) mkdirs
+	$(echo_cmd) "MAKE $(TARGET_OGG)"
+	@$(MAKE) -f $(MKFILE) B=$(BR) WORKDIRS="$(WORKOGG) $(WORKVORBIS)" mkdirs
 	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) pre-build
-	@$(MAKE) -f $(MKFILE) B=$(BR) BUILD_LIBOGG=1 $(BR)/$(TARGET)
-	@$(MAKE) -f $(MKFILE) B=$(BR) BUILD_LIBVORBIS=1 $(BR)/$(TARGET2)
+	@$(MAKE) -f $(MKFILE) B=$(BR) -j 8 \
+		LIBVOR_CFLAGS="$(LIBVOR_CFLAGS) $(RELEASE_CFLAGS)" \
+		LIBVOR_LDFLAGS="$(LIBVOR_LDFLAGS) $(RELEASE_LDFLAGS)" \
+		LIBOGG_CFLAGS="$(LIBOGG_CFLAGS) $(RELEASE_CFLAGS)" \
+		LIBOGG_LDFLAGS="$(LIBOGG_LDFLAGS) $(RELEASE_LDFLAGS)" \
+		$(BR)/$(TARGET_OGG) $(BR)/$(TARGET_VORBIS)
 
 clean:
-	@rm -rf ./$(BD)/$(WORKDIR) ./$(BD)/$(TARGET)
-	@rm -rf ./$(BR)/$(WORKDIR) ./$(BR)/$(TARGET)
+	@rm -rf ./$(BD)/$(WORKOGG) ./$(BD)/$(TARGET_OGG)
+	@rm -rf ./$(BR)/$(WORKOGG) ./$(BR)/$(TARGET_OGG)
+	@rm -rf ./$(BD)/$(WORKVORBIS) ./$(BD)/$(TARGET_VORBIS)
+	@rm -rf ./$(BR)/$(WORKVORBIS) ./$(BR)/$(TARGET_VORBIS)
 
 ifdef B
-$(B)/$(WORKDIR)/%.o: $(SOURCES)/%.c
+$(B)/$(WORKOGG)/%.o: $(SOURCES_OGG)/%.c
 	$(DO_OGG_CC)
 
-$(B)/$(WORKDIR2)/%.o: $(SOURCES2)/%.c
+$(B)/$(WORKVORBIS)/%.o: $(SOURCES_VORBIS)/%.c
 	$(DO_VORBIS_CC)
 
-$(B)/$(TARGET): $(Q3OBJ) 
+$(B)/$(TARGET_OGG): $(OGG_OBJ) 
 	$(echo_cmd) "LD $@"
-	$(Q)$(CC) -o $@ $(Q3OBJ) $(SHLIBCFLAGS) $(SHLIBLDFLAGS)
+	$(Q)$(CC) -o $@ $(OGG_OBJ) $(LIBOGG_CFLAGS) $(LIBOGG_LDFLAGS)
 
-$(B)/$(TARGET2): $(Q3OBJ2) 
+$(B)/$(TARGET_VORBIS): $(VORBIS_OBJ) 
 	$(echo_cmd) "LD $@"
-	$(Q)$(CC) -o $@ $(Q3OBJ) $(SHLIBCFLAGS) $(SHLIBLDFLAGS)
+	$(Q)$(CC) -o $@ $(VORBIS_OBJ) $(LIBVOR_CFLAGS) $(LIBVOR_LDFLAGS)
 endif

@@ -30,8 +30,7 @@ BUILD_CLIENT     := 1
 CLIENT_SYSTEM    := quake3e.js \
                     sys_fs.js \
                     sys_net.js \
-                    sys_in.js \
-                    sys_em.js
+                    sys_in.js 
 
 CLIENT_LIBS      := $(addprefix --js-library $(MOUNT_DIR)/wasm/http/,$(notdir $(CLIENT_SYSTEM)))
 
@@ -118,11 +117,6 @@ RELEASE_LDFLAGS  += -O3 -Os \
                     -s SINGLE_FILE=1 \
                     -s EXPORTED_FUNCTIONS=\"[$(LDEXPORTS), '_Z_Malloc', '_S_Malloc']\" \
                     -s DISABLE_EXCEPTION_CATCHING=1
-
-#-s EXPORTED_RUNTIME_METHODS="['FS', 'SYS', 'SYSC',  \
-#  'SYSF', 'SYSN', 'SYSM', 'ccall', 'callMain', 'addFunction', \
-#  'dynCall', 'UTF8ToString']" \
-#-s STANDALONE_WASM=1 \
 
 CLIENT_LDFLAGS   += $(CLIENT_LIBS) \
                     --post-js $(MOUNT_DIR)/wasm/sys_web.js \

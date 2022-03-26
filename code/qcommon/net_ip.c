@@ -57,7 +57,7 @@ int NET_GetPacket( netadr_t *net_from, msg_t *net_message, const fd_set *fdr, in
 int NET_GetPacket( netadr_t *net_from, msg_t *net_message, const fd_set *fdr );
 #endif
 
-#else
+#else // !__WASM__
 
 #ifdef _WIN32
 #	include <winsock2.h>
@@ -137,7 +137,7 @@ typedef int SOCKET;
 typedef int	ioctlarg_t;
 #	define socketError			errno
 
-#endif
+#endif // !__WASM__
 
 typedef union {
 	struct sockaddr_in v4;

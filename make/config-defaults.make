@@ -32,6 +32,7 @@ USE_JPEG            ?= 0
 USE_VULKAN_API      ?= 0
 USE_Q3KEY           ?= 0
 USE_IPV6            ?= 0
+USE_CODEC_WAV       ?= 1
 USE_CODEC_VORBIS    ?= 0
 USE_CODEC_OPUS      ?= 0
 USE_VIDEO_THEORA    ?= 0

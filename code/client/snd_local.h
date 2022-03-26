@@ -74,7 +74,11 @@ typedef struct {
 	const char	*driver;
 } dma_t;
 
+#ifdef __WASM__
+extern byte dma_buffer2[ 0x10000 ];
+#else
 extern byte *dma_buffer2;
+#endif
 
 #define START_SAMPLE_IMMEDIATE	0x7fffffff
 

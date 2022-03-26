@@ -1,22 +1,24 @@
-HAVE_VM_COMPILED := false
-BUILD_CLIENT     ?= 0
-BUILD_SERVER     := 0
-BUILD_STANDALONE := 1
+HAVE_VM_COMPILED  := false
+BUILD_CLIENT      ?= 0
+BUILD_SERVER      := 0
+BUILD_STANDALONE  := 1
 USE_RENDERER_DLOPEN := 0
-USE_SYSTEM_JPEG  := 0
+USE_SYSTEM_JPEG   := 0
 USE_INTERNAL_JPEG := 0
-USE_SYSTEM_LIBC  := 0
-USE_ABS_MOUSE    := 1
-USE_LOCAL_DED    := 0
-USE_LAZY_LOAD    := 1
-USE_LAZY_MEMORY  := 1
-USE_MASTER_LAN   := 1
-USE_CURL         := 0
-USE_SDL          := 0
-USE_IPV6         := 0
-USE_OPENGL2      := 1
-USE_VULKAN       := 0
-NO_MAKE_LOCAL    := 1
+USE_SYSTEM_LIBC   := 0
+USE_CODEC_VORBIS  := 1
+USE_CODEC_WAV     := 0
+USE_ABS_MOUSE     := 1
+USE_LOCAL_DED     := 0
+USE_LAZY_LOAD     := 1
+USE_LAZY_MEMORY   := 1
+USE_MASTER_LAN    := 1
+USE_CURL          := 0
+USE_SDL           := 0
+USE_IPV6          := 0
+USE_OPENGL2       := 1
+USE_VULKAN        := 0
+NO_MAKE_LOCAL     := 1
 
 include make/configure.make
 
@@ -33,10 +35,8 @@ BINEXT           := .wasm
 
 SHLIBEXT         := wasm
 SHLIBCFLAGS      := 
-SHLIBLDFLAGS     := -Wl,--import-memory -Wl,--import-table -Wl,--error-limit=200 \
-                    -Wl,--export-dynamic --no-standard-libraries \
-                    -Wl,--no-entry -Wl,--allow-undefined-file=code/wasm/wasm.syms 
-
+SHLIBLDFLAGS     := -Wl,--error-limit=200 \
+                    -Wl,--no-entry --no-standard-libraries
 CLIENT_LDFLAGS   := -Wl,--import-memory -Wl,--import-table -Wl,--error-limit=200 \
                     -Wl,--no-entry --no-standard-libraries
 
@@ -45,13 +45,25 @@ RELEASE_LDFLAGS  := -Wl,--export-dynamic
 DEBUG_LDFLAGS    := -fvisibility=default -fno-inline -Wl,--export-dynamic
 
 ifeq ($(BUILD_CLIENT),1)
-SHLIBLDFLAGS     += -Wl,--allow-undefined-file=code/wasm/wasm.syms
+SHLIBLDFLAGS     += -fvisibility=default -Wl,--allow-undefined-file=code/wasm/wasm.syms
 CLIENT_LDFLAGS   += -Wl,--allow-undefined-file=code/wasm/wasm.syms
 endif
 
 ifeq ($(BUILD_RENDERER_OPENGL),1)
 SHLIBLDFLAGS     += -Wl,--allow-undefined-file=code/wasm/wasm-nogl.syms
 CLIENT_LDFLAGS   += -Wl,--allow-undefined-file=code/wasm/wasm-nogl.syms
+endif
+
+ifeq ($(BUILD_VORBIS),1)
+SHLIBLDFLAGS     += -Wl,--allow-undefined-file=code/wasm/wasm-nogl.syms
+CLIENT_LDFLAGS   += -Wl,--allow-undefined-file=code/wasm/wasm-nogl.syms
+endif
+
+
+ifndef BUILD_VORBIS
+ifeq ($(USE_CODEC_VORBIS),1)
+  CLIENT_LDFLAGS += -L$(B) -lvorbis_$(ARCH)
+endif
 endif
 
 CLIENT_LDFLAGS   += code/wasm/wasi/libclang_rt.builtins-wasm32.a
@@ -105,21 +117,23 @@ WASM_INDEX       := $(B)/$(TARGET) $(B)/$(TARGET).opt \
                     $(WASM_HTTP)/index.html $(WASM_VFS)
 WASM_VFSOBJ      := $(addprefix $(B)/assets/,$(WASM_IMG_ASSETS)) \
                     $(B)/assets/index.css \
-                    $(B)/assets/$(TARGET)
-#                    $(B)/assets/xxx-multigame-files.pk3 \
-#                    $(B)/assets/xxx-multigame-vms.pk3 \
-#                    $(B)/assets/lsdm3_v1-files.pk3 \
-#                    $(B)/assets/lsdm3_v1-images.pk3 
+                    $(B)/assets/$(TARGET) \
+                    $(B)/assets/xxx-multigame-files.pk3 \
+                    $(B)/assets/xxx-multigame-vms.pk3 \
+                    $(B)/assets/lsdm3_v1-files.pk3 \
+                    $(B)/assets/lsdm3_v1-images.pk3 \
+                    $(B)/assets/xxx-multigame-sounds.pk3 
 else
 WASM_INDEX       := $(B)/$(TARGET) $(B)/$(TARGET).opt $(WASM_HTTP)/$(WASM_MIN).ugly \
                     $(WASM_HTTP)/index.html $(WASM_VFS)
 WASM_VFSOBJ      := $(addprefix $(B)/assets/,$(WASM_IMG_ASSETS)) \
                     $(B)/assets/index.css $(B)/assets/$(WASM_MIN) \
-                    $(B)/assets/$(TARGET)
-#                    $(B)/assets/xxx-multigame-files.pk3 \
-#                    $(B)/assets/xxx-multigame-vms.pk3 \
-#                    $(B)/assets/lsdm3_v1-files.pk3 \
-#                    $(B)/assets/lsdm3_v1-images.pk3 
+                    $(B)/assets/$(TARGET) \
+                    $(B)/assets/xxx-multigame-files.pk3 \
+                    $(B)/assets/xxx-multigame-vms.pk3 \
+                    $(B)/assets/lsdm3_v1-files.pk3 \
+                    $(B)/assets/lsdm3_v1-images.pk3 \
+                    $(B)/assets/xxx-multigame-sounds.pk3 
 endif
 
 

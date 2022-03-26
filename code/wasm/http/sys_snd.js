@@ -15,24 +15,32 @@ const smoothingInterval = 0.02
 const beepLengthInSeconds = 0.5
 const beeps = [220,440,880]
 
-let buffer_pos
+let buffer_pos = 0
 
 function SNDDMA_AudioCallback_Test(parameter, osc) {
-  const note = (beeps.length * Math.random()) | 0;
-  let now = SND.audioContext.currentTime
-  osc.frequency.value = beeps[note]
-  parameter.setTargetAtTime(1, now, smoothingInterval);
-  parameter.setTargetAtTime(0, now + beepLengthInSeconds, smoothingInterval);
-  buffer_pos++
+	let pos = Math.floor(SND.audioContext.currentTime * (HEAPU32[(dma >> 2) + 4]/8))
+	if (pos >= 0x10000)
+    buffer_pos = pos = 0;
+  //console.log(HEAPU32[(HEAPU32[(dma >> 2) + 7] + pos) >> 2])
+
+  //const note = (beeps.length * Math.random()) | 0
+  //let now = SND.audioContext.currentTime
+  //osc.frequency.value = beeps[note]
+  //parameter.setTargetAtTime(1, now, smoothingInterval)
+  //parameter.setTargetAtTime(0, now + beepLengthInSeconds, smoothingInterval)
+  //buffer_pos++
+  
 }
 
 function SNDDMA_Shutdown() {
-  debugger
+  if(SND.interval) {
+    clearInterval(SND.interval)
+  }
   SND.oscillator.disconnect(SND.gainNode);
 }
 
 function SNDDMA_BeginPainting() {
-
+  
 }
 
 function SNDDMA_Submit() {
@@ -44,11 +52,11 @@ function SNDDMA_GetDMAPos() {
     return 0
   
   if ( HEAPU32[(dma >> 2) + 1] )
-		samples = (buffer_pos) % HEAPU32[(dma >> 2) + 1];
+		samples = buffer_pos % HEAPU32[(dma >> 2) + 1];
 	else
 		samples = 0;
 
-  return SND.audioContext.currentTime
+  return samples
 }
 
 function SNDDMA_Init() {
@@ -85,7 +93,7 @@ function SNDDMA_Init() {
   SND.oscillator = SND.audioContext.createOscillator()
   SND.oscillator.frequency.value = Math.random() * 2 - 1
   if(!SND.interval) {
-    setInterval(SNDDMA_AudioCallback_Test.bind(null, SND.gainNode.gain, SND.oscillator), 1000)
+    SND.interval = setInterval(SNDDMA_AudioCallback_Test.bind(null, SND.gainNode.gain, SND.oscillator), 50)
   }
   SND.oscillator.connect(SND.gainNode)
   SND.oscillator.start()
@@ -102,6 +110,7 @@ function SNDDMA_Init() {
   HEAPU32[(dma >> 2) + 8] /* driver */ = stringToAddress(AudioContext.toString())
 
   HEAPU32[s_soundStarted >> 2] = 1
+  HEAPU32[s_soundMuted >> 2] = 0
   S_Base_SoundInfo();
 
   return 1
