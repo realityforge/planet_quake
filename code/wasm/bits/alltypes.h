@@ -1,6 +1,7 @@
 #define __pthread_self() ((pthread_t)__get_tp())
 #define __LONG_MAX 0x7fffffffL
 #define exit Sys_Exit
+#define alloca __builtin_alloca
 
 #define _Addr __PTRDIFF_TYPE__
 #define _Int64 __INT64_TYPE__

@@ -21,11 +21,14 @@ sqrt
 acosf
 powf
 sin
+exp
 exp2
 exp2f
 atof
 sinf
 asin
+atan
+log
 logf
 abs
 fprintf

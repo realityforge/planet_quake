@@ -34,6 +34,10 @@ ifeq ($(USE_INTERNAL_JPEG),1)
 include make/lib_jpeg.make
 endif
 
+ifeq ($(USE_INTERNAL_VORBIS),1)
+include make/lib_vorbis.make
+endif
+
 ifneq ($(USE_RENDERER_DLOPEN),1)
 ifneq ($(USE_OPENGL2),1)
 include make/build_renderer.make
@@ -227,6 +231,10 @@ else
 
 endif
 endif
+endif
+
+ifeq ($(USE_INTERNAL_VORBIS),1)
+Q3OBJ            += $(VORBIS_OBJ) $(OGG_OBJ)
 endif
 
 ifeq ($(USE_INTERNAL_JPEG),1)

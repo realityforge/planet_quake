@@ -9,7 +9,7 @@ var SND = {
   SNDDMA_Submit: SNDDMA_Submit,
   SNDDMA_GetDMAPos: SNDDMA_GetDMAPos,
 
-} 
+}
 
 const smoothingInterval = 0.02
 const beepLengthInSeconds = 0.5
@@ -21,8 +21,7 @@ function SNDDMA_AudioCallback_Test(parameter, osc) {
 	let pos = Math.floor(SND.audioContext.currentTime * (HEAPU32[(dma >> 2) + 4]/8))
 	if (pos >= 0x10000)
     buffer_pos = pos = 0;
-  //console.log(HEAPU32[(HEAPU32[(dma >> 2) + 7] + pos) >> 2])
-
+  console.log(HEAPU32[(HEAPU32[(dma >> 2) + 7] + pos) >> 2])
   //const note = (beeps.length * Math.random()) | 0
   //let now = SND.audioContext.currentTime
   //osc.frequency.value = beeps[note]

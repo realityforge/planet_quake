@@ -5,6 +5,7 @@ BUILD_STANDALONE  := 1
 USE_RENDERER_DLOPEN := 0
 USE_SYSTEM_JPEG   := 0
 USE_INTERNAL_JPEG := 0
+USE_INTERNAL_VORBIS := 1
 USE_SYSTEM_LIBC   := 0
 USE_CODEC_VORBIS  := 1
 USE_CODEC_WAV     := 0
@@ -34,8 +35,9 @@ CXX              := libs/$(COMPILE_PLATFORM)/wasi-sdk-14.0/bin/clang++
 BINEXT           := .wasm
 
 SHLIBEXT         := wasm
-SHLIBCFLAGS      := 
-SHLIBLDFLAGS     := -Wl,--error-limit=200 \
+SHLIBCFLAGS      := -frtti -fPIC -MMD
+SHLIBLDFLAGS     := -fPIC -Wl,-shared \
+                    -Wl,--import-memory -Wl,--import-table -Wl,--error-limit=200 \
                     -Wl,--no-entry --no-standard-libraries
 CLIENT_LDFLAGS   := -Wl,--import-memory -Wl,--import-table -Wl,--error-limit=200 \
                     -Wl,--no-entry --no-standard-libraries
@@ -55,8 +57,8 @@ CLIENT_LDFLAGS   += -Wl,--allow-undefined-file=code/wasm/wasm-nogl.syms
 endif
 
 ifeq ($(BUILD_VORBIS),1)
-SHLIBLDFLAGS     += -Wl,--allow-undefined-file=code/wasm/wasm-nogl.syms
-CLIENT_LDFLAGS   += -Wl,--allow-undefined-file=code/wasm/wasm-nogl.syms
+SHLIBLDFLAGS     += -Wl,--allow-undefined-file=code/wasm/wasm-lib.syms
+CLIENT_LDFLAGS   += -Wl,--allow-undefined-file=code/wasm/wasm-lib.syms
 endif
 
 

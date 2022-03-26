@@ -52,7 +52,7 @@ MUSL_LOBJ        := string/stpcpy.o  string/memset.o  string/memcpy.o    \
                     math/__signbit.o    math/__signbitf.o    math/__signbitl.o \
                     math/__fpclassify.o math/__fpclassifyf.o math/__fpclassifyl.o \
                     math/frexpl.o       math/scalbn.o        math/copysignl.o \
-										math/scalbnl.o      math/fmodl.o \
+										math/scalbnl.o      math/fmodl.o         math/ldexp.o \
                     math/__math_oflowf.o math/__math_uflowf.o \
                     math/__math_invalidf.o math/__math_xflowf.o \
                     \

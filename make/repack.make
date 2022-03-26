@@ -1,9 +1,17 @@
+#.DEFAULT_GOAL := repack
 # most make files are the format 
 # 1) PLATFORM
 # 2) BUILD OBJS
 # 3) DEFINES
 # 4) GOALS
 #this make file adds an additional BUILD OBJS and defined down below
+ifeq ($(V),1)
+echo_cmd=@:
+Q=
+else
+echo_cmd=@echo
+Q=@
+endif
 
 # TODO: make script for repack files, just like repack.js but no graphing
 # TODO: use _hi _lo formats and the renderer and same directory to load converted web content
@@ -17,15 +25,22 @@ IDENTIFY         := identify -format '%[opaque]'
 REPACK_MOD       := 1
 NO_OVERWRITE     ?= 1
 GETEXT            = $(if $(filter "%True%",$(shell $(IDENTIFY) "$(1)")),jpg,png)
-#BOTH              = $(1).png $(1).jpg
+FILTER_EXT        = $(foreach ext,$(1), $(filter %.$(ext),$(2)))
 COPY             := cp
 UNLINK           := rm
 MOVE             := mv
-
-include make/platform.make
+MKDIR            ?= mkdir -p
 
 ifndef SRCDIR
 SRCDIR           := games/multigame/assets
+PK3_PREFIX       := xxx-multigame
+endif
+
+ifndef PK3_PREFIX
+PK3_PREFIX       := $(subst .pk3dir,,$(notdir $(SRCDIR)))
+endif
+
+ifeq ($(PK3_PREFIX),multigame)
 PK3_PREFIX       := xxx-multigame
 endif
 
@@ -33,17 +48,51 @@ ifeq ($(SRCDIR),)
 $(error No SRCDIR!)
 endif
 
-BASEMOD          := $(subst .pk3dir,,$(notdir $(SRCDIR)))
-ifeq ($(BASEMOD),multigame)
-PK3_PREFIX       := xxx-multigame
+ifndef DESTDIR
+DESTDIR          := build
 endif
 
-ifndef PK3_PREFIX
-PK3_PREFIX       := $(BASEMOD)
+ifeq ($(DESTDIR),)
+$(error No SRCDIR!)
 endif
-WORKDIRS         := $(BASEMOD)-sounds $(BASEMOD)-images $(BASEMOD)-unpacked
-PK3_FILES        := $(wildcard $(SRCDIR)/*.pk3)
-PK3_OBJS         := $(patsubst $(SRCDIR)/%,$(B)/$(BASEMOD)-unpacked/%,$(PK3DIRS))
+
+ifndef RPK_EXT
+RPK_EXT          := pk3
+endif
+
+ifeq ($(NO_REPACK),1)
+RPK_EXT          := pk3dir
+endif
+
+RPK_LEVELS       := * */* */*/* */*/*/* */*/*/*/*
+RPK_TARGET       := $(PK3_PREFIX).pk3
+RPK_UNPACK       := $(notdir $(wildcard $(SRCDIR)/*.pk3))
+RPK_PK3DIRS      := $(subst .pk3dir,.pk3,$(notdir $(wildcard $(SRCDIR)/*.pk3dir)))
+RPK_TARGETS      := $(RPK_TARGET) $(RPK_UNPACK) $(RPK_PK3DIRS)
+RPK_WORKDIRS     := $(addsuffix dir,$(RPK_TARGETS))
+
+# must convert files in 2 seperate steps because of images 
+#   we don't know what format we end up with until after the
+#   conversion so we don't repeat the the GETEXT command excessively
+RPK_CONVERTED    :=
+
+PK3DIR_FILES     := $(foreach lvl,$(RPK_LEVELS), $(wildcard $(SRCDIR)/$(lvl).pk3dir))
+SOURCE_FILES     := $(foreach lvl,$(RPK_LEVELS), $(wildcard $(SRCDIR)/$(lvl)))
+ALL_FILES        := $(subst $(SRCDIR)/,,$(filter-out $(PK3DIR_FILES),$(SOURCE_FILES)))
+
+# list images with converted pathname then check for existing alt-name in 
+#   defined script
+IMAGE_VALID      := jpg png
+IMAGE_CONVERT    := dds tga bmp pcx
+IMAGE_NEEDED     := $(call FILTER_EXT,$(IMAGE_CONVERT),$(ALL_FILES))
+IMAGE_OBJS       := $(addprefix $(DESTDIR)/$(RPK_TARGET)dir/,$(IMAGE_NEEDED))
+
+ifneq ($(IMAGE_NEEDED),)
+RPK_CONVERTED    += $(subst .pk3,-converted.pk3,$(RPK_TARGET))
+endif
+
+#RPK_CONVERTED    := $(subst .pk3,-converted.pk3,$(RPK_TARGETS))
+
 
 define DO_CONVERT_CC
 	$(echo_cmd) "CONVERT $(subst $(SRCDIR)/,,$<)"
@@ -68,53 +117,49 @@ define DO_COPY_CC
 	$(Q)$(COPY) -n "$<" "$@"
 endef
 
-
-debug:
-	$(echo_cmd) "REPACK $(SRCDIR)"
-	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) WORKDIRS="$(WORKDIRS)" mkdirs
-	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) pre-build
-	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) $(BD)/$(BASEMOD).unpacked
-	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) -j 16 \
-		TARGET_MOD="$(PK3_PREFIX).zip" $(BD)/$(BASEMOD).collect
-	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) -j 1 \
-		TARGET_MOD="$(PK3_PREFIX).zip" $(BD)/$(PK3_PREFIX).zip
-	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) -j 1 \
-		TARGET_MOD="$(PK3_PREFIX).zip" $(BD)/$(BASEMOD).pk3dirs
-
-release:
-	$(echo_cmd) "REPACK $(WORKDIR)"
-	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) WORKDIRS="$(WORKDIRS)" mkdirs
-	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) pre-build
-	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) $(BR)/$(BASEMOD).unpacked
-	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) -j 16 \
-		TARGET_MOD="$(PK3_PREFIX).zip" $(BR)/$(BASEMOD).collect
-	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) -j 1 \
-		TARGET_MOD="$(PK3_PREFIX).zip" $(BR)/$(PK3_PREFIX).zip
-	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) -j 1 \
-		TARGET_MOD="$(PK3_PREFIX).zip" $(BR)/$(BASEMOD).pk3dirs
+$(DESTDIR)/%.pk3dir: 
+	@if [ ! -d $(DESTDIR) ];then $(MKDIR) $(DESTDIR);fi
+	@if [ ! -d "./$(DESTDIR)/$@" ];then $(MKDIR) "./$(DESTDIR)/$@";fi
 
 # have to do this first and it runs with no replace 
 #   so it's not expensive to repeat every time
-
-
-
-ifdef B
-
-$(B)/$(BASEMOD)-unpacked/%.pk3: $(SRCDIR)/%.pk3
+$(DESTDIR)/%.pk3: $(SRCDIR)/%.pk3
 	$(DO_UNPACK_CC)
 
-$(B)/$(BASEMOD).unpacked: $(PK3_OBJS)
-	$(echo_cmd) "UNPACKED $@"
+$(DESTDIR)/$(RPK_TARGET)dir/%: $(SRCDIR)/%
+	$(DO_CONVERT_CC)
 
-#BOTHLIST := $(foreach x,$(LIST),$(call BOTH,$(x)))
 
-endif
+$(DESTDIR)/$(PK3_PREFIX)-converted.pk3: $(SRCDIR) $(IMAGE_OBJS)
+	$(echo_cmd) "CONVERT $(IMAGE_NEEDED)"
+	@:
 
+#$(DESTDIR)/%-converted.pk3: $(SRCDIR)/%.pk3
+#	$(echo_cmd) "CONVERT PK3 $@"
+#	@:
+
+#$(DESTDIR)/%-converted.pk3: $(SRCDIR)/%.pk3dir
+#	$(echo_cmd) "CONVERT PK3DIR $@"
+#	@:
+
+repack:
+	$(echo_cmd) "REPACK $(RPK_TARGETS)"
+	@$(MAKE) -f $(MKFILE) V=$(V) $(addprefix $(DESTDIR)/,$(RPK_WORKDIRS))
+	@$(MAKE) -f $(MKFILE) V=$(V) $(addprefix $(DESTDIR)/,$(RPK_UNPACK))
+	@$(MAKE) -f $(MKFILE) V=$(V) $(addprefix $(DESTDIR)/,$(RPK_CONVERTED))
+
+#	@$(MAKE) -f $(MKFILE) V=$(V) -j 16 \
+#		TARGET_MOD="$(PK3_PREFIX).zip" $(BD)/$(BASEMOD).collect
+#	@$(MAKE) -f $(MKFILE) V=$(V) -j 1 \
+#		TARGET_MOD="$(PK3_PREFIX).zip" $(BD)/$(PK3_PREFIX).zip
+#	@$(MAKE) -f $(MKFILE) V=$(V) -j 1 \
+#		TARGET_MOD="$(PK3_PREFIX).zip" $(BD)/$(BASEMOD).pk3dirs
 
 
 ifdef TARGET_MOD
 
 # does it help to store file searches down here?
+
 PK3DIR_FILES     := $(wildcard $(SRCDIR)/*.pk3dir) \
                     $(wildcard $(SRCDIR)/*.pk3dir/*) \
                     $(wildcard $(SRCDIR)/*.pk3dir/*/*) \
@@ -143,8 +188,6 @@ DONE_STRIPPED    := $(subst $(B)/$(BASEMOD)-images/,,$(DONENOPK3_FILES)) \
 
 
 # skip checking image for transparency
-VALID_IMG_EXT    := jpg png
-CONVERT_IMG_EXT  := dds tga bmp pcx
 VALID_EXT        := $(addprefix %.,$(VALID_IMG_EXT))
 CONVERT_EXT      := $(addprefix %.,$(CONVERT_IMG_EXT))
 include make/difflist.make
@@ -152,8 +195,8 @@ IMG_NEEDED       := $(addprefix $(B)/$(BASEMOD)-images/,$(DIFFLIST_CONVERT))
 IMG_OBJS         := $(filter-out  ,$(addprefix $(B)/$(BASEMOD)-images/,$(DIFFLIST_INCLUDED)))
 
 
-VALID_SND_EXT    := mp3 ogg
-CONVERT_SND_EXT  := wav 
+VALID_SND_EXT    := ogg
+CONVERT_SND_EXT  := wav mp3
 VALID_EXT        := $(addprefix %.,$(VALID_SND_EXT))
 CONVERT_EXT      := $(addprefix %.,$(CONVERT_SND_EXT))
 include make/difflist.make
