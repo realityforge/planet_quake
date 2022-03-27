@@ -1,5 +1,5 @@
-#.DEFAULT_GOAL := repack
-# most make files are the format 
+
+# most .make files are the format 
 # 1) PLATFORM
 # 2) BUILD OBJS
 # 3) DEFINES
@@ -16,11 +16,14 @@ endif
 
 ifndef SRCDIR
 SRCDIR           := games/multigame/assets
-PK3_PREFIX       := xxx-multigame
 endif
 
 ifndef PK3_PREFIX
 PK3_PREFIX       := $(subst .pk3dir,,$(notdir $(SRCDIR)))
+endif
+
+ifeq ($(SRCDIR),games/multigame/assets)
+PK3_PREFIX       := xxx-multigame
 endif
 
 ifeq ($(PK3_PREFIX),multigame)
@@ -60,16 +63,17 @@ _                 = $() $()
 MKFILE           := $(lastword $(MAKEFILE_LIST))
 ZIP              := zip
 CONVERT          := convert -strip -interlace Plane -sampling-factor 4:2:0 -quality 15% -auto-orient 
-ENCODE           := oggenc --downmix --resample 11025 --quiet 
+ENCODE           := oggenc -q 7 --downmix --resample 11025 --quiet 
 UNZIP            := unzip -n 
 IDENTIFY         := identify -format '%[opaque]'
 REPACK_MOD       := 1
 NO_OVERWRITE     ?= 1
 GETEXT            = $(if $(filter "%True%",$(shell $(IDENTIFY) "$(1)")),jpg,png)
 FILTER_EXT        = $(foreach ext,$(1), $(filter %.$(ext),$(2)))
-LVLS             := * */* */*/* */*/*/* */*/*/*/*
-LEVELS            = $(subst $(1)/,,$(subst \space$(1)/, ,$(foreach lvl,$(LVLS), $(subst $(_),\space,$(wildcard $(1)/$(lvl))))))
-LEVELS_PK3        = $(subst $(1)/,,$(subst \space$(1)/, ,$(foreach lvl,$(LVLS), $(subst $(_),\space,$(wildcard $(1)/$(lvl).pk3dir)))))
+LVLS4            := * */* */*/* */*/*/* */*/*/*/*
+LVLS3            := * */* */*/* */*/*/*
+LEVELS            = $(subst $(1)/,,$(subst \space$(1)/, ,$(foreach lvl,$(LVLS4), $(subst $(_),\space,$(wildcard $(1)/$(lvl))))))
+LEVELS_PK3        = $(subst $(1)/,,$(subst \space$(1)/, ,$(foreach lvl,$(LVLS3), $(subst $(_),\space,$(wildcard $(1)/*.pk3dir/$(lvl))))))
 REPLACE_EXT       = $(foreach ext,$(1), $(subst .$(ext),.%,$(2)))
 COPY             := cp
 UNLINK           := rm
@@ -78,19 +82,23 @@ MKDIR            ?= mkdir -p
 
 
 RPK_TARGET       := $(PK3_PREFIX).pk3
+RPK_GOAL         := $(DESTDIR)/$(RPK_TARGET)
 RPK_CONVERT      := $(subst .pk3,-converted,$(RPK_TARGET))
 RPK_ENCODE       := $(subst .pk3,-encoded,$(RPK_TARGET))
 RPK_UNPACK       := $(notdir $(wildcard $(SRCDIR)/*.pk3))
 RPK_PK3DIRS      := $(subst .pk3dir,.pk3,$(notdir $(wildcard $(SRCDIR)/*.pk3dir)))
 RPK_TARGETS      := $(RPK_TARGET) $(RPK_UNPACK) $(RPK_PK3DIRS)
 RPK_WORKDIRS     := $(addsuffix dir,$(RPK_TARGETS))
-RPK_REPLACE       = $(subst \space, ,$(subst $(DESTDIR)/$(RPK_TARGET)dir/,$(SRCDIR)/,$(1)))
-RPK_LOCAL         = $(subst \space, ,$(subst $(DESTDIR)/$(RPK_TARGET)-packed/,,$(1)))
+RPK_REPLACE       = $(subst \space, ,$(subst $(RPK_GOAL)dir/,$(SRCDIR)/,$(1)))
+RPK_LOCAL         = $(subst \space, ,$(subst $(RPK_GOAL)-packed/,,$(1)))
+RPK_COPY          = $(subst \space, ,$(subst  $(DESTDIR)/$(PK3_PREFIX)-copied/,$(SRCDIR)/,$(1)))
+RPK_COPIED        = $(subst \space, ,$(subst  $(DESTDIR)/$(PK3_PREFIX)-copied/,$(RPK_GOAL)dir/,$(1)))
 RPK_GETEXT        = $(basename $(1)).$(call GETEXT,$(call RPK_REPLACE,$(1)))
-
+RPK_PK3DIR        = $(subst $(DESTDIR)/,$(SRCDIR)/,$(subst -repack,.pk3dir,$(1)))
 
 ################ BUILD OBJS / DIFF FILES 
 
+ifeq ($(filter %.pk3dir,$(SRCDIR),1,0),1)
 
 # must convert files in 2 seperate steps because of images 
 #   we don't know what format we end up with until after the
@@ -98,9 +106,11 @@ RPK_GETEXT        = $(basename $(1)).$(call GETEXT,$(call RPK_REPLACE,$(1)))
 FILES_SRCPK3     := $(call LEVELS_PK3,$(SRCDIR))
 FILES_SRC        := $(call LEVELS,$(SRCDIR))
 ALL_FILES        := $(filter-out $(FILES_SRCPK3),$(FILES_SRC))
-FILES_DONEPK3    := $(call LEVELS_PK3,$(DESTDIR)/$(RPK_TARGET)dir)
-FILES_DONE       := $(call LEVELS,$(DESTDIR)/$(RPK_TARGET)dir)
+FILES_DONEPK3    := $(call LEVELS_PK3,$(RPK_GOAL)dir)
+FILES_DONE       := $(call LEVELS,$(RPK_GOAL)dir)
 ALL_DONE         := $(filter-out $(FILES_DONEPK3),$(FILES_DONE))
+
+endif
 
 IMAGE_VALID_EXTS := jpg png
 IMAGE_CONV_EXTS  := dds tga bmp pcx
@@ -134,14 +144,14 @@ define DO_ENCODE
 endef
 
 define DO_COPY
-	$(echo_cmd) "COPY $(call RPK_REPLACE,$@) -> $@"
-	$(Q)$(MKDIR) "$(dir $@)"
-	$(Q)$(COPY) -n "$(call RPK_REPLACE,$@)" "$(subst \space, ,$@)"
+	$(echo_cmd) "COPY $(call RPK_COPY,$@) -> $@"
+	$(Q)$(MKDIR) "$(call RPK_COPIED,$(dir $@))"
+	$(Q)$(COPY) -n "$(call RPK_COPY,$@)" "$(call RPK_COPIED,$@)" ||:
 endef
 
 define DO_ARCHIVE
 	$(echo_cmd) "ARCHIVE $@"
-	$(Q)pushd "$(DESTDIR)/$(RPK_TARGET)dir" > /dev/null && \
+	$(Q)pushd "$(RPK_GOAL)dir" > /dev/null && \
 	$(ZIP) -o ../$(PK3_PREFIX).zip "$(subst -packed,dir,$(call RPK_LOCAL,$@))" > /dev/null && \
 	popd > /dev/null
 endef
@@ -159,20 +169,34 @@ IMAGE_SRC        := $(call FILTER_EXT,$(IMAGE_ALL_EXTS),$(ALL_FILES))
 IMAGE_DONE       := $(call FILTER_EXT,$(IMAGE_VALID_EXTS),$(ALL_DONE))
 IMAGE_DONE_WILD  := $(call REPLACE_EXT,$(IMAGE_VALID_EXTS),$(IMAGE_DONE))
 IMAGE_NEEDED     := $(filter-out $(IMAGE_DONE_WILD),$(IMAGE_SRC))
-IMAGE_OBJS       := $(addprefix $(DESTDIR)/$(RPK_TARGET)dir/,$(IMAGE_NEEDED))
+IMAGE_OBJS       := $(addprefix $(RPK_GOAL)dir/,$(IMAGE_NEEDED))
 
 convert: $(TARGET_CONVERT)
 	@:
 
-$(DESTDIR)/$(RPK_TARGET)dir/%:
+$(RPK_GOAL)dir/%:
 	$(DO_CONVERT)
+
+ifeq ($(IMAGE_OBJS),)
+
+$(DESTDIR)/$(PK3_PREFIX)-converted:
+	$(echo_cmd) "NOTHING TO CONVERT"
+
+else
 
 $(DESTDIR)/$(PK3_PREFIX)-converted: $(IMAGE_OBJS)
 	$(echo_cmd) "CONVERTED $<"
-	@:
+
+endif
 
 endif # TARGET_CONVERT
 
+ifeq ($(TARGET_CONVERT),)
+
+convert:
+	$(echo_cmd) "NOTHING TO CONVERT"
+
+endif
 
 
 
@@ -182,21 +206,24 @@ ifdef TARGET_ENCODE
 # list images with converted pathname then check for existing alt-name in 
 #   defined script
 # convert jpg from source dirs in case there is a quality conversion
-AUDIO_SRC        := $(call FILTER_EXT,$(AUDIO_ALL_EXTS),$(ALL_FILES))
+AUDIO_SRC        := $(call FILTER_EXT,$(AUDIO_CONV_EXTS),$(ALL_FILES))
+AUDIO_SRCDONE    := $(addprefix $(DESTDIR)/$(PK3_PREFIX)-copied/,$(call FILTER_EXT,$(AUDIO_VALID_EXTS),$(ALL_FILES)))
 AUDIO_DONE       := $(call FILTER_EXT,$(AUDIO_VALID_EXTS),$(ALL_DONE))
 AUDIO_DONE_WILD  := $(call REPLACE_EXT,$(AUDIO_VALID_EXTS),$(AUDIO_DONE))
 AUDIO_NEEDED     := $(filter-out $(AUDIO_DONE_WILD),$(AUDIO_SRC))
-AUDIO_OBJS       := $(addprefix $(DESTDIR)/$(RPK_TARGET)dir/,$(AUDIO_NEEDED))
+AUDIO_OBJS       := $(addprefix $(RPK_GOAL)dir/,$(AUDIO_NEEDED))
 
 encode: $(TARGET_ENCODE)
 	@:
 
-$(DESTDIR)/$(RPK_TARGET)dir/%:
+$(RPK_GOAL)dir/%:
 	$(DO_ENCODE)
 
-$(DESTDIR)/$(PK3_PREFIX)-encoded: $(AUDIO_OBJS)
+$(DESTDIR)/$(PK3_PREFIX)-copied/%:
+	$(DO_COPY)
+
+$(DESTDIR)/$(PK3_PREFIX)-encoded: $(AUDIO_OBJS) $(AUDIO_SRCDONE)
 	$(echo_cmd) "ENCODED $<"
-	@:
 
 endif # TARGET_ENCODE
 
@@ -208,7 +235,6 @@ ifdef TARGET_UNPACK
 
 unpack: $(TARGET_UNPACK)
 	$(echo_cmd) "UNPACKED $<"
-	@:
 
 # have to do this first and it runs with no replace 
 #   so it's not expensive to repeat every time
@@ -218,6 +244,12 @@ $(DESTDIR)/%.pk3: $(SRCDIR)/%.pk3
 endif
 
 
+ifeq ($(TARGET_UNPACK),)
+
+unpack:
+	$(echo_cmd) "NOTHING TO UNPACK"
+
+endif
 
 
 
@@ -225,7 +257,6 @@ ifdef TARGET_MKDIRS
 
 mkdirs: $(TARGET_MKDIRS)
 	$(echo_cmd) "MADEDIRS $<"
-	@:
 
 $(DESTDIR)/%.pk3dir: 
 	@if [ ! -d "./$(DESTDIR)/" ];then $(MKDIR) "./$(DESTDIR)";fi
@@ -243,15 +274,22 @@ ifdef TARGET_REPACK
 
 IMAGE_SRC        := $(call FILTER_EXT,$(IMAGE_ALL_EXTS),$(ALL_FILES))
 IMAGE_SRCWILD    := $(call REPLACE_EXT,$(IMAGE_ALL_EXTS),$(IMAGE_SRC))
-IMAGE_DESTINED   := $(addprefix $(DESTDIR)/$(RPK_TARGET)-packed/,$(filter $(IMAGE_SRCWILD),$(ALL_DONE)))
+IMAGE_DESTINED   := $(addprefix $(RPK_GOAL)-packed/,$(filter $(IMAGE_SRCWILD),$(ALL_DONE)))
+
+$(DESTDIR)/%-repack:
+	+$(Q)$(MAKE) -f $(MKFILE) V=$(V) repack \
+		SRCDIR="$(call RPK_PK3DIR,$@)" DESTDIR="$(DESTDIR)"
+
+package-pk3dirs: $(TARGET_REPACK)
+	@:
 
 package: $(TARGET_REPACK)
 	$(echo_cmd) "PACKAGED $<"
-	-@$(MOVE) $(DESTDIR)/$(RPK_TARGET) $(DESTDIR)/$(RPK_TARGET).bak > /dev/null
-	$(Q)$(MOVE) $(DESTDIR)/$(PK3_PREFIX).zip $(DESTDIR)/$(RPK_TARGET)
-	-@$(UNLINK) $(DESTDIR)/$(RPK_TARGET).bak > /dev/null
+	-@$(MOVE) $(RPK_GOAL) $(RPK_GOAL).bak > /dev/null
+	$(Q)$(MOVE) $(DESTDIR)/$(PK3_PREFIX).zip $(RPK_GOAL)
+	-@$(UNLINK) $(RPK_GOAL).bak > /dev/null
 
-$(DESTDIR)/$(RPK_TARGET)-packed/%:
+$(RPK_GOAL)-packed/%:
 	$(DO_ARCHIVE)
 
 $(DESTDIR)/$(PK3_PREFIX)-packed: $(IMAGE_DESTINED)
@@ -259,6 +297,12 @@ $(DESTDIR)/$(PK3_PREFIX)-packed: $(IMAGE_DESTINED)
 
 endif
 
+ifeq ($(TARGET_REPACK),)
+
+package-pk3dirs:
+	$(echo_cmd) "NOTHING TO PACKAGE"
+
+endif
 
 
 
@@ -268,15 +312,24 @@ endif
 ################### MAIN / REPACK!
 
 repack:
-	$(echo_cmd) "REPACK $(SRCDIR) $(RPK_TARGETS)"
-	@$(MAKE) -f $(MKFILE) V=$(V) mkdirs -j 8 \
+	$(echo_cmd) "REPACK $(SRCDIR) -> $(RPK_WORKDIRS)"
+	$(Q)$(MAKE) -f $(MKFILE) V=$(V) mkdirs \
+		SRCDIR="$(SRCDIR)" DESTDIR="$(DESTDIR)" \
 		TARGET_MKDIRS="$(addprefix $(DESTDIR)/,$(RPK_WORKDIRS))"
-	@$(MAKE) -f $(MKFILE) V=$(V) unpack -j 8 \
-		TARGET_UNPACK="$(addprefix $(DESTDIR)/,$(RPK_UNPACK))"
-	@$(MAKE) -f $(MKFILE) V=$(V) convert -j 8 \
+#	$(Q)$(MAKE) -f $(MKFILE) V=$(V) unpack \
+#		SRCDIR="$(SRCDIR)" DESTDIR="$(DESTDIR)" \
+#		TARGET_UNPACK="$(addprefix $(DESTDIR)/,$(RPK_UNPACK))"
+	$(Q)$(MAKE) -f $(MKFILE) V=$(V) convert \
+		SRCDIR="$(SRCDIR)" DESTDIR="$(DESTDIR)" \
 		TARGET_CONVERT="$(addprefix $(DESTDIR)/,$(RPK_CONVERT))"
-	@$(MAKE) -f $(MKFILE) V=$(V) encode -j 8 \
+	$(Q)$(MAKE) -f $(MKFILE) V=$(V) encode \
+		SRCDIR="$(SRCDIR)" DESTDIR="$(DESTDIR)" \
 		TARGET_ENCODE="$(addprefix $(DESTDIR)/,$(RPK_ENCODE))"
-	@$(MAKE) -f $(MKFILE) V=$(V) package -j 1 \
-		TARGET_REPACK="$(DESTDIR)/$(PK3_PREFIX)-packed"
+#	+$(Q)$(MAKE) -f $(MKFILE) V=$(V) package -j 1 \
+#		SRCDIR="$(SRCDIR)" DESTDIR="$(DESTDIR)" \
+#		TARGET_REPACK="$(DESTDIR)/$(PK3_PREFIX)-packed"
+	$(Q)$(MAKE) -f $(MKFILE) V=$(V) package-pk3dirs \
+		SRCDIR="$(SRCDIR)" DESTDIR="$(DESTDIR)" \
+		TARGET_REPACK="$(addprefix $(DESTDIR)/,$(subst .pk3,-repack,$(RPK_PK3DIRS)))"
 
+.DEFAULT_GOAL := repack
