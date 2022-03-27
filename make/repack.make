@@ -85,8 +85,8 @@ RPK_TARGET       := $(PK3_PREFIX).pk3
 RPK_GOAL         := $(DESTDIR)/$(RPK_TARGET)
 RPK_CONVERT      := $(subst .pk3,-converted,$(RPK_TARGET))
 RPK_ENCODE       := $(subst .pk3,-encoded,$(RPK_TARGET))
-RPK_UNPACK       := $(notdir $(wildcard $(SRCDIR)/*.pk3))
-RPK_PK3DIRS      := $(subst .pk3dir,.pk3,$(notdir $(wildcard $(SRCDIR)/*.pk3dir)))
+RPK_UNPACK       := $(subst $(SRCDIR)/,,$(subst \space$(SRCDIR)/, ,$(subst $(_),\space,$(wildcard $(SRCDIR)/*.pk3))))
+RPK_PK3DIRS      := $(subst .pk3dir,.pk3,$(subst $(SRCDIR)/,,$(subst \space$(SRCDIR)/, ,$(subst $(_),\space,$(wildcard $(SRCDIR)/*.pk3dir)))))
 RPK_TARGETS      := $(RPK_TARGET) $(RPK_UNPACK) $(RPK_PK3DIRS)
 RPK_WORKDIRS     := $(addsuffix dir,$(RPK_TARGETS))
 RPK_REPLACE       = $(subst \space, ,$(subst $(RPK_GOAL)dir/,$(SRCDIR)/,$(1)))
@@ -259,8 +259,8 @@ mkdirs: $(TARGET_MKDIRS)
 	$(echo_cmd) "MADEDIRS $<"
 
 $(DESTDIR)/%.pk3dir: 
-	@if [ ! -d "./$(DESTDIR)/" ];then $(MKDIR) "./$(DESTDIR)";fi
-	@if [ ! -d "./$@" ];then $(MKDIR) "./$@";fi
+	@if [ ! -d "$(DESTDIR)/" ];then $(MKDIR) "$(DESTDIR)";fi
+	@if [ ! -d "$(subst \space, ,$@)" ];then $(MKDIR) "$(subst \space, ,$@)";fi
 
 endif
 
