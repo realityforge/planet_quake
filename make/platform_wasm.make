@@ -64,7 +64,9 @@ endif
 
 ifndef BUILD_VORBIS
 ifeq ($(USE_CODEC_VORBIS),1)
+ifneq ($(USE_INTERNAL_VORBIS),1)
   CLIENT_LDFLAGS += -L$(B) -lvorbis_$(ARCH)
+endif
 endif
 endif
 
