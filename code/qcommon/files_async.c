@@ -728,6 +728,7 @@ void MakeDirectoryBuffer(char *paths, int count, int length, const char *parentD
 			//!strrchr(currentPath, '.')
 			//&& (Q_stristr(currentPath, "/maps")
 			//|| Q_stristr(currentPath, "/vm")
+			|| currentPath[Q_stristr(currentPath, ".pk3") - currentPath] + 4 == '\0'
 			|| Q_stristr(currentPath, "botfiles/")
 			|| !FS_GeneralRef(currentPath)
 		) {

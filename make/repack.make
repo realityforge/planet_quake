@@ -62,6 +62,7 @@ MKFILE           := $(lastword $(MAKEFILE_LIST))
 ZIP              := zip
 CONVERT          := convert -strip -interlace Plane -sampling-factor 4:2:0 -quality 15% -auto-orient 
 ENCODE           := oggenc -q 7 --downmix --resample 11025 --quiet 
+FFMPEG           := ffmpeg 
 UNZIP            := unzip -n 
 IDENTIFY         := identify -format '%[opaque]'
 REPACK_MOD       := 1
@@ -125,7 +126,7 @@ IMAGE_VALID_EXTS := jpg png
 IMAGE_CONV_EXTS  := dds tga bmp pcx
 IMAGE_ALL_EXTS   := $(IMAGE_CONV_EXTS) $(IMAGE_VALID_EXTS)
 AUDIO_VALID_EXTS := ogg
-AUDIO_CONV_EXTS  := wav mp3 opus
+AUDIO_CONV_EXTS  := wav mp3 opus mpga
 AUDIO_ALL_EXTS   := $(AUDIO_CONV_EXTS) $(AUDIO_VALID_EXTS)
 FILE_ALL_EXT     := cfg skin menu shaderx mtr arena bot txt shader
 
@@ -149,6 +150,12 @@ define DO_ENCODE
 	$(echo_cmd) "ENCODE $(call RPK_REPLACE,$@) -> $@"
 	$(Q)$(MKDIR) "$(subst \space, ,$(dir $@))"
 	$(Q)$(ENCODE) "$(call RPK_REPLACE,$@)" -n "$(subst \space, ,$(basename $@)).ogg"
+endef
+
+define DO_FFMPEG
+	$(echo_cmd) "FFMPEG $(call RPK_REPLACE,$@) -> $@"
+	$(Q)$(MKDIR) "$(subst \space, ,$(dir $@))"
+	$(Q)$(FFMPEG) -i "$(call RPK_REPLACE,$@)" -c:a libvorbis -q:a 4 "$(subst \space, ,$(basename $@)).ogg"
 endef
 
 define DO_COPY
@@ -225,6 +232,12 @@ AUDIO_OBJS       := $(addprefix $(RPK_GOAL)dir/,$(AUDIO_NEEDED))
 
 encode: $(TARGET_ENCODE)
 	@:
+
+$(RPK_GOAL)dir/%.mp3:
+	$(DO_FFMPEG)
+
+$(RPK_GOAL)dir/%.mpga:
+	$(DO_FFMPEG)
 
 $(RPK_GOAL)dir/%:
 	$(DO_ENCODE)

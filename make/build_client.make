@@ -87,7 +87,9 @@ endif
 
 ifeq ($(USE_CODEC_VORBIS),1)
 BASE_CFLAGS      += $(VORBIS_CFLAGS) $(OGG_CFLAGS)
+ifneq ($(USE_INTERNAL_VORBIS),1)
 CLIENT_LDFLAGS   += $(VORBIS_LIBS) $(OGG_LIBS)
+endif
 endif
 
 
