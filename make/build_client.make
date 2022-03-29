@@ -1,6 +1,12 @@
 CLIENT_WORKDIR   := client
 BUILD_CLIENT     := 1
 
+
+ifneq ($(BUILD_LIBRARY),1)
+MKFILE           := $(lastword $(MAKEFILE_LIST))
+include make/platform.make
+endif
+
 CLIENT_TARGET    := $(CNAME)$(ARCHEXT)$(BINEXT)
 ifeq ($(USE_MULTIVM_CLIENT),1)
 CLIENT_TARGET    := $(CNAME)_mw$(ARCHEXT)$(BINEXT)
@@ -12,13 +18,8 @@ ifeq ($(BUILD_EXPERIMENTAL),1)
 CLIENT_TARGET    := $(CNAME)_experimental$(ARCHEXT)$(BINEXT)
 endif
 
-
-ifneq ($(BUILD_LIBRARY),1)
-MKFILE           := $(lastword $(MAKEFILE_LIST))
-include make/platform.make
 WORKDIRS         += $(CLIENT_WORKDIR)
 CLEANS           += $(CLIENT_WORKDIR) $(CLIENT_TARGET)
-endif
 
 
 CLIENT_CFLAGS    := $(BASE_CFLAGS) $(INCLUDE)
@@ -324,7 +325,7 @@ $(B)/$(CLIENT_WORKDIR)/%.o: $(MOUNT_DIR)/server/%.c
 $(B)/$(CLIENT_WORKDIR)/%.o: $(MOUNT_DIR)/*/%.c
 	$(DO_CLIENT_CC)
 
-$(B)/$(CLIENT_TARGET): $(addprefix $(B)/,$(WORKDIRS)) $(Q3OBJ)
+$(B)/$(CLIENT_TARGET): $(addsuffix \\/,$(addprefix $(B)/,$(WORKDIRS))) $(Q3OBJ)
 	$(echo_cmd) "LD $@"
 	$(Q)$(CC) -o $@ $(Q3OBJ) $(CLIENT_LDFLAGS)
 

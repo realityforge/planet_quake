@@ -114,18 +114,19 @@ include $(D_FILES)
 endif
 endif
 
-
-$(BD)/%/: $(addprefix $(BD)/,$(WORKDIRS))
+$(BUILD_DIR)/:
 	@if [ ! -d $(BUILD_DIR) ];then $(MKDIR) $(BUILD_DIR);fi
-	@if [ ! -d $(B) ];then $(MKDIR) $(B);fi
-	@for dir in $(WORKDIRS); \
-	do \
-	if [ ! -d "./$(B)/$$dir" ];then $(MKDIR) "./$(B)/$$dir";fi; \
-	done
+
+$(BUILD_DIR)/%\\/: $(dir $(filter %,$(WORKDIRS)))
+	@if [ ! -d "./$(subst \,,$@)/$$dir" ];then $(MKDIR) "./$(subst \,,$@)/$$dir";fi; \
+
+#	@for dir in $(WORKDIRS); \
+#	do \
+#	done
 
 
 
 .PHONY: all clean clean2 clean-debug clean-release copyfiles \
   debug default dist distclean makedirs release \
-  targets tools toolsclean mkdirs \
+  targets tools toolsclean mkdirs build  \
     $(D_FILES)
