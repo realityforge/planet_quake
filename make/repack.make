@@ -58,6 +58,7 @@ endif
 # TODO: make script for repack files, just like repack.js but no graphing
 # TODO: use _hi _lo formats and the renderer and same directory to load converted web content
 # TODO: figure out how this fits in with AMP file-naming style
+NODE             := node
 MKFILE           := $(lastword $(MAKEFILE_LIST))
 ZIP              := zip
 CONVERT          := convert -strip -interlace Plane -sampling-factor 4:2:0 -quality 15% -auto-orient 
@@ -68,6 +69,7 @@ IDENTIFY         := identify -format '%[opaque]'
 REPACK_MOD       := 1
 NO_OVERWRITE     ?= 1
 GETEXT            = $(if $(filter "%True%",$(shell $(IDENTIFY) "$(1)")),jpg,png)
+GETMPGA           = $(filter "%True%",$(shell $(NODE) -e "if(fs.readFileSync('$(1)', 'binary').includes('\x2E\x3D')) {console.log('True')}"))
 FILTER_EXT        = $(foreach ext,$(1), $(filter %.$(ext),$(2)))
 LVLS4            := * */* */*/* */*/*/* */*/*/*/*
 LVLS3            := * */* */*/* */*/*/*
@@ -191,6 +193,10 @@ IMAGE_OBJS       := $(addprefix $(RPK_GOAL)dir/,$(IMAGE_NEEDED))
 convert: $(TARGET_CONVERT)
 	@:
 
+$(RPK_GOAL)dir/%.tga:
+	$(NODE) -e "let wrong=fs.readFileSync('$(call RPK_REPLACE,$@)', 'binary');if(wrong.includes('created using ImageLib by SkyLine Tools')){wrong=wrong.replace('created using ImageLib by SkyLine Tools', '');wrong=wrong.replace(/^\(/, '\0');fs.writeFileSync('$(call RPK_REPLACE,$@)', wrong)}"
+	$(DO_CONVERT)
+
 $(RPK_GOAL)dir/%:
 	$(DO_CONVERT)
 
@@ -238,6 +244,9 @@ $(RPK_GOAL)dir/%.mp3:
 
 $(RPK_GOAL)dir/%.mpga:
 	$(DO_FFMPEG)
+
+$(RPK_GOAL)dir/%.wav:
+	$(if $(call GETMPGA,$(call RPK_REPLACE,$@)),$(DO_ENCODE),$(DO_FFMPEG))
 
 $(RPK_GOAL)dir/%:
 	$(DO_ENCODE)

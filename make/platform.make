@@ -1,11 +1,15 @@
 ABSOLUTE_PATH       := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))..
+ifndef COMPILE_PLATFORM
 COMPILE_PLATFORM    := $(shell uname | sed -e 's/_.*//' | tr '[:upper:]' '[:lower:]' | sed -e 's/\//_/g')
+endif
+ifndef COMPILE_ARCH
 COMPILE_ARCH        := $(shell uname -m | sed -e 's/i.86/x86/' | sed -e 's/^arm.*/arm/')
+endif
 
 ifeq ($(COMPILE_PLATFORM),mingw32)
-  ifeq ($(COMPILE_ARCH),i386)
-    COMPILE_ARCH=x86
-  endif
+ifeq ($(COMPILE_ARCH),i386)
+COMPILE_ARCH=x86
+endif
 endif
 
 # echo_cmd is silent in verbose mode, makes sense

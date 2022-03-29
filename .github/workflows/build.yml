@@ -471,7 +471,13 @@ jobs:
             artifact_name: quake3e-macos-x86_64.zip
 
           - artifact_dir: ./
-            artifact_name: quake3e-js.zip
+            artifact_name: quake3e.wasm
+
+          - artifact_dir: ./
+            artifact_name: quake3e.html
+
+          - artifact_dir: ./
+            artifact_name: quake3e-wasm.zip
 
           - artifact_dir: ./
             artifact_name: xxx-multigame.pk3
