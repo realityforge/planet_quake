@@ -131,7 +131,6 @@ endef
 debug:
 	$(echo_cmd) "MAKE $(BD)/$(TARGET_SERVER)"
 	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) WORKDIRS="$(WORKDIR)" mkdirs
-	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) pre-build
 	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) -j 8 \
     SERVER_CFLAGS="$(SERVER_CFLAGS) $(DEBUG_CFLAGS)" \
     SERVER_LDFLAGS="$(SERVER_LDFLAGS) $(DEBUG_LDFLAGS)" $(BD)/$(TARGET_SERVER)
@@ -139,7 +138,6 @@ debug:
 release:
 	$(echo_cmd) "MAKE $(BR)/$(TARGET_SERVER)"
 	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) WORKDIRS="$(WORKDIR)" mkdirs
-	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) pre-build
 	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) -j 8 \
     SERVER_CFLAGS="$(SERVER_CFLAGS) $(RELEASE_CFLAGS)" \
     SERVER_LDFLAGS="$(SERVER_LDFLAGS) $(RELEASE_LDFLAGS)" $(BR)/$(TARGET_SERVER)

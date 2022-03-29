@@ -5,6 +5,8 @@ BUILD_RENDERER_OPENGL:=1
 ifneq ($(BUILD_CLIENT),1)
 MKFILE         := $(lastword $(MAKEFILE_LIST))
 include make/platform.make
+WORKDIRS       += $(REND_WORKDIR)
+CLEANS 	       += $(REND_WORKDIR) $(REND_TARGET)
 endif
 
 NEED_COMMON_REND := 0
@@ -45,16 +47,14 @@ endef
 ifneq ($(BUILD_CLIENT),1)
 debug:
 	$(echo_cmd) "MAKE $(REND_TARGET)"
-	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) WORKDIRS=$(REND_WORKDIR) mkdirs
-	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) pre-build
+	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) mkdirs
 	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) -j 8 \
 		REND_CFLAGS="$(REND_CFLAGS) $(DEBUG_CFLAGS)" \
 		LDFLAGS="$(LDFLAGS) $(DEBUG_LDFLAGS)" $(BD)/$(REND_TARGET)
 
 release:
 	$(echo_cmd) "MAKE $(REND_TARGET)"
-	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) WORKDIRS=$(REND_WORKDIR) mkdirs
-	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) pre-build
+	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) mkdirs
 	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) -j 8 \
 		REND_CFLAGS="$(REND_CFLAGS) $(RELEASE_CFLAGS)" \
 		LDFLAGS="$(LDFLAGS) $(RELEASE_CFLAGS)" $(BR)/$(REND_TARGET)
@@ -62,9 +62,6 @@ release:
 clean:
 	@rm -rf ./$(BD)/$(REND_WORKDIR) ./$(BD)/$(REND_TARGET)
 	@rm -rf ./$(BR)/$(REND_WORKDIR) ./$(BR)/$(REND_TARGET)
-else
-WORKDIRS += $(REND_WORKDIR)
-CLEANS 	 += $(REND_WORKDIR) $(REND_TARGET)
 endif
 
 ifdef B

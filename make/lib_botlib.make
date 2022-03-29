@@ -29,7 +29,6 @@ endef
 debug:
 	$(echo_cmd) "MAKE $(BOT_TARGET)"
 	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) WORKDIRS=$(BOT_WORKDIR) mkdirs
-	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) pre-build
 	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) -j 8 \
 		BOT_CFLAGS="$(BOT_CFLAGS) $(DEBUG_CFLAGS)" \
 		LDFLAGS="$(LDFLAGS) $(DEBUG_LDFLAGS)" $(BD)/$(BOT_TARGET)
@@ -37,7 +36,6 @@ debug:
 release:
 	$(echo_cmd) "MAKE $(BOT_TARGET)"
 	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) WORKDIRS=$(BOT_WORKDIR) mkdirs
-	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) pre-build
 	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) -j 8 \
 		BOT_CFLAGS="$(BOT_CFLAGS) $(RELEASE_CFLAGS)" \
 		LDFLAGS="$(LDFLAGS) $(RELEASE_LDFLAGS)" $(BR)/$(BOT_TARGET)

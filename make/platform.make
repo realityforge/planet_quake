@@ -103,16 +103,6 @@ endif
 
 D_FILES :=
 
-ifdef WORKDIRS
-mkdirs:
-	@if [ ! -d $(BUILD_DIR) ];then $(MKDIR) $(BUILD_DIR);fi
-	@if [ ! -d $(B) ];then $(MKDIR) $(B);fi
-	@for dir in $(WORKDIRS); \
-	do \
-	if [ ! -d "./$(B)/$$dir" ];then $(MKDIR) "./$(B)/$$dir";fi; \
-	done
-endif
-
 ifdef WORKDIR
 D_DIRS  := $(addprefix $(BD)/,$(notdir $(WORKDIRS))) \
 					 $(addprefix $(BR)/,$(notdir $(WORKDIRS)))
@@ -123,6 +113,17 @@ ifneq ($(strip $(D_FILES)),)
 include $(D_FILES)
 endif
 endif
+
+
+$(BD)/%/: $(addprefix $(BD)/,$(WORKDIRS))
+	@if [ ! -d $(BUILD_DIR) ];then $(MKDIR) $(BUILD_DIR);fi
+	@if [ ! -d $(B) ];then $(MKDIR) $(B);fi
+	@for dir in $(WORKDIRS); \
+	do \
+	if [ ! -d "./$(B)/$$dir" ];then $(MKDIR) "./$(B)/$$dir";fi; \
+	done
+
+
 
 .PHONY: all clean clean2 clean-debug clean-release copyfiles \
   debug default dist distclean makedirs release \

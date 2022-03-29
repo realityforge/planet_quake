@@ -58,7 +58,6 @@ ifdef NOT_INCLUDED_Q3LCC
 release:
 	$(echo_cmd) "MAKE Q3LCC"
 	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) WORKDIRS="$(Q3LCC_WORKDIRS)" mkdirs
-	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) pre-build
 	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) \
 	  WORKDIRS="$(Q3LCC_WORKDIRS)" \
 	  CFLAGS="$(CFLAGS) $(RELEASE_CFLAGS)" \

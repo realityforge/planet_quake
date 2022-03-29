@@ -59,10 +59,3 @@ DEBUG_CFLAGS      = -DDEBUG -D_DEBUG -g -O0 -g3 -fno-inline
 RELEASE_CFLAGS    = -DNDEBUG $(OPTIMIZE)
 USE_SDL          ?= 1
 
-
-ifdef B
-pre-build:
-	@:
-post-build:
-	@:
-endif

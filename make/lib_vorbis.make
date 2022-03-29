@@ -48,7 +48,6 @@ ifndef BUILD_CLIENT
 debug:
 	$(echo_cmd) "MAKE $(TARGET_OGG)"
 	@$(MAKE) -f $(MKFILE) B=$(BD) WORKDIRS="$(WORKOGG) $(WORKVORBIS)" mkdirs
-	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) pre-build
 	@$(MAKE) -f $(MKFILE) B=$(BD) -j 8 \
 		LIBVOR_CFLAGS="$(LIBVOR_CFLAGS) $(DEBUG_CFLAGS)" \
 		LIBVOR_LDFLAGS="$(LIBVOR_LDFLAGS) $(DEBUG_LDFLAGS) $(BD)/libogg_$(SHLIBNAME)" \
@@ -59,7 +58,6 @@ debug:
 release:
 	$(echo_cmd) "MAKE $(TARGET_OGG)"
 	@$(MAKE) -f $(MKFILE) B=$(BR) WORKDIRS="$(WORKOGG) $(WORKVORBIS)" mkdirs
-	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) pre-build
 	@$(MAKE) -f $(MKFILE) B=$(BR) -j 8 \
 		LIBVOR_CFLAGS="$(LIBVOR_CFLAGS) $(RELEASE_CFLAGS)" \
 		LIBVOR_LDFLAGS="$(LIBVOR_LDFLAGS) $(RELEASE_LDFLAGS) $(BR)/libogg_$(SHLIBNAME)" \

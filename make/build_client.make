@@ -1,19 +1,63 @@
-MKFILE           := $(lastword $(MAKEFILE_LIST))
-WORKDIR          := client
-
+CLIENT_WORKDIR   := client
 BUILD_CLIENT     := 1
-include make/platform.make
 
-TARGET_CLIENT    := $(CNAME)$(ARCHEXT)$(BINEXT)
+CLIENT_TARGET    := $(CNAME)$(ARCHEXT)$(BINEXT)
 ifeq ($(USE_MULTIVM_CLIENT),1)
-TARGET_CLIENT    := $(CNAME)_mw$(ARCHEXT)$(BINEXT)
+CLIENT_TARGET    := $(CNAME)_mw$(ARCHEXT)$(BINEXT)
 endif
 ifeq ($(BUILD_SLIM_CLIENT),1)
-TARGET_CLIENT    := $(CNAME)_slim$(ARCHEXT)$(BINEXT)
+CLIENT_TARGET    := $(CNAME)_slim$(ARCHEXT)$(BINEXT)
 endif
 ifeq ($(BUILD_EXPERIMENTAL),1)
-TARGET_CLIENT    := $(CNAME)_experimental$(ARCHEXT)$(BINEXT)
+CLIENT_TARGET    := $(CNAME)_experimental$(ARCHEXT)$(BINEXT)
 endif
+
+
+ifneq ($(BUILD_LIBRARY),1)
+MKFILE           := $(lastword $(MAKEFILE_LIST))
+include make/platform.make
+WORKDIRS         += $(CLIENT_WORKDIR)
+CLEANS           += $(CLIENT_WORKDIR) $(CLIENT_TARGET)
+endif
+
+
+CLIENT_CFLAGS    := $(BASE_CFLAGS) $(INCLUDE)
+ifeq ($(BUILD_GAME_STATIC),1)
+CLIENT_CFLAGS    += $(GAME_INCLUDE)
+endif
+
+ifeq ($(USE_CODEC_VORBIS),1)
+CLIENT_CFLAGS    += $(VORBIS_CFLAGS) $(OGG_CFLAGS)
+ifneq ($(USE_INTERNAL_VORBIS),1)
+CLIENT_LDFLAGS   += $(VORBIS_LIBS) $(OGG_LIBS)
+endif
+endif
+
+ifeq ($(USE_CURL),1)
+ifneq ($(USE_CURL_DLOPEN),1)
+CLIENT_CFLAGS    += $(CURL_CFLAGS)
+CLIENT_LDFLAGS   += $(CURL_LIBS)
+endif
+endif
+
+ifeq ($(USE_VIDEO_XVID),1)
+CLIENT_CFLAGS    += $(XVID_CFLAGS)
+CLIENT_LDFLAGS   += $(XVID_LIBS)
+endif
+
+ifeq ($(USE_VIDEO_THEORA),1)
+CLIENT_CFLAGS    += $(THEORA_CFLAGS)
+CLIENT_LDFLAGS   += $(THEORA_LIBS)
+endif
+
+ifeq ($(USE_SYSTEM_JPEG),1)
+CLIENT_CFLAGS    += $(JPEG_CFLAGS)
+CLIENT_LDFLAGS   += $(JPEG_LIBS)
+endif
+
+export INCLUDE   := $(foreach dir,$(INCLUDES),-I$(dir))
+
+#GXXFLAGS := $(CLIENT_CFLAGS) -std=gnu++11
 
 INCLUDES         := $(MOUNT_DIR)/qcommon
 SOURCES          := $(MOUNT_DIR)/client
@@ -85,13 +129,6 @@ ifndef MINGW
 endif
 endif
 
-ifeq ($(USE_CODEC_VORBIS),1)
-BASE_CFLAGS      += $(VORBIS_CFLAGS) $(OGG_CFLAGS)
-ifneq ($(USE_INTERNAL_VORBIS),1)
-CLIENT_LDFLAGS   += $(VORBIS_LIBS) $(OGG_LIBS)
-endif
-endif
-
 
 VM               := vm.o
 ifneq ($(BUILD_GAME_STATIC),1)
@@ -115,12 +152,7 @@ endif
 CURL             :=
 ifeq ($(USE_CURL),1)
 #CURL            += cl_curl.o
-ifneq ($(USE_CURL_DLOPEN),1)
-BASE_CFLAGS      += $(CURL_CFLAGS)
-CLIENT_LDFLAGS   += $(CURL_LIBS)
 endif
-endif
-
 
 SYSTEM           := 
 
@@ -177,21 +209,6 @@ VIDEO            :=
                     libs/libvpx-1.10/third_party/libwebm
 #endif
 
-ifeq ($(USE_VIDEO_XVID),1)
-BASE_CFLAGS      += $(XVID_CFLAGS)
-CLIENT_LDFLAGS   += $(XVID_LIBS)
-endif
-
-ifeq ($(USE_VIDEO_THEORA),1)
-BASE_CFLAGS      += $(THEORA_CFLAGS)
-CLIENT_LDFLAGS   += $(THEORA_LIBS)
-endif
-
-ifeq ($(USE_SYSTEM_JPEG),1)
-BASE_CFLAGS      += $(JPEG_CFLAGS)
-CLIENT_LDFLAGS   += $(JPEG_LIBS)
-endif
-
 ifeq ($(USE_MEMORY_MAPS),1)
 CLIENT_LDFLAGS   += $(BR)/$(CNAME)_q3map2_$(SHLIBNAME)
 endif
@@ -215,7 +232,7 @@ CFILES           += $(MOUNT_DIR)/botlib/be_interface.c \
                     $(foreach dir,$(SOURCES), $(wildcard $(dir)/l_*.c))
 endif
 OBJS             := $(CFILES:.c=.o) 
-Q3OBJ            := $(addprefix $(B)/$(WORKDIR)/,$(notdir $(OBJS)))
+Q3OBJ            := $(addprefix $(B)/$(CLIENT_WORKDIR)/,$(notdir $(OBJS)))
 
 ifeq ($(BUILD_GAME_STATIC),1)
 Q3OBJ            += $(GAME_OBJ)
@@ -243,16 +260,6 @@ ifeq ($(USE_INTERNAL_JPEG),1)
 Q3OBJ            += $(JPEGOBJS)
 endif
 
-export INCLUDE   := $(foreach dir,$(INCLUDES),-I$(dir))
-
-CLIENT_CFLAGS    := $(BASE_CFLAGS) $(INCLUDE)
-
-ifeq ($(BUILD_GAME_STATIC),1)
-CLIENT_CFLAGS           += $(GAME_INCLUDE)
-endif
-
-#GXXFLAGS := $(CLIENT_CFLAGS) -std=gnu++11
-
 # TODO build quake 3 as a library that can be use for rendering embedded in other apps?
 
 define DO_CLIENT_CC
@@ -277,72 +284,47 @@ define DO_WINDRES
 endef
 endif
 
+
 debug:
-	$(echo_cmd) "MAKE $(TARGET_CLIENT)"
-	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) WORKDIRS="$(WORKDIR) $(WORKDIRS)" mkdirs
-	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) pre-build
-	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) -j 8 \
-		WORKDIRS="$(WORKDIR) $(WORKDIRS)" \
+	$(echo_cmd) "MAKE $(CLIENT_TARGET)"
+#	+$(Q)$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) mkdirs
+	$(Q)$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) \
 		CLIENT_CFLAGS="$(CLIENT_CFLAGS) $(DEBUG_CFLAGS)" \
 		CLIENT_LDFLAGS="$(CLIENT_LDFLAGS) $(DEBUG_LDFLAGS)" \
-		$(BD)/$(TARGET_CLIENT)
-	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) post-build TARGET="$(TARGET_CLIENT)"
+		$(BD)/$(CLIENT_TARGET)
 
 release:
-	$(echo_cmd) "MAKE $(TARGET_CLIENT)"
-	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) WORKDIRS="$(WORKDIR) $(WORKDIRS)" mkdirs
-	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) pre-build
-	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) -j 8 \
-		WORKDIRS="$(WORKDIR) $(WORKDIRS)" \
+	$(echo_cmd) "MAKE $(CLIENT_TARGET)"
+#	+$(Q)$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) mkdirs
+	$(Q)$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) \
 		CLIENT_CFLAGS="$(CLIENT_CFLAGS) $(RELEASE_CFLAGS)" \
 		CLIENT_LDFLAGS="$(CLIENT_LDFLAGS) $(RELEASE_LDFLAGS)" \
-		$(BR)/$(TARGET_CLIENT)
-	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) post-build TARGET="$(TARGET_CLIENT)"
+		$(BR)/$(CLIENT_TARGET)
 
 clean:
-	@rm -rf ./$(BD)/$(WORKDIR) ./$(BD)/$(TARGET_CLIENT)
-	@rm -rf ./$(BR)/$(WORKDIR) ./$(BR)/$(TARGET_CLIENT)
-	@for i in $(CLEANS); \
+	$(Q)rm -rf ./$(BD)/$(CLIENT_WORKDIR) ./$(BD)/$(CLIENT_TARGET)
+	$(Q)rm -rf ./$(BR)/$(CLIENT_WORKDIR) ./$(BR)/$(CLIENT_TARGET)
+	$(Q)for i in $(CLEANS); \
 	do \
 	rm -r "./$(BD)/$$i" 2> /dev/null || true; \
 	rm -r "./$(BR)/$$i" 2> /dev/null || true; \
 	done
 
 ifdef B
-$(B)/$(WORKDIR)/%.o: libs/libvpx-1.10/%.cc
-	$(DO_VPX_GXX)
 
-$(B)/$(WORKDIR)/%.o: $(MOUNT_DIR)/client/%.c
-	$(DO_CLIENT_CC)
-
-$(B)/$(WORKDIR)/%.o: $(MOUNT_DIR)/unix/%.c
-	$(DO_CLIENT_CC)
-
-$(B)/$(WORKDIR)/%.o: $(MOUNT_DIR)/win32/%.c
-	$(DO_CLIENT_CC)
-
-$(B)/$(WORKDIR)/%.o: $(MOUNT_DIR)/win32/%.rc
+$(B)/$(CLIENT_WORKDIR)/%.o: $(MOUNT_DIR)/win32/%.rc
 	$(DO_WINDRES)
 
-$(B)/$(WORKDIR)/%.o: $(MOUNT_DIR)/macosx/%.c
-	$(DO_CLIENT_CC)
-
-$(B)/$(WORKDIR)/%.o: $(MOUNT_DIR)/wasm/%.c
-	$(DO_CLIENT_CC)
-
-$(B)/$(WORKDIR)/%.o: $(MOUNT_DIR)/sdl/%.c
-	$(DO_CLIENT_CC)
-
-$(B)/$(WORKDIR)/%.o: $(MOUNT_DIR)/qcommon/%.c
-	$(DO_CLIENT_CC)
-
-$(B)/$(WORKDIR)/%.o: $(MOUNT_DIR)/server/%.c
-	$(DO_SERVER_CC)
-
-$(B)/$(WORKDIR)/%.o: $(MOUNT_DIR)/botlib/%.c
+$(B)/$(CLIENT_WORKDIR)/%.o: $(MOUNT_DIR)/botlib/%.c
 	$(DO_BOT_CC)
 
-$(B)/$(TARGET_CLIENT): $(Q3OBJ)
+$(B)/$(CLIENT_WORKDIR)/%.o: $(MOUNT_DIR)/server/%.c
+	$(DO_SERVER_CC)
+
+$(B)/$(CLIENT_WORKDIR)/%.o: $(MOUNT_DIR)/*/%.c
+	$(DO_CLIENT_CC)
+
+$(B)/$(CLIENT_TARGET): $(addprefix $(B)/,$(WORKDIRS)) $(Q3OBJ)
 	$(echo_cmd) "LD $@"
 	$(Q)$(CC) -o $@ $(Q3OBJ) $(CLIENT_LDFLAGS)
 

@@ -145,7 +145,6 @@ debug:
 	$(echo_cmd) "MAKE $(Q3MAP2_TARGET)"
 	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) \
 		WORKDIRS="$(Q3MAP2_WORKDIR) $(Q3MAP2_WORKDIR)/picomodel" mkdirs
-	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) pre-build
 	@$(MAKE) -f $(MKFILE) B=$(BD) -j 8 \
 		CFLAGS="$(CFLAGS) $(DEBUG_CFLAGS)" \
 		LDFLAGS="$(LDFLAGS) $(DEBUG_LDFLAGS)" $(BD)/$(Q3MAP2_TARGET)
@@ -154,7 +153,6 @@ release:
 	$(echo_cmd) "MAKE $(Q3MAP2_TARGET)"
 	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) \
 		WORKDIRS="$(Q3MAP2_WORKDIR) $(Q3MAP2_WORKDIR)/picomodel" mkdirs
-	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) pre-build
 	@$(MAKE) -f $(MKFILE) B=$(BR) -j 8 \
 		CFLAGS="$(CFLAGS) $(RELEASE_CFLAGS)" \
 		LDFLAGS="$(LDFLAGS) $(RELEASE_LDFLAGS)" $(BR)/$(Q3MAP2_TARGET)

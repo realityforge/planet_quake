@@ -148,10 +148,3 @@ CLIENT_LDFLAGS   += $(CLIENT_LIBS) \
 
 export EM_CACHE=$(EM_CACHE_LOCATION)
 #export EMCC_FORCE_STDLIBS=1
-
-ifdef B
-pre-build:
-	@:
-post-build:
-	@:
-endif

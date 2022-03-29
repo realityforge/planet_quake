@@ -15,7 +15,7 @@ BUILD_MODES      := debug release clean deploy install
 MODE_TARGETS     := $(filter $(MAKECMDGOALS),$(BUILD_MODES))
 ENGINE_FEATURES  := experimental mw static
 RENDER_FEATURES  := -vulkan -mw 2 2-mw
-BUILD_FEATURES   := client $(addprefix client-,$(ENGINE_FEATURES)) \
+BUILD_FEATURES   := client client-slim $(addprefix client-,$(ENGINE_FEATURES)) \
 										server $(addprefix server-,$(ENGINE_FEATURES)) \
 										renderer $(addprefix renderer,$(RENDER_FEATURES)) \
 										huffman 
@@ -61,6 +61,10 @@ multiworld: ## build drag and drop and persistent console
 
 client-experimental: ## build drag and drop and persistent console
 	$(eval CLIENT_OPTIONS += BUILD_EXPERIMENTAL=1)
+	@:
+
+client-slim: client ## build a client without server features for connecting
+	$(eval CLIENT_OPTIONS += BUILD_SLIM_CLIENT=1)
 	@:
 
 client-mw: client mw ## build multiworld features and multiple VMs
