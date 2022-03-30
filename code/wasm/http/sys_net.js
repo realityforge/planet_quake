@@ -298,7 +298,8 @@ function NET_OpenIP() {
   if(!NET.queue) {
     NET.queue = []
   }
-  if(window.location.protocol == 'file:') {
+  if(window.location.protocol != 'http:' 
+    && window.location.protocol != 'https:') {
     return
   }
   let fullAddress = 'ws' 

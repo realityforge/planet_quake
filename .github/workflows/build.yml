@@ -93,7 +93,7 @@ jobs:
         retention-days: 10
 
   create-testing:
-    if: github.ref == 'refs/heads/master' && github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    if: always() && github.ref == 'refs/heads/master' && github.event_name == 'push' || github.event_name == 'workflow_dispatch'
     needs: [build-everything]
     runs-on: ubuntu-latest
     steps:
