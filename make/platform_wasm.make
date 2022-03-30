@@ -19,6 +19,7 @@ USE_SDL             := 0
 USE_IPV6            := 0
 USE_OPENGL2         := 1
 USE_VULKAN          := 0
+USE_VULKAN_API      := 0
 NO_MAKE_LOCAL       := 1
 
 include make/configure.make
