@@ -90,8 +90,8 @@ BASE_CFLAGS         += -Wall --target=wasm32 \
                        -DUSE_MASTER_LAN \
                        -D__WASM__ \
                        -std=c11 \
-                       -Ilibs/musl-1.2.2/include
-                       -Icode/wasm \
+                       -Ilibs/musl-1.2.2/include \
+                       -Icode/wasm
 
 DEBUG_CFLAGS        := -fvisibility=default -fno-inline \
                        -DDEBUG -D_DEBUG -g -g3 -fPIC -gdwarf -gfull
