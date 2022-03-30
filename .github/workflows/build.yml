@@ -58,9 +58,17 @@ jobs:
             cflags: BUILD_SLIM_CLIENT=1
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: snow-actions/sparse-checkout@v1.1.0
       with:
         fetch-depth: 1
+        patterns: |
+          code
+          make
+          games/multigame
+          libs/tools/quake3
+          libs/libvorbis-*
+          libs/libogg-*
+          libs/libjpeg-*
 
     - name: Install tools
       run: |
@@ -95,7 +103,7 @@ jobs:
 
       - name: Create binary archives
         run: |
-          7z a -r ../quake3e-wasm.zip   ./wasm-js/*
+          7z a -r ./quake3e-wasm.zip ./wasm-js/*
 #         7z a -r quake3e-linux-aarch64.zip  ./linux-aarch64/*
 #         7z a -r quake3e-linux-armv7.zip    ./linux-armv7/*
 
