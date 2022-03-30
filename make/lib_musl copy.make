@@ -173,13 +173,10 @@ endif
 
 #RELEASE_CFLAGS   := $(BASE_CFLAGS) \
                     -std=c11 -DNDEBUG -O3 -Oz -flto -fPIC
-MUSL_INCLUDE     := -Icode/wasm 
-
-export MUSL_INCLUDE
 
 define DO_MUSL_CC
 	$(echo_cmd) "MUSL_CC $<"
-	$(Q)$(CC) -o $@ $(MUSL_INCLUDE) $(CFLAGS) $(MUSL_CFLAGS) -c $<
+	$(Q)$(CC) -o $@ $(CFLAGS) $(MUSL_CFLAGS) -c $<
 endef
 
 ifdef B
