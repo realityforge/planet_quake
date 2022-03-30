@@ -90,6 +90,7 @@ BASE_CFLAGS         += -Wall --target=wasm32 \
                        -DUSE_MASTER_LAN \
                        -D__WASM__ \
                        -std=c11 \
+                       -Icode/wasm/include \
                        -Ilibs/musl-1.2.2/include \
                        -Icode/wasm
 
@@ -98,7 +99,7 @@ DEBUG_CFLAGS        := -fvisibility=default -fno-inline \
 RELEASE_CFLAGS      := -fvisibility=hidden \
                        -DNDEBUG -Ofast -O3 -Oz -fPIC -ffast-math
                     # -flto 
-export INCLUDE      := -Icode/wasm/include 
+
 STARTUP_COMMAND     := +devmap\\', \\'lsdm3_v1
 
 

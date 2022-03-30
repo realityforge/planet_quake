@@ -57,19 +57,19 @@ jobs:
             makefile: make/build_client.make
             cflags: BUILD_SLIM_CLIENT=1
 
+#    - uses: actions/checkout@v2
     steps:
     - uses: snow-actions/sparse-checkout@v1.1.0
       with:
         fetch-depth: 1
         patterns: |
-          code
-          make
-          games/multigame
-          libs/musl-*
-          libs/tools/quake3
-          libs/libvorbis-*
-          libs/libogg-*
-          libs/libjpeg-*
+          /code/
+          /make/
+          /games/multigame/
+          /libs/musl-*/
+          /libs/tools/quake3/
+          /libs/libvorbis-*/
+          /libs/libogg-*/
 
     - name: Install tools
       run: |
