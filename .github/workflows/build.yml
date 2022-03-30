@@ -22,15 +22,15 @@ on:
 
 jobs:
   build-everything:
-    name: ${{ matrix.config }} ${{ matrix.name }} (${{ matrix.arch }}) ${{ matrix.client }}
+    name: ${{ matrix.config }} ${{ matrix.name }} (${{ matrix.arch }}) ${{ matrix.proper }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        runtime: [client, client-slim, client-mw, client-experimental, server, server-mw, server-experimental, q3map2, renderer, renderer2, renderer-mw, renderer2-mw, renderervk, multigame, multigame-static]
+        runtime: [client, client-slim, client-mw]
+        #, client-experimental, server, server-mw, server-experimental, q3map2, renderer, renderer2, renderer-mw, renderer2-mw, renderervk, multigame, multigame-static]
         platform: [wasm]
         arch: [js]
-        cc: [gcc]
         config: [Release]
         include:
           - config: Release
@@ -40,32 +40,42 @@ jobs:
             platform: wasm
             name: WebAssembly
             options: USE_ASYNCHRONOUS=1 USE_LAZY_LOAD=1
+            cc: libs/linux/wasi-sdk-14.0/bin/clang
 
           - runtime: client
             proper: Client
             makefile: make/build_client.make
+            cflags: ~
 
           - runtime: client-mw
             proper: Client (Multiworld)
             makefile: make/build_client.make
+            cflags: USE_MULTIVM_CLIENT=1 USE_MULTIVM_SERVER=1
 
           - runtime: client-slim
             proper: Client (Slim)
             makefile: make/build_client.make
+            cflags: BUILD_SLIM_CLIENT=1
+
     steps:
     - uses: actions/checkout@v2
+      with:
+        fetch-depth: 1
 
     - name: Install tools
       run: |
         sudo apt-get -qq update
         sudo apt-get -y install libcurl4-openssl-dev mesa-common-dev libxxf86dga-dev libxrandr-dev libxxf86vm-dev libasound-dev libsdl2-dev wget binaryen git
         wget --no-check-certificate https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-14/wasi-sdk-14.0-linux.tar.gz
-        tar -zxvf wasi-sdk-14.0-linux.tar.gz -C libs/linux
+        pwd
+        ls -la libs/linux
+        mkdir libs/linux
+        tar -zxvf wasi-sdk-14.0-linux.tar.gz -C libs/linux/
         npm install -g uglify-js
 
     - name: Build
       run: |
-        make -f {{ matrix.makefile }} NO_MAKE_LOCAL=1 ${{ matrix.rule }} install ARCH=${{ matrix.arch }} {{ matrix.options }} PLATFORM=${{ matrix.platform }} CC=/home/runner/work/planet_quake/wasi-sdk-14.0/bin/clang V=1
+        make -f ${{ matrix.makefile }} -j 16 NO_MAKE_LOCAL=1 ARCH=${{ matrix.arch }} ${{ matrix.options }} ${{ matrix.cflags }} PLATFORM=${{ matrix.platform }} CC=${{ matrix.cc }} V=1 ${{ matrix.rule }} install 
 
     - uses: actions/upload-artifact@v2
       if: matrix.config == 'Release'

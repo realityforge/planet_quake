@@ -22,7 +22,7 @@ Q=@
 endif
 
 ifeq ($(COMPILE_PLATFORM),cygwin)
-  PLATFORM=mingw32
+PLATFORM=mingw32
 endif
 
 ifndef PLATFORM
@@ -31,21 +31,21 @@ endif
 export PLATFORM
 
 ifeq ($(PLATFORM),mingw32)
-  MINGW=1
+MINGW=1
 endif
 ifeq ($(PLATFORM),mingw64)
-  MINGW=1
+MINGW=1
 endif
 
 ifeq ($(COMPILE_ARCH),i86pc)
-  COMPILE_ARCH=x86
+COMPILE_ARCH=x86
 endif
 
 ifeq ($(COMPILE_ARCH),amd64)
-  COMPILE_ARCH=x86_64
+COMPILE_ARCH=x86_64
 endif
 ifeq ($(COMPILE_ARCH),x64)
-  COMPILE_ARCH=x86_64
+COMPILE_ARCH=x86_64
 endif
 
 ifndef ARCH
@@ -76,15 +76,17 @@ SHLIBNAME    = $(ARCH).$(SHLIBEXT)
 ####################################################################
 
 ifneq ($(PLATFORM),$(COMPILE_PLATFORM))
-  CROSS_COMPILING=1
+CROSS_COMPILING=1
 else
-  CROSS_COMPILING=0
+CROSS_COMPILING=0
 
-  ifneq ($(ARCH),$(COMPILE_ARCH))
-    CROSS_COMPILING=1
-  endif
+ifneq ($(ARCH),$(COMPILE_ARCH))
+CROSS_COMPILING=1
 endif
+endif
+
 export CROSS_COMPILING
+
 ifdef MINGW
 include make/platform_win.make
 else
@@ -107,10 +109,10 @@ D_FILES :=
 
 ifdef WORKDIR
 D_DIRS  := $(addprefix $(BD)/,$(notdir $(WORKDIRS))) \
-					 $(addprefix $(BR)/,$(notdir $(WORKDIRS)))
+           $(addprefix $(BR)/,$(notdir $(WORKDIRS)))
 D_FILES := $(shell find $(BD)/$(WORKDIR) -name '*.d' 2>/dev/null) \
            $(shell find $(BR)/$(WORKDIR) -name '*.d' 2>/dev/null) \
-					 $(shell find $(D_DIRS) -name '*.d' 2>/dev/null)
+           $(shell find $(D_DIRS) -name '*.d' 2>/dev/null)
 ifneq ($(strip $(D_FILES)),)
 include $(D_FILES)
 endif
@@ -121,16 +123,16 @@ $(BUILD_DIR)/:
 
 $(BUILD_DIR)/%.mkdirs: $(dir $(filter %,$(WORKDIRS)))
 	@if [ ! -d "./$(subst .mkdirs,,$@)/$$dir" ]; \
-    then $(MKDIR) "./$(subst .mkdirs,,$@)/$$dir";fi;
+		then $(MKDIR) "./$(subst .mkdirs,,$@)/$$dir";fi;
 
 $(INSTALL_DIR)/:
 	@if [ ! -d $(INSTALL_DIR) ];then $(MKDIR) $(INSTALL_DIR);fi
 
 $(INSTALL_DIR)/%: $(BUILD_DIR)/*/%
-  @cp -f "$<" "$@"
+	@cp -f "$<" "$@"
 
 install: $(INSTALL_DIR)/ $(addprefix $(INSTALL_DIR)/,$(INSTALLS))
-  @:
+	@:
 
 .PHONY: all clean clean2 clean-debug clean-release copyfiles \
   debug default dist distclean makedirs release \
