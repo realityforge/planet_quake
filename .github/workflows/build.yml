@@ -63,13 +63,13 @@ jobs:
       with:
         fetch-depth: 1
         patterns: |
-          /code/
-          /make/
-          /games/multigame/
-          /libs/musl-*/
-          /libs/tools/quake3/
-          /libs/libvorbis-*/
-          /libs/libogg-*/
+          /code/**
+          /make/*
+          /games/multigame/**
+          /libs/musl-*/**
+          /libs/tools/quake3/**
+          /libs/libvorbis-*/**
+          /libs/libogg-*/**
 
     - name: Install tools
       run: |
