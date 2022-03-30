@@ -25,10 +25,11 @@ NO_MAKE_LOCAL       := 1
 include make/configure.make
 
 ifeq ($(filter $(MAKECMDGOALS),debug),debug)
-INSTALLS            += $(BD)/quake3e.html
+INSTALLS            += $(BD)/$(WASM_INDEX)
 else
-INSTALLS            += $(BR)/quake3e.html
+INSTALLS            += $(BR)/$(WASM_INDEX)
 endif
+
 NODE                := node
 UGLIFY              := uglifyjs
 COPY                := cp
@@ -120,6 +121,8 @@ PK3_INCLUDES     := xxx-multigame-files.pk3 \
                     xxx-multigame-sounds.pk3
 
 
+WASM_TARGET      := $(CNAME)$(BINEXT)
+WASM_INDEX       := $(WASM_TARGET:$(BINEXT)=.html)
 WASM_HTTP        := code/wasm/http
 WASM_FILES       := $(CNAME).js sys_emgl.js sys_fs.js sys_in.js \
                     sys_net.js sys_std.js sys_wasm.js sys_snd.js nipplejs.js
@@ -228,21 +231,10 @@ $(INSTALL_FROM).assets/%.pk3: $(INSTALL_FROM)/%.pk3
 $(INSTALL_FROM).assets/%.html: $(WASM_HTTP)/index.html
 	$(DO_INDEX_CC)
 
-index: $(INSTALL_FROM).assets/quake3e.html $(INSTALL_FROM).assets/quake3e.wasm $(WASM_OBJS)
-	$(DO_JS_LIST)
-	-$(Q)$(MOVE) $(INSTALL_FROM)/quake3e.html $(INSTALL_FROM)/quake3e.html.bak > /dev/null
-	$(Q)$(MOVE) $(INSTALL_FROM)/index.html $(INSTALL_FROM)/quake3e.html > /dev/null
-	-$(Q)$(UNLINK) $(INSTALL_FROM)/quake3e.html.bak > /dev/null
+index: $(INSTALL_FROM)/$(WASM_INDEX)
+	@:
 
-#
-$(INSTALL_FROM)/quake3e.html: $(INSTALL_FROM)/%.wasm $(INSTALL_FROM).assets/%.html $(INSTALL_FROM).assets/%.wasm $(WASM_OBJS)
-	$(DO_JS_LIST)
-	-$(Q)$(MOVE) $@ $@.bak > /dev/null
-	$(Q)$(MOVE) $(INSTALL_FROM)/index.html $@ > /dev/null
-	-$(Q)$(UNLINK) $@.bak > /dev/null
-
-
-$(INSTALL_FROM)/%.html: $(INSTALL_FROM)/%.wasm $(INSTALL_FROM).assets/%.html $(INSTALL_FROM).assets/%.wasm $(WASM_OBJS)
+$(INSTALL_FROM)/$(WASM_INDEX): $(INSTALL_FROM)/$(WASM_TARGET) $(INSTALL_FROM).assets/$(WASM_INDEX) $(INSTALL_FROM).assets/$(WASM_TARGET) $(WASM_OBJS)
 	$(DO_JS_LIST)
 	-$(Q)$(MOVE) $@ $@.bak > /dev/null
 	$(Q)$(MOVE) $(INSTALL_FROM)/index.html $@ > /dev/null
