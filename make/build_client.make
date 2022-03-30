@@ -22,16 +22,13 @@ WORKDIRS         += $(CLIENT_WORKDIR)
 CLEANS           += $(CLIENT_WORKDIR) $(CLIENT_TARGET)
 INSTALLS         += $(CLIENT_TARGET)
 
+INCLUDES         := $(MOUNT_DIR)/qcommon
 ifeq ($(USE_INTERNAL_VORBIS),1)
 INCLUDES         += libs/libvorbis-1.3.7/include
 endif
-
 ifeq ($(USE_RMLUI),1)
 INCLUDES         += $(MOUNT_DIR)/../libs/RmlUi/Include
 endif
-
-INCLUDES         := $(MOUNT_DIR)/qcommon
-
 export INCLUDE   := $(foreach dir,$(INCLUDES),-I$(dir))
 
 CLIENT_CFLAGS    := $(BASE_CFLAGS) $(INCLUDE)

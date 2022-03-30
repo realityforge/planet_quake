@@ -1918,7 +1918,7 @@ static void NET_Config( qboolean enableNetworking ) {
 	{
 		if ( net_enabled->integer )
 		{
-#ifndef USE_MULTIVM_SERVER
+#if defined(USE_MULTIVM_SERVER) || defined(__WASM__)
 			NET_OpenIP();
 #else
 			NET_OpenIP(-1);
