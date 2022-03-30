@@ -24,12 +24,6 @@ NO_MAKE_LOCAL       := 1
 
 include make/configure.make
 
-ifeq ($(filter $(MAKECMDGOALS),debug),debug)
-INSTALLS            += $(BD)/$(WASM_INDEX)
-else
-INSTALLS            += $(BR)/$(WASM_INDEX)
-endif
-
 NODE                := node
 UGLIFY              := uglifyjs
 COPY                := cp
@@ -120,9 +114,25 @@ PK3_INCLUDES     := xxx-multigame-files.pk3 \
                     lsdm3_v1-images.pk3 \
                     xxx-multigame-sounds.pk3
 
-
 WASM_TARGET      := $(CNAME)$(BINEXT)
+ifeq ($(USE_MULTIVM_CLIENT),1)
+WASM_TARGET      := $(CNAME)_mw$(BINEXT)
+endif
+ifeq ($(BUILD_SLIM_CLIENT),1)
+WASM_TARGET      := $(CNAME)_slim$(BINEXT)
+endif
+ifeq ($(BUILD_EXPERIMENTAL),1)
+WASM_TARGET      := $(CNAME)_experimental$(BINEXT)
+endif
+
 WASM_INDEX       := $(WASM_TARGET:$(BINEXT)=.html)
+
+ifeq ($(filter $(MAKECMDGOALS),debug),debug)
+INSTALLS         += $(BD)/$(WASM_INDEX)
+else
+INSTALLS         += $(BR)/$(WASM_INDEX)
+endif
+
 WASM_HTTP        := code/wasm/http
 WASM_FILES       := $(CNAME).js sys_emgl.js sys_fs.js sys_in.js \
                     sys_net.js sys_std.js sys_wasm.js sys_snd.js nipplejs.js
