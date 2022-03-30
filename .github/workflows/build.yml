@@ -40,7 +40,7 @@ jobs:
             platform: wasm
             name: WebAssembly
             options: USE_ASYNCHRONOUS=1 USE_LAZY_LOAD=1
-            cc: libs/linux/wasi-sdk-14.0/bin/clang
+            cc: /home/runner/work/planet_quake/planet_quake/libs/linux/wasi-sdk-14.0/bin/clang
 
           - runtime: client
             proper: Client
@@ -68,9 +68,9 @@ jobs:
         sudo apt-get -y install libcurl4-openssl-dev mesa-common-dev libxxf86dga-dev libxrandr-dev libxxf86vm-dev libasound-dev libsdl2-dev wget binaryen git
         wget --no-check-certificate https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-14/wasi-sdk-14.0-linux.tar.gz
         pwd
-        ls -la libs/linux
         mkdir libs/linux
         tar -zxvf wasi-sdk-14.0-linux.tar.gz -C libs/linux/
+        ls -la libs/linux
         npm install -g uglify-js
 
     - name: Build
