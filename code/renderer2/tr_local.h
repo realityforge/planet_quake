@@ -1695,7 +1695,12 @@ typedef struct {
 } trGlobals_t;
 
 extern backEndState_t	backEnd;
+#ifdef USE_MULTIVM_CLIENT
+extern trGlobals_t	trWorlds[MAX_NUM_WORLDS];
+#define tr trWorlds[rwi]
+#else
 extern trGlobals_t	tr;
+#endif
 extern glstate_t	glState;		// outside of TR since it shouldn't be cleared during ref re-init
 extern glRefConfig_t glRefConfig;
 

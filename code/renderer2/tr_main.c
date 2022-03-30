@@ -25,7 +25,11 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #include <string.h> // memcpy
 
+#ifdef USE_MULTIVM_CLIENT
+trGlobals_t		trWorlds[MAX_NUM_WORLDS];
+#else
 trGlobals_t		tr;
+#endif
 
 static float	s_flipMatrix[16] = {
 	// convert from our coordinate system (looking down X)

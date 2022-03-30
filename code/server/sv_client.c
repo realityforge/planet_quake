@@ -2364,7 +2364,9 @@ void SV_PrintLocations_f( client_t *client ) {
 }
 
 #ifdef USE_MULTIVM_SERVER
+#ifndef __WASM__
 void NET_OpenIP( int igvm );
+#endif
 
 void SV_LoadVM( client_t *cl ) {
 	char *mapname;
@@ -2413,7 +2415,9 @@ void SV_LoadVM( client_t *cl ) {
 	SV_ClearWorld();
   sv.state = SS_LOADING;
 	SV_SetAASgvm(gvmi);
+#ifndef __WASM__
 	NET_OpenIP(gvmi);
+#endif
 	SV_InitGameProgs(qtrue);
 	// catch up with current VM
 	for ( i = 4; i > 1; i-- )
