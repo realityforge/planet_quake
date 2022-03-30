@@ -43,14 +43,9 @@ static snd_stream_t *s_backgroundStream = NULL;
 static char		s_backgroundLoop[MAX_QPATH];
 //static char		s_backgroundMusic[MAX_QPATH]; //TTimo: unused
 
-#ifdef __WASM__
-Q_EXPORT byte dma_buffer2[ 0x10000 ]; // for muted painting
-#define buffer2 dma_buffer2
-#else
 static byte		buffer2[ 0x10000 ]; // for muted painting
 
 byte			*dma_buffer2;
-#endif
 
 // =======================================================================
 // Internal sound data & structures
@@ -1091,10 +1086,6 @@ void S_Base_Respatialize( int entityNum, const vec3_t head, vec3_t axis[3], int 
 	VectorCopy(axis[1], listener_axis[1]);
 	VectorCopy(axis[2], listener_axis[2]);
 
-#ifdef __WASM__
-return;
-#endif
-
 	// update spatialization for dynamic sounds	
 	ch = s_channels;
 	for ( i = 0 ; i < MAX_CHANNELS ; i++, ch++ ) {
@@ -1538,11 +1529,9 @@ void S_Base_Shutdown( void ) {
   }
 #endif
 
-#ifndef __WASM__
 	if ( dma_buffer2 != buffer2 )
 		free( dma_buffer2 );
 	dma_buffer2 = NULL;
-#endif
 
 	Cmd_RemoveCommand( "s_info" );
 
@@ -1612,7 +1601,6 @@ qboolean S_Base_Init( soundInterface_t *si ) {
 
 		S_Base_StopAllSounds();
 
-#ifndef __WASM__
 		// setup(likely) or allocate (unlikely) buffer for muted painting
 		if ( dma.samples * dma.samplebits/8 <= sizeof( buffer2 ) ) {
 			dma_buffer2 = buffer2;
@@ -1620,6 +1608,7 @@ qboolean S_Base_Init( soundInterface_t *si ) {
 			dma_buffer2 = malloc( dma.samples * dma.samplebits/8 );
 			memset( dma_buffer2, 0, dma.samples * dma.samplebits/8 );
 		}
+#ifndef __WASM__
 	} else {
 		return qfalse;
 	}

@@ -860,7 +860,7 @@ extern "C" {
 // XXX Emscripten XXX
 extern __attribute__((visibility("default"))) void* malloc(size_t) __attribute__((weak, alias("dlmalloc")));
 extern __attribute__((visibility("default"))) void  free(void*) __attribute__((weak, alias("dlfree")));
-void* calloc(size_t, size_t) __attribute__((weak, alias("dlcalloc")));
+extern __attribute__((visibility("default"))) void* calloc(size_t, size_t) __attribute__((weak, alias("dlcalloc")));
 void* realloc(void*, size_t) __attribute__((weak, alias("dlrealloc")));
 void* realloc_in_place(void*, size_t) __attribute__((weak, alias("dlrealloc_in_place")));
 extern __attribute__((visibility("default"))) void* memalign(size_t, size_t) __attribute__((weak, alias("dlmemalign")));

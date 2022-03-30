@@ -699,10 +699,6 @@ void S_PaintChannels( int endtime ) {
 		muted = qfalse;
 	}
 
-#ifdef __WASM__
-	endtime = 1;
-#endif
-
 	//Com_Printf ("%i to %i\n", s_paintedtime, endtime);
 	while ( endtime - s_paintedtime > 0 ) {
 		// if paintbuffer is smaller than DMA buffer

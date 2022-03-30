@@ -126,11 +126,14 @@ function NET_Sleep() {
 	let sv_running = Cvar_VariableIntegerValue(stringToAddress('sv_running'))
 	let sv_dedicated = Cvar_VariableIntegerValue(stringToAddress('dedicated'))
 	let count = NET.queue.length
+   // alternate buffers so we don't overwrite
+  NET.bufferAlternate = !NET.bufferAlternate
+  let buffer = NET.buffer + NET.bufferAlternate * NET.bufferLength
 	for(let i = 0; i < count; i++) {
 		let packet = NET.queue.shift()
-		let from = NET.buffer
-		let netmsg = NET.buffer + 512
-		let data = NET.buffer + 1024
+		let from = buffer
+		let netmsg = buffer + 512
+		let data = buffer + 1024
 		HEAPU8.fill(0, from, from + 512)
 		HEAPU8.fill(0, netmsg, netmsg + 512)
 		HEAPU32[(netmsg >> 2) + 3] = data
@@ -293,7 +296,10 @@ function NET_OpenIP() {
   NET.net_socksServer = addressToString(Cvar_VariableString(stringToAddress('net_socksServer')))
   NET.net_socksPort = addressToString(Cvar_VariableString(stringToAddress('net_socksPort')))
   if(!NET.buffer) {
-    NET.buffer = malloc(MAX_MSGLEN + 8 + 24 + 1024) // from NET_Event() + netmsg_t + netadr_t
+    // from NET_Event() + netmsg_t + netadr_t
+    NET.bufferLength = MAX_MSGLEN + 8 + 24 + 1024
+    NET.bufferAlternate = 0
+    NET.buffer = malloc(NET.bufferLength * 3) 
   }
   if(!NET.queue) {
     NET.queue = []
