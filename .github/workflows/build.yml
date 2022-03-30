@@ -75,7 +75,7 @@ jobs:
 
     - name: Build
       run: |
-        make -f ${{ matrix.makefile }} -j 16 NO_MAKE_LOCAL=1 ARCH=${{ matrix.arch }} ${{ matrix.options }} ${{ matrix.cflags }} PLATFORM=${{ matrix.platform }} CC=${{ matrix.cc }} V=1 ${{ matrix.rule }} install 
+        make -f ${{ matrix.makefile }} -j 16 NO_MAKE_LOCAL=1 ARCH=${{ matrix.arch }} ${{ matrix.options }} ${{ matrix.cflags }} PLATFORM=${{ matrix.platform }} CC=${{ matrix.cc }} V=1 clean ${{ matrix.rule }} install 
 
     - uses: actions/upload-artifact@v2
       if: matrix.config == 'Release'

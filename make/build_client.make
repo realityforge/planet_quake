@@ -20,7 +20,7 @@ endif
 
 WORKDIRS         += $(CLIENT_WORKDIR)
 CLEANS           += $(CLIENT_WORKDIR) $(CLIENT_TARGET)
-INSTALLS         += $(CLIENT_TARGET)
+INSTALLS         += $(B)/$(CLIENT_TARGET)
 
 INCLUDES         := $(MOUNT_DIR)/qcommon
 ifeq ($(USE_INTERNAL_VORBIS),1)

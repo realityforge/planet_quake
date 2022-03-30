@@ -67,7 +67,7 @@ MOUNT_DIR ?= code
 BUILD_DIR ?= build
 MAKE      ?= make
 
-INSTALL_DIR := dir/
+INSTALL_DIR := bin
 
 BD=$(BUILD_DIR)/debug-$(PLATFORM)-$(ARCH)
 BR=$(BUILD_DIR)/release-$(PLATFORM)-$(ARCH)
@@ -125,13 +125,15 @@ $(BUILD_DIR)/%.mkdirs: $(dir $(filter %,$(WORKDIRS)))
 	@if [ ! -d "./$(subst .mkdirs,,$@)/$$dir" ]; \
 		then $(MKDIR) "./$(subst .mkdirs,,$@)/$$dir";fi;
 
-$(INSTALL_DIR)/:
+$(INSTALL_DIR):
 	@if [ ! -d $(INSTALL_DIR) ];then $(MKDIR) $(INSTALL_DIR);fi
 
 $(INSTALL_DIR)/%: $(BUILD_DIR)/*/%
-	@cp -f "$<" "$@"
+	$(echo_cmd) "INSTALL $<"
+	$(Q)cp -f "$<" "$@"
 
-install: $(INSTALL_DIR)/ $(addprefix $(INSTALL_DIR)/,$(INSTALLS))
+install: $(INSTALL_DIR) $(INSTALLS)
+	@$(MAKE) -f $(MKFILE) $(addprefix $(INSTALL_DIR)/,$(notdir $(INSTALLS)))
 	@:
 
 .PHONY: all clean clean2 clean-debug clean-release copyfiles \

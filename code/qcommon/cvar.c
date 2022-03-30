@@ -384,6 +384,9 @@ If the variable already exists, the value will not be set unless CVAR_ROM
 The flags will be or'ed in if the variable exists.
 ============
 */
+#ifdef __WASM__
+Q_EXPORT
+#endif
 cvar_t *Cvar_Get( const char *var_name, const char *var_value, int flags ) {
 	cvar_t	*var;
 	long	hash;
@@ -2031,6 +2034,9 @@ void Cvar_InfoStringBuffer( int bit, char* buff, int buffsize ) {
 Cvar_CheckRange
 =====================
 */
+#ifdef __WASM__
+Q_EXPORT
+#endif
 void Cvar_CheckRange( cvar_t *var, const char *mins, const char *maxs, cvarValidator_t type )
 {
 	if ( type >= CV_MAX ) {

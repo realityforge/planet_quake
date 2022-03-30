@@ -732,7 +732,9 @@ The are also occasionally used to communicated information between different
 modules of the program.
 
 */
-
+#ifdef __WASM__
+Q_EXPORT
+#endif
 cvar_t *Cvar_Get( const char *var_name, const char *value, int flags );
 // creates the variable if it doesn't exist, or returns the existing one
 // if it exists, the value will not be changed, but flags will be ORed in
