@@ -67,6 +67,8 @@ MOUNT_DIR ?= code
 BUILD_DIR ?= build
 MAKE      ?= make
 
+INSTALL_DIR := dir/
+
 BD=$(BUILD_DIR)/debug-$(PLATFORM)-$(ARCH)
 BR=$(BUILD_DIR)/release-$(PLATFORM)-$(ARCH)
 SHLIBNAME    = $(ARCH).$(SHLIBEXT)
@@ -117,14 +119,18 @@ endif
 $(BUILD_DIR)/:
 	@if [ ! -d $(BUILD_DIR) ];then $(MKDIR) $(BUILD_DIR);fi
 
-$(BUILD_DIR)/%\\/: $(dir $(filter %,$(WORKDIRS)))
-	@if [ ! -d "./$(subst \,,$@)/$$dir" ];then $(MKDIR) "./$(subst \,,$@)/$$dir";fi; \
+$(BUILD_DIR)/%.mkdirs: $(dir $(filter %,$(WORKDIRS)))
+	@if [ ! -d "./$(subst .mkdirs,,$@)/$$dir" ]; \
+    then $(MKDIR) "./$(subst .mkdirs,,$@)/$$dir";fi;
 
-#	@for dir in $(WORKDIRS); \
-#	do \
-#	done
+$(INSTALL_DIR)/:
+	@if [ ! -d $(INSTALL_DIR) ];then $(MKDIR) $(INSTALL_DIR);fi
 
+$(INSTALL_DIR)/%: $(BUILD_DIR)/*/%
+  @cp -f "$<" "$@"
 
+install: $(INSTALL_DIR)/ $(addprefix $(INSTALL_DIR)/,$(INSTALLS))
+  @:
 
 .PHONY: all clean clean2 clean-debug clean-release copyfiles \
   debug default dist distclean makedirs release \

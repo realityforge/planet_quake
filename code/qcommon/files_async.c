@@ -19,11 +19,15 @@ int FS_FileLength( FILE* h );
 qboolean FS_GeneralRef( const char *filename );
 
 
+#if defined(USE_LAZY_LOAD) || defined(USE_ASYNCHRONOUS)
+
+extern int cmd_lazy;
+
 #ifdef _DEBUG
 static const char *NEEDED = "";
+static char stupidPathError[MAX_OSPATH];
 #endif
 
-#if defined(USE_LAZY_LOAD) || defined(USE_ASYNCHRONOUS)
 // store a list of files to download this session
 typedef struct downloadLazy_s {
   char *downloadName; // this is the of the file in the shader
@@ -38,7 +42,6 @@ static downloadLazy_t *readyCallback[PK3_HASH_SIZE]; // MAX_MOD_KNOWN
 static int secondTimer = 0;
 static int thirdTimer = 0;
 extern cvar_t *cl_lazyLoad;
-cvar_t *cl_dlSimultaneous;
 char asyncShaderName[MAX_OSPATH * 2];
 char asyncModelName[MAX_OSPATH * 2];
 char asyncSoundName[MAX_OSPATH * 2];
@@ -49,23 +52,8 @@ char asyncSoundName[MAX_OSPATH * 2];
 static int lastVersionTime = 0;
 #endif
 
-#if _DEBUG
-static char stupidPathError[MAX_OSPATH];
-#endif
-
-static int FS_HashPK3( const char *name )
-{
-	unsigned int c, hash = 0;
-	while ( (c = *name++) != '\0' )
-	{
-		hash = hash * 101 + c;
-	}
-	hash = hash ^ (hash >> 16);
-	return hash & (PK3_HASH_SIZE-1);
-}
-
-
 #ifdef USE_LIVE_RELOAD
+
 void Sys_FileNeeded(const char *filename, int state);
 cvar_t *fs_notify[MAX_NOTIFICATIONS];
 int fileTimes[MAX_NOTIFICATIONS];
@@ -165,11 +153,22 @@ void CL_ChangeNotifcations( void ) {
 
 
 #ifdef USE_ASYNCHRONOUS
+
 #define JSON_IMPLEMENTATION
 #include "../qcommon/json.h"
 #undef JSON_IMPLEMENTATION
 
-extern int cmd_lazy;
+static int FS_HashPK3( const char *name )
+{
+	unsigned int c, hash = 0;
+	while ( (c = *name++) != '\0' )
+	{
+		hash = hash * 101 + c;
+	}
+	hash = hash ^ (hash >> 16);
+	return hash & (PK3_HASH_SIZE-1);
+}
+
 
 void Sys_UpdateNeeded( downloadLazy_t **ready, downloadLazy_t **downloadNeeded ) {
 	downloadLazy_t *highestDownload = NULL;

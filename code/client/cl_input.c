@@ -90,7 +90,7 @@ static qboolean in_mlooking;
 
 static void IN_CenterView( void ) {
 #ifdef USE_MULTIVM_CLIENT
-	int igs = clientGames[clc.currentView];
+	int igs = clc.currentView;
 #endif
 	cl.viewangles[PITCH] = -SHORT2ANGLE(cl.snap.ps.delta_angles[PITCH]);
 }

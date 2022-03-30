@@ -1331,7 +1331,7 @@ CL_ParseServerMessage
 void CL_ParseServerMessage( msg_t *msg ) {
 	int			cmd;
 #ifdef USE_MULTIVM_CLIENT
-  int igs = clientGames[clc.currentView];
+  int igs = clc.currentView;
 #endif
 
 	if ( cl_shownet->integer == 1 ) {

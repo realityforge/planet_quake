@@ -54,7 +54,7 @@ static void GetClientState( uiClientState_t *state ) {
 	Q_strncpyz( state->updateInfoString, cls.updateInfoString, sizeof( state->updateInfoString ) );
 	Q_strncpyz( state->messageString, clc.serverMessage, sizeof( state->messageString ) );
 #ifdef USE_MULTIVM_CLIENT
-	int igs = clientGames[clc.currentView];
+	int igs = clc.currentView;
 #endif
 	state->clientNum = cl.snap.ps.clientNum;
 }

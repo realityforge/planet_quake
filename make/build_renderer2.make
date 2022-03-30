@@ -11,6 +11,10 @@ REND_TARGET    := $(CNAME)_opengl2_$(SHLIBNAME)
 ifeq ($(USE_MULTIVM_CLIENT),1)
 REND_TARGET    := $(CNAME)_mw_opengl2_$(SHLIBNAME)
 endif
+
+WORKDIRS += $(REND_WORKDIR) $(REND_WORKDIR)/glsl
+CLEANS 	 += $(REND_WORKDIR) $(REND_TARGET)
+
 REND_SOURCES   := $(MOUNT_DIR)/$(REND_SOURCE) $(MOUNT_DIR)/$(REND_SOURCE)/glsl \
 									$(MOUNT_DIR)/renderercommon
 GLSLFFALLBACKS := $(foreach dir,$(REND_SOURCES), $(wildcard $(dir)/*.glsl))
@@ -65,9 +69,6 @@ clean:
 	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) $(REND_TARGET)_clean
 	@rm -rf ./$(BD)/$(REND_WORKDIR) ./$(BD)/$(REND_TARGET)
 	@rm -rf ./$(BR)/$(REND_WORKDIR) ./$(BR)/$(REND_TARGET)
-else
-WORKDIRS += $(REND_WORKDIR) $(REND_WORKDIR)/glsl
-CLEANS 	 += $(REND_WORKDIR) $(REND_TARGET)
 endif
 
 ifdef B

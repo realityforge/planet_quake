@@ -23,6 +23,7 @@ NO_MAKE_LOCAL       := 1
 
 include make/configure.make
 
+INSTALLS            += quake3e.html
 NODE                := node
 UGLIFY              := uglifyjs
 COPY                := cp

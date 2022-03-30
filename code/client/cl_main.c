@@ -408,7 +408,7 @@ static void CL_WriteGamestate( qboolean initial )
 	entityState_t	*ent;
 	entityState_t	nullstate;
 #ifdef USE_MULTIVM_CLIENT
-	int igs = clientGames[clc.currentView];
+	int igs = clc.currentView;
 #endif
 
 	// write out the gamestate message
@@ -490,7 +490,7 @@ static void CL_EmitPacketEntities( clSnapshot_t *from, clSnapshot_t *to, msg_t *
 	int		oldnum, newnum;
 	int		from_num_entities;
 #ifdef USE_MULTIVM_CLIENT
-	int igs = clientGames[clc.currentView];
+	int igs = clc.currentView;
 #endif
 
 	// generate the delta update
@@ -564,7 +564,7 @@ static void CL_WriteSnapshot( void ) {
 	msg_t	msg;
 	int		i, len;
 #ifdef USE_MULTIVM_CLIENT
-	int igs = clientGames[clc.currentView];
+	int igs = clc.currentView;
 #endif
 
 	clSnap = &cl.snapshots[ cl.snap.messageNum & PACKET_MASK ]; // current snapshot
@@ -1140,7 +1140,7 @@ static void CL_Play_f( void ) {
 static void CL_Rewind_f( void ) {
 	int seconds = 10;
 #ifdef USE_MULTIVM_CLIENT
-  int igs = clientGames[clc.currentView];
+  int igs = clc.currentView;
 #endif
 
 	if(!clc.demoplaying) {
@@ -3098,6 +3098,9 @@ void CL_InitDownloads( void ) {
 	if ( cl_mapAutoDownload->integer && ( !(clc.sv_allowDownload & DLF_ENABLE) || clc.demoplaying ) )
 	{
 		const char *info, *mapname, *bsp;
+#ifdef USE_MULTIVM_CLIENT
+		int igs = clc.currentView;
+#endif
 
 		// get map name and BSP file name
 		info = cl.gameState.stringData + cl.gameState.stringOffsets[ CS_SERVERINFO ];
@@ -6722,7 +6725,7 @@ qboolean CL_Download( const char *cmd, const char *pakname, qboolean autoDownloa
 	if(!autoDownload) {
 		int i;
 		int empty = -1;
-		for(i = 0; i < cl_dlSimultaneous->integer; i++) {
+		for(i = 0; i < 10; i++) {
 			if(!Com_DL_InProgress(&cl_downloads[i])) {
 				empty = i;
 			} else if (!Q_stricmp(cl_downloads[i].Name, pakname)) {
@@ -6809,7 +6812,7 @@ static void CL_Download_f( void )
 
 void CL_Multiview_f( void ) {
 #ifdef USE_MULTIVM_CLIENT
-	int igs = clientGames[clc.currentView];
+	int igs = clc.currentView;
 #endif
 
 	if ( cls.state != CA_ACTIVE || !cls.servername[0] || clc.demoplaying ) {
@@ -6829,7 +6832,7 @@ void CL_Multiview_f( void ) {
 void CL_MultiviewFollow_f( void ) {
 	int clientNum;
 #ifdef USE_MULTIVM_CLIENT
-	int igs = clientGames[clc.currentView];
+	int igs = clc.currentView;
 #endif
 
 	if ( !cl.snap.multiview ) {

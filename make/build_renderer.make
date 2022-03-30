@@ -5,9 +5,15 @@ BUILD_RENDERER_OPENGL:=1
 ifneq ($(BUILD_CLIENT),1)
 MKFILE         := $(lastword $(MAKEFILE_LIST))
 include make/platform.make
+endif
+
+REND_TARGET    := $(CNAME)_opengl1_$(SHLIBNAME)
+ifeq ($(USE_MULTIVM_CLIENT),1)
+REND_TARGET    := $(CNAME)_mw_opengl1_$(SHLIBNAME)
+endif
+
 WORKDIRS       += $(REND_WORKDIR)
 CLEANS 	       += $(REND_WORKDIR) $(REND_TARGET)
-endif
 
 NEED_COMMON_REND := 0
 ifeq ($(USE_RENDERER_DLOPEN),1)
@@ -19,10 +25,7 @@ REND_CFLAGS += -DRENDERER_PREFIX=$(CNAME)
 NEED_COMMON_REND := 1
 endif
 
-REND_TARGET    := $(CNAME)_opengl1_$(SHLIBNAME)
-ifeq ($(USE_MULTIVM_CLIENT),1)
-REND_TARGET    := $(CNAME)_mw_opengl1_$(SHLIBNAME)
-endif
+
 REND_SOURCES   := $(MOUNT_DIR)/$(REND_SOURCE) $(MOUNT_DIR)/renderercommon
 REND_CFILES    := $(foreach dir,$(REND_SOURCES), $(wildcard $(dir)/*.c))
 

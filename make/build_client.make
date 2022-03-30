@@ -20,6 +20,7 @@ endif
 
 WORKDIRS         += $(CLIENT_WORKDIR)
 CLEANS           += $(CLIENT_WORKDIR) $(CLIENT_TARGET)
+INSTALLS         += $(CLIENT_TARGET)
 
 
 CLIENT_CFLAGS    := $(BASE_CFLAGS) $(INCLUDE)
@@ -84,14 +85,14 @@ include make/lib_vorbis.make
 endif
 
 ifneq ($(USE_RENDERER_DLOPEN),1)
-ifneq ($(USE_OPENGL2),1)
-include make/build_renderer.make
-else
+ifeq ($(USE_OPENGL2),0)
 ifneq ($(USE_VULKAN),1)
-include make/build_renderer2.make
+include make/build_renderer.make
 else
 include make/build_renderervk.make
 endif
+else
+include make/build_renderer2.make
 endif
 endif
 
@@ -325,7 +326,7 @@ $(B)/$(CLIENT_WORKDIR)/%.o: $(MOUNT_DIR)/server/%.c
 $(B)/$(CLIENT_WORKDIR)/%.o: $(MOUNT_DIR)/*/%.c
 	$(DO_CLIENT_CC)
 
-$(B)/$(CLIENT_TARGET): $(addsuffix \\/,$(addprefix $(B)/,$(WORKDIRS))) $(Q3OBJ)
+$(B)/$(CLIENT_TARGET): $(addsuffix .mkdirs,$(addprefix $(B)/,$(WORKDIRS))) $(Q3OBJ)
 	$(echo_cmd) "LD $@"
 	$(Q)$(CC) -o $@ $(Q3OBJ) $(CLIENT_LDFLAGS)
 

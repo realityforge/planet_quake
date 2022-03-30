@@ -277,7 +277,6 @@ void S_TransferStereo16( unsigned long *pbuf, int endtime )
 	snd_p = (int *) paintbuffer;
 	ls_paintedtime = s_paintedtime;
 
-Com_Printf("end: %i\n", endtime);
 	while (ls_paintedtime < endtime)
 	{
 		// handle recirculating buffer issues

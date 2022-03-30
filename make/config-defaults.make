@@ -29,7 +29,7 @@ USE_CURL            ?= 0
 USE_LOCAL_HEADERS   ?= 0
 USE_VULKAN          ?= 0
 USE_JPEG            ?= 0
-USE_VULKAN_API      ?= 0
+USE_VULKAN_API      ?= 1
 USE_Q3KEY           ?= 0
 USE_IPV6            ?= 0
 USE_CODEC_WAV       ?= 1
@@ -83,7 +83,7 @@ endif
 endif
 
 ifneq ($(USE_RENDERER_DLOPEN),0)
-#USE_VULKAN=1
+USE_VULKAN=1
 endif
 
 ifneq ($(USE_VULKAN),0)
@@ -235,6 +235,10 @@ endif
 ifeq ($(USE_RENDERER_DLOPEN),1)
   BASE_CFLAGS += -DUSE_RENDERER_DLOPEN
   BASE_CFLAGS += -DRENDERER_PREFIX=$(CNAME)
+endif
+
+ifeq ($(USE_CODEC_WAV),1)
+  BASE_CFLAGS += -DUSE_CODEC_WAV=1
 endif
 
 ifeq ($(USE_CODEC_VORBIS),1)

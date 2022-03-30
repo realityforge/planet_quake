@@ -10,8 +10,8 @@ PLATFORM_TARGETS := $(filter $(MAKECMDGOALS),$(PLATFORMS))
 
 BUILD_POSTOP     := 
 BUILD_PREOP      := 
-BUILD_MODE       := debug
-BUILD_MODES      := debug release clean deploy install
+BUILD_MODE       := 
+BUILD_MODES      := clean debug release install deploy
 MODE_TARGETS     := $(filter $(MAKECMDGOALS),$(BUILD_MODES))
 ENGINE_FEATURES  := experimental mw static
 RENDER_FEATURES  := -vulkan -mw 2 2-mw
@@ -28,6 +28,9 @@ LIB_OPTIONS      :=
 
 INSTALL_DIR      ?= bin/
 
+define NEWLINE
+
+endef
 
 
 all: ## build everything the entire system can build
@@ -51,7 +54,7 @@ static: ## build drag and drop and persistent console
 	$(eval CLIENT_OPTIONS += BUILD_CLIENT_STATIC=1)
 	@:
 
-mw: multiworld ## (alias) build drag and drop and persistent console
+mw: multiworld ## build drag and drop and persistent console
 	@:
 
 multiworld: ## build drag and drop and persistent console
@@ -63,7 +66,7 @@ client-experimental: ## build drag and drop and persistent console
 	$(eval CLIENT_OPTIONS += BUILD_EXPERIMENTAL=1)
 	@:
 
-client-slim: client ## build a client without server features for connecting
+client-slim: client ## build a client without single player mode
 	$(eval CLIENT_OPTIONS += BUILD_SLIM_CLIENT=1)
 	@:
 
@@ -204,24 +207,41 @@ eval-commands:
 	$(eval MAKES = $(addprefix make\space-f\space,$(BUILD_MAKEFILE)))
 	$(eval MAKES = $(addsuffix $(subst $(_),\space, $(COMMANDS)),$(MAKES)))
 
-ifeq ($(filter $(MAKECMDGOALS),make),make)
+configure: $(HELP_TARGETS) $(MODE_TARGETS) $(PLATFORM_TARGETS) $(BUILD_TARGETS)
+	@:
 
-make: $(HELP_TARGETS) $(MODE_TARGETS) $(PLATFORM_TARGETS) $(BUILD_TARGETS) eval-commands
-	@echo "MAKING $(subst \space, ,$(addsuffix \n,$(MAKES)))"
-	$(subst \space, ,$(addsuffix \n,$(MAKES)))
+ifeq ($(filter $(MAKECMDGOALS),commands),commands)
+
+commands: configure eval-commands ## print MAKE commands
+	@echo $(subst \space, ,$(addsuffix ;$(NEWLINE),$(MAKES)))
 
 else
+ifeq ($(filter $(MAKECMDGOALS),make),make)
+
+make: configure eval-commands
+	@echo "MAKING $(subst \space, ,$(addsuffix ;$(NEWLINE),$(MAKES)))"
+	$(subst \space, ,$(addsuffix ;$(NEWLINE),$(MAKES)))
+
+else
+
+make: configure ## execute the make commands in order, add this when ready
+	@:
 
 %: $(HELP_TARGETS) $(MODE_TARGETS) $(PLATFORM_TARGETS) $(BUILD_TARGETS) help 
 	@:
 
 endif
+endif
+
+ifeq ($(HELPFILTER),)
+HELPFILTER = [a-zA-Z0-9_-]+
+endif
 
 help: eval-commands ## print help docs in Makefile
 	@echo Please see docs: https://github.com/briancullinan/planet_quake/blob/master/docs/make.md
-	awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n $(subst \space, ,$(addsuffix \n,$(MAKES))) \033[36m\033[0m\n"} /^${subst (|,(,$(HELPFILTER)}[a-zA-Z0-9_-]*:.*?##/ { printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) } ' $(MKFILE)
+	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n $(subst \space, ,$(addsuffix \n,$(MAKES))) \033[36m\033[0m\n"} /^${subst (|,(,$(HELPFILTER)}[a-zA-Z0-9_-]*:.*?##/ { printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) } ' $(MKFILE)
 
 
 .DEFAULT_GOAL := help
-.PHONY: help build release debug client libs platform games jpeg rmlui vorbis multigame baseq3a server renderer renderer2 huffman wasm client-static renderer-static renderer2-static client-experimental server-experimental server-mw client-mw all install experimental multiworld mw static clean deploy install make
+.PHONY: help build release debug client libs platform games jpeg rmlui vorbis multigame baseq3a server renderer renderer2 huffman wasm client-static renderer-static renderer2-static client-experimental server-experimental server-mw client-mw all install experimental multiworld mw static clean deploy install make commands
 #.RECIPEPREFIX +=
