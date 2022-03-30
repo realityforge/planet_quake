@@ -76,10 +76,8 @@ jobs:
         sudo apt-get -qq update
         sudo apt-get -y install libcurl4-openssl-dev mesa-common-dev libxxf86dga-dev libxrandr-dev libxxf86vm-dev libasound-dev libsdl2-dev wget binaryen git
         wget --no-check-certificate https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-14/wasi-sdk-14.0-linux.tar.gz
-        pwd
         mkdir libs/linux
         tar -zxvf wasi-sdk-14.0-linux.tar.gz -C libs/linux/
-        ls -la libs/linux
         npm install -g uglify-js
 
     - name: Build
@@ -105,26 +103,9 @@ jobs:
       - name: Create binary archives
         run: |
           7z a -r ./quake3e-wasm.zip ./wasm-js/*
+          cp -f ./wasm-js/* ./
 #         7z a -r quake3e-linux-aarch64.zip  ./linux-aarch64/*
 #         7z a -r quake3e-linux-armv7.zip    ./linux-armv7/*
-
-      - uses: actions/checkout@v2
-        if: false
-
-      - name: Create game archive
-        if: false
-        run: |
-          7z a -r ../xxx-multigame.pk3      ./games/multigame/assets/*
-          cd ..
-          mv planet_quake planet_quake_checkout
-          mkdir planet_quake
-          7z a -r xxx-multigame.pk3 ./planet_quake_build/linux-x86_64/*.qvm
-          7z a -r xxx-multigame.zip xxx-multigame.pk3
-          7z a -r xxx-multigame.zip ./planet_quake_build/linux-x86_64/*.so
-          7z a -r xxx-multigame.zip ./planet_quake_build/macos-x86_64/*.dylib
-          7z a -r xxx-multigame.zip ./planet_quake_build/windows-mingw-x86_64/*.dll
-          mv ./*.zip planet_quake/
-          mv ./*.pk3 planet_quake/
 
       - name: Create latest build
         uses: ec-/action-automatic-releases@test
@@ -136,6 +117,8 @@ jobs:
           files: |
             *.zip
             *.pk3
+            *.html
+            *.wasm
 
   update-release:
     if: ${{ github.event_name == 'release' }}
