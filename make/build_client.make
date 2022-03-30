@@ -24,7 +24,7 @@ INSTALLS         += $(CLIENT_TARGET)
 
 INCLUDES         := $(MOUNT_DIR)/qcommon
 ifeq ($(USE_INTERNAL_VORBIS),1)
-INCLUDES         += libs/libvorbis-1.3.7/include
+INCLUDES         += libs/libvorbis-1.3.7/include libs/libogg-1.3.4/include
 endif
 ifeq ($(USE_RMLUI),1)
 INCLUDES         += $(MOUNT_DIR)/../libs/RmlUi/Include
