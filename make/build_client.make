@@ -283,7 +283,6 @@ endif
 
 debug:
 	$(echo_cmd) "MAKE $(CLIENT_TARGET)"
-#	+$(Q)$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) mkdirs
 	$(Q)$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) \
 		CLIENT_CFLAGS="$(CLIENT_CFLAGS) $(DEBUG_CFLAGS)" \
 		CLIENT_LDFLAGS="$(CLIENT_LDFLAGS) $(DEBUG_LDFLAGS)" \
@@ -291,7 +290,6 @@ debug:
 
 release:
 	$(echo_cmd) "MAKE $(CLIENT_TARGET)"
-#	+$(Q)$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) mkdirs
 	$(Q)$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) \
 		CLIENT_CFLAGS="$(CLIENT_CFLAGS) $(RELEASE_CFLAGS)" \
 		CLIENT_LDFLAGS="$(CLIENT_LDFLAGS) $(RELEASE_LDFLAGS)" \

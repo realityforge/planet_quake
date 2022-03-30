@@ -44,6 +44,7 @@ int RE_LoadWorldMap( const char *name );
 world_t		s_worldDatas[MAX_NUM_WORLDS];
 int       rwi = 0; // render world, should match number of loaded clip maps, 
                    //   since they are reusable
+#define s_worldData s_worldDatas[rwi]
 #else
 static		world_t		s_worldData;
 #endif

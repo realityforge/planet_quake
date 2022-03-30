@@ -146,9 +146,9 @@ JS_SCRIPT         = <script async type=\"text/javascript\">\n/* <\!-- $2 */\n$1/
 define DO_OPT_CC
 	$(echo_cmd) "OPT_CC $<"
 	$(Q)$(OPT) -Os --no-validation -o $@ $<
-	-$(Q)$(MOVE) $< $<.bak 
-	$(Q)$(MOVE) $@ $< 
-	-$(Q)$(UNLINK) $<.bak
+	-$(Q)$(MOVE) $< $<.bak > /dev/null
+	$(Q)$(MOVE) $@ $< > /dev/null
+	-$(Q)$(UNLINK) $<.bak > /dev/null
 endef
 
 define DO_UGLY_CC
@@ -230,17 +230,17 @@ $(INSTALL_FROM).assets/%.html: $(WASM_HTTP)/index.html
 
 index: $(INSTALL_FROM).assets/quake3e.html $(INSTALL_FROM).assets/quake3e.wasm $(WASM_OBJS)
 	$(DO_JS_LIST)
-	-$(Q)$(MOVE) $(INSTALL_FROM)/quake3e.html $(INSTALL_FROM)/quake3e.html.bak 
-	$(Q)$(MOVE) $(INSTALL_FROM)/index.html $(INSTALL_FROM)/quake3e.html 
-	-$(Q)$(UNLINK) $(INSTALL_FROM)/quake3e.html.bak
+	-$(Q)$(MOVE) $(INSTALL_FROM)/quake3e.html $(INSTALL_FROM)/quake3e.html.bak > /dev/null
+	$(Q)$(MOVE) $(INSTALL_FROM)/index.html $(INSTALL_FROM)/quake3e.html > /dev/null
+	-$(Q)$(UNLINK) $(INSTALL_FROM)/quake3e.html.bak > /dev/null
 
 #
 
 $(INSTALL_FROM)/%.html: $(INSTALL_FROM)/%.wasm $(INSTALL_FROM).assets/%.html $(INSTALL_FROM).assets/%.wasm $(WASM_OBJS)
 	$(DO_JS_LIST)
-	-$(Q)$(MOVE) $@ $$@.bak 
-	$(Q)$(MOVE) $(INSTALL_FROM)/index.html $@
-	-$(Q)$(UNLINK) $@.bak
+	-$(Q)$(MOVE) $@ $@.bak > /dev/null
+	$(Q)$(MOVE) $(INSTALL_FROM)/index.html $@ > /dev/null
+	-$(Q)$(UNLINK) $@.bak > /dev/null
 
 
 .NOTPARALLEL: index
