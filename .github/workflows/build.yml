@@ -65,6 +65,7 @@ jobs:
           code
           make
           games/multigame
+          libs/musl-*
           libs/tools/quake3
           libs/libvorbis-*
           libs/libogg-*
