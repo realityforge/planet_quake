@@ -22,6 +22,17 @@ WORKDIRS         += $(CLIENT_WORKDIR)
 CLEANS           += $(CLIENT_WORKDIR) $(CLIENT_TARGET)
 INSTALLS         += $(CLIENT_TARGET)
 
+ifeq ($(USE_INTERNAL_VORBIS),1)
+INCLUDES         += libs/libvorbis-1.3.7/include
+endif
+
+ifeq ($(USE_RMLUI),1)
+INCLUDES         += $(MOUNT_DIR)/../libs/RmlUi/Include
+endif
+
+INCLUDES         := $(MOUNT_DIR)/qcommon
+
+export INCLUDE   := $(foreach dir,$(INCLUDES),-I$(dir))
 
 CLIENT_CFLAGS    := $(BASE_CFLAGS) $(INCLUDE)
 ifeq ($(BUILD_GAME_STATIC),1)
@@ -57,12 +68,11 @@ CLIENT_CFLAGS    += $(JPEG_CFLAGS)
 CLIENT_LDFLAGS   += $(JPEG_LIBS)
 endif
 
-export INCLUDE   := $(foreach dir,$(INCLUDES),-I$(dir))
+ifeq ($(USE_MEMORY_MAPS),1)
+CLIENT_LDFLAGS   += $(BR)/$(CNAME)_q3map2_$(SHLIBNAME)
+endif
 
 #GXXFLAGS := $(CLIENT_CFLAGS) -std=gnu++11
-
-INCLUDES         := $(MOUNT_DIR)/qcommon
-SOURCES          := $(MOUNT_DIR)/client
 
 ifeq ($(USE_SYSTEM_LIBC),0)
 include make/lib_musl.make
@@ -96,6 +106,7 @@ include make/build_renderer2.make
 endif
 endif
 
+SOURCES          := $(MOUNT_DIR)/client
 ifneq ($(BUILD_SLIM_CLIENT),1)
 SOURCES          += $(MOUNT_DIR)/server
 endif
@@ -203,21 +214,7 @@ VIDEO            :=
 # TODO static linking? have to switch to gnu++
 #ifeq ($(USE_CIN_VPX),1)
 #VIDEO           += webmdec.o
-#LIBS            += $(VPX_LIBS) $(VORBIS_LIBS) $(OPUS_LIBS)
-#INCLUDES        += libs/libvpx-1.10 \
-                    libs/libvorbis-1.3.7/include \
-                    libs/opus-1.3.1/include \
-                    libs/libogg-1.3.4/include \
-                    libs/libvpx-1.10/third_party/libwebm
 #endif
-
-ifeq ($(USE_MEMORY_MAPS),1)
-CLIENT_LDFLAGS   += $(BR)/$(CNAME)_q3map2_$(SHLIBNAME)
-endif
-
-ifeq ($(USE_RMLUI),1)
-INCLUDES         += $(MOUNT_DIR)/../libs/RmlUi/Include
-endif
 
 CFILES           := $(foreach dir,$(SOURCES), $(wildcard $(dir)/cl_*.c)) \
                     $(CLIPMAP) $(QCOMMON) $(SOUND) $(VIDEO) $(VM) \
