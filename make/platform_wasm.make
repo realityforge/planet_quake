@@ -235,6 +235,12 @@ index: $(INSTALL_FROM).assets/quake3e.html $(INSTALL_FROM).assets/quake3e.wasm $
 	-$(Q)$(UNLINK) $(INSTALL_FROM)/quake3e.html.bak > /dev/null
 
 #
+$(INSTALL_FROM)/quake3e.html: $(INSTALL_FROM)/%.wasm $(INSTALL_FROM).assets/%.html $(INSTALL_FROM).assets/%.wasm $(WASM_OBJS)
+	$(DO_JS_LIST)
+	-$(Q)$(MOVE) $@ $@.bak > /dev/null
+	$(Q)$(MOVE) $(INSTALL_FROM)/index.html $@ > /dev/null
+	-$(Q)$(UNLINK) $@.bak > /dev/null
+
 
 $(INSTALL_FROM)/%.html: $(INSTALL_FROM)/%.wasm $(INSTALL_FROM).assets/%.html $(INSTALL_FROM).assets/%.wasm $(WASM_OBJS)
 	$(DO_JS_LIST)
