@@ -104,8 +104,10 @@ jobs:
 #         7z a -r quake3e-linux-armv7.zip    ./linux-armv7/*
 
       - uses: actions/checkout@v2
+        if: false
 
       - name: Create game archive
+        if: false
         run: |
           7z a -r ../xxx-multigame.pk3      ./games/multigame/assets/*
           cd ..
