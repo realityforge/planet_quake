@@ -5,6 +5,9 @@ USE_INTERNAL_JPEG   := 1
 USE_CURL            := 0
 USE_OPENGL2         := 1
 USE_VULKAN          := 0
+USE_VULKAN_API      := 0
+USE_OPENGL          := 0
+USE_SDL             := 0
 NO_MAKE_LOCAL       := 1
 BUILD_STANDALONE    := 1
 
@@ -28,9 +31,12 @@ BUILD_CLIENT     := 1
 
 # curious if it combines then executes module linker
 CLIENT_SYSTEM    := quake3e.js \
+                    sys_emgl.js \
                     sys_fs.js \
                     sys_net.js \
-                    sys_in.js 
+                    sys_in.js \
+                    sys_em.js
+#                    sys_snd.js
 
 CLIENT_LIBS      := $(addprefix --js-library $(MOUNT_DIR)/wasm/http/,$(notdir $(CLIENT_SYSTEM)))
 
@@ -71,16 +77,14 @@ endif
 
 ifeq ($(USE_RENDERER_DLOPEN),0)
 ifeq ($(USE_OPENGL2),1)
-CLIENT_LDFLAGS   += -lGL \
-                    -s MIN_WEBGL_VERSION=3 \
-                    -s MAX_WEBGL_VERSION=3 \
-                    -s FULL_ES2=1 \
-                    -s FULL_ES3=1
+CLIENT_LDFLAGS   += -s MIN_WEBGL_VERSION=0 \
+                    -s MAX_WEBGL_VERSION=0 \
+                    -s FULL_ES2=0 \
+                    -s FULL_ES3=0
 else
-CLIENT_LDFLAGS   += -lGL \
-                    -s LEGACY_GL_EMULATION=1 \
-                    -s MAX_WEBGL_VERSION=3 \
-                    -s USE_WEBGL2=1
+CLIENT_LDFLAGS   += -s LEGACY_GL_EMULATION=0 \
+                    -s MAX_WEBGL_VERSION=0 \
+                    -s USE_WEBGL2=0
 endif
 endif
 
@@ -89,9 +93,11 @@ LDEXPORTS := '_free', '_BG_sprintf', '_malloc', '_RunGame', '_Z_Free', \
   '_Cvar_VariableIntegerValue', '_FS_AllowedExtension', '_Com_Frame', \
   '_Cvar_VariableString', '_FS_GetCurrentGameDir', '_Sys_FileReady', \
   '_Key_KeynumToString', '_Sys_QueEvent', '_Sys_Milliseconds', \
-  '_Key_ClearStates', '_gw_minimized', '_gw_active', '_g_bigcharsData', \
-  '_g_bigcharsSize', '_glGetStringi', '_Cvar_SetIntegerValue', '_Key_GetCatcher', \
-  '_Key_SetCatcher', '_FS_CopyString', '_Sys_Exit'
+  '_Key_ClearStates', '_gw_minimized', '_gw_active', \
+  '_glGetStringi', '_Cvar_SetIntegerValue', '_Key_GetCatcher', \
+  '_Key_SetCatcher', '_FS_CopyString', '_Sys_Exit', '_Cvar_CheckRange', \
+  '_FS_ReadFile', '_SNDDMA_Init', '_snd_inited', '_s_soundMuted', \
+  '_s_soundStarted', '_S_Base_SoundInfo', '_SDL_PauseAudio'
 
 DEBUG_LDFLAGS    += -O0 -g -gsource-map \
                     -s WASM=1 \
@@ -119,14 +125,14 @@ RELEASE_LDFLAGS  += -O3 -Os \
                     -s DISABLE_EXCEPTION_CATCHING=1
 
 CLIENT_LDFLAGS   += $(CLIENT_LIBS) \
-                    --post-js $(MOUNT_DIR)/wasm/sys_web.js \
+                    --post-js $(MOUNT_DIR)/wasm/http/sys_empost.js \
                     --em-config $(EMJS_CONFIG_PATH) \
                     -s INITIAL_MEMORY=56MB \
                     -s ALLOW_MEMORY_GROWTH=1 \
                     -s ALLOW_TABLE_GROWTH=1 \
                     -s ERROR_ON_UNDEFINED_SYMBOLS=0 \
                     -s FORCE_FILESYSTEM=0 \
-                    -s EXPORTED_RUNTIME_METHODS="['SYS', 'GL']" \
+                    -s EXPORTED_RUNTIME_METHODS=\"['SYS']\" \
                     -s DEFAULT_LIBRARY_FUNCS_TO_INCLUDE="[]" \
                     -s INCLUDE_FULL_LIBRARY=0 \
                     -s MAIN_MODULE=0 \
@@ -135,6 +141,7 @@ CLIENT_LDFLAGS   += $(CLIENT_LIBS) \
                     -s LINKABLE=0 \
                     -s STRICT=1 \
                     -s AUTO_JS_LIBRARIES=0 \
+                    -s USE_SDL=2 \
                     --memory-init-file 0 \
                     -s DISABLE_DEPRECATED_FIND_EVENT_TARGET_BEHAVIOR=1
 

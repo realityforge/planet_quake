@@ -1,15 +1,4 @@
 
-function Com_RealTime(outAddress) {
-  let now = new Date()
-  let t = t.now() / 1000
-  HEAP32[(tm >> 2) + 5] = now.getFullYear() - 1900
-  HEAP32[(tm >> 2) + 4] = now.getMonth() // already subtracted by 1
-  HEAP32[(tm >> 2) + 3] = now.getDate() 
-  HEAP32[(tm >> 2) + 2] = (t / 60 / 60) % 24
-  HEAP32[(tm >> 2) + 1] = (t / 60) % 60
-  HEAP32[(tm >> 2) + 0] = t % 60
-  return t
-}
 
 var DATE = {
   mktime: function (tm) {
@@ -56,7 +45,6 @@ typedef struct qtime_s {
   ctime: function (t) {
     return stringToAddress(new Date(t).toString())
   },
-  Com_RealTime: Com_RealTime
 }
 
 

@@ -32,9 +32,18 @@ function openDatabase(noWait) {
       }
     })
   } else if (!noWait) {
-    return new Promise(function (resolve) { setTimeout(function () {
-      openDatabase(true).then(resolve)
-    }, 1000) })
+    return new Promise(function (resolve) { 
+      let count = 0
+      let interval
+      interval = setInterval(function () {
+        if(FS.database || count == 10) {
+          clearInterval(interval)
+          openDatabase(true).then(resolve)
+        } else {
+          count++
+        }
+      }, 300)
+    })
   } else {
     throw new Error('no database')
   }

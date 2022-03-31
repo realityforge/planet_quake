@@ -37,6 +37,9 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define Com_DPrintf S_DPrintf
 #endif
 
+#ifdef __WASM__
+Q_EXPORT
+#endif
 qboolean snd_inited = qfalse;
 
 extern cvar_t *s_khz;
@@ -196,16 +199,29 @@ static int SNDDMA_KHzToHz( int khz )
 }
 
 
+#ifdef __WASM__
+extern qboolean IN_FirstClick( void );
+#endif
+
 /*
 ===============
 SNDDMA_Init
 ===============
 */
+#ifdef __WASM__
+Q_EXPORT
+#endif
 qboolean SNDDMA_Init( void )
 {
 	SDL_AudioSpec desired;
 	SDL_AudioSpec obtained;
 	int tmp;
+
+#ifdef __WASM__
+	if(IN_FirstClick()) {
+		return qfalse;
+	}
+#endif
 
 	if ( snd_inited )
 		return qtrue;

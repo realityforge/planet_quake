@@ -121,7 +121,7 @@ endif
 $(BUILD_DIR)/:
 	@if [ ! -d $(BUILD_DIR) ];then $(MKDIR) $(BUILD_DIR);fi
 
-$(BUILD_DIR)/%.mkdirs: $(dir $(filter %,$(WORKDIRS)))
+$(BUILD_DIR)/%.mkdirs: $(filter $(MAKECMDGOALS),clean) $(dir $(filter %,$(WORKDIRS)))
 	@if [ ! -d "./$(subst .mkdirs,,$@)/$$dir" ]; \
 		then $(MKDIR) "./$(subst .mkdirs,,$@)/$$dir";fi;
 

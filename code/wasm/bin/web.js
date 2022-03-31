@@ -20,8 +20,8 @@ const ALLOWED_DIRECTORIES = [
 const BUILD_ORDER = [
   'release-wasm-js',
   'debug-wasm-js',
-  //'release-js-js',
-  //'debug-js-js',
+  'release-js-js',
+  'debug-js-js',
   'release-darwin-x86_64',
   'debug-darwin-x86_64'
 ]

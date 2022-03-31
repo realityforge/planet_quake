@@ -238,6 +238,7 @@ RSERR_UNKNOWN
 cvar_t *r_stereoEnabled;
 cvar_t *in_nograb;
 
+#ifndef EMSCRIPTEN
 void SDL_GL_SwapWindow(void *window) {
   // this probably prevents that flashing when changing mods
 }
@@ -248,7 +249,17 @@ int SDL_GL_SetSwapInterval(int interval) {
   // set values for request animation frame?
   return 0;
 }
+#else
 
+void *eglGetProcAddress(const char *procname) {
+	DebugBreak();
+	return NULL;
+}
+
+void emscripten_sleep(int ms) {
+	DebugBreak();
+}
+#endif
 
 /*
 ===============

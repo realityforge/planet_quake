@@ -203,6 +203,8 @@ ifeq ($(USE_SDL),1)
 SYSTEM           += sdl_glimp.o sdl_gamma.o sdl_input.o sdl_snd.o
 endif
 
+else
+SYSTEM           += sdl_snd.o
 endif # !js
 endif # !wasm
 

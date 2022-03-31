@@ -5,6 +5,7 @@ output/
 *.user
 *tags
 *.tags*
+.tags*
 /code/libjpeg/
 /bin/
 

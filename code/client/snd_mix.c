@@ -331,8 +331,9 @@ static void S_TransferPaintBuffer( int endtime, byte *buffer )
 	if ( s_testsound->integer ) {
 		// write a fixed sine wave
 		count = (endtime - s_paintedtime);
-		for (i=0 ; i<count ; i++)
-			paintbuffer[i].left = paintbuffer[i].right = sin((s_paintedtime+i)*0.1)*20000*256;
+		for (i=0 ; i<count ; i++) {
+			paintbuffer[i].left = paintbuffer[i].right = sin((s_paintedtime+i)*0.1)*20000.0f*256.0f;
+		}
 	}
 
 	if ( dma.samplebits == 16 && dma.channels == 2 )

@@ -131,7 +131,6 @@ function InputPushFocusEvent (evt) {
 function InputPushMovedEvent (evt) {
   if (evt.toElement === null && evt.relatedTarget === null) {
     INPUT.firstClick = true
-    HEAP32[gw_active >> 2] = false;
     if(Q3e.frameInterval) {
       clearInterval(Q3e.frameInterval)
     }
@@ -342,39 +341,49 @@ function InputPushWheelEvent(evt) {
 
 function InputPushMouseEvent (evt) {
   let down = evt.type == 'mousedown'
-	if ( Key_GetCatcher() & KEYCATCH_CONSOLE ) {
-    if(HEAP32[gw_active >> 2]) {
+
+  if(down && INPUT.firstClick) {
+    INPUT.firstClick = false
+    SNDDMA_Init()
+
+    HEAP32[gw_active >> 2] = 1
+    HEAP32[s_soundStarted >> 2] = 1
+    HEAP32[s_soundMuted >> 2] = 0
+    S_Base_SoundInfo();
+  }
+
+  if ( Key_GetCatcher() & KEYCATCH_CONSOLE ) {
+    if(document.pointerLockElement) {
       SDL_ShowCursor()
-      HEAP32[gw_active >> 2] = false
+      // ruins sound //HEAP32[gw_active >> 2] = false
     }
     //INPUT.firstClick = true
     return;
   }
-  if (evt.type != 'mousemove') {
-    // TODO: fix this maybe?
-    //if(!mouseActive || in_joystick->integer) {
-    //  return;
-    //}
-    if(down && (!HEAP32[gw_active >> 2]
-      || document.pointerLockElement != Q3e.canvas)) {
-      // TODO: start sound, capture mouse
-      HEAP32[gw_active >> 2] = true
-      Q3e.canvas.requestPointerLock();
-      if(INPUT.firstClick) {
-        INPUT.firstClick = false
-        SNDDMA_Init()
-      }
-      if(Q3e.frameInterval) {
-        clearInterval(Q3e.frameInterval)
-      }
-      Q3e.frameInterval = setInterval(Sys_Frame, 1000.0 / INPUT.fps);
-    }
-    Sys_QueEvent( Sys_Milliseconds(), SE_KEY, 
-      INPUT.keystrings['MOUSE1'] + evt.button, down, 0, null );
-  } else {
-		Sys_QueEvent( Sys_Milliseconds(), SE_MOUSE, 
-      getMovementX(evt), getMovementY(evt), 0, null );
+
+  if (evt.type == 'mousemove') {
+    Sys_QueEvent( Sys_Milliseconds(), SE_MOUSE, 
+    getMovementX(evt), getMovementY(evt), 0, null );
+    return
   }
+
+  // TODO: fix this maybe?
+  //if(!mouseActive || in_joystick->integer) {
+  //  return;
+  //}
+  if(down && (!HEAP32[gw_active >> 2]
+    || document.pointerLockElement != Q3e.canvas)) {
+    // TODO: start sound, capture mouse
+    HEAP32[gw_active >> 2] = true
+    Q3e.canvas.requestPointerLock();
+
+    if(Q3e.frameInterval) {
+      clearInterval(Q3e.frameInterval)
+    }
+    Q3e.frameInterval = setInterval(Sys_Frame, 1000.0 / INPUT.fps);
+  }
+  Sys_QueEvent( Sys_Milliseconds(), SE_KEY, 
+    INPUT.keystrings['MOUSE1'] + evt.button, down, 0, null );
 }
 
 function Com_MaxFPSChanged() {
@@ -383,7 +392,7 @@ function Com_MaxFPSChanged() {
   if(Q3e.frameInterval) {
     clearInterval(Q3e.frameInterval)
   }
-  Q3e.frameInterval = setInterval(Sys_Frame, 1000.0 / INPUT.fps)
+  Q3e.frameInterval = setInterval(Sys_Frame, 1000.0 / (HEAP32[gw_active >> 2] ? INPUT.fps : INPUT.fpsUnfocused))
 }
 
 function Sys_ConsoleInput() {
@@ -574,7 +583,7 @@ function GLimp_Shutdown(destroy) {
     Q3e.canvas.removeEventListener('mousemove', InputPushMouseEvent)
     Q3e.canvas.removeEventListener('mousedown', InputPushMouseEvent)
     Q3e.canvas.removeEventListener('mouseup', InputPushMouseEvent)
-    GL.deleteContext(Q3e.webgl);
+    GL.deleteContext(INPUT.handle);
     Q3e.canvas.remove()
     delete Q3e['canvas']
   }
@@ -593,6 +602,8 @@ var INPUT = {
   SDL_SetWindowGrab: SDL_SetWindowGrab,
   Com_MaxFPSChanged: Com_MaxFPSChanged,
   Sys_ConsoleInput: Sys_ConsoleInput,
-  
+  IN_FirstClick: function () {
+    return INPUT.firstClick
+  }
 }
 

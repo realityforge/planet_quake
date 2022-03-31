@@ -45,8 +45,6 @@ const smoothingInterval = 0.02
 //const beepLengthInSeconds = 0.5
 //const beeps = [220,440,880]
 
-let snd_inited = false
-
 function SNDDMA_Shutdown() {
   //if(SND.interval) {
   //  clearInterval(SND.interval)
@@ -79,35 +77,22 @@ function log2pad( v, roundup )
 }
 
 function SNDDMA_GetDMAPos() {
-	/*
-  if(!HEAPU32[s_soundStarted >> 2])
-    return 0
-  
-  if ( HEAPU32[(dma >> 2) + 1] )
-		samples = buffer_pos % HEAPU32[(dma >> 2) + 1];
+	return dmapos
+/*
+	if ( !SND.inited )
+		return 0;
+
+		if ( dma.samples )
+		samples = dmapos % dma.samples;
 	else
 		samples = 0;
+
+	return samples
 */
-  return dmapos
 }
 
 let dmapos = 0
 let dmasize = 0x100000
-
-function HandleAudioProcess()
-{
-	/* Only do something if audio is enabled */
-	if (!snd_inited || SND.paused) {
-		//SDL_memset(HEAPU32[(dma >> 2) + 7], SND.silence, dmasize);
-		//FeedAudioDevice(HEAPU32[(dma >> 2) + 7], dmasize);
-		return;
-	}
-	var numChannels = SND.currentOutputBuffer['numberOfChannels'];
-	for (var c = 0; c < numChannels; ++c) {
-		var channelData = SND.currentOutputBuffer['getChannelData'](c);
-		SND.callback(channelData, 0, channelData.length)
-	}
-}
 
 function SNDDMA_KHzToHz( khz )
 {
@@ -128,6 +113,10 @@ function SNDDMA_Init() {
   if(INPUT.firstClick) {
     return 0
   }
+
+	if(SND.inited) {
+		return 0
+	}
 
   SND.nextPlayTime = 0
   let channelsName = stringToAddress('s_sdlChannels')
@@ -180,7 +169,6 @@ function SNDDMA_Init() {
 	}
 
 	SND.channels = Cvar_VariableIntegerValue(stringToAddress('s_sdlChannels'));
-	SND.callback = SNDDMA_AudioCallback;
 
 	try {
 		if (SND.format == 0x0008 /*AUDIO_U8*/) {
@@ -192,16 +180,10 @@ function SNDDMA_Init() {
 		} else {
 			throw 'Invalid SDL audio format ' + SND.format + '!';
 		}
-		SND.gainNode = SND.context.createGain();
-		SND.gainNode.connect(SND.context.destination);
-		SND.gainNode.gain.setValueAtTime(1, SND.context.currentTime);
 	
 		SND.scriptProcessorNode = SND.context['createScriptProcessor'](SND.samples, 0, SND.channels);
-		SND.scriptProcessorNode['onaudioprocess'] = function (e) {
-			SND.currentOutputBuffer = e['outputBuffer'];
-			HandleAudioProcess()
-		};
-		SND.scriptProcessorNode['connect'](SND.gainNode);
+		SND.scriptProcessorNode['onaudioprocess'] = SNDDMA_AudioCallback
+		SND.scriptProcessorNode.connect(SND.context.destination);
 		
 	}
 	catch (e) {
@@ -241,27 +223,23 @@ function SNDDMA_Init() {
 	dmasize = (dma.samples * (dma.samplebits/8));
 	dma.buffer = calloc(1, dmasize);
 */
-  HEAPU32[(dma >> 2) + 0] /* channels */ = SND.channels
-  HEAPU32[(dma >> 2) + 1] /* samples */ = tmp
-  HEAPU32[(dma >> 2) + 2] /* fullsamples */ = HEAPU32[(dma >> 2) + 1] / HEAPU32[(dma >> 2) + 0]
-  HEAPU32[(dma >> 2) + 3] /* submission_chunk */ = 1
-  HEAPU32[(dma >> 2) + 4] /* samplebits */ = SND.format & 0xFF
-  HEAPU32[(dma >> 2) + 5] /* isfloat */ = SND.format & (1<<8)
-  HEAPU32[(dma >> 2) + 6] /* speed */ = SND.context.sampleRate
-	dmasize = (HEAPU32[(dma >> 2) + 1] * (HEAPU32[(dma >> 2) + 4]/8));
+  HEAP32[(dma >> 2) + 0] /* channels */ = SND.channels
+  HEAP32[(dma >> 2) + 1] /* samples */ = tmp
+  HEAP32[(dma >> 2) + 2] /* fullsamples */ = HEAPU32[(dma >> 2) + 1] / HEAPU32[(dma >> 2) + 0]
+  HEAP32[(dma >> 2) + 3] /* submission_chunk */ = 1
+  HEAP32[(dma >> 2) + 4] /* samplebits */ = SND.format & 0xFF
+  HEAP32[(dma >> 2) + 5] /* isfloat */ = SND.format & (1<<8)
+  HEAP32[(dma >> 2) + 6] /* speed */ = SND.freq // SND.context.sampleRate
+	dmasize = SND.samples * (HEAPU32[(dma >> 2) + 1] * (HEAPU32[(dma >> 2) + 4]/8));
 	HEAPU32[(dma >> 2) + 7] /* buffer */ = calloc(1, dmasize);
   //HEAPU32[(dma >> 2) + 7] /* buffer */ = dma_buffer2
-  HEAPU32[(dma >> 2) + 8] /* driver */ = stringToAddress('Web Audio')
+  HEAP32[(dma >> 2) + 8] /* driver */ = stringToAddress('Web Audio')
 
 	console.log("Starting SDL audio callback...\n");
 	SDL_PauseAudio(0);  // start callback.
 
 	console.log("SDL audio initialized.\n");
-	snd_inited = true;
-
-  HEAPU32[s_soundStarted >> 2] = 1
-  HEAPU32[s_soundMuted >> 2] = 0
-	S_Base_SoundInfo();
+	SND.inited = true;
 
   return 1
 }
@@ -271,70 +249,66 @@ function SNDDMA_Init() {
 SNDDMA_AudioCallback
 ===============
 */
-function SNDDMA_AudioCallback(userdata, stream, len)
+function SNDDMA_AudioCallback(e)
 {
+	let frameLen = ((SND.format & 0xFF) * 8) * SND.channels * 2
+	/* Only do something if audio is enabled */
+	if (!SND.inited || SND.paused) {
+		//SDL_memset(HEAPU32[(dma >> 2) + 7], SND.silence, dmasize);
+		//FeedAudioDevice(HEAPU32[(dma >> 2) + 7], dmasize);
+		return;
+	}
+
+	let setStream = function ($0, $1) {
+		let numChannels = e.outputBuffer.numberOfChannels
+		for (let c = 0; c < numChannels; ++c) {
+			let channelData = e.outputBuffer.getChannelData(c);
+			if (channelData.length != $1) {
+				throw new Error('Web Audio output buffer length mismatch! Destination size: ' + channelData.length + ' samples vs expected ' + $1 + ' samples!');
+			}
+			//SND.callback(channelData, 0, channelData.length)
+			for (let j = 0; j < frameLen; ++j) {
+				//channelData[j] = HEAPF32[($0 + ((j*numChannels + c) << 2)) >> 2];
+				let tune = (Math.sin((0+j)*0.1)*20000.0*256.0) >> 8
+				if (tune > 0x7fff)
+					tune = 0x7fff;
+				else if (tune < -32768)
+					tune = -32768;
+				channelData[j % SND.samples] = 32768.0 / tune
+			}
+		}
+	}
+
+	
+
+
 	let pos = (dmapos * (HEAPU32[(dma >> 2) + 4]/8));
 	if (pos >= dmasize)
 		dmapos = pos = 0;
 
 	let tobufend = dmasize - pos;  /* bytes to buffer's end. */
-	let len1 = len;
+	let len1 = SND.samples;
 	let len2 = 0;
 
 	if (len1 > tobufend)
 	{
 		len1 = tobufend;
-		len2 = len - len1;
+		len2 = SND.samples - len1;
 	}
-	userdata.set(HEAPU8.slice(HEAPU32[(dma >> 2) + 7] + pos, HEAPU32[(dma >> 2) + 7] + pos + len1), stream)
+	
+	setStream(HEAPU32[(dma >> 2) + 7] + pos, frameLen)
 	//memcpy(stream, HEAPU32[(dma >> 2) + 7] + pos, len1);
 	if (len2 <= 0)
 		dmapos += (len1 / (HEAPU32[(dma >> 2) + 4]/8));
 	else  /* wraparound? */
 	{
-		userdata.set(HEAPU8.slice(HEAPU32[(dma >> 2) + 7], HEAPU32[(dma >> 2) + 7] + len2), stream + len1)
+		setStream(HEAPU32[(dma >> 2) + 7], frameLen)
 		//memcpy(stream+len1, HEAPU32[(dma >> 2) + 7], len2);
 		dmapos = (len2 / (HEAPU32[(dma >> 2) + 4]/8));
 	}
 
 	if (dmapos >= dmasize)
 		dmapos = 0;
-
-		/*
-#ifdef USE_SDL_AUDIO_CAPTURE
-	if (sdlMasterGain != 1.0f)
-	{
-		int i;
-		if (dma.isfloat && (HEAPU32[(dma >> 2) + 4] == 32))
-		{
-			float *ptr = (float *) stream;
-			len /= sizeof (*ptr);
-			for (i = 0; i < len; i++, ptr++)
-			{
-				*ptr *= sdlMasterGain;
-			}
-		}
-		else if (HEAPU32[(dma >> 2) + 4] == 16)
-		{
-			int16_t *ptr = (int16_t *) stream;
-			len /= sizeof (*ptr);
-			for (i = 0; i < len; i++, ptr++)
-			{
-				*ptr = (int16_t) (((float) *ptr) * sdlMasterGain);
-			}
-		}
-		else if (HEAPU32[(dma >> 2) + 4] == 8)
-		{
-			uint8_t *ptr = (uint8_t *) stream;
-			len /= sizeof (*ptr);
-			for (i = 0; i < len; i++, ptr++)
-			{
-				*ptr = (uint8_t) (((float) *ptr) * sdlMasterGain);
-			}
-		}
-	}
-#endif
-*/
 
 }
 
@@ -370,7 +344,7 @@ function SDL_CloseAudio() {
 }
 
 function SDL_AudioQuit() {
-	for (var i = 0; i < SDL.numChannels; ++i) {
+	for (let i = 0; i < SDL.numChannels; ++i) {
 		if (SDL.channels[i].audio) {
 			SDL.channels[i].audio.pause();
 			SDL.channels[i].audio = undefined;
