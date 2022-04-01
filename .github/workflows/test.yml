@@ -28,22 +28,6 @@ jobs:
     uses: ./.github/workflows/build.yml
     with:
       makefile: make/build_client.make
-    strategy:
-      matrix:
-        platform: [wasm]
-        runtime: [q3map2]
-        arch: [js]
-        include:
-        - arch: js
-        - platform: wasm
-          name: WebAssembly
-          cc: libs/linux/wasi-sdk-14.0/bin/clang
-          flags: USE_ASYNCHRONOUS=1 USE_LAZY_LOAD=1
-          os: ubuntu-latest
-        - runtime: q3map2
-          proper: Q3Map2
-          cflags: ~
-          makefile: make/lib_q3map2.make
 
   create-testing:
     name: Test Release
