@@ -62,6 +62,7 @@ SDL_Delay
 Sys_getenv
 Sys_SendPacket
 Sys_StringToAdr
+CreateAndCall
 NET_OpenIP
 NET_Sleep
 Sys_FTell

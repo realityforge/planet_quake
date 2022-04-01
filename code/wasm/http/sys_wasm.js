@@ -41,6 +41,7 @@ function _base64ToArrayBuffer(base64) {
 }
 
 function init() {
+  window.Module = Q3e
   Q3e['imports'] = Q3e
   // might as well start this early, transfer IndexedDB from disk/memory to application memory
   Q3e['cacheBuster'] = Date.now()

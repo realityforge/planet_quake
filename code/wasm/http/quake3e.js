@@ -399,12 +399,31 @@ function _emscripten_get_heap_size() {
 	return HEAPU8.length;
 }
 
+function dynCall(ret, func, args) {
+	return Q3e.table.get(func).apply(null, args)
+}
+
+function CreateAndCall(code, params, vargs) {
+	let func
+	if(typeof SYS.evaledFuncs[code] != 'undefined') {
+		func = SYS.evaledFuncs[code]
+	} else {
+		func = SYS.evaledFuncs[code] = eval('(function func'
+			+ ++SYS.evaledCount + '($0, $1, $2, $3)'
+			+ addressToString(code, 4096) + ')')
+		func.paramCount = addressToString(params).split(',').length
+	}
+	let args = HEAPU32.slice(vargs >> 2, (vargs >> 2) + func.paramCount)
+	return func.apply(func, args)
+}
+
 var SYS = {
+	evaledFuncs: {},
+	evaledCount: 0,
 	DebugBreak: function () { debugger },
 	DebugTrace: function () { console.log(new Error()) },
 	emscripten_resize_heap: _emscripten_resize_heap,
 	emscripten_get_heap_size: _emscripten_get_heap_size,
-	emscripten_asm_const_int: emscripten_asm_const_int,
 	Sys_RandomBytes: Sys_RandomBytes,
 	Sys_Milliseconds: Sys_Milliseconds,
 	Sys_Microseconds: Sys_Microseconds,
@@ -419,5 +438,5 @@ var SYS = {
 	Sys_SetStatus: Sys_SetStatus,
 	CL_MenuModified: CL_MenuModified,
 	Com_RealTime: Com_RealTime,
-
+	CreateAndCall: CreateAndCall,
 }

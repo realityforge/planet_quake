@@ -30,6 +30,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "../client/snd_local.h"
 #endif
 
+#undef PATH_MAX
 #define PATH_MAX 1024
 
 #ifndef Q_EXPORT
@@ -61,7 +62,6 @@ void Sys_ShowConsole( int visLevel, qboolean quitOnClose ) { }
 const char *Sys_DefaultBasePath( void ) { return "/base"; }
 qboolean Sys_ResetReadOnlyAttribute( const char *ospath ) { return qfalse; }
 const char *Sys_DefaultHomePath( void ) { return "/base/home"; }
-
 
 
 /*

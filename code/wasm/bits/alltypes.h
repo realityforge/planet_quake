@@ -469,4 +469,3 @@ typedef unsigned short sa_family_t;
 #define SDL_strncasecmp strncasecmp
 #define SDL_strcasecmp strcasecmp
 
-

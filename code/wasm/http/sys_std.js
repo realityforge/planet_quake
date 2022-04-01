@@ -47,7 +47,13 @@ typedef struct qtime_s {
   },
 }
 
+const DEFAULT_OUTPUT_DEVNAME = "System audio output device"
+
 function Sys_getenv(varname) {
+  let envar = addressToString(varname)
+  if(envar == 'SDL_AUDIO_DEVICE_NAME') {
+    return stringToAddress(DEFAULT_OUTPUT_DEVNAME)
+  }
   return stringToAddress('')
 }
 
