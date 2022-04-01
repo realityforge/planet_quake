@@ -73,7 +73,7 @@ jobs:
     - uses: snow-actions/sparse-checkout@v1.1.0
       with:
         fetch-depth: 1
-        patterns: ${{checkout}}
+        patterns: ${{env.checkout}}
 
     - name: Install tools
       run: |
