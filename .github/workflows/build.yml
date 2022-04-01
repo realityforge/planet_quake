@@ -77,7 +77,7 @@ jobs:
       matrix:
         runtime: [client, client-slim, client-mw, client-experimental]
         include:
-        - cc: ${{env.BASEPATH}}/libs/linux/wasi-sdk-14.0/bin/clang
+        - cc: libs/linux/wasi-sdk-14.0/bin/clang
         - makefile: ${{env.CLIENTMAKEFILE}}
         - runtime: client
           proper: Client
