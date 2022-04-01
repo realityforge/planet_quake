@@ -43,13 +43,37 @@ on:
 
 jobs:
   build-client:
-    name: WebAssembly (wasm) ${{ matrix.proper }}
-    runs-on: ubuntu-latest
+    name: ${{ matrix.name }} (${{ matrix.arch }}) ${{ matrix.proper }}
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        runtime: [client, client-slim, client-mw]
-#        runtime: [client, client-slim, client-mw, client-experimental]
+        platform: [wasm, win, linux, darwin]
+        runtime: [client, client-mw, client-slim]
         include:
+        - platform: wasm
+          name: WebAssembly
+          cc: libs/linux/wasi-sdk-14.0/bin/clang
+          arch: js
+          flags: USE_ASYNCHRONOUS=1 USE_LAZY_LOAD=1
+          os: ubuntu-latest
+        - platform: win
+          name: Windows
+          cc: gcc
+          arch: [x86, x86_64]
+          flags: ~
+          os: windows-2019
+        - platform: linux
+          name: Ubuntu
+          cc: gcc
+          arch: [x86, x86_64]
+          flags: ~
+          os: ubuntu-20.04
+        - platform: darwin
+          name: MacOS
+          cc: clang
+          arch: [x86_64] 
+          flags: ~
+          os: macos-latest
         - runtime: client
           proper: Client
           cflags: ~
@@ -59,27 +83,28 @@ jobs:
         - runtime: client-slim
           proper: Client (Slim)
           cflags: BUILD_SLIM_CLIENT=1
-        - runtime: client-experimental
-          proper: Client (Experimental)
-          cflags: BUILD_EXPERIMENTAL=1
+#        - runtime: client-experimental
+#          proper: Client (Experimental)
+#          cflags: BUILD_EXPERIMENTAL=1
     steps:
     - uses: snow-actions/sparse-checkout@v1.1.0
       with:
-        patterns: ${{env.SPARSECHECKOUT}}
+        patterns: ${{ env.SPARSECHECKOUT }}
     - name: Install tools
       run: |
         sudo apt-get -qq update
-        sudo apt-get -y install ${{env.STANDARDTOOLS}} ${{env.WASITOOLS}}
-        wget --no-check-certificate ${{env.WASISDK}}
-        ${{env.WASIINSTALL}}
+        sudo apt-get -y install ${{ env.STANDARDTOOLS }} ${{ env.WASITOOLS }}
+        wget --no-check-certificate ${{ env.WASISDK }}
+        ${{ env.WASIINSTALL }}
     - name: Build
       run: |
-        make -f ${{env.CLIENTMAKEFILE}} -j 16 NO_MAKE_LOCAL=1 ARCH=js \
-        USE_ASYNCHRONOUS=1 USE_LAZY_LOAD=1 ${{ matrix.cflags }} \
-        PLATFORM=wasm CC=libs/linux/wasi-sdk-14.0/bin/clang V=1 ${{env.DEFAULTTARGET}} 
+        make -f ${{ env.CLIENTMAKEFILE }} -j 16 NO_MAKE_LOCAL=1 \
+        ARCH=${{ matrix.arch }} ${{ matrix.cflags }} \
+        PLATFORM=${{ matrix.platform }} ${{ matrix.flags }} \
+        CC=${{ matrix.cc }} V=1 ${{ env.DEFAULTTARGET }} 
     - uses: actions/upload-artifact@v2
       with:
-        name: wasm-js
+        name: ${{ matrix.platform }}-js
         path: bin/*
         if-no-files-found: error
         retention-days: 10
