@@ -56,6 +56,10 @@ SDL_StopTextInput
 NET_GetPacket
 NET_AdrToString
 Sys_IsLANAddress
+IN_FirstClick
+SDL_GetTicks
+SDL_Delay
+Sys_getenv
 Sys_SendPacket
 Sys_StringToAdr
 NET_OpenIP

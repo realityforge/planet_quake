@@ -19,6 +19,7 @@ along with Quake III Arena source code; if not, write to the Free Software
 Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 ===========================================================================
 */
+#include <SDL.h>
 #include "../qcommon/q_shared.h"
 #include "../qcommon/qcommon.h"
 
@@ -238,18 +239,14 @@ RSERR_UNKNOWN
 cvar_t *r_stereoEnabled;
 cvar_t *in_nograb;
 
-#ifndef EMSCRIPTEN
-void SDL_GL_SwapWindow(void *window) {
+void SDL_GL_SwapWindow(SDL_Window *window) {
   // this probably prevents that flashing when changing mods
 }
-
-
 
 int SDL_GL_SetSwapInterval(int interval) {
   // set values for request animation frame?
   return 0;
 }
-#else
 
 void *eglGetProcAddress(const char *procname) {
 	DebugBreak();
@@ -259,7 +256,6 @@ void *eglGetProcAddress(const char *procname) {
 void emscripten_sleep(int ms) {
 	DebugBreak();
 }
-#endif
 
 /*
 ===============
@@ -374,6 +370,63 @@ void Sys_SetClipboardBitmap( const byte *bitmap, int length )
 }
 
 
+void SDL_LogResetPriorities(void) {
+
+}
+SDL_LogPriority SDL_LogGetPriority(int category) {
+	return SDL_LOG_PRIORITY_INFO;
+}
+SDL_Window *SDL_GetFocusWindow(void) {
+	return NULL;
+}
+Uint32 SDL_GetWindowFlags(SDL_Window * window) {
+	return 0;
+}
+void SDL_MinimizeWindow(SDL_Window * window) {
+
+}
+int SDL_ShowMessageBox(const SDL_MessageBoxData *messageboxdata, int *buttonid) {
+	DebugBreak();
+	return 0;
+}
+void SDL_RestoreWindow(SDL_Window * window) {
+
+}
+void SDL_ToggleDragAndDropSupport(void) {
+
+}
+void *SDL_GetVideoDevice(void) {
+	return NULL;
+}
+void SDL_ReleaseAutoReleaseKeys(void) {
+
+}
+void SDL_SendPendingSignalEvents(void) {
+
+}
+void SDL_GestureProcessEvent(SDL_Event* event) {
+
+}
+int SDL_QuitInit(void) {
+	return 0;
+}
+void SDL_QuitQuit(void) {
+
+}
+void
+SDL_LogDebug(int category, SDL_PRINTF_FORMAT_STRING const char *fmt, ...)
+{
+    va_list ap;
+
+    va_start(ap, fmt);
+    Com_Printf(fmt, ap);
+    va_end(ap);
+}
+void
+SDL_LogMessageV(int category, SDL_LogPriority priority, const char *fmt, va_list ap)
+{
+    Com_Printf(fmt, ap);
+}
 
 #if 0
 

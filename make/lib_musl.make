@@ -35,6 +35,7 @@ MUSL_LOBJ        := string/stpcpy.o  string/memset.o  string/memcpy.o    \
                     string/strlen.o  string/strncat.o string/strspn.o    \
                     string/strstr.o  string/strrchr.o string/strnlen.o   \
                     string/strcspn.o string/strpbrk.o string/strdup.o    \
+                    string/strlcpy.o string/strcasecmp.o string/strncasecmp.o \
                     \
                     stdio/sprintf.o  stdio/fprintf.o   stdio/vsnprintf.o \
                     stdio/vfprintf.o stdio/sscanf.o    stdio/fwrite.o    \

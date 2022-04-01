@@ -1,5 +1,7 @@
 #define __pthread_self() ((pthread_t)__get_tp())
 #define __LONG_MAX 0x7fffffffL
+void Sys_Exit( int code ) __attribute((noreturn));
+#define getenv Sys_getenv
 #define exit Sys_Exit
 #define alloca __builtin_alloca
 
@@ -442,3 +444,29 @@ typedef unsigned short sa_family_t;
 #undef _Addr
 #undef _Int64
 #undef _Reg
+
+#define SDL_Log Com_Printf
+#define SDL_memset memset
+#define SDL_strcmp strcmp
+#define SDL_getenv getenv
+#define SDL_free free
+#define SDL_calloc calloc
+#define SDL_realloc realloc
+#define SDL_atoi atoi
+#define SDL_malloc malloc
+#define SDL_snprintf snprintf
+#define SDL_strlen strlen
+#define SDL_memcpy memcpy
+#define SDL_vsnprintf vsnprintf
+#define SDL_strlcpy strlcpy
+#define SDL_pow pow
+#define SDL_sinf sinf
+#define SDL_sqrt sqrt
+#define SDL_ceil ceil
+#define SDL_memmove memmove
+#define SDL_strdup strdup
+#define SDL_strtoll strtoll
+#define SDL_strncasecmp strncasecmp
+#define SDL_strcasecmp strcasecmp
+
+

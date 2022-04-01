@@ -56,7 +56,7 @@ function startProgram(program) {
 		throw new Error("no program!")
 	}
 	Q3e['program'] = program || {}
-	Q3e['instance'] = Q3e['program'] || {}
+	Q3e['instance'] = Q3e['program'].instance || {}
 	Q3e['exports'] = Q3e['instance'].exports || {}
 	let newMethods = Object.keys(Q3e['exports'])
 	for(let i = 0; i < newMethods.length; i++) {
@@ -357,6 +357,7 @@ function updateGlobalBufferAndViews(buf) {
 	Q3e["HEAPF64"] = window.HEAPF64 = new Float64Array(buf);
 }
 
+		
 function emscripten_realloc_buffer(size) {
 	try {
 		Q3e.memory.grow(size - Q3e.memory.buffer.byteLength + 65535 >>> 16);
@@ -403,6 +404,7 @@ var SYS = {
 	DebugTrace: function () { console.log(new Error()) },
 	emscripten_resize_heap: _emscripten_resize_heap,
 	emscripten_get_heap_size: _emscripten_get_heap_size,
+	emscripten_asm_const_int: emscripten_asm_const_int,
 	Sys_RandomBytes: Sys_RandomBytes,
 	Sys_Milliseconds: Sys_Milliseconds,
 	Sys_Microseconds: Sys_Microseconds,

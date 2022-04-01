@@ -74,8 +74,10 @@ SDL_NORETURN void SDL_ExitProcess(int exitcode)
        ExitProcess here that will never be reached but make MingW happy. */
     ExitProcess(exitcode);
 #elif defined(__EMSCRIPTEN__)
+#ifndef __WASM__
     emscripten_cancel_main_loop();  /* this should "kill" the app. */
     emscripten_force_exit(exitcode);  /* this should "kill" the app. */
+#endif
     exit(exitcode);
 #elif defined(__HAIKU__)  /* Haiku has _Exit, but it's not marked noreturn. */
     _exit(exitcode);

@@ -170,7 +170,12 @@ ifeq ($(PLATFORM),js)
 SYSTEM           += sys_main.o 
 endif # not js
 ifeq ($(PLATFORM),wasm)
-SYSTEM           += sys_main.o 	dlmalloc.o sbrk.o
+SYSTEM           += sys_main.o 	dlmalloc.o sbrk.o SDL.o SDL_audio.o SDL_error.o \
+                    SDL_assert.o sdl_snd.o SDL_sysmutex.o SDL_atomic.o SDL_events.o \
+										SDL_spinlock.o SDL_audiocvt.o SDL_audiotypecvt.o SDL_dataqueue.o \
+										SDL_thread.o SDL_systimer.o SDL_syssem.o SDL_hints.o \
+										SDL_systhread.o SDL_systls.o SDL_mixer.o SDL_emscriptenaudio.o
+
 endif # not wasm
 
 
@@ -203,8 +208,6 @@ ifeq ($(USE_SDL),1)
 SYSTEM           += sdl_glimp.o sdl_gamma.o sdl_input.o sdl_snd.o
 endif
 
-else
-SYSTEM           += sdl_snd.o
 endif # !js
 endif # !wasm
 

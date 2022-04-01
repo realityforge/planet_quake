@@ -47,11 +47,16 @@ typedef struct qtime_s {
   },
 }
 
+function Sys_getenv(varname) {
+  return stringToAddress('')
+}
+
 
 var STD = {
   __assert_fail: console.assert, // TODO: convert to variadic fmt for help messages
   longjmp: function (id, code) { throw new Error('longjmp', id, code) },
   setjmp: function (id) { try {  } catch (e) { } },
+  Sys_getenv: Sys_getenv,
   /*
   memset: function (addr, val, count) {
     HEAP8.fill(val, addr, addr + count)

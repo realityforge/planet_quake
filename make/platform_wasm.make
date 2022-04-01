@@ -72,13 +72,15 @@ endif
 CLIENT_LDFLAGS      += code/wasm/wasi/libclang_rt.builtins-wasm32.a
 
 # -fno-common -ffreestanding -nostdinc --no-standard-libraries
+MUSL_SOURCE         := libs/musl-1.2.2
+SDL_SOURCE          := libs/SDL2-2.0.14
 
 BASE_CFLAGS         += -Wall --target=wasm32 \
                        -Wimplicit -fstrict-aliasing \
                        -ftree-vectorize -fsigned-char -MMD \
                        -ffast-math -fno-short-enums \
-                       -pedantic \
                        -Wno-extra-semi \
+                       -D_XOPEN_SOURCE=700 \
                        -DGL_GLEXT_PROTOTYPES=1 \
                        -DGL_ARB_ES2_compatibility=1 \
                        -DGL_EXT_direct_state_access=1 \
@@ -89,9 +91,11 @@ BASE_CFLAGS         += -Wall --target=wasm32 \
                        -DUSE_LAZY_MEMORY \
                        -DUSE_MASTER_LAN \
                        -D__WASM__ \
-                       -std=c11 \
+                       -std=gnu11 \
                        -Icode/wasm/include \
-                       -Ilibs/musl-1.2.2/include \
+                       -Icode/wasm/emscripten \
+                       -I$(MUSL_SOURCE)/include \
+											 -I$(SDL_SOURCE)/include \
                        -Icode/wasm
 
 DEBUG_CFLAGS        := -fvisibility=default -fno-inline \
@@ -250,6 +254,53 @@ $(INSTALL_FROM)/$(WASM_INDEX): $(INSTALL_FROM)/$(WASM_TARGET) $(INSTALL_FROM).as
 	-$(Q)$(MOVE) $@ $@.bak > /dev/null
 	$(Q)$(MOVE) $(INSTALL_FROM)/index.html $@ > /dev/null
 	-$(Q)$(UNLINK) $@.bak > /dev/null
+
+
+# TODO build quake 3 as a library that can be use for rendering embedded in other apps?
+SDL_FLAGS := -DSDL_VIDEO_DISABLED=1 \
+						 -DSDL_JOYSTICK_DISABLED=1 \
+						 -DSDL_SENSOR_DISABLED=1 \
+						 -DSDL_HAPTIC_DISABLED=1 \
+             -D__EMSCRIPTEN__=1 \
+						 -D_GNU_SOURCE=1 \
+						 -DHAVE_STDLIB_H=1 \
+						 -DHAVE_UNISTD_H=1 \
+						 -DHAVE_GETENV=1 \
+						 -DSDL_THREADS_DISABLED=1 \
+						 -DSDL_AUDIO_DRIVER_EMSCRIPTEN=1
+
+define DO_SDL_CC
+	$(echo_cmd) "SDL_CC $<"
+	$(Q)$(CC) -o $@ -Wno-macro-redefined $(SDL_FLAGS) $(CLIENT_CFLAGS) -c $<
+endef
+
+ifdef B
+$(B)/client/%.o: $(SDL_SOURCE)/src/audio/%.c
+	$(DO_SDL_CC)
+
+$(B)/client/%.o: $(SDL_SOURCE)/src/audio/emscripten/%.c
+	$(DO_SDL_CC)
+
+$(B)/client/%.o: $(SDL_SOURCE)/src/events/%.c
+	$(DO_SDL_CC)
+
+$(B)/client/%.o: $(SDL_SOURCE)/src/atomic/%.c
+	$(DO_SDL_CC)
+
+$(B)/client/%.o: $(SDL_SOURCE)/src/thread/generic/%.c
+	$(DO_SDL_CC)
+
+$(B)/client/%.o: $(SDL_SOURCE)/src/thread/%.c
+	$(DO_SDL_CC)
+
+$(B)/client/%.o: $(SDL_SOURCE)/src/timer/unix/%.c
+	$(DO_SDL_CC)
+
+$(B)/client/%.o: $(SDL_SOURCE)/src/%.c
+	$(DO_SDL_CC)
+endif
+
+
 
 
 .NOTPARALLEL: index

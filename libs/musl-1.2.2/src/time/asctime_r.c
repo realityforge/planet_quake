@@ -4,8 +4,6 @@
 #include "locale_impl.h"
 #include "atomic.h"
 
-#define abort Sys_Exit
-
 char *__asctime_r(const struct tm *restrict tm, char *restrict buf)
 {
 	if (snprintf(buf, 26, "%.3s %.3s%3d %.2d:%.2d:%.2d %d\n",

@@ -18,7 +18,7 @@
 #endif
 
 #ifdef __EMSCRIPTEN_TRACING__
-//#include <emscripten/em_asm.h>
+#include <emscripten/em_asm.h>
 #endif
 
 //#include <emscripten/heap.h>

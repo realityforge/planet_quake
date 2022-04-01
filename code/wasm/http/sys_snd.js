@@ -1,4 +1,187 @@
 
+
+function capture_available() {
+	if ((typeof(navigator.mediaDevices) !== 'undefined') && (typeof(navigator.mediaDevices.getUserMedia) !== 'undefined')) {
+		return 1;
+	} else if (typeof(navigator.webkitGetUserMedia) !== 'undefined') {
+			return 1;
+	}
+	return 0;
+
+}
+
+
+function audio_available() {
+	if (typeof(AudioContext) !== 'undefined') {
+		return 1;
+	} else if (typeof(webkitAudioContext) !== 'undefined') {
+			return 1;
+	}
+	return 0;
+
+}
+
+function open_capture_device($0, $1, $2, $3) {
+	var SDL2 = Module['SDL2'];
+	var have_microphone = function(stream) {
+			//console.log('SDL audio capture: we have a microphone! Replacing silence callback.');
+			if (SDL2.capture.silenceTimer !== undefined) {
+					clearTimeout(SDL2.capture.silenceTimer);
+					SDL2.capture.silenceTimer = undefined;
+			}
+			SDL2.capture.mediaStreamNode = SDL2.audioContext.createMediaStreamSource(stream);
+			SDL2.capture.scriptProcessorNode = SDL2.audioContext.createScriptProcessor($1, $0, 1);
+			SDL2.capture.scriptProcessorNode.onaudioprocess = function(audioProcessingEvent) {
+					if ((SDL2 === undefined) || (SDL2.capture === undefined)) { return; }
+					audioProcessingEvent.outputBuffer.getChannelData(0).fill(0.0);
+					SDL2.capture.currentCaptureBuffer = audioProcessingEvent.inputBuffer;
+					dynCall('vi', $2, [$3]);
+			};
+			SDL2.capture.mediaStreamNode.connect(SDL2.capture.scriptProcessorNode);
+			SDL2.capture.scriptProcessorNode.connect(SDL2.audioContext.destination);
+			SDL2.capture.stream = stream;
+	};
+
+	var no_microphone = function(error) {
+			//console.log('SDL audio capture: we DO NOT have a microphone! (' + error.name + ')...leaving silence callback running.');
+	};
+
+	/* we write silence to the audio callback until the microphone is available (user approves use, etc). */
+	SDL2.capture.silenceBuffer = SDL2.audioContext.createBuffer($0, $1, SDL2.audioContext.sampleRate);
+	SDL2.capture.silenceBuffer.getChannelData(0).fill(0.0);
+	var silence_callback = function() {
+			SDL2.capture.currentCaptureBuffer = SDL2.capture.silenceBuffer;
+			dynCall('vi', $2, [$3]);
+	};
+
+	SDL2.capture.silenceTimer = setTimeout(silence_callback, ($1 / SDL2.audioContext.sampleRate) * 1000);
+
+	if ((navigator.mediaDevices !== undefined) && (navigator.mediaDevices.getUserMedia !== undefined)) {
+			navigator.mediaDevices.getUserMedia({ audio: true, video: false }).then(have_microphone).catch(no_microphone);
+	} else if (navigator.webkitGetUserMedia !== undefined) {
+			navigator.webkitGetUserMedia({ audio: true, video: false }, have_microphone, no_microphone);
+	}
+}
+
+
+function open_audio_device($0, $1, $2, $3) {
+	var SDL2 = Module['SDL2'];
+	SDL2.audio.scriptProcessorNode = SDL2.audioContext['createScriptProcessor']($1, 0, $0);
+	SDL2.audio.scriptProcessorNode['onaudioprocess'] = function (e) {
+			if ((SDL2 === undefined) || (SDL2.audio === undefined)) { return; }
+			SDL2.audio.currentOutputBuffer = e['outputBuffer'];
+			dynCall('vi', $2, [$3]);
+	};
+	SDL2.audio.scriptProcessorNode['connect'](SDL2.audioContext['destination']);
+
+}
+
+function native_freq() {
+	var SDL2 = Module['SDL2'];
+	return SDL2.audioContext.sampleRate;
+}
+
+
+function create_context($0) {
+	if(typeof(Module['SDL2']) === 'undefined') {
+		Module['SDL2'] = {};
+	}
+	var SDL2 = Module['SDL2'];
+	if (!$0) {
+			SDL2.audio = {};
+	} else {
+			SDL2.capture = {};
+	}
+
+	if (!SDL2.audioContext) {
+			if (typeof(AudioContext) !== 'undefined') {
+					SDL2.audioContext = new AudioContext();
+			} else if (typeof(webkitAudioContext) !== 'undefined') {
+					SDL2.audioContext = new webkitAudioContext();
+			}
+	}
+	return SDL2.audioContext === undefined ? -1 : 0;
+}
+
+function feed_audio_device($0, $1) {
+	var SDL2 = Module['SDL2'];
+	var numChannels = SDL2.audio.currentOutputBuffer['numberOfChannels'];
+	for (var c = 0; c < numChannels; ++c) {
+			var channelData = SDL2.audio.currentOutputBuffer['getChannelData'](c);
+			if (channelData.length != $1) {
+					throw 'Web Audio output buffer length mismatch! Destination size: ' + channelData.length + ' samples vs expected ' + $1 + ' samples!';
+			}
+
+			for (var j = 0; j < $1; ++j) {
+					channelData[j] = HEAPF32[$0 + ((j*numChannels + c) << 2) >> 2];  /* !!! FIXME: why are these shifts here? */
+			}
+	}
+
+}
+
+function handle_capture_process($0, $1) {
+	var SDL2 = Module['SDL2'];
+	var numChannels = SDL2.capture.currentCaptureBuffer.numberOfChannels;
+	for (var c = 0; c < numChannels; ++c) {
+			var channelData = SDL2.capture.currentCaptureBuffer.getChannelData(c);
+			if (channelData.length != $1) {
+					throw 'Web Audio capture buffer length mismatch! Destination size: ' + channelData.length + ' samples vs expected ' + $1 + ' samples!';
+			}
+
+			if (numChannels == 1) {  /* fastpath this a little for the common (mono) case. */
+					for (var j = 0; j < $1; ++j) {
+							setValue($0 + (j * 4), channelData[j], 'float');
+					}
+			} else {
+					for (var j = 0; j < $1; ++j) {
+							setValue($0 + (((j * numChannels) + c) * 4), channelData[j], 'float');
+					}
+			}
+	}
+
+}
+
+
+function close_device($0) {
+	var SDL2 = Module['SDL2'];
+	if ($0) {
+			if (SDL2.capture.silenceTimer !== undefined) {
+					clearTimeout(SDL2.capture.silenceTimer);
+			}
+			if (SDL2.capture.stream !== undefined) {
+					var tracks = SDL2.capture.stream.getAudioTracks();
+					for (var i = 0; i < tracks.length; i++) {
+							SDL2.capture.stream.removeTrack(tracks[i]);
+					}
+					SDL2.capture.stream = undefined;
+			}
+			if (SDL2.capture.scriptProcessorNode !== undefined) {
+					SDL2.capture.scriptProcessorNode.onaudioprocess = function(audioProcessingEvent) {};
+					SDL2.capture.scriptProcessorNode.disconnect();
+					SDL2.capture.scriptProcessorNode = undefined;
+			}
+			if (SDL2.capture.mediaStreamNode !== undefined) {
+					SDL2.capture.mediaStreamNode.disconnect();
+					SDL2.capture.mediaStreamNode = undefined;
+			}
+			if (SDL2.capture.silenceBuffer !== undefined) {
+					SDL2.capture.silenceBuffer = undefined
+			}
+			SDL2.capture = undefined;
+	} else {
+			if (SDL2.audio.scriptProcessorNode != undefined) {
+					SDL2.audio.scriptProcessorNode.disconnect();
+					SDL2.audio.scriptProcessorNode = undefined;
+			}
+			SDL2.audio = undefined;
+	}
+	if ((SDL2.audioContext !== undefined) && (SDL2.audio === undefined) && (SDL2.capture === undefined)) {
+			SDL2.audioContext.close();
+			SDL2.audioContext = undefined;
+	}
+}
+
+
 var SND = {
 	context: null,
 	paused: true,
@@ -13,12 +196,18 @@ var SND = {
 	callback: 0,
 	userdata: 0,
 	numSimultaneouslyQueuedBuffers: 5,
+	/*
   SNDDMA_Init: SNDDMA_Init,
   SNDDMA_Shutdown: SNDDMA_Shutdown,
   SNDDMA_BeginPainting: SNDDMA_BeginPainting,
   SNDDMA_Submit: SNDDMA_Submit,
   SNDDMA_GetDMAPos: SNDDMA_GetDMAPos,
-
+	*/
+	SDL_Delay: SDL_Delay,
+	SDL_GetTicks: SDL_GetTicks,
+	feed_audio_device: feed_audio_device,
+	handle_capture_process: handle_capture_process,
+	close_device: close_device,
 }
 
 const AUDIO_U8      = 0x0008  /**< Unsigned 8-bit samples */
@@ -145,11 +334,11 @@ function SNDDMA_Init() {
 	if ( SND.freq == 0 )
 		SND.freq = 22050;
 
-	tmp = Cvar_VariableIntegerValue(stringToAddress('s_sdlBits'));
-	if ( tmp < 16 )
-		tmp = 8;
+	SND.sdlBits = Cvar_VariableIntegerValue(stringToAddress('s_sdlBits'));
+	if ( SND.sdlBits < 16 )
+		SND.sdlBits = 8;
 
-	SND.format = ((tmp == 16) ? AUDIO_S16SYS : AUDIO_U8);
+	SND.format = ((SND.sdlBits == 16) ? AUDIO_S16SYS : AUDIO_U8);
 
 	// I dunno if this is the best idea, but I'll give it a try...
 	//  should probably check a cvar for this...
@@ -192,37 +381,15 @@ function SNDDMA_Init() {
 		return false;
 	}
 
-	tmp = Cvar_VariableIntegerValue(stringToAddress('s_sdlMixSamps'));
+	let tmp = Cvar_VariableIntegerValue(stringToAddress('s_sdlMixSamps'));
 	if ( !tmp )
 		tmp = (SND.samples * SND.channels) * 10;
-
 	// samples must be divisible by number of channels
 	tmp -= tmp % SND.channels;
 	// round up to next power of 2
 	tmp = log2pad( tmp, 1 );
 
-	/*
-
-  SND.oscillator = SND.context.createOscillator()
-  SND.oscillator.frequency.value = Math.random() * 2 - 1
-  if(!SND.interval) {
-    SND.interval = setInterval(SNDDMA_AudioCallback_Test.bind(null, SND.gainNode.gain, SND.oscillator), 50)
-  }
-  SND.oscillator.connect(SND.gainNode)
-  SND.oscillator.start()
-*/
 	dmapos = 0;
-/*
-	dma.samplebits = SDL_AUDIO_BITSIZE( obtained.format );
-	dma.isfloat = SDL_AUDIO_ISFLOAT( obtained.format );
-	dma.channels = obtained.channels;
-	dma.samples = tmp;
-	dma.fullsamples = dma.samples / dma.channels;
-	dma.submission_chunk = 1;
-	dma.speed = obtained.freq;
-	dmasize = (dma.samples * (dma.samplebits/8));
-	dma.buffer = calloc(1, dmasize);
-*/
   HEAP32[(dma >> 2) + 0] /* channels */ = SND.channels
   HEAP32[(dma >> 2) + 1] /* samples */ = tmp
   HEAP32[(dma >> 2) + 2] /* fullsamples */ = HEAPU32[(dma >> 2) + 1] / HEAPU32[(dma >> 2) + 0]
@@ -357,3 +524,13 @@ function SDL_AudioQuit() {
 
 function SDL_LockAudio() {}
 function SDL_UnlockAudio() {}
+
+function SDL_GetTicks() {
+	return (Date.now() - SDL.startTime)|0;
+}
+
+function SDL_Delay(delay) {
+	// horrible busy-wait, but in a worker it at least does not block rendering
+	var now = Date.now();
+	while (Date.now() - now < delay) {}
+}
