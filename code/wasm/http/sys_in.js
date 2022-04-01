@@ -303,10 +303,9 @@ function InputPushTextEvent (evt) {
       if(Key_GetCatcher() & KEYCATCH_CONSOLE) {
         SDL_ShowCursor()
         HEAP32[gw_active >> 2] = false
-      } /* else {
-        if(!INPUT.firstClick)
-          Q3e.canvas.requestPointerLock();      
-      } */
+      } else if(!INPUT.firstClick) {
+        //Q3e.canvas.requestPointerLock();      
+      }
     }, 100)
   } else {
     Sys_QueEvent( Sys_Milliseconds(), SE_CHAR, evt.charCode, 0, 0, null )
@@ -352,7 +351,8 @@ function InputPushMouseEvent (evt) {
     S_Base_SoundInfo();
   }
 
-  if ( Key_GetCatcher() & KEYCATCH_CONSOLE ) {
+  // always unlock on menus because it's position absolute now
+  if ( !(Key_GetCatcher() & KEYCATCH_CGAME) ) {
     if(document.pointerLockElement) {
       SDL_ShowCursor()
       // ruins sound //HEAP32[gw_active >> 2] = false

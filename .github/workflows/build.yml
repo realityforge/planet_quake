@@ -1,4 +1,3 @@
-name: build
 
 env:
   BASEPATH: /home/runner/work/planet_quake/planet_quake
@@ -11,105 +10,30 @@ env:
     /libs/SDL2-2.0.14/
     /libs/libvorbis-1.3.7/
     /libs/libogg-1.3.4/
-  CLIENTMAKEFILE: make/build_client.make
   STANDARDTOOLS: libcurl4-openssl-dev mesa-common-dev libxxf86dga-dev libxrandr-dev libxxf86vm-dev libasound-dev libsdl2-dev
   WASITOOLS: wget binaryen
-  WASISDK: https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-14/wasi-sdk-14.0-linux.tar.gz
+  WASISDK: wget --no-check-certificate https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-14/wasi-sdk-14.0-linux.tar.gz
   WASIINSTALL: |
     mkdir libs/linux
     tar -zxvf wasi-sdk-14.0-linux.tar.gz -C libs/linux/
     npm install -g uglify-js
-  DEFAULTTARGET: clean release install
 
 on:
-  pull_request:
-    paths-ignore:
-      - '**.md'
-      - '*.txt'
-      - '.gitignore'
-      - 'docs/*'
-  push:
-    branches:
-      - master
-    paths-ignore:
-      - '**.md'
-      - '*.txt'
-      - '.gitignore'
-      - 'docs/*'
-  release:
-    types: [published]
-
-  workflow_dispatch:
+  workflow_call:
+    inputs:
+      makefile:
+        required: true
+        type: string
+      targets:
+        required: false
+        type: string
+        default: clean release install
+#    secrets:
+#      envPAT:
+#        required: true
 
 jobs:
-  build-client:
-    name: ${{ matrix.name }} (${{ matrix.arch }}) ${{ matrix.proper }}
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        platform: [win, linux, darwin]
-        runtime: [client, client-mw, client-slim]
-        arch: [x86, x86_64]
-        include:
-        - arch: x86
-          use_sdl: USE_SDL=0
-        - arch: x86_64
-          use_sdl: USE_SDL=1
-        - platform: win
-          name: Windows
-          cc: gcc
-          flags: ~
-          os: windows-2019
-        - platform: linux
-          name: Ubuntu
-          cc: gcc
-          flags: ~
-          os: ubuntu-20.04
-        - platform: darwin
-          name: MacOS
-          cc: clang
-          flags: ~
-          os: macos-latest
-        - runtime: client
-          proper: Client
-          cflags: ~
-        - runtime: client-mw
-          proper: Client (Multiworld)
-          cflags: USE_MULTIVM_CLIENT=1 USE_MULTIVM_SERVER=1
-        - runtime: client-slim
-          proper: Client (Slim)
-          cflags: BUILD_SLIM_CLIENT=1
-#        - runtime: client-experimental
-#          proper: Client (Experimental)
-#          cflags: BUILD_EXPERIMENTAL=1
-    steps:
-    - uses: snow-actions/sparse-checkout@v1.1.0
-      if: false
-      with:
-        patterns: ${{ env.SPARSECHECKOUT }}
-    - name: Install tools
-      if: false
-      run: |
-        sudo apt-get -qq update
-        sudo apt-get -y install ${{ env.STANDARDTOOLS }} ${{ env.WASITOOLS }}
-        wget --no-check-certificate ${{ env.WASISDK }}
-        ${{ env.WASIINSTALL }}
-    - name: Build
-      if: false
-      run: |
-        make -f ${{ env.CLIENTMAKEFILE }} -j 16 NO_MAKE_LOCAL=1 \
-        ARCH=${{ matrix.arch }} ${{ matrix.cflags }}  ${{ matrix.use_sdl }} \
-        PLATFORM=${{ matrix.platform }} ${{ matrix.flags }} \
-        CC=${{ matrix.cc }} V=1 ${{ env.DEFAULTTARGET }} 
-    - uses: actions/upload-artifact@v2
-      if: false
-      with:
-        name: ${{ matrix.platform }}-js
-        path: bin/*
-        if-no-files-found: error
-        retention-days: 10
-
-  build-web:
+  standard-build:
     name: ${{ matrix.name }} (${{ matrix.arch }}) ${{ matrix.proper }}
     runs-on: ${{ matrix.os }}
     strategy:
@@ -119,7 +43,6 @@ jobs:
         arch: [js]
         include:
         - arch: js
-          use_sdl: USE_SDL=1
         - platform: wasm
           name: WebAssembly
           cc: libs/linux/wasi-sdk-14.0/bin/clang
@@ -141,49 +64,25 @@ jobs:
     - uses: snow-actions/sparse-checkout@v1.1.0
       with:
         patterns: ${{ env.SPARSECHECKOUT }}
+    - name: Download Artifacts
+      uses: actions/download-artifact@v2
+      with:
+        name: ${{ matrix.platform }}-js
     - name: Install tools
       run: |
         sudo apt-get -qq update
-        sudo apt-get -y install ${{ env.STANDARDTOOLS }} ${{ env.WASITOOLS }}
-        wget --no-check-certificate ${{ env.WASISDK }}
+        sudo apt-get -y install ${{ env.STANDARDTOOLS }} ${{ env.EXTRATOOLS }}
+        ${{ env.WASISDK }}
         ${{ env.WASIINSTALL }}
     - name: Build
       run: |
-        make -f ${{ env.CLIENTMAKEFILE }} -j 16 NO_MAKE_LOCAL=1 \
+        make -f ${{ inputs.makefile }} -j 16 NO_MAKE_LOCAL=1 \
         ARCH=${{ matrix.arch }} ${{ matrix.cflags }} \
         PLATFORM=${{ matrix.platform }} ${{ matrix.flags }} \
-        CC=${{ matrix.cc }} V=1 ${{ env.DEFAULTTARGET }} 
+        CC=${{ matrix.cc }} V=1 ${{ inputs.targets }} 
     - uses: actions/upload-artifact@v2
       with:
         name: ${{ matrix.platform }}-js
         path: bin/*
         if-no-files-found: error
         retention-days: 10
-
-  create-testing:
-    if: always() && github.ref == 'refs/heads/master' && github.event_name == 'push' || github.event_name == 'workflow_dispatch'
-    needs: [build-client, build-web]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Download Artifacts
-        uses: actions/download-artifact@v2
-
-      - name: Create binary archives
-        run: |
-          7z a -r ./quake3e-wasm.zip ./wasm-js/*
-          cp -f ./wasm-js/* ./
-#         7z a -r quake3e-linux-aarch64.zip  ./linux-aarch64/*
-#         7z a -r quake3e-linux-armv7.zip    ./linux-armv7/*
-
-      - name: Create latest build
-        uses: ec-/action-automatic-releases@test
-        with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          automatic_release_tag: "latest"
-          prerelease: false
-          title: Latest Build
-          files: |
-            *.zip
-            *.pk3
-            *.html
-            *.wasm

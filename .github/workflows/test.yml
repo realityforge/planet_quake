@@ -1,0 +1,76 @@
+name: test
+
+env:
+  CLIENTMAKEFILE: make/build_client.make
+
+on:
+  pull_request:
+    paths-ignore:
+      - '**.md'
+      - '*.txt'
+      - '.gitignore'
+      - 'docs/*'
+  push:
+    branches:
+      - master
+    paths-ignore:
+      - '**.md'
+      - '*.txt'
+      - '.gitignore'
+      - 'docs/*'
+  release:
+    types: [published]
+
+jobs:
+  build-client:
+    name: ${{ matrix.name }} (${{ matrix.arch }}) ${{ matrix.proper }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        platform: [wasm]
+        runtime: [q3map2]
+        arch: [js]
+        include:
+        - arch: js
+        - platform: wasm
+          name: WebAssembly
+          cc: libs/linux/wasi-sdk-14.0/bin/clang
+          flags: USE_ASYNCHRONOUS=1 USE_LAZY_LOAD=1
+          os: ubuntu-latest
+        - runtime: q3map2
+          proper: Q3Map2
+          cflags: ~
+          makefile: make/lib_q3map2.make
+    steps:
+    - uses: ./.github/workflows/build
+      with:
+        makefile: make/build_client.make
+
+  create-testing:
+    name: Test Release
+    if: always() && github.ref == 'refs/heads/master' && github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    needs: [build-client, build-web]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download Artifacts
+        uses: actions/download-artifact@v2
+
+      - name: Create binary archives
+        run: |
+          7z a -r ./quake3e-wasm.zip ./wasm-js/*
+          cp -f ./wasm-js/* ./
+#         7z a -r quake3e-linux-aarch64.zip  ./linux-aarch64/*
+#         7z a -r quake3e-linux-armv7.zip    ./linux-armv7/*
+
+      - name: Create latest build
+        uses: ec-/action-automatic-releases@test
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          automatic_release_tag: "latest"
+          prerelease: false
+          title: Latest Build
+          files: |
+            *.zip
+            *.pk3
+            *.html
+            *.wasm
