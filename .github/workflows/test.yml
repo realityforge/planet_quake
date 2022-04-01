@@ -28,7 +28,6 @@ jobs:
     uses: ./.github/workflows/build.yml
     with:
       makefile: make/build_client.make
-    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         platform: [wasm]
