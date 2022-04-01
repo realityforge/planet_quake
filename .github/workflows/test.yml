@@ -24,7 +24,7 @@ on:
 
 jobs:
   build-client:
-    name: ${{ matrix.name }} (${{ matrix.arch }}) ${{ matrix.proper }}
+    name: Build client
     uses: ./.github/workflows/build.yml
     with:
       makefile: make/build_client.make
