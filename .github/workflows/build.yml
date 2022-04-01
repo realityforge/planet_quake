@@ -24,9 +24,6 @@ on:
         required: false
         type: string
         default: ~
-#    secrets:
-#      envPAT:
-#        required: true
 
 jobs:
   standard-build:
