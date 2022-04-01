@@ -104,6 +104,7 @@ endif
 endif
 
 SOURCES          := $(MOUNT_DIR)/client
+# TODO: move this redundant server setup to make/build_server.make
 ifneq ($(BUILD_SLIM_CLIENT),1)
 SOURCES          += $(MOUNT_DIR)/server
 endif
@@ -286,21 +287,21 @@ endef
 endif
 
 
-debug:
+debug: ## build the debug client engine
 	$(echo_cmd) "MAKE $(CLIENT_TARGET)"
 	$(Q)$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) \
 		CLIENT_CFLAGS="$(CLIENT_CFLAGS) $(DEBUG_CFLAGS)" \
 		CLIENT_LDFLAGS="$(CLIENT_LDFLAGS) $(DEBUG_LDFLAGS)" \
 		$(BD)/$(CLIENT_TARGET)
 
-release:
+release: ## build the release version of the client engine
 	$(echo_cmd) "MAKE $(CLIENT_TARGET)"
 	$(Q)$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) \
 		CLIENT_CFLAGS="$(CLIENT_CFLAGS) $(RELEASE_CFLAGS)" \
 		CLIENT_LDFLAGS="$(CLIENT_LDFLAGS) $(RELEASE_LDFLAGS)" \
 		$(BR)/$(CLIENT_TARGET)
 
-clean:
+clean: ## clean all built files and start over
 	$(Q)rm -rf ./$(BD)/$(CLIENT_WORKDIR) ./$(BD)/$(CLIENT_TARGET)
 	$(Q)rm -rf ./$(BR)/$(CLIENT_WORKDIR) ./$(BR)/$(CLIENT_TARGET)
 	$(Q)for i in $(CLEANS); \

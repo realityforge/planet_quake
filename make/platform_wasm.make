@@ -25,11 +25,9 @@ NO_MAKE_LOCAL       := 1
 include make/configure.make
 
 NODE                := node
-UGLIFY              := uglifyjs
 COPY                := cp
 UNLINK              := rm
 MOVE                := mv
-OPT                 := wasm-opt
 LD                  := libs/$(COMPILE_PLATFORM)/wasi-sdk-14.0/bin/wasm-ld
 CC                  := libs/$(COMPILE_PLATFORM)/wasi-sdk-14.0/bin/clang
 CXX                 := libs/$(COMPILE_PLATFORM)/wasi-sdk-14.0/bin/clang++
@@ -106,154 +104,23 @@ RELEASE_CFLAGS      := -fvisibility=hidden \
 
 STARTUP_COMMAND     := +devmap\\', \\'lsdm3_v1
 
-
-ifeq ($(filter $(MAKECMDGOALS),debug),debug)
-INSTALL_FROM     := $(BD)
-else
-INSTALL_FROM     := $(BR)
-endif
-
 PK3_INCLUDES     := xxx-multigame-files.pk3 \
                     xxx-multigame-vms.pk3 \
                     lsdm3_v1-files.pk3 \
                     lsdm3_v1-images.pk3 \
                     xxx-multigame-sounds.pk3
 
-WASM_TARGET      := $(CNAME)$(BINEXT)
-ifeq ($(USE_MULTIVM_CLIENT),1)
-WASM_TARGET      := $(CNAME)_mw$(BINEXT)
-endif
-ifeq ($(BUILD_SLIM_CLIENT),1)
-WASM_TARGET      := $(CNAME)_slim$(BINEXT)
-endif
-ifeq ($(BUILD_EXPERIMENTAL),1)
-WASM_TARGET      := $(CNAME)_experimental$(BINEXT)
-endif
-
-WASM_INDEX       := $(WASM_TARGET:$(BINEXT)=.html)
-
 ifeq ($(filter $(MAKECMDGOALS),debug),debug)
-INSTALLS         += $(BD)/$(WASM_INDEX)
+WASM_INDEX       += $(wildcard $(BD)/$(CNAME)*.wasm)
 else
-INSTALLS         += $(BR)/$(WASM_INDEX)
+WASM_INDEX       += $(wildcard $(BR)/$(CNAME)*.wasm)
 endif
 
-WASM_HTTP        := code/wasm/http
-WASM_FILES       := $(CNAME).js sys_emgl.js sys_fs.js sys_in.js \
-                    sys_net.js sys_std.js sys_wasm.js sys_snd.js nipplejs.js
-WASM_JS          := $(addprefix $(WASM_HTTP)/,$(notdir $(WASM_FILES)))
-WASM_ASSETS      := games/multigame/assets
-WASM_VFSOBJ      := gfx/2d/bigchars.png \
-                    index.css
-WASM_OBJS        := $(addprefix $(INSTALL_FROM).assets/,$(WASM_VFSOBJ))
 
-NODE_FSWRITE      = fs.writeFileSync('$2', $1)
-NODE_FSREAD       = fs.readFileSync('$1', 'utf-8')
-NODE_FSREAD64     = fs.readFileSync('$1', 'base64')
-NODE_FSREPLACE    = $(call NODE_FSWRITE,$(call NODE_FSREAD,$3).replace($1, $2),$3)
-WASM_BASE64       = data:image/png;base64,'+$(call NODE_FSREAD64,$1)+'
-HTML_VFSHEAD     := <!-- BEGIN VFS INCLUDES -->
-HTML_SCRIPT       = <script async type=\"text/javascript\" src=\"$1\"></script>
-HTML_LINK         = <link rel=\"stylesheet\" href=\"$1\" />
-HTML_STYLE        = <style type=\"text/css\">\n/* <!-- $1 */\n'+$(call NODE_FSREAD,$2)+'\n/* --> */\n</style>
-HTML_BODY         = </body>
-JS_PREFS          = window.preFS[\\'$2\\']=\\''+$(call NODE_FSREAD64,$1)+'\\'\n
-JS_SCRIPT         = <script async type=\"text/javascript\">\n/* <\!-- $2 */\n$1/* --> */\n</script>
-#HTML_IMG          = 
-
-define DO_OPT_CC
-	$(echo_cmd) "OPT_CC $<"
-	$(Q)$(OPT) -Os --no-validation -o $@ $<
-	-$(Q)$(MOVE) $< $<.bak > /dev/null
-	$(Q)$(MOVE) $@ $< > /dev/null
-	-$(Q)$(UNLINK) $<.bak > /dev/null
-endef
-
-define DO_UGLY_CC
-	$(echo_cmd) "UGLY_CC $<"
-	$(Q)$(UGLIFY) $(WASM_JS) -o $@ -c -m
-	-$(Q)$(MOVE) $(WASM_HTTP)/$(WASM_MIN) $(WASM_HTTP)/$(WASM_MIN).bak
-  $(Q)$(MOVE) $@ $(WASM_HTTP)/$(WASM_MIN)
-	-$(Q)$(UNLINK) $(WASM_HTTP)/$(WASM_MIN).bak
-endef
-
-define DO_BASE64_CC
-	$(echo_cmd) "BASE64_CC $<"
-	$(Q)$(NODE) -e "$(call NODE_FSREPLACE,'$(HTML_VFSHEAD)','$(HTML_VFSHEAD)\n<img title=\"$(subst $(WASM_ASSETS)/,,$<)\" src=\"$(call WASM_BASE64,$<)\" />',$(INSTALL_FROM)/index.html)"
-endef
-
-define DO_CSS_EMBED
-	$(echo_cmd) "CSS_EMBED $<"
-	$(Q)$(NODE) -e "$(call NODE_FSREPLACE,'$(call HTML_LINK,$(subst $(WASM_HTTP)/,,$<))','$(call HTML_STYLE,$(subst $(WASM_ASSETS)/,,$<),$<)',$(INSTALL_FROM)/index.html)"
-endef
-
-define DO_JS_LIST
-	$(echo_cmd) "JS_LIST $<"
-	$(Q)$(NODE) -e "$(call NODE_FSREPLACE,'$(call HTML_SCRIPT,quake3e.js)','$(WASM_FILES)'.split(' ').map(jsFile => '$(call JS_SCRIPT,'+$(call NODE_FSREAD,$(WASM_HTTP)/'+jsFile+')+','+jsFile+')').join(''),$(INSTALL_FROM)/index.html)"
-endef
-
-define DO_JSBUILD_EMBED
-	$(echo_cmd) "JS_EMBED $<"
-	$(Q)$(NODE) -e "$(call NODE_FSREPLACE,'<script async type=\"text/javascript\" src=\"${subst $(INSTALL_FROM)/,,$<}\"></script>','<script async type=\"text/javascript\">\n/* <\!-- ${subst $(INSTALL_FROM)/,,$<} */\n'+fs.readFileSync('$<', 'utf-8')+'\n/* --> */\n</script>',$(INSTALL_FROM)/$(WASM_HTML))"
-endef
-
-define DO_JS_EMBED
-	$(echo_cmd) "JS_EMBED $<"
-	$(Q)$(NODE) -e "fs.writeFileSync('$(INSTALL_FROM)/$(WASM_HTML)', fs.readFileSync('$(INSTALL_FROM)/$(WASM_HTML)').toString('utf-8').replace('<script async type=\"text/javascript\" src=\"${subst $(WASM_HTTP)/,,$<}\"></script>', '<script async type=\"text/javascript\">\n/* <\!-- ${subst $(WASM_HTTP)/,,$<} */\n'+fs.readFileSync('$<', 'utf-8')+'\n/* --> */\n</script>'))"
-endef
-
-define DO_WASM_EMBED
-	$(echo_cmd) "WASM_EMBED $<"
-	$(Q)$(NODE) -e "$(call NODE_FSREPLACE,'$(HTML_BODY)','$(HTML_BODY)\n$(call JS_SCRIPT,$(call JS_PREFS,$(<:.opt=.wasm),$(CNAME).wasm),$(subst $(INSTALL_FROM)/,,$<))',$(INSTALL_FROM)/index.html)"
-endef
-
-define DO_ASSET_EMBED
-	$(echo_cmd) "ASSET_EMBED $<"
-	$(Q)$(NODE) -e "$(call NODE_FSREPLACE,'$(HTML_BODY)','$(HTML_BODY)\n<script async type=\"text/javascript\">\n/* <\!-- ${subst $(INSTALL_FROM)/,,$<} */\nwindow.preFS[\\'multigame/${notdir $<}\\']=\\''+fs.readFileSync('$<', 'base64')+'\\'\n/* --> */\n</script>',$(INSTALL_FROM)/index.html)"
-endef
-
-define DO_INDEX_CC
-	$(echo_cmd) "INDEX_CC $@"
-	$(COPY) -f $(WASM_HTTP)/index.html $(dir $(subst $(INSTALL_FROM).assets/,$(INSTALL_FROM)/,$@))index.html
-	$(Q)$(NODE) -e "$(call NODE_FSREPLACE,'$(HTML_BODY)','$(HTML_BODY)\n<script async type=\"text/javascript\">\nwindow.preStart=[\\'$(STARTUP_COMMAND)\\'];\n/* --> */\n</script>',$(INSTALL_FROM)/index.html)"
-endef
-
-
-$(INSTALL_FROM)/%.opt: $(INSTALL_FROM)/%.wasm
-	$(DO_OPT_CC)
-
-$(INSTALL_FROM)/%.min.js: $(WASM_JS)
-	$(DO_UGLY_CC)
-
-$(INSTALL_FROM).assets/%.png: $(WASM_ASSETS)/%.png
-	$(DO_BASE64_CC)
-
-$(INSTALL_FROM).assets/%.css: $(WASM_HTTP)/%.css
-	$(DO_CSS_EMBED)
-
-$(INSTALL_FROM).assets/%.js: $(INSTALL_FROM)/%.min.js
-	$(DO_JSBUILD_EMBED)
-
-#$(INSTALL_FROM).assets/%.js: $(WASM_HTTP)/%.js
-#	$(DO_JS_EMBED)
-
-$(INSTALL_FROM).assets/%.wasm: $(INSTALL_FROM)/%.opt
-	$(DO_WASM_EMBED)
-
-$(INSTALL_FROM).assets/%.pk3: $(INSTALL_FROM)/%.pk3
-	$(DO_ASSET_EMBED)
-
-$(INSTALL_FROM).assets/%.html: $(WASM_HTTP)/index.html
-	$(DO_INDEX_CC)
-
-index: $(INSTALL_FROM)/$(WASM_INDEX)
-	@:
-
-$(INSTALL_FROM)/$(WASM_INDEX): $(INSTALL_FROM)/$(WASM_TARGET) $(INSTALL_FROM).assets/$(WASM_INDEX) $(INSTALL_FROM).assets/$(WASM_TARGET) $(WASM_OBJS)
-	$(DO_JS_LIST)
-	-$(Q)$(MOVE) $@ $@.bak > /dev/null
-	$(Q)$(MOVE) $(INSTALL_FROM)/index.html $@ > /dev/null
-	-$(Q)$(UNLINK) $@.bak > /dev/null
+index: $(WASM_INDEX) $(WASM_INDEX:.wasm=.html) ## create an index.html page out of the current build target
+	@$(echo_cmd) "MAKING INDEX $(WASM_INDEX:.wasm=.html)"
+	$(Q)$(MAKE) -f make/build_package.make \
+		DESTDIR="$(dir $(WASM_INDEX))" index
 
 
 # TODO build quake 3 as a library that can be use for rendering embedded in other apps?
@@ -276,6 +143,8 @@ define DO_SDL_CC
 	$(Q)$(CC) -o $@ -Wno-macro-redefined $(SDL_FLAGS) $(CLIENT_CFLAGS) -c $<
 endef
 
+
+# TODO: move this to make/lib_sdl.make
 ifdef B
 $(B)/client/%.o: $(SDL_SOURCE)/src/audio/%.c
 	$(DO_SDL_CC)
