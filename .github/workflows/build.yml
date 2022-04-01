@@ -16,7 +16,6 @@ env:
   WASITOOLS: wget binaryen
   WASISDK: https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-14/wasi-sdk-14.0-linux.tar.gz
   WASIINSTALL: |
-    wget --no-check-certificate ${{env.WASISDK}}
     mkdir libs/linux
     tar -zxvf wasi-sdk-14.0-linux.tar.gz -C libs/linux/
     npm install -g uglify-js
@@ -100,6 +99,7 @@ jobs:
       run: |
         sudo apt-get -qq update
         sudo apt-get -y install ${{env.STANDARDTOOLS}} ${{env.WASITOOLS}}
+        wget --no-check-certificate ${{env.WASISDK}}
         ${{env.WASIINSTALL}}
     - name: Build
       run: |
