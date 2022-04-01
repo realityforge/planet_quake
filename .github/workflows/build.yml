@@ -49,30 +49,31 @@ jobs:
       matrix:
         platform: [wasm, win, linux, darwin]
         runtime: [client, client-mw, client-slim]
-        arch: [x86, x86_64, js]
         include:
+        - platform: wasm
+          arch: js
+        - platform: win
+          arch: x86
+        - platform: win
+          arch: x86_64
         - platform: wasm
           name: WebAssembly
           cc: libs/linux/wasi-sdk-14.0/bin/clang
-          arch: [js]
           flags: USE_ASYNCHRONOUS=1 USE_LAZY_LOAD=1
           os: ubuntu-latest
         - platform: win
           name: Windows
           cc: gcc
-          arch: [x86, x86_64]
           flags: ~
           os: windows-2019
         - platform: linux
           name: Ubuntu
           cc: gcc
-          arch: [x86, x86_64]
           flags: ~
           os: ubuntu-20.04
         - platform: darwin
           name: MacOS
           cc: clang
-          arch: [x86_64] 
           flags: ~
           os: macos-latest
         - runtime: client
