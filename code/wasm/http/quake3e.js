@@ -408,10 +408,13 @@ function CreateAndCall(code, params, vargs) {
 	if(typeof SYS.evaledFuncs[code] != 'undefined') {
 		func = SYS.evaledFuncs[code]
 	} else {
+		let paramStr = addressToString(params)
+		func.paramCount = paramStr.split(',').filter(function (name) {
+			return name.length > 0
+		}).length
 		func = SYS.evaledFuncs[code] = eval('(function func'
 			+ ++SYS.evaledCount + '($0, $1, $2, $3)'
 			+ addressToString(code, 4096) + ')')
-		func.paramCount = addressToString(params).split(',').length
 	}
 	let args = HEAPU32.slice(vargs >> 2, (vargs >> 2) + func.paramCount)
 	return func.apply(func, args)
