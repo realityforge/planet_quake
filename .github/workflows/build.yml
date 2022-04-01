@@ -11,7 +11,11 @@ env:
     /libs/SDL2-2.0.14/
     /libs/libvorbis-1.3.7/
     /libs/libogg-1.3.4/
-  CLIENTRUNTIMES: [client, client-slim, client-mw, client-experimental]
+  CLIENTRUNTIMES: |
+    client
+    client-slim
+    client-mw
+    client-experimental
   CLIENTINCLUDES:
   - runtime: client
     proper: Client
