@@ -1,7 +1,8 @@
 name: build
 
 env:
-  checkout: |
+  BASEPATH: /home/runner/work/planet_quake/planet_quake
+  SPARSECHECKOUT: |
     /code/
     /make/
     /games/multigame/
@@ -10,6 +11,31 @@ env:
     /libs/SDL2-2.0.14/
     /libs/libvorbis-1.3.7/
     /libs/libogg-1.3.4/
+  CLIENTRUNTIMES: [client, client-slim, client-mw, client-experimental]
+  CLIENTINCLUDES:
+  - runtime: client
+    proper: Client
+    cflags: ~
+  - runtime: client-mw
+    proper: Client (Multiworld)
+    cflags: USE_MULTIVM_CLIENT=1 USE_MULTIVM_SERVER=1
+  - runtime: client-slim
+    proper: Client (Slim)
+    cflags: BUILD_SLIM_CLIENT=1
+  - runtime: client-experimental
+    proper: Client (Experimental)
+    cflags: BUILD_EXPERIMENTAL=1
+  CLIENTMAKEFILE: make/build_client.make
+  STANDARDTOOLS: libcurl4-openssl-dev mesa-common-dev libxxf86dga-dev libxrandr-dev libxxf86vm-dev libasound-dev libsdl2-dev
+  WASITOOLS: wget binaryen
+  WASISDK: https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-14/wasi-sdk-14.0-linux.tar.gz
+  WASIINSTALL: |
+    wget --no-check-certificate ${{env.WASISDK}}
+    mkdir libs/linux
+    tar -zxvf wasi-sdk-14.0-linux.tar.gz -C libs/linux/
+    npm install -g uglify-js
+
+
 
 on:
   pull_request:
@@ -32,73 +58,56 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-everything:
-    name: ${{ matrix.config }} ${{ matrix.name }} (${{ matrix.arch }}) ${{ matrix.proper }}
+  client-win:
+    name: Windows (win) ${{ matrix.proper }}
+    if: false
+    runs-on: windows-2019
+
+  client-lin:
+    name: Ubuntu (linux) ${{ matrix.proper }}
+    if: false
+    runs-on: ubuntu-latest
+
+  client-mac:
+    name: MacOS (darwin) ${{ matrix.proper }}
+    if: false
+    runs-on: macos-latest
+
+  client-web:
+    name: WebAssembly (wasm) ${{ matrix.proper }}
     runs-on: ubuntu-latest
     strategy:
-      fail-fast: false
       matrix:
-        runtime: [client, client-slim, client-mw]
-        #, client-experimental, server, server-mw, server-experimental, q3map2, renderer, renderer2, renderer-mw, renderer2-mw, renderervk, multigame, multigame-static]
-        platform: [wasm]
-        arch: [js]
-        config: [Release]
-        include:
-          - config: Release
-            rule: release
-
-          - arch: js
-            platform: wasm
-            name: WebAssembly
-            options: USE_ASYNCHRONOUS=1 USE_LAZY_LOAD=1
-            cc: /home/runner/work/planet_quake/planet_quake/libs/linux/wasi-sdk-14.0/bin/clang
-
-          - runtime: client
-            proper: Client
-            makefile: make/build_client.make
-            cflags: ~
-
-          - runtime: client-mw
-            proper: Client (Multiworld)
-            makefile: make/build_client.make
-            cflags: USE_MULTIVM_CLIENT=1 USE_MULTIVM_SERVER=1
-
-          - runtime: client-slim
-            proper: Client (Slim)
-            makefile: make/build_client.make
-            cflags: BUILD_SLIM_CLIENT=1
-
-#    - uses: actions/checkout@v2
+        cc: ${{env.BASEPATH}}/libs/linux/wasi-sdk-14.0/bin/clang
+        makefile: ${{env.CLIENTMAKEFILE}}
+        runtime: ${{env.CLIENTRUNTIMES}}
+        include: ${{env.CLIENTINCLUDES}}
     steps:
     - uses: snow-actions/sparse-checkout@v1.1.0
       with:
         fetch-depth: 1
-        patterns: ${{env.checkout}}
-
+        patterns: ${{env.SPARSECHECKOUT}}
     - name: Install tools
       run: |
         sudo apt-get -qq update
-        sudo apt-get -y install libcurl4-openssl-dev mesa-common-dev libxxf86dga-dev libxrandr-dev libxxf86vm-dev libasound-dev libsdl2-dev wget binaryen git
-        wget --no-check-certificate https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-14/wasi-sdk-14.0-linux.tar.gz
-        mkdir libs/linux
-        tar -zxvf wasi-sdk-14.0-linux.tar.gz -C libs/linux/
-        npm install -g uglify-js
-
+        sudo apt-get -y install ${{env.STANDARDTOOLS}} ${{env.WASITOOLS}}
+        ${{env.WASIINSTALL}}
     - name: Build
       run: |
-        make -f ${{ matrix.makefile }} -j 16 NO_MAKE_LOCAL=1 ARCH=${{ matrix.arch }} ${{ matrix.options }} ${{ matrix.cflags }} PLATFORM=${{ matrix.platform }} CC=${{ matrix.cc }} V=1 clean ${{ matrix.rule }} install 
-
+        make -f ${{ matrix.makefile }} -j 16 NO_MAKE_LOCAL=1 ARCH=js \
+        USE_ASYNCHRONOUS=1 USE_LAZY_LOAD=1 ${{ matrix.cflags }} \
+        PLATFORM=wasm CC=${{ matrix.cc }} V=1 clean release install 
     - uses: actions/upload-artifact@v2
       if: matrix.config == 'Release'
       with:
-        name: ${{ matrix.platform }}-${{ matrix.arch }}
+        name: wasm-js
         path: bin
         if-no-files-found: error
         retention-days: 10
 
   create-testing:
     if: always() && github.ref == 'refs/heads/master' && github.event_name == 'push' || github.event_name == 'workflow_dispatch'
-    needs: [build-everything]
+    needs: [client-web]
     runs-on: ubuntu-latest
     steps:
       - name: Download Artifacts
