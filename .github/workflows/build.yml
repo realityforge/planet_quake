@@ -1,3 +1,4 @@
+name: build
 
 env:
   BASEPATH: /home/runner/work/planet_quake/planet_quake
