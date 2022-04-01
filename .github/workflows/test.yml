@@ -36,6 +36,9 @@ jobs:
   build-client:
     name: ${{ matrix.name }} (${{ matrix.arch }}) ${{ matrix.proper }}
     uses: briancullinan/planet_quake/.github/workflows/build.yml@master
+      with:
+        makefile: make/build_client.make
+        sparse: ${{ env.SPARSECHECKOUT }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -53,11 +56,6 @@ jobs:
           proper: Q3Map2
           cflags: ~
           makefile: make/lib_q3map2.make
-    steps:
-    - name: Build client
-      with:
-        makefile: make/build_client.make
-        sparse: ${{ env.SPARSECHECKOUT }}
 
   create-testing:
     name: Test Release
