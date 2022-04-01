@@ -54,7 +54,7 @@ jobs:
         - platform: wasm
           name: WebAssembly
           cc: libs/linux/wasi-sdk-14.0/bin/clang
-          arch: js
+          arch: [js]
           flags: USE_ASYNCHRONOUS=1 USE_LAZY_LOAD=1
           os: ubuntu-latest
         - platform: win
