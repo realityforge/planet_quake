@@ -54,7 +54,7 @@ jobs:
           makefile: make/lib_q3map2.make
     steps:
     - name: Build client
-      uses: ./.github/workflows/build
+      uses: ./.github/workflows/build.yml@master
       with:
         makefile: make/build_client.make
         sparse: ${{ env.SPARSECHECKOUT }}
