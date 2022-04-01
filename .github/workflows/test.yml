@@ -38,7 +38,7 @@ jobs:
     uses: ./.github/workflows/build.yml
     with:
       makefile: make/build_client.make
-      sparse: ${{ matrix.os }}
+      sparse: ${{ env.SPARSECHECKOUT }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:

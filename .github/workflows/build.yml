@@ -9,6 +9,16 @@ env:
     mkdir libs/linux
     tar -zxvf wasi-sdk-14.0-linux.tar.gz -C libs/linux/
     npm install -g uglify-js
+  SPARSECHECKOUT: |
+    /code/
+    /make/
+    /games/multigame/
+    /libs/musl-1.2.2/
+    /libs/tools/quake3/
+    /libs/SDL2-2.0.14/
+    /libs/libvorbis-1.3.7/
+    /libs/libogg-1.3.4/
+    /.github/
 
 on:
   workflow_call:
@@ -56,7 +66,9 @@ jobs:
     steps:
     - uses: snow-actions/sparse-checkout@v1.1.0
       with:
-        patterns: ${{ inputs.sparse }}
+        patterns: |
+          ${{ env.SPARSECHECKOUT }}
+          ${{ inputs.sparse }}
     - name: Download Artifacts
       uses: actions/download-artifact@v2
       with:
