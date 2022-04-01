@@ -11,6 +11,7 @@ env:
     /libs/SDL2-2.0.14/
     /libs/libvorbis-1.3.7/
     /libs/libogg-1.3.4/
+    /.github/
 
 on:
   pull_request:
@@ -52,7 +53,8 @@ jobs:
           cflags: ~
           makefile: make/lib_q3map2.make
     steps:
-    - uses: ./.github/workflows/build
+    - name: Build client
+      uses: ./.github/workflows/build
       with:
         makefile: make/build_client.make
         sparse: ${{ env.SPARSECHECKOUT }}
