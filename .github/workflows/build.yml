@@ -1,5 +1,16 @@
 name: build
 
+env:
+  checkout: |
+    /code/
+    /make/
+    /games/multigame/
+    /libs/musl-1.2.2/
+    /libs/tools/quake3/
+    /libs/SDL2-2.0.14/
+    /libs/libvorbis-1.3.7/
+    /libs/libogg-1.3.4/
+
 on:
   pull_request:
     paths-ignore:
@@ -62,15 +73,7 @@ jobs:
     - uses: snow-actions/sparse-checkout@v1.1.0
       with:
         fetch-depth: 1
-        patterns: |
-          /code/
-          /make/
-          /games/multigame/
-          /libs/musl-1.2.2/
-          /libs/tools/quake3/
-          /libs/SDL2-2.0.14/
-          /libs/libvorbis-1.3.7/
-          /libs/libogg-1.3.4/
+        patterns: ${{checkout}}
 
     - name: Install tools
       run: |
