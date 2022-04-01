@@ -19,8 +19,7 @@ env:
     mkdir libs/linux
     tar -zxvf wasi-sdk-14.0-linux.tar.gz -C libs/linux/
     npm install -g uglify-js
-
-
+  DEFAULTTARGET: clean release install
 
 on:
   pull_request:
@@ -43,39 +42,13 @@ on:
   workflow_dispatch:
 
 jobs:
-  client-win:
-    name: Windows (win) ${{ matrix.proper }}
-    runs-on: windows-2019
-    steps:
-    - uses: snow-actions/sparse-checkout@v1.1.0
-      if: false
-      with:
-        patterns: ${{env.SPARSECHECKOUT}}
-
-  client-lin:
-    name: Ubuntu (linux) ${{ matrix.proper }}
-    runs-on: ubuntu-latest
-    steps:
-    - uses: snow-actions/sparse-checkout@v1.1.0
-      if: false
-      with:
-        patterns: ${{env.SPARSECHECKOUT}}
-
-  client-mac:
-    name: MacOS (darwin) ${{ matrix.proper }}
-    runs-on: macos-latest
-    steps:
-    - uses: snow-actions/sparse-checkout@v1.1.0
-      if: false
-      with:
-        patterns: ${{env.SPARSECHECKOUT}}
-
-  client-web:
+  build-client:
     name: WebAssembly (wasm) ${{ matrix.proper }}
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        runtime: [client, client-slim, client-mw, client-experimental]
+        runtime: [client, client-slim, client-mw]
+#        runtime: [client, client-slim, client-mw, client-experimental]
         include:
         - runtime: client
           proper: Client
@@ -103,17 +76,17 @@ jobs:
       run: |
         make -f ${{env.CLIENTMAKEFILE}} -j 16 NO_MAKE_LOCAL=1 ARCH=js \
         USE_ASYNCHRONOUS=1 USE_LAZY_LOAD=1 ${{ matrix.cflags }} \
-        PLATFORM=wasm CC=libs/linux/wasi-sdk-14.0/bin/clang V=1 clean release install 
+        PLATFORM=wasm CC=libs/linux/wasi-sdk-14.0/bin/clang V=1 ${{env.DEFAULTTARGET}} 
     - uses: actions/upload-artifact@v2
       with:
         name: wasm-js
-        path: bin
+        path: bin/*
         if-no-files-found: error
         retention-days: 10
 
   create-testing:
     if: always() && github.ref == 'refs/heads/master' && github.event_name == 'push' || github.event_name == 'workflow_dispatch'
-    needs: [client-web]
+    needs: [build-client]
     runs-on: ubuntu-latest
     steps:
       - name: Download Artifacts
