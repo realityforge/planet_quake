@@ -47,18 +47,14 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        platform: [wasm, win, linux, darwin]
+        platform: [win, linux, darwin]
         runtime: [client, client-mw, client-slim]
+        arch: [x86, x86_64]
         include:
-        - platform: wasm
-          arch: js
-        - platform: win
-          arch: [x86, x86_64]
-        - platform: wasm
-          name: WebAssembly
-          cc: libs/linux/wasi-sdk-14.0/bin/clang
-          flags: USE_ASYNCHRONOUS=1 USE_LAZY_LOAD=1
-          os: ubuntu-latest
+        - arch: x86
+          use_sdl: USE_SDL=0
+        - arch: x86_64
+          use_sdl: USE_SDL=1
         - platform: win
           name: Windows
           cc: gcc
@@ -74,6 +70,61 @@ jobs:
           cc: clang
           flags: ~
           os: macos-latest
+        - runtime: client
+          proper: Client
+          cflags: ~
+        - runtime: client-mw
+          proper: Client (Multiworld)
+          cflags: USE_MULTIVM_CLIENT=1 USE_MULTIVM_SERVER=1
+        - runtime: client-slim
+          proper: Client (Slim)
+          cflags: BUILD_SLIM_CLIENT=1
+#        - runtime: client-experimental
+#          proper: Client (Experimental)
+#          cflags: BUILD_EXPERIMENTAL=1
+    steps:
+    - uses: snow-actions/sparse-checkout@v1.1.0
+      if: false
+      with:
+        patterns: ${{ env.SPARSECHECKOUT }}
+    - name: Install tools
+      if: false
+      run: |
+        sudo apt-get -qq update
+        sudo apt-get -y install ${{ env.STANDARDTOOLS }} ${{ env.WASITOOLS }}
+        wget --no-check-certificate ${{ env.WASISDK }}
+        ${{ env.WASIINSTALL }}
+    - name: Build
+      if: false
+      run: |
+        make -f ${{ env.CLIENTMAKEFILE }} -j 16 NO_MAKE_LOCAL=1 \
+        ARCH=${{ matrix.arch }} ${{ matrix.cflags }}  ${{ matrix.use_sdl }} \
+        PLATFORM=${{ matrix.platform }} ${{ matrix.flags }} \
+        CC=${{ matrix.cc }} V=1 ${{ env.DEFAULTTARGET }} 
+    - uses: actions/upload-artifact@v2
+      if: false
+      with:
+        name: ${{ matrix.platform }}-js
+        path: bin/*
+        if-no-files-found: error
+        retention-days: 10
+
+  build-web:
+    name: ${{ matrix.name }} (${{ matrix.arch }}) ${{ matrix.proper }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        platform: [wasm]
+        runtime: [client, client-mw, client-slim]
+        arch: [js]
+        include:
+        - arch: js
+          use_sdl: USE_SDL=1
+        - platform: wasm
+          name: WebAssembly
+          cc: libs/linux/wasi-sdk-14.0/bin/clang
+          flags: USE_ASYNCHRONOUS=1 USE_LAZY_LOAD=1
+          os: ubuntu-latest
         - runtime: client
           proper: Client
           cflags: ~
@@ -111,7 +162,7 @@ jobs:
 
   create-testing:
     if: always() && github.ref == 'refs/heads/master' && github.event_name == 'push' || github.event_name == 'workflow_dispatch'
-    needs: [build-client]
+    needs: [build-client, build-web]
     runs-on: ubuntu-latest
     steps:
       - name: Download Artifacts
