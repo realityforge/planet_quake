@@ -11,24 +11,6 @@ env:
     /libs/SDL2-2.0.14/
     /libs/libvorbis-1.3.7/
     /libs/libogg-1.3.4/
-  CLIENTRUNTIMES: |
-    client
-    client-slim
-    client-mw
-    client-experimental
-  CLIENTINCLUDES:
-  - runtime: client
-    proper: Client
-    cflags: ~
-  - runtime: client-mw
-    proper: Client (Multiworld)
-    cflags: USE_MULTIVM_CLIENT=1 USE_MULTIVM_SERVER=1
-  - runtime: client-slim
-    proper: Client (Slim)
-    cflags: BUILD_SLIM_CLIENT=1
-  - runtime: client-experimental
-    proper: Client (Experimental)
-    cflags: BUILD_EXPERIMENTAL=1
   CLIENTMAKEFILE: make/build_client.make
   STANDARDTOOLS: libcurl4-openssl-dev mesa-common-dev libxxf86dga-dev libxrandr-dev libxxf86vm-dev libasound-dev libsdl2-dev
   WASITOOLS: wget binaryen
@@ -96,8 +78,20 @@ jobs:
       matrix:
         cc: ${{env.BASEPATH}}/libs/linux/wasi-sdk-14.0/bin/clang
         makefile: ${{env.CLIENTMAKEFILE}}
-        runtime: ${{env.CLIENTRUNTIMES}}
-        include: ${{env.CLIENTINCLUDES}}
+        runtime: [client, client-slim, client-mw, client-experimental]
+        include:
+        - runtime: client
+          proper: Client
+          cflags: ~
+        - runtime: client-mw
+          proper: Client (Multiworld)
+          cflags: USE_MULTIVM_CLIENT=1 USE_MULTIVM_SERVER=1
+        - runtime: client-slim
+          proper: Client (Slim)
+          cflags: BUILD_SLIM_CLIENT=1
+        - runtime: client-experimental
+          proper: Client (Experimental)
+          cflags: BUILD_EXPERIMENTAL=1
     steps:
     - uses: snow-actions/sparse-checkout@v1.1.0
       with:
