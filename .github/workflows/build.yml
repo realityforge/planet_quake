@@ -53,9 +53,7 @@ jobs:
         - platform: wasm
           arch: js
         - platform: win
-          arch: x86
-        - platform: win
-          arch: x86_64
+          arch: [x86, x86_64]
         - platform: wasm
           name: WebAssembly
           cc: libs/linux/wasi-sdk-14.0/bin/clang
