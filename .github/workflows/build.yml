@@ -49,6 +49,7 @@ jobs:
       matrix:
         platform: [wasm, win, linux, darwin]
         runtime: [client, client-mw, client-slim]
+        arch: [x86, x86_64]
         include:
         - platform: wasm
           name: WebAssembly
