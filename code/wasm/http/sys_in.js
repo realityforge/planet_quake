@@ -93,15 +93,15 @@ const	SE_FINGER_DOWN = 2
 const	SE_FINGER_UP = 3
 const	SE_CHAR = 4	// evValue is an ascii char
 const	SE_MOUSE = 5	// evValue and evValue2 are relative signed x / y moves
-const	SE_MOUSE_ABS = 6
-const	SE_JOYSTICK_AXIS = 7	// evValue is an axis number and evValue2 is the current state (-127 to 127)
-const	SE_CONSOLE = 8	// evPtr is a char*
-const	SE_MAX = 9
+const	SE_JOYSTICK_AXIS = 6	// evValue is an axis number and evValue2 is the current state (-127 to 127)
+const	SE_CONSOLE = 7	// evPtr is a char*
+const	SE_MOUSE_ABS = 8
 //#ifdef USE_DRAGDROP
-const	SE_DROPBEGIN = 10
-const	SE_DROPCOMPLETE = 11
-const	SE_DROPFILE = 12
-const	SE_DROPTEXT = 13
+const	SE_DROPBEGIN = 9
+const	SE_DROPCOMPLETE = 10
+const	SE_DROPFILE = 11
+const	SE_DROPTEXT = 12
+const	SE_MAX = 13
 
 //#endif
 //} sysEventType_t;
@@ -351,6 +351,19 @@ function InputPushMouseEvent (evt) {
     S_Base_SoundInfo();
   }
 
+  if (evt.type == 'mousemove') {
+    if(Key_GetCatcher() & KEYCATCH_CGAME) {
+      Sys_QueEvent( Sys_Milliseconds(), SE_MOUSE, 
+        getMovementX(evt), getMovementY(evt), 0, null );
+    } else {
+      Sys_QueEvent( Sys_Milliseconds(), SE_MOUSE_ABS, 
+        evt.clientX, evt.clientY, 0, null );
+    }
+  } else {
+    Sys_QueEvent( Sys_Milliseconds(), SE_KEY, 
+      INPUT.keystrings['MOUSE1'] + evt.button, down, 0, null );
+  }
+
   // always unlock on menus because it's position absolute now
   if ( !(Key_GetCatcher() & KEYCATCH_CGAME) ) {
     if(document.pointerLockElement) {
@@ -361,18 +374,13 @@ function InputPushMouseEvent (evt) {
     return;
   }
 
-  if (evt.type == 'mousemove') {
-    Sys_QueEvent( Sys_Milliseconds(), SE_MOUSE, 
-    getMovementX(evt), getMovementY(evt), 0, null );
-    return
-  }
-
   // TODO: fix this maybe?
   //if(!mouseActive || in_joystick->integer) {
   //  return;
   //}
-  if(down && (!HEAP32[gw_active >> 2]
-    || document.pointerLockElement != Q3e.canvas)) {
+  // Basically, whenever the requestPointerLock() is finally triggered when cgame starts,
+  //   the unfocusedFPS is cancelled and changed to real FPS, 200+!
+  if(down && document.pointerLockElement != Q3e.canvas) {
     // TODO: start sound, capture mouse
     HEAP32[gw_active >> 2] = true
     Q3e.canvas.requestPointerLock();
@@ -382,8 +390,6 @@ function InputPushMouseEvent (evt) {
     }
     Q3e.frameInterval = setInterval(Sys_Frame, 1000.0 / INPUT.fps);
   }
-  Sys_QueEvent( Sys_Milliseconds(), SE_KEY, 
-    INPUT.keystrings['MOUSE1'] + evt.button, down, 0, null );
 }
 
 function Com_MaxFPSChanged() {

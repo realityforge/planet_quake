@@ -124,14 +124,14 @@ let LibrarySys = {
 		SE_FINGER_UP: 3,
 		SE_CHAR: 4,	// evValue is an ascii char
 		SE_MOUSE: 5,	// evValue and evValue2 are relative signed x / y moves
-		SE_MOUSE_ABS: 6,
-		SE_JOYSTICK_AXIS: 7,	// evValue is an axis number and evValue2 is the current state (-127 to 127)
-		SE_CONSOLE: 8,	// evPtr is a char*
-		SE_MAX: 9,
-		SE_DROPBEGIN: 10,
-		SE_DROPCOMPLETE: 11,
-		SE_DROPFILE: 12,
-		SE_DROPTEXT: 13,
+		SE_JOYSTICK_AXIS: 6,	// evValue is an axis number and evValue2 is the current state (-127 to 127)
+		SE_CONSOLE: 7,	// evPtr is a char*
+		SE_MOUSE_ABS: 8,
+		SE_DROPBEGIN: 9,
+		SE_DROPCOMPLETE: 10,
+		SE_DROPFILE: 11,
+		SE_DROPTEXT: 12,
+		SE_MAX: 13,
 		KEYCATCH_CONSOLE: 0x0001,
 		KEYCATCH_UI     :  0x0002,
 		KEYCATCH_MESSAGE:  0x0004,
