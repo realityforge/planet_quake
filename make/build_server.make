@@ -130,14 +130,12 @@ endef
 
 debug:
 	$(echo_cmd) "MAKE $(BD)/$(TARGET_SERVER)"
-	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) WORKDIRS="$(WORKDIR)" mkdirs
 	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) -j 8 \
     SERVER_CFLAGS="$(SERVER_CFLAGS) $(DEBUG_CFLAGS)" \
     SERVER_LDFLAGS="$(SERVER_LDFLAGS) $(DEBUG_LDFLAGS)" $(BD)/$(TARGET_SERVER)
 
 release:
 	$(echo_cmd) "MAKE $(BR)/$(TARGET_SERVER)"
-	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) WORKDIRS="$(WORKDIR)" mkdirs
 	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) -j 8 \
     SERVER_CFLAGS="$(SERVER_CFLAGS) $(RELEASE_CFLAGS)" \
     SERVER_LDFLAGS="$(SERVER_LDFLAGS) $(RELEASE_LDFLAGS)" $(BR)/$(TARGET_SERVER)
@@ -176,7 +174,7 @@ $(B)/$(WORKDIR)/%.o: $(MOUNT_DIR)/server/%.c
 $(B)/$(WORKDIR)/%.o: $(MOUNT_DIR)/botlib/%.c
 	$(DO_BOT_CC)
 
-$(B)/$(TARGET_SERVER): $(SERVER_Q3OBJ)
+$(B)/$(TARGET_SERVER): $(addsuffix .mkdirs,$(addprefix $(B)/,$(WORKDIRS))) $(SERVER_Q3OBJ)
 	$(echo_cmd) "LD $@"
 	$(Q)$(CC) -o $@ $(SERVER_Q3OBJ) $(CLIENT_LDFLAGS) $(SERVER_LDFLAGS)
 endif

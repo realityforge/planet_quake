@@ -100,7 +100,6 @@ ifneq ($(BUILD_GAME_QVM),0)
 debug:
 	$(echo_cmd) "MAKE $(MOD)"
 	@$(MAKE) -f make/lib_q3lcc.make release 
-	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) WORKDIRS="$(WORKDIR) $(WORKDIRS)" mkdirs
 	@$(MAKE) -f $(MKFILE)  -j 8 \
 		$(BD)/$(MOD)/cgame$(SHLIBNAME) \
 		$(BD)/$(MOD)/qagame$(SHLIBNAME) \
@@ -114,7 +113,6 @@ debug:
 release:
 	$(echo_cmd) "MAKE $(MOD)"
 	@$(MAKE) -f make/lib_q3lcc.make release 
-	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) WORKDIRS="$(WORKDIR) $(WORKDIRS)" mkdirs
 	@$(MAKE) -f $(MKFILE)  -j 8 \
 	  $(BR)/$(MOD)/cgame$(SHLIBNAME) \
 	  $(BR)/$(MOD)/qagame$(SHLIBNAME) \
@@ -128,7 +126,6 @@ release:
 else
 debug:
 	$(echo_cmd) "MAKE $(MOD)"
-	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) WORKDIRS="$(WORKDIR) $(WORKDIRS)" mkdirs
 	@$(MAKE) -f $(MKFILE)  -j 8 \
 		$(BD)/$(MOD)/cgame$(SHLIBNAME) \
 		$(BD)/$(MOD)/qagame$(SHLIBNAME) \
@@ -138,7 +135,6 @@ debug:
 
 release:
 	$(echo_cmd) "MAKE $(MOD)"
-	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) WORKDIRS="$(WORKDIR) $(WORKDIRS)" mkdirs
 	@$(MAKE) -f $(MKFILE)  -j 8 \
 	  $(BR)/$(MOD)/cgame$(SHLIBNAME) \
 	  $(BR)/$(MOD)/qagame$(SHLIBNAME) \
@@ -335,18 +331,21 @@ endif
 ## GAME MODULE RULES
 #############################################################################
 
+
 ifdef B
 # native libs
 
-$(B)/$(MOD)/cgame$(SHLIBNAME): $(CGOBJ)
+mkdirs: $(addsuffix .mkdirs,$(addprefix $(B)/,$(WORKDIRS)))
+
+$(B)/$(MOD)/cgame$(SHLIBNAME): mkdirs $(CGOBJ)
 	$(echo_cmd) "LD $@"
 	$(Q)$(CC) $(GAME_CFLAGS) $(GAME_LDFLAGS) -o $@ $(CGOBJ)
 
-$(B)/$(MOD)/qagame$(SHLIBNAME): $(QAOBJ)
+$(B)/$(MOD)/qagame$(SHLIBNAME): mkdirs $(QAOBJ)
 	$(echo_cmd) "LD $@"
 	$(Q)$(CC) $(GAME_CFLAGS) $(GAME_LDFLAGS) -o $@ $(QAOBJ)
 
-$(B)/$(MOD)/ui$(SHLIBNAME): $(UIOBJ)
+$(B)/$(MOD)/ui$(SHLIBNAME): mkdirs $(UIOBJ)
 	$(echo_cmd) "LD $@"
 	$(Q)$(CC) $(GAME_CFLAGS) $(GAME_LDFLAGS) -o $@ $(UIOBJ)
 
@@ -354,15 +353,15 @@ $(B)/$(MOD)/ui$(SHLIBNAME): $(UIOBJ)
 
 ifneq ($(BUILD_GAME_QVM),0)
 
-$(B)/$(MOD)/vm/cgame.qvm: $(CGVMOBJ) $(Q3ASM)
+$(B)/$(MOD)/vm/cgame.qvm: mkdirs $(CGVMOBJ) $(Q3ASM)
 	$(echo_cmd) "Q3ASM $@"
 	$(Q)$(Q3ASM) -o $@ -m $(CGVMOBJ)
 
-$(B)/$(MOD)/vm/qagame.qvm: $(QAVMOBJ) $(Q3ASM)
+$(B)/$(MOD)/vm/qagame.qvm: mkdirs $(QAVMOBJ) $(Q3ASM)
 	$(echo_cmd) "Q3ASM $@"
 	$(Q)$(Q3ASM) -o $@ -m $(QAVMOBJ)
 
-$(B)/$(MOD)/vm/ui.qvm: $(UIVMOBJ) $(Q3ASM)
+$(B)/$(MOD)/vm/ui.qvm: mkdirs $(UIVMOBJ) $(Q3ASM)
 	$(echo_cmd) "Q3ASM $@"
 	$(Q)$(Q3ASM) -o $@ -m $(UIVMOBJ)
 

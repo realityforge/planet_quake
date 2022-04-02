@@ -216,6 +216,8 @@ static cvarTable_t		cvarTable[] = {
 // bk001129 - made static to avoid aliasing
 static int cvarTableSize = sizeof(cvarTable) / sizeof(cvarTable[0]);
 
+static int breadcrumbModificationCount = -1;
+static int lazyloadModificationCount = -1;
 
 /*
 =================

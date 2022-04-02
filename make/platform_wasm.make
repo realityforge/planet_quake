@@ -104,10 +104,10 @@ RELEASE_CFLAGS      := -fvisibility=hidden \
 
 STARTUP_COMMAND     := +devmap\\', \\'lsdm3_v1
 
-PK3_INCLUDES     := xxx-multigame-files.pk3 \
-                    xxx-multigame-vms.pk3 \
-                    lsdm3_v1-files.pk3 \
-                    lsdm3_v1-images.pk3 \
+PK3_INCLUDES     := xxx-multigame-files.pk3  \
+                    xxx-multigame-vms.pk3    \
+                    lsdm3_v1-files.pk3       \
+                    lsdm3_v1-images.pk3      \
                     xxx-multigame-sounds.pk3
 
 ifeq ($(filter $(MAKECMDGOALS),debug),debug)
@@ -118,9 +118,11 @@ endif
 
 
 index: $(WASM_INDEX) $(WASM_INDEX:.wasm=.html) ## create an index.html page out of the current build target
-	@$(echo_cmd) "MAKING INDEX $(WASM_INDEX:.wasm=.html)"
-	$(Q)$(MAKE) -f make/build_package.make \
-		DESTDIR="$(dir $(WASM_INDEX))" index
+	$(Q)$(MAKE) -f make/build_package.make package \
+		TARGET_REPACK="xxx-multigame-vms.do-always"
+#xxx-multigame-files.do-always 
+#	$(Q)$(MAKE) -f make/build_package.make \
+#		DESTDIR="$(dir $(WASM_INDEX))" index
 
 
 # TODO build quake 3 as a library that can be use for rendering embedded in other apps?

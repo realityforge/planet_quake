@@ -670,7 +670,9 @@ void CG_UpdateCvars( void ) {
 		const char *s;
 		lazyloadModificationCount = cg_lazyLoad.modificationCount;
 		if(Q_stristr(cg_lazyLoad.string, "gfx/2d") != NULL) {
+#ifdef USE_NEW_FONT_RENDERER
 			CG_LoadFonts();
+#endif
 			CG_Register2D();
 		}
 
@@ -1321,6 +1323,7 @@ static void CG_PowerupCache( const char *update ) {
 		cgs.media.redQuadShader = trap_R_RegisterShader("powerups/blueflag" );
 	}
 	cgs.media.armorModel = trap_R_RegisterModel( "models/powerups/armor/armor_yel.md3" );
+#ifdef MISSIONPACK
 	cgs.media.kamikazeHeadModel = trap_R_RegisterModel( "models/powerups/kamikazi.md3" );
 	cgs.media.kamikazeHeadTrail = trap_R_RegisterModel( "models/powerups/trailtest.md3" );
 	cgs.media.guardPowerupModel = trap_R_RegisterModel( "models/powerups/guard_player.md3" );
@@ -1331,6 +1334,7 @@ static void CG_PowerupCache( const char *update ) {
 	cgs.media.invulnerabilityJuicedModel = trap_R_RegisterModel( "models/powerups/shield/juicer.md3" );
 	cgs.media.medkitUsageModel = trap_R_RegisterModel( "models/powerups/regen.md3" );
 	cgs.media.invulnerabilityPowerupModel = trap_R_RegisterModel( "models/powerups/shield/shield.md3" );
+#endif
 	if(!cgs.media.teleportEffectModel) {
 		cgs.media.teleportEffectModel = trap_R_RegisterModel( "models/powerups/pop.md3" );
 	}
@@ -1386,10 +1390,11 @@ static void CG_TeamCache( void ) {
 
 
 static void CG_WeaphitsCache( void ) {
-
+#ifdef MISSIONPACK
 	if(!cgs.media.dustPuffShader) {
 		cgs.media.dustPuffShader = trap_R_RegisterShader("hasteSmokePuff" );
 	}
+#endif
 	if(!cgs.media.smokePuffShader) {
 		cgs.media.smokePuffShader = trap_R_RegisterShader( "smokePuff" );
 	}

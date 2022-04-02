@@ -118,15 +118,27 @@ include $(D_FILES)
 endif
 endif
 
-$(BUILD_DIR)/:
+ifeq ($(filter $(MAKECMDGOALS),debug),debug)
+OUTPUT_DIR := $(BD)/
+else
+OUTPUT_DIR := $(BR)/
+endif
+# make sure clean happens before build directory creation
+$(BUILD_DIR)/: $(filter $(MAKECMDGOALS),clean)
 	@if [ ! -d $(BUILD_DIR) ];then $(MKDIR) $(BUILD_DIR);fi
 
-$(BUILD_DIR)/%.mkdirs: $(filter $(MAKECMDGOALS),clean) $(dir $(filter %,$(WORKDIRS)))
+$(BR)/: $(BUILD_DIR)/
+	@if [ ! -d $(BR) ];then $(MKDIR) $(BR);fi
+
+$(BD)/: $(BUILD_DIR)/
+	@if [ ! -d $(BD) ];then $(MKDIR) $(BD);fi
+
+$(BUILD_DIR)/%.mkdirs: $(OUTPUT_DIR)
 	@if [ ! -d "./$(subst .mkdirs,,$@)/$$dir" ]; \
 		then $(MKDIR) "./$(subst .mkdirs,,$@)/$$dir";fi;
 
 $(INSTALL_DIR):
-	@if [ ! -d $(INSTALL_DIR) ];then $(MKDIR) $(INSTALL_DIR);fi
+	@if [ ! -d "$(INSTALL_DIR)" ];then $(MKDIR) $(INSTALL_DIR);fi
 
 $(INSTALL_DIR)/%: $(BUILD_DIR)/*/%
 	$(echo_cmd) "INSTALL $<"

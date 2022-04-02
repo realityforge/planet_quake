@@ -57,11 +57,10 @@ ifdef NOT_INCLUDED_Q3LCC
 
 release:
 	$(echo_cmd) "MAKE Q3LCC"
-	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) WORKDIRS="$(Q3LCC_WORKDIRS)" mkdirs
-	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) \
+	$(Q)$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) \
 	  WORKDIRS="$(Q3LCC_WORKDIRS)" \
-	  CFLAGS="$(CFLAGS) $(RELEASE_CFLAGS)" \
-	  LDFLAGS="$(LDFLAGS) $(RELEASE_LDFLAGS)" \
+	  CFLAGS="$(TOOLS_CFLAGS) $(RELEASE_CFLAGS)" \
+	  LDFLAGS="$(TOOLS_LDFLAGS) $(RELEASE_LDFLAGS)" \
 	  $(BR)/$(Q3LCC_WORKDIR)/$(TARGET_Q3ASM) \
 	  $(BR)/$(Q3LCC_WORKDIR)/$(TARGET_Q3LCC) \
 	  $(BR)/$(Q3LCC_WORKDIR)/$(TARGET_Q3RCC) \
@@ -175,24 +174,27 @@ $(BR)/$(Q3LCC_WORKDIR)/etc/%.o: $(Q3LCCDIR)/etc/%.c
 
 # targets
 
-$(Q3ASM): $(Q3ASMOBJ)
-	$(echo_cmd) "LD $@"
-	$(Q)$(CC) $(TOOLS_CFLAGS) $(TOOLS_LDFLAGS) -o $@ $^ $(TOOLS_LIBS)
+mkdirs: $(BR)/ $(addsuffix .mkdirs,$(addprefix $(BR)/,$(Q3LCC_WORKDIRS)))
+  @:
 
-$(Q3LCC): $(Q3LCCOBJ) $(Q3RCC) $(Q3CPP)
+$(Q3ASM): mkdirs $(Q3ASMOBJ)
+	$(echo_cmd) "LD $@"
+	$(Q)$(CC) $(TOOLS_CFLAGS) $(TOOLS_LDFLAGS) -o $@ $(Q3ASMOBJ) $(TOOLS_LIBS)
+
+$(Q3LCC): mkdirs $(Q3LCCOBJ) $(Q3RCC) $(Q3CPP)
 	$(echo_cmd) "LD $@"
 	$(Q)$(CC) $(TOOLS_CFLAGS) $(TOOLS_LDFLAGS) -o $@ $(Q3LCCOBJ) $(TOOLS_LIBS)
 
-$(Q3CPP): $(Q3CPPOBJ)
+$(Q3CPP): mkdirs $(Q3CPPOBJ)
 	$(echo_cmd) "LD $@"
-	$(Q)$(CC) $(TOOLS_CFLAGS) $(TOOLS_LDFLAGS) -o $@ $^ $(TOOLS_LIBS)
+	$(Q)$(CC) $(TOOLS_CFLAGS) $(TOOLS_LDFLAGS) -o $@ $(Q3CPPOBJ) $(TOOLS_LIBS)
 
-$(LBURG): $(LBURGOBJ)
+$(LBURG): mkdirs $(LBURGOBJ)
 	$(echo_cmd) "LD $@"
-	$(Q)$(CC) $(TOOLS_CFLAGS) $(TOOLS_LDFLAGS) -o $@ $^ $(TOOLS_LIBS)
+	$(Q)$(CC) $(TOOLS_CFLAGS) $(TOOLS_LDFLAGS) -o $@ $(LBURGOBJ) $(TOOLS_LIBS)
 
-$(Q3RCC): $(Q3RCCOBJ)
+$(Q3RCC): mkdirs $(Q3RCCOBJ)
 	$(echo_cmd) "LD $@"
-	$(Q)$(CC) $(TOOLS_CFLAGS) $(TOOLS_LDFLAGS) -o $@ $^ $(TOOLS_LIBS)
+	$(Q)$(CC) $(TOOLS_CFLAGS) $(TOOLS_LDFLAGS) -o $@ $(Q3RCCOBJ) $(TOOLS_LIBS)
 
 endif

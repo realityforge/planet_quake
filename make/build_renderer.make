@@ -50,14 +50,12 @@ endef
 ifneq ($(BUILD_CLIENT),1)
 debug:
 	$(echo_cmd) "MAKE $(REND_TARGET)"
-	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) mkdirs
 	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) -j 8 \
 		REND_CFLAGS="$(REND_CFLAGS) $(DEBUG_CFLAGS)" \
 		LDFLAGS="$(LDFLAGS) $(DEBUG_LDFLAGS)" $(BD)/$(REND_TARGET)
 
 release:
 	$(echo_cmd) "MAKE $(REND_TARGET)"
-	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) mkdirs
 	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) -j 8 \
 		REND_CFLAGS="$(REND_CFLAGS) $(RELEASE_CFLAGS)" \
 		LDFLAGS="$(LDFLAGS) $(RELEASE_CFLAGS)" $(BR)/$(REND_TARGET)
@@ -77,7 +75,7 @@ $(B)/$(REND_WORKDIR)/%.o: $(MOUNT_DIR)/renderercommon/%.c
 $(B)/$(REND_WORKDIR)/%.o: $(MOUNT_DIR)/$(REND_SOURCE)/%.c
 	$(DO_REND_CC)
 
-$(B)/$(REND_TARGET): $(REND_Q3OBJ)
+$(B)/$(REND_TARGET):  $(addsuffix .mkdirs,$(addprefix $(B)/,$(WORKDIRS))) $(REND_Q3OBJ)
 	$(echo_cmd) "LD $@"
 	$(Q)$(CC) -o $@ $(REND_Q3OBJ) $(SHLIBCFLAGS) $(SHLIBLDFLAGS)
 endif

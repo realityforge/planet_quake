@@ -56,13 +56,11 @@ endef
 ifneq ($(BUILD_CLIENT),1)
 debug:
 	$(echo_cmd) "MAKE $(REND_TARGET)"
-	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) WORKDIRS="$(REND_WORKDIR) $(REND_WORKDIR)/shaders" mkdirs
 	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) REND_CFLAGS="$(REND_CFLAGS) $(DEBUG_CFLAGS)" LDFLAGS="$(LDFLAGS) $(DEBUG_LDFLAGS)" $(BD)/$(REND_TARGET)
 	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) $(REND_TARGET)_clean
 
 release:
 	$(echo_cmd) "MAKE $(REND_TARGET)"
-	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) WORKDIRS="$(REND_WORKDIR) $(REND_WORKDIR)/shaders" mkdirs
 	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) REND_CFLAGS="$(REND_CFLAGS) $(RELEASE_CFLAGS)" LDFLAGS="$(LDFLAGS) $(RELEASE_CFLAGS)" $(BR)/$(REND_TARGET)
 	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) $(REND_TARGET)_clean
 
@@ -93,7 +91,7 @@ $(B)/$(REND_WORKDIR)/shaders/%.o_clean: $(MOUNT_DIR)/$(REND_SOURCE)/shaders/%.gl
 $(B)/$(REND_WORKDIR)/shaders/%.o: $(B)/$(REND_WORKDIR)/shaders/%.c
 	$(DO_REND_CC)
 
-$(B)/$(REND_TARGET): $(REND_Q3OBJ)
+$(B)/$(REND_TARGET):  $(addsuffix .mkdirs,$(addprefix $(B)/,$(WORKDIRS))) $(REND_Q3OBJ)
 	$(echo_cmd) "LD $@"
 	$(Q)$(CC) -o $@ $(REND_Q3OBJ) $(SHLIBCFLAGS) $(SHLIBLDFLAGS)
 

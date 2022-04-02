@@ -8,6 +8,8 @@
 
 # .do-always is used to force a command to run, even if the target files already exist
 #   this is for things like putting all the images and js files inside quake3e.html
+# some of these calls are idempotent, which means you can call it multiple times
+#   and get the same/expected result every time, with minimal repetative work done
 
 ifeq ($(V),1)
 echo_cmd=@:
@@ -57,7 +59,7 @@ endif
 
 ############################################## PLATFORM SPECIFIC COMMANDS 
 
-
+# TODO: make sure these are correct on every platform
 # TODO: make script for repack files, just like repack.js but no graphing
 # TODO: use _hi _lo formats and the renderer and same directory to load converted web content
 # TODO: figure out how this fits in with AMP file-naming style
@@ -89,16 +91,15 @@ MKDIR            ?= mkdir -p
 
 
 RPK_TARGET       := $(PK3_PREFIX).pk3
-RPK_GOAL         := $(DESTDIR)/$(RPK_TARGET)
 RPK_DOALWAYS     := $(subst .pk3,.do-always,$(RPK_TARGET))
 #RPK_UNPACK      := $(subst \pathsep,,$(subst \space\pathsep, ,$(subst $(_),\space,$(subst $(SRCDIR)/,\pathsep,$(wildcard $(SRCDIR)/*.pk3)))))
 RPK_PK3DIRS      := $(subst .pk3dir,.pk3,$(subst \pathsep,,$(subst \space\pathsep, ,$(subst $(_),\space,$(subst $(SRCDIR)/,\pathsep,$(wildcard $(SRCDIR)/*.pk3dir))))))
 RPK_TARGETS      := $(RPK_TARGET) $(RPK_UNPACK) $(RPK_PK3DIRS)
 RPK_WORKDIRS     := $(addsuffix dir,$(RPK_TARGETS))
-RPK_REPLACE       = $(subst \space, ,$(subst $(RPK_GOAL)dir/,$(SRCDIR)/,$1))
-RPK_LOCAL         = $(subst \space, ,$(subst $(RPK_GOAL).do-always/,,$1))
+RPK_REPLACE       = $(subst \space, ,$(subst $(DESTDIR)/$(RPK_TARGET)dir/,$(SRCDIR)/,$1))
+RPK_LOCAL         = $(subst \space, ,$(subst $(DESTDIR)/$(RPK_TARGET).do-always/,,$1))
 RPK_COPY          = $(subst \space, ,$(subst $(DESTDIR)/$(PK3_PREFIX).do-always/,$(SRCDIR)/,$1))
-RPK_COPIED        = $(subst \space, ,$(subst $(DESTDIR)/$(PK3_PREFIX).do-always/,$(RPK_GOAL)dir/,$1))
+RPK_COPIED        = $(subst \space, ,$(subst $(DESTDIR)/$(PK3_PREFIX).do-always/,$(DESTDIR)/$(RPK_TARGET)dir/,$1))
 RPK_GETEXT        = $(basename $1).$(call GETEXT,$(call RPK_REPLACE,$1))
 RPK_PK3DIR        = $(subst $(DESTDIR)/,$(SRCDIR)/,$(subst .do-always,.pk3dir,$1))
 RPK_INDEXES      += $(notdir $(wildcard build/*/$(CNAME)*.wasm))
@@ -133,6 +134,10 @@ endif
 
 ################################################ BUILD OBJS / DIFF FILES 
 
+############## DANGER ZONE
+# because lvlworld conversion has so many files we limit automatic pk3 
+#   packaging to .pk3dir names
+
 ifneq ($(filter %.pk3dir,$(SRCDIR)),)
 
 # must convert files in 2 seperate steps because of images 
@@ -141,13 +146,12 @@ ifneq ($(filter %.pk3dir,$(SRCDIR)),)
 FILES_SRCPK3     := $(call LEVELS_PK3,$(subst \space, ,$(SRCDIR)))
 FILES_SRC        := $(call LEVELS,$(subst \space, ,$(SRCDIR)))
 ALL_FILES        := $(filter-out $(FILES_SRCPK3),$(FILES_SRC))
-FILES_DONEPK3    := $(call LEVELS_PK3,$(subst \space, ,$(RPK_GOAL)dir))
-FILES_DONE       := $(call LEVELS,$(subst \space, ,$(RPK_GOAL)dir))
+FILES_DONEPK3    := $(call LEVELS_PK3,$(subst \space, ,$(DESTDIR)/$(RPK_TARGET)dir))
+FILES_DONE       := $(call LEVELS,$(subst \space, ,$(DESTDIR)/$(RPK_TARGET)dir))
 ALL_DONE         := $(filter-out $(FILES_DONEPK3),$(FILES_DONE))
 
-
 ifeq ($(filter-out $(_),$(ALL_FILES)),)
-$(error no files in source directory $(FILES_SRC))
+$(error no files in source directory $(SRCDIR))
 endif
 
 endif
@@ -161,9 +165,8 @@ AUDIO_ALL_EXTS   := $(AUDIO_CONV_EXTS) $(AUDIO_VALID_EXTS)
 FILE_ALL_EXT     := cfg skin menu shaderx mtr arena bot txt shader
 
 
-
-
 ################################################# DO WORK DEFINES
+
 
 define DO_CONVERT
 	$(echo_cmd) "CONVERT $(call RPK_REPLACE,$@) -> $@"
@@ -173,7 +176,7 @@ endef
 
 define DO_UNPACK
 	$(echo_cmd) "UNPACK $<"
-	$(Q)$(UNZIP) "$<" -d "$@dir/" > /dev/null
+	$(Q)$(UNZIP) "$<" -d "$@dir/" 2> /dev/null
 endef
 
 define DO_ENCODE
@@ -195,10 +198,14 @@ define DO_COPY
 endef
 
 define DO_ARCHIVE
-	$(echo_cmd) "ARCHIVE $@"
-	$(Q)pushd "$(RPK_GOAL)dir" > /dev/null && \
-	$(ZIP) -o ../$(subst \space, ,$(PK3_PREFIX)).zip "$(subst \space, ,$(subst .do-always,dir,$(call RPK_LOCAL,$@)))" > /dev/null && \
-	popd > /dev/null
+	$(echo_cmd) "ARCHIVE $1"
+	$(eval PK3_NAME := $(subst \space, ,$(PK3_PREFIX)).zip)
+	$(Q)if [ -f "$(DESTDIR)/$(PK3_NAME)" ]; \
+		then $(MOVE) "$(DESTDIR)/$(PK3_NAME)" "$2../$(PK3_NAME)";fi
+	$(Q)pushd "$2" && \
+	$(Q)$(ZIP) -o ../$(PK3_NAME) "$(subst \space, ,$(subst .do-always,dir,$(call RPK_LOCAL,$1)))" && \
+	popd 2> /dev/null
+	$(Q)$(MOVE) "$2../$(PK3_NAME)" "$(DESTDIR)/$(PK3_NAME)"
 endef
 
 
@@ -208,9 +215,9 @@ endef
 define DO_OPT_CC
 	$(echo_cmd) "OPT_CC $<"
 	$(Q)$(OPT) -Os --no-validation -o $@ $<
-	-$(Q)$(MOVE) $< $<.bak > /dev/null
-	$(Q)$(MOVE) $@ $< > /dev/null
-	-$(Q)$(UNLINK) $<.bak > /dev/null
+	-$(Q)$(MOVE) $< $<.bak 2> /dev/null
+	$(Q)$(MOVE) $@ $< 2> /dev/null
+	-$(Q)$(UNLINK) $<.bak 2> /dev/null
 endef
 
 define DO_UGLY_CC
@@ -223,7 +230,7 @@ endef
 
 define DO_BASE64_CC
 	$(echo_cmd) "BASE64_CC $<"
-	$(Q)$(NODE) -e "$(call NODE_FSREPLACE,'$(HTML_VFSHEAD)','$(HTML_VFSHEAD)\n<img title=\"$(notdir $<)\" src=\"$(call WASM_BASE64,$<)\" />',$(DESTDIR)/$(WASM_HTML))"
+	$(Q)$(NODE) -e "$(call NODE_FSREPLACE,'$(HTML_VFSHEAD)','$(HTML_VFSHEAD)\n<img title=\"$(subst $(SRCDIR)/,,$<)\" src=\"$(call WASM_BASE64,$<)\" />',$(DESTDIR)/$(WASM_HTML))"
 endef
 
 define DO_CSS_EMBED
@@ -248,7 +255,7 @@ endef
 
 define DO_WASM_EMBED
 	$(echo_cmd) "WASM_EMBED $@"
-	$(Q)$(NODE) -e "$(call NODE_FSREPLACE,'$(HTML_BODY)','$(HTML_BODY)\n$(call JS_SCRIPT,$(call JS_PREFS,$(<:.opt=.wasm),$(CNAME).wasm),$(subst $(DESTDIR)/,,$<))',$(DESTDIR)/$(WASM_HTML))"
+	$(Q)$(NODE) -e "$(call NODE_FSREPLACE,'$(HTML_BODY)','$(HTML_BODY)\n$(call JS_SCRIPT,$(call JS_PREFS,$(subst .do-always,,$(@:.html=.wasm)),$(subst $(DESTDIR).do-always/,,$@)),$(subst $(DESTDIR)/,,$<))',$(DESTDIR)/$(WASM_HTML))"
 endef
 
 define DO_ASSET_EMBED
@@ -268,6 +275,7 @@ endef
 
 #################################################### image conversion
 
+
 ifdef TARGET_CONVERT
 
 # list images with converted pathname then check for existing alt-name in 
@@ -277,39 +285,32 @@ IMAGE_SRC        := $(call FILTER_EXT,$(IMAGE_ALL_EXTS),$(ALL_FILES))
 IMAGE_DONE       := $(call FILTER_EXT,$(IMAGE_VALID_EXTS),$(ALL_DONE))
 IMAGE_DONE_WILD  := $(call REPLACE_EXT,$(IMAGE_VALID_EXTS),$(IMAGE_DONE))
 IMAGE_NEEDED     := $(filter-out $(IMAGE_DONE_WILD),$(IMAGE_SRC))
-IMAGE_OBJS       := $(addprefix $(RPK_GOAL)dir/,$(IMAGE_NEEDED))
+IMAGE_OBJS       := $(addprefix $(DESTDIR)/$(RPK_TARGET)dir/,$(IMAGE_NEEDED))
 
-convert: $(addprefix $(DESTDIR)/,$(TARGET_CONVERT))
-	@:
-
-$(RPK_GOAL)dir/%.tga:
-	$(NODE) -e "let wrong=fs.readFileSync('$(call RPK_REPLACE,$@)', 'binary');if(wrong.includes('created using ImageLib by SkyLine Tools')){wrong=wrong.replace('created using ImageLib by SkyLine Tools', '');wrong=wrong.replace(/^\(/, '\0');fs.writeFileSync('$(call RPK_REPLACE,$@)', wrong)}"
-	$(DO_CONVERT)
-
-$(RPK_GOAL)dir/%:
-	$(DO_CONVERT)
 
 ifeq ($(IMAGE_OBJS),)
-
-$(DESTDIR)/$(PK3_PREFIX).do-always:
-	$(echo_cmd) "NOTHING TO CONVERT"
-
-else
-
-$(DESTDIR)/$(PK3_PREFIX).do-always: $(IMAGE_OBJS)
-	$(echo_cmd) "CONVERTED $<"
-
-endif
-
-endif # TARGET_CONVERT
-
-ifeq ($(TARGET_CONVERT),)
 
 convert:
 	$(echo_cmd) "NOTHING TO CONVERT"
 
+else
+
+convert: $(addprefix $(DESTDIR)/,$(TARGET_CONVERT))
+	@:
+
 endif
 
+$(DESTDIR)/$(RPK_TARGET)dir/%.tga:
+	$(NODE) -e "let wrong=fs.readFileSync('$(call RPK_REPLACE,$@)', 'binary');if(wrong.includes('created using ImageLib by SkyLine Tools')){wrong=wrong.replace('created using ImageLib by SkyLine Tools', '');wrong=wrong.replace(/^\(/, '\0');fs.writeFileSync('$(call RPK_REPLACE,$@)', wrong)}"
+	$(DO_CONVERT)
+
+$(DESTDIR)/$(RPK_TARGET)dir/%:
+	$(DO_CONVERT)
+
+$(DESTDIR)/$(PK3_PREFIX).do-always: $(IMAGE_OBJS)
+	$(echo_cmd) "CONVERTED $<"
+
+endif # TARGET_CONVERT
 
 
 #################################################### audio conversion
@@ -325,21 +326,30 @@ AUDIO_SRCDONE    := $(addprefix $(DESTDIR)/$(PK3_PREFIX).do-always/,$(call FILTE
 AUDIO_DONE       := $(call FILTER_EXT,$(AUDIO_VALID_EXTS),$(ALL_DONE))
 AUDIO_DONE_WILD  := $(call REPLACE_EXT,$(AUDIO_VALID_EXTS),$(AUDIO_DONE))
 AUDIO_NEEDED     := $(filter-out $(AUDIO_DONE_WILD),$(AUDIO_SRC))
-AUDIO_OBJS       := $(addprefix $(RPK_GOAL)dir/,$(AUDIO_NEEDED))
+AUDIO_OBJS       := $(addprefix $(DESTDIR)/$(RPK_TARGET)dir/,$(AUDIO_NEEDED))
+
+ifeq ($(AUDIO_OBJS),)
+
+encode:
+	$(echo_cmd) "NOTHING TO ENCODE"
+
+else
 
 encode: $(addprefix $(DESTDIR)/,$(TARGET_ENCODE))
 	@:
 
-$(RPK_GOAL)dir/%.mp3:
+endif
+
+$(DESTDIR)/$(RPK_TARGET)dir/%.mp3:
 	$(DO_FFMPEG)
 
-$(RPK_GOAL)dir/%.mpga:
+$(DESTDIR)/$(RPK_TARGET)dir/%.mpga:
 	$(DO_FFMPEG)
 
-$(RPK_GOAL)dir/%.wav:
+$(DESTDIR)/$(RPK_TARGET)dir/%.wav:
 	$(if $(call GETMPGA,$(call RPK_REPLACE,$@)),$(DO_ENCODE),$(DO_FFMPEG))
 
-$(RPK_GOAL)dir/%:
+$(DESTDIR)/$(RPK_TARGET)dir/%:
 	$(DO_ENCODE)
 
 $(DESTDIR)/$(PK3_PREFIX).do-always/%:
@@ -349,15 +359,6 @@ $(DESTDIR)/$(PK3_PREFIX).do-always: $(AUDIO_OBJS) $(AUDIO_SRCDONE)
 	$(echo_cmd) "ENCODED $<"
 
 endif # TARGET_ENCODE
-
-ifeq ($(TARGET_ENCODE),)
-
-encode:
-	$(echo_cmd) "NOTHING TO ENCODE"
-
-endif
-
-
 
 
 ################################################# pk3s extraction
@@ -372,14 +373,6 @@ unpack: $(TARGET_UNPACK)
 #   so it's not expensive to repeat every time
 $(DESTDIR)/%.pk3: $(SRCDIR)/%.pk3
 	$(DO_UNPACK)
-
-endif
-
-
-ifeq ($(TARGET_UNPACK),)
-
-unpack:
-	$(echo_cmd) "NOTHING TO UNPACK"
 
 endif
 
@@ -399,45 +392,58 @@ $(DESTDIR)/%.pk3dir:
 endif
 
 
-
-
 #################################################### repack pk3 files
 
 
 ifdef TARGET_REPACK
 
+QVMS             := cgame.qvm qagame.qvm ui.qvm
+QVM_SRC          := $(addprefix build/*/*/vm/,$(QVMS))
+QVM_DESTINED     := $(wildcard $(QVM_SRC))
+
 IMAGE_SRC        := $(call FILTER_EXT,$(IMAGE_ALL_EXTS),$(ALL_FILES))
 IMAGE_SRCWILD    := $(call REPLACE_EXT,$(IMAGE_ALL_EXTS),$(IMAGE_SRC))
-IMAGE_DESTINED   := $(addprefix $(RPK_GOAL).do-always/,$(filter $(IMAGE_SRCWILD),$(ALL_DONE)))
+IMAGE_DESTINED   := $(addprefix $(DESTDIR)/$(RPK_TARGET).do-always/,$(filter $(IMAGE_SRCWILD),$(ALL_DONE)))
+
+package: $(addprefix $(DESTDIR)/,$(TARGET_REPACK))
+	$(echo_cmd) "PACKAGED $<"
+	-@$(MOVE) $(DESTDIR)/$(RPK_TARGET) $(DESTDIR)/$(RPK_TARGET).bak 2> /dev/null
+	$(Q)$(MOVE) $(DESTDIR)/$(PK3_PREFIX).zip $(DESTDIR)/$(RPK_TARGET)
+	-@$(UNLINK) $(DESTDIR)/$(RPK_TARGET).bak 2> /dev/null
+
+#$(DESTDIR)/*/xxx-multigame-files.pk3
+
+$(DESTDIR)/$(RPK_TARGET).do-always/%:
+	$(call DO_ARCHIVE,$@,$(DESTDIR)/$(RPK_TARGET)dir)
+
+$(DESTDIR)/$(PK3_PREFIX).do-always: $(IMAGE_DESTINED)
+	@:
+
+ifeq ($(QVM_DESTINED),)
+
+$(error no vms, build game first)
+
+else
+
+build/*/*/vm/%.qvm:
+
+$(DESTDIR)/$(PK3_PREFIX)-vms.do-always: $(QVM_DESTINED)
+	$(call DO_ARCHIVE,$(DESTDIR)/$(RPK_TARGET).do-always/vm/ui.qvm,$(dir $(filter %/ui.qvm,$(QVM_DESTINED)))../)
+	$(call DO_ARCHIVE,$(DESTDIR)/$(RPK_TARGET).do-always/vm/cgame.qvm,$(dir $(filter %/cgame.qvm,$(QVM_DESTINED)))../)
+	$(call DO_ARCHIVE,$(DESTDIR)/$(RPK_TARGET).do-always/vm/qagame.qvm,$(dir $(filter %/qagame.qvm,$(QVM_DESTINED)))../)
+	@:
+
+endif
 
 $(DESTDIR)/%.do-always:
+	@echo "REPACKING $(TARGET_REPACK) $(DESTDIR)/$(PK3_PREFIX)-vms.do-always"
 	+$(Q)$(MAKE) -f $(MKFILE) V=$(V) repack \
 		SRCDIR="$(subst \space, ,$(call RPK_PK3DIR,$@))" DESTDIR="$(DESTDIR)"
 
 package-pk3dirs: $(addprefix $(DESTDIR)/,$(TARGET_REPACK))
 	@:
 
-package: $(addprefix $(DESTDIR)/,$(TARGET_REPACK))
-	$(echo_cmd) "PACKAGED $<"
-	-@$(MOVE) $(RPK_GOAL) $(RPK_GOAL).bak > /dev/null
-	$(Q)$(MOVE) $(DESTDIR)/$(PK3_PREFIX).zip $(RPK_GOAL)
-	-@$(UNLINK) $(RPK_GOAL).bak > /dev/null
-
-$(RPK_GOAL).do-always/%:
-	$(DO_ARCHIVE)
-
-$(DESTDIR)/$(PK3_PREFIX).do-always: $(IMAGE_DESTINED)
-	@:
-
 endif
-
-ifeq ($(TARGET_REPACK),)
-
-package-pk3dirs:
-	$(echo_cmd) "NOTHING TO PACKAGE"
-
-endif
-
 
 
 ################################################## build index file
@@ -451,15 +457,6 @@ WASM_OBJS        := $(DESTDIR).do-always/$(WASM_HTML) \
 										$(addprefix $(DESTDIR)/,$(WASM_VFSOBJ)) \
 										$(DESTDIR)/quake3e.opt \
 										$(DESTDIR).do-always/quake3e.wasm
-
-$(DESTDIR).do-always/quake3e.html: $(WASM_OBJS)
-	$(DO_JS_LIST)
-	-$(Q)$(MOVE) $@ $@.bak > /dev/null
-	$(Q)$(MOVE) $(DESTDIR)/$(WASM_HTML) $@ > /dev/null
-	-$(Q)$(UNLINK) $@.bak > /dev/null
-
-$(DESTDIR).do-always/$(WASM_HTML):
-	$(call DO_INDEX_CC,$(DESTDIR)/$(WASM_HTML))
 
 $(DESTDIR)/%.opt: $(DESTDIR)/%.wasm
 	$(DO_OPT_CC)
@@ -479,11 +476,20 @@ $(DESTDIR).do-always/%.wasm:
 $(DESTDIR).do-always/%.js: $(DESTDIR)/%.min.js
 	$(DO_JSBUILD_EMBED)
 
+$(DESTDIR).do-always/$(WASM_HTML):
+	$(call DO_INDEX_CC,$(DESTDIR)/$(WASM_HTML))
+
 #$(DESTDIR).do-always/%.js: $(WASM_HTTP)/%.js
 #	$(DO_JS_EMBED)
 
 $(DESTDIR).do-always/%.pk3: $(DESTDIR)/%.pk3
 	$(DO_ASSET_EMBED)
+
+$(DESTDIR).do-always/quake3e.html: $(WASM_OBJS)
+	$(DO_JS_LIST)
+	-$(Q)$(MOVE) $(subst .do-always,,$@) $(subst .do-always,,$@).bak 2> /dev/null
+	$(Q)$(MOVE) $(DESTDIR)/$(WASM_HTML) $(subst .do-always,,$@) 2> /dev/null
+	-$(Q)$(UNLINK) $(subst .do-always,,$@).bak 2> /dev/null
 
 index: $(addprefix $(DESTDIR).do-always/,$(TARGET_INDEX))
 	@:
@@ -491,29 +497,83 @@ index: $(addprefix $(DESTDIR).do-always/,$(TARGET_INDEX))
 endif
 
 
+############################################# MAIN / REPACK / INDEX / SYNC
 
-######################################## MAIN / REPACK / INDEX / SYNC
 
-repack: ## repackage an existing pk3/pk3dir
+ifeq ($(RPK_UNPACK),)
+
+unpack:
+	$(echo_cmd) "NOTHING TO UNPACK"
+
+else
+ifndef TARGET_UNPACK
+
+unpack: ## unpack .pk3 zips into seperate .pk3dir folders
+	$(Q)$(MAKE) -f $(MKFILE) V=$(V) unpack \
+		SRCDIR="$(SRCDIR)" DESTDIR="$(DESTDIR)" \
+		TARGET_UNPACK="$(RPK_UNPACK)"
+
+endif
+endif
+
+
+ifndef TARGET_MKDIRS
+
+mkdirs:
 	$(echo_cmd) "REPACK $(SRCDIR) -> $(RPK_WORKDIRS)"
 	$(Q)$(MAKE) -f $(MKFILE) V=$(V) mkdirs \
 		SRCDIR="$(SRCDIR)" DESTDIR="$(DESTDIR)" \
 		TARGET_MKDIRS="$(RPK_WORKDIRS)"
-#	$(Q)$(MAKE) -f $(MKFILE) V=$(V) unpack \
-#		SRCDIR="$(SRCDIR)" DESTDIR="$(DESTDIR)" \
-#		TARGET_UNPACK="$(addprefix $(DESTDIR)/,$(RPK_UNPACK))"
-	$(Q)$(MAKE) -f $(MKFILE) V=$(V) convert \
-		SRCDIR="$(SRCDIR)" DESTDIR="$(DESTDIR)" \
-		TARGET_CONVERT="$(RPK_CONVERT)"
+
+endif
+
+
+ifndef TARGET_ENCODE
+
+encode: mkdirs ## re-encode audio to ogg, for web
 	$(Q)$(MAKE) -f $(MKFILE) V=$(V) encode \
 		SRCDIR="$(SRCDIR)" DESTDIR="$(DESTDIR)" \
-		TARGET_ENCODE="$(RPK_ENCODE)"
-#	+$(Q)$(MAKE) -f $(MKFILE) V=$(V) package \
-#		SRCDIR="$(SRCDIR)" DESTDIR="$(DESTDIR)" \
-#		TARGET_REPACK="$(DESTDIR)/$(PK3_PREFIX).do-always"
+		TARGET_ENCODE="$(PK3_PREFIX).do-always"
+
+endif
+
+
+ifndef TARGET_CONVERT
+
+convert: mkdirs ## convert assets to web compatible format
+	$(Q)$(MAKE) -f $(MKFILE) V=$(V) convert \
+		SRCDIR="$(SRCDIR)" DESTDIR="$(DESTDIR)" \
+		TARGET_CONVERT="$(PK3_PREFIX).do-always"
+
+endif
+
+
+ifndef TARGET_REPACK
+
+package: mkdirs convert encode ## compress converted assets back into a single .pk3 zip
+	+$(Q)$(MAKE) -f $(MKFILE) V=$(V) package \
+		SRCDIR="$(SRCDIR)" DESTDIR="$(DESTDIR)" \
+		TARGET_REPACK="$(PK3_PREFIX).do-always"
+
+endif
+
+
+ifeq ($(RPK_PK3DIRS),)
+
+package-pk3dirs:
+	$(echo_cmd) "NOTHING TO PACKAGE"
+
+else
+ifndef TARGET_REPACK
+
+repack: mkdirs convert encode ## collect and repackage an existing pk3/pk3dir
+	$(echo_cmd) "DESCENDING $(RPK_PK3DIRS)"
 	$(Q)$(MAKE) -f $(MKFILE) V=$(V) package-pk3dirs \
 		SRCDIR="$(SRCDIR)" DESTDIR="$(DESTDIR)" \
 		TARGET_REPACK="$(subst .pk3,.do-always,$(RPK_PK3DIRS))"
+
+endif
+endif
 
 
 ifeq ($(RPK_INDEXES),)
@@ -534,9 +594,9 @@ endif
 endif
 
 
+
 sync: ## synchronize a local copy of all lvlworld content
 	@:
-
 
 
 help:
