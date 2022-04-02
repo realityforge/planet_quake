@@ -199,13 +199,12 @@ endef
 
 define DO_ARCHIVE
 	$(echo_cmd) "ARCHIVE $1"
-	$(eval PK3_NAME := $(subst \space, ,$(PK3_PREFIX)).zip)
-	$(Q)if [ -f "$(DESTDIR)/$(PK3_NAME)" ]; \
-		then $(MOVE) "$(DESTDIR)/$(PK3_NAME)" "$2../$(PK3_NAME)";fi
+	$(Q)if [ -f "$(DESTDIR)/$3" ]; \
+		then $(MOVE) "$(DESTDIR)/$3" "$2../$3";fi
 	$(Q)pushd "$2" && \
-	$(Q)$(ZIP) -o ../$(PK3_NAME) "$(subst \space, ,$(subst .do-always,dir,$(call RPK_LOCAL,$1)))" && \
+	$(ZIP) -o ../$3 "$(subst \space, ,$(subst .do-always,dir,$(call RPK_LOCAL,$1)))" && \
 	popd 2> /dev/null
-	$(Q)$(MOVE) "$2../$(PK3_NAME)" "$(DESTDIR)/$(PK3_NAME)"
+	$(Q)$(MOVE) "$2../$3" "$(DESTDIR)/$3"
 endef
 
 
@@ -245,12 +244,12 @@ endef
 
 define DO_JSBUILD_EMBED
 	$(echo_cmd) "JS_EMBED $<"
-	$(Q)$(NODE) -e "$(call NODE_FSREPLACE,'<script async type=\"text/javascript\" src=\"${subst $(DESTDIR)/,,$<}\"></script>','$(call JS_SCRIPT,'+fs.readFileSync('$<', 'utf-8')+',$(subst $(DESTDIR)/,,$<))',$(DESTDIR)/$(WASM_HTML))"
+	$(Q)$(NODE) -e "$(call NODE_FSREPLACE,'<script async type=\"text/javascript\" src=\"${subst $(DESTDIR)/,,$<}\"></script>','$(call JS_SCRIPT,'+$(call NODE_FSREAD,$<)+',$(subst $(DESTDIR)/,,$<))',$(DESTDIR)/$(WASM_HTML))"
 endef
 
 define DO_JS_EMBED
 	$(echo_cmd) "JS_EMBED $<"
-	$(Q)$(NODE) -e "fs.writeFileSync('$(DESTDIR)/$(WASM_HTML)', fs.readFileSync('$(DESTDIR)/$(WASM_HTML)').toString('utf-8').replace('<script async type=\"text/javascript\" src=\"${subst $(WASM_HTTP)/,,$<}\"></script>', '$(call JS_SCRIPT,'+fs.readFileSync('$<', 'utf-8')+',$(subst $(WASM_HTTP)/,,$<))'))"
+	$(Q)$(NODE) -e "$(call NODE_FSREPLACE,'<script async type=\"text/javascript\" src=\"${subst $(WASM_HTTP)/,,$<}\"></script>','$(call JS_SCRIPT,'+$(call NODE_FSREAD,$<)+',$(subst $(WASM_HTTP)/,,$<))',$(DESTDIR)/$(WASM_HTML))"
 endef
 
 define DO_WASM_EMBED
@@ -260,7 +259,7 @@ endef
 
 define DO_ASSET_EMBED
 	$(echo_cmd) "ASSET_EMBED $<"
-	$(Q)$(NODE) -e "$(call NODE_FSREPLACE,'$(HTML_BODY)','$(HTML_BODY)\n<script async type=\"text/javascript\">\n/* <\!-- ${subst $(DESTDIR)/,,$<} */\nwindow.preFS[\\'multigame/${notdir $<}\\']=\\''+fs.readFileSync('$<', 'base64')+'\\'\n/* --> */\n</script>',$(DESTDIR)/$(WASM_HTML))"
+	$(Q)$(NODE) -e "$(call NODE_FSREPLACE,'$(HTML_BODY)','$(HTML_BODY)\n<script async type=\"text/javascript\">\n/* <\!-- $(subst $(DESTDIR)/,,$<) */\nwindow.preFS[\\'multigame/$(notdir $<)\\']=\\''+$(call NODE_FSREAD64,$<)+'\\'\n/* --> */\n</script>',$(DESTDIR)/$(WASM_HTML))"
 endef
 
 define DO_INDEX_CC
@@ -406,15 +405,14 @@ IMAGE_SRCWILD    := $(call REPLACE_EXT,$(IMAGE_ALL_EXTS),$(IMAGE_SRC))
 IMAGE_DESTINED   := $(addprefix $(DESTDIR)/$(RPK_TARGET).do-always/,$(filter $(IMAGE_SRCWILD),$(ALL_DONE)))
 
 package: $(addprefix $(DESTDIR)/,$(TARGET_REPACK))
-	$(echo_cmd) "PACKAGED $<"
-	-@$(MOVE) $(DESTDIR)/$(RPK_TARGET) $(DESTDIR)/$(RPK_TARGET).bak 2> /dev/null
-	$(Q)$(MOVE) $(DESTDIR)/$(PK3_PREFIX).zip $(DESTDIR)/$(RPK_TARGET)
-	-@$(UNLINK) $(DESTDIR)/$(RPK_TARGET).bak 2> /dev/null
-
-#$(DESTDIR)/*/xxx-multigame-files.pk3
+	$(eval RPK_TARGET := $(subst .do-always,.pk3,$(notdir $<)))
+	$(echo_cmd) "PACKAGED $(RPK_TARGET)"
+	-$(Q)$(MOVE) $(DESTDIR)/$(RPK_TARGET) $(DESTDIR)/$(RPK_TARGET).bak 2> /dev/null
+	$(Q)$(MOVE) $(DESTDIR)/$(RPK_TARGET:.pk3=.zip) $(DESTDIR)/$(RPK_TARGET)
+	-$(Q)$(UNLINK) $(DESTDIR)/$(RPK_TARGET).bak 2> /dev/null
 
 $(DESTDIR)/$(RPK_TARGET).do-always/%:
-	$(call DO_ARCHIVE,$@,$(DESTDIR)/$(RPK_TARGET)dir)
+	$(call DO_ARCHIVE,$@,$(DESTDIR)/$(RPK_TARGET)dir,$(subst \space, ,$(PK3_PREFIX)).zip)
 
 $(DESTDIR)/$(PK3_PREFIX).do-always: $(IMAGE_DESTINED)
 	@:
@@ -425,18 +423,15 @@ $(error no vms, build game first)
 
 else
 
-build/*/*/vm/%.qvm:
-
 $(DESTDIR)/$(PK3_PREFIX)-vms.do-always: $(QVM_DESTINED)
-	$(call DO_ARCHIVE,$(DESTDIR)/$(RPK_TARGET).do-always/vm/ui.qvm,$(dir $(filter %/ui.qvm,$(QVM_DESTINED)))../)
-	$(call DO_ARCHIVE,$(DESTDIR)/$(RPK_TARGET).do-always/vm/cgame.qvm,$(dir $(filter %/cgame.qvm,$(QVM_DESTINED)))../)
-	$(call DO_ARCHIVE,$(DESTDIR)/$(RPK_TARGET).do-always/vm/qagame.qvm,$(dir $(filter %/qagame.qvm,$(QVM_DESTINED)))../)
+	$(call DO_ARCHIVE,$(DESTDIR)/$(RPK_TARGET).do-always/vm/ui.qvm,$(dir $(filter %/ui.qvm,$(QVM_DESTINED)))../,$(subst \space, ,$(PK3_PREFIX))-vms.zip)
+	$(call DO_ARCHIVE,$(DESTDIR)/$(RPK_TARGET).do-always/vm/cgame.qvm,$(dir $(filter %/cgame.qvm,$(QVM_DESTINED)))../,$(subst \space, ,$(PK3_PREFIX))-vms.zip)
+	$(call DO_ARCHIVE,$(DESTDIR)/$(RPK_TARGET).do-always/vm/qagame.qvm,$(dir $(filter %/qagame.qvm,$(QVM_DESTINED)))../,$(subst \space, ,$(PK3_PREFIX))-vms.zip)
 	@:
 
 endif
 
 $(DESTDIR)/%.do-always:
-	@echo "REPACKING $(TARGET_REPACK) $(DESTDIR)/$(PK3_PREFIX)-vms.do-always"
 	+$(Q)$(MAKE) -f $(MKFILE) V=$(V) repack \
 		SRCDIR="$(subst \space, ,$(call RPK_PK3DIR,$@))" DESTDIR="$(DESTDIR)"
 
@@ -451,24 +446,28 @@ endif
 
 ifdef TARGET_INDEX
 
-WASM_VFSOBJ      := gfx/2d/bigchars.png \
-                    index.css
+WASM_ESSENTIAL   := gfx/2d/bigchars.png \
+                    index.css $(WASM_VFS)
 WASM_OBJS        := $(DESTDIR).do-always/$(WASM_HTML) \
-										$(addprefix $(DESTDIR)/,$(WASM_VFSOBJ)) \
+										$(addprefix $(DESTDIR).do-always/,$(WASM_ESSENTIAL)) \
 										$(DESTDIR)/quake3e.opt \
 										$(DESTDIR).do-always/quake3e.wasm
 
 $(DESTDIR)/%.opt: $(DESTDIR)/%.wasm
 	$(DO_OPT_CC)
 
+# TODO: package a .js with loader code like emscripten does, for other libs
 $(DESTDIR)/%.min.js: $(WASM_JS)
 	$(DO_UGLY_CC)
 
-$(DESTDIR)/%.png: $(SRCDIR)/%.png
+$(DESTDIR).do-always/%.png: $(SRCDIR)/%.png
 	$(DO_BASE64_CC)
 
-$(DESTDIR)/%.css: $(WASM_HTTP)/%.css
+$(DESTDIR).do-always/%.css: $(WASM_HTTP)/%.css
 	$(DO_CSS_EMBED)
+
+$(DESTDIR).do-always/%.pk3: build/%.pk3
+	$(DO_ASSET_EMBED)
 
 $(DESTDIR).do-always/%.wasm:
 	$(DO_WASM_EMBED)
@@ -481,9 +480,6 @@ $(DESTDIR).do-always/$(WASM_HTML):
 
 #$(DESTDIR).do-always/%.js: $(WASM_HTTP)/%.js
 #	$(DO_JS_EMBED)
-
-$(DESTDIR).do-always/%.pk3: $(DESTDIR)/%.pk3
-	$(DO_ASSET_EMBED)
 
 $(DESTDIR).do-always/quake3e.html: $(WASM_OBJS)
 	$(DO_JS_LIST)
