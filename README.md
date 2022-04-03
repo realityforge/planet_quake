@@ -42,10 +42,9 @@ This is not a cheat server. There are experimental features that can be used to 
 
 ## Coming soon!
   
-  * Asynchronous lazy loading with zip file repackaging and coalescing.
-  * Multi-world file-system and networking for connecting to specific worlds.
+  * Multi-world file-system.
   * demoMap rendering that maps a .dm file to a surface in game.
-  * Advanced teleporting features like replacing Voids with teleporting back, addressable.
+  * Advanced teleporting features like replacing Voids with teleporting back, addressable spawn points.
 
 ## Future TODOs
 
