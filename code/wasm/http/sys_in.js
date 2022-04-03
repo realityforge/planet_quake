@@ -351,17 +351,19 @@ function InputPushMouseEvent (evt) {
     S_Base_SoundInfo();
   }
 
-  if (evt.type == 'mousemove') {
-    if(Key_GetCatcher() & KEYCATCH_CGAME) {
-      Sys_QueEvent( Sys_Milliseconds(), SE_MOUSE, 
-        getMovementX(evt), getMovementY(evt), 0, null );
+  if(!(Key_GetCatcher() & KEYCATCH_CONSOLE)) {
+    if (evt.type == 'mousemove') {
+      if(Key_GetCatcher() & KEYCATCH_CGAME) {
+        Sys_QueEvent( Sys_Milliseconds(), SE_MOUSE, 
+          getMovementX(evt), getMovementY(evt), 0, null );
+      } else {
+        Sys_QueEvent( Sys_Milliseconds(), SE_MOUSE_ABS, 
+          evt.clientX, evt.clientY, 0, null );
+      }
     } else {
-      Sys_QueEvent( Sys_Milliseconds(), SE_MOUSE_ABS, 
-        evt.clientX, evt.clientY, 0, null );
+      Sys_QueEvent( Sys_Milliseconds(), SE_KEY, 
+        INPUT.keystrings['MOUSE1'] + evt.button, down, 0, null );
     }
-  } else {
-    Sys_QueEvent( Sys_Milliseconds(), SE_KEY, 
-      INPUT.keystrings['MOUSE1'] + evt.button, down, 0, null );
   }
 
   // always unlock on menus because it's position absolute now
@@ -382,7 +384,7 @@ function InputPushMouseEvent (evt) {
   //   the unfocusedFPS is cancelled and changed to real FPS, 200+!
   if(down && document.pointerLockElement != Q3e.canvas) {
     // TODO: start sound, capture mouse
-    HEAP32[gw_active >> 2] = true
+    HEAP32[gw_active >> 2] = 1
     Q3e.canvas.requestPointerLock();
 
     if(Q3e.frameInterval) {

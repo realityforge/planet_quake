@@ -15,5 +15,5 @@ sprites/laser
 	{
 		clampmap sprites/laser.jpg
 		blendfunc GL_ONE GL_ONE
-        }
+	}
 }

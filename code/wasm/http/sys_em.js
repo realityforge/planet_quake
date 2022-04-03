@@ -132,10 +132,12 @@ let LibrarySys = {
 		SE_DROPFILE: 11,
 		SE_DROPTEXT: 12,
 		SE_MAX: 13,
+
 		KEYCATCH_CONSOLE: 0x0001,
-		KEYCATCH_UI     :  0x0002,
-		KEYCATCH_MESSAGE:  0x0004,
-		KEYCATCH_CGAME  :  0x0008,
+		KEYCATCH_UI     : 0x0002,
+		KEYCATCH_MESSAGE: 0x0004,
+		KEYCATCH_CGAME  : 0x0008,
+
 		startProgram: startProgram,
 
 		GL: GL,

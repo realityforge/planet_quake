@@ -21,14 +21,14 @@ endif
 _                 = $() $()
 
 ifndef SRCDIR
-SRCDIR           := games/multigame/assets
+SRCDIR           := games/multigame/assets/xxx-multigame.pk3dir
 endif
 
 ifndef PK3_PREFIX
 PK3_PREFIX       := $(subst $(_),\space,$(subst .pk3dir,,$(notdir $(SRCDIR))))
 endif
 
-ifeq ($(SRCDIR),games/multigame/assets)
+ifeq ($(SRCDIR),games/multigame/assets/xxx-multigame.pk3dir)
 PK3_PREFIX       := xxx-multigame
 endif
 
@@ -110,7 +110,8 @@ WASM_HTTP        := code/wasm/http
 WASM_FILES       := $(CNAME).js sys_emgl.js sys_fs.js sys_in.js \
                     sys_net.js sys_std.js sys_wasm.js sys_snd.js nipplejs.js
 WASM_JS          := $(addprefix $(WASM_HTTP)/,$(notdir $(WASM_FILES)))
-WASM_ASSETS      := games/multigame/assets
+WASM_ASSETS      := games/multigame/assets/xxx-multigame.pk3dir
+
 
 NODE_FSWRITE      = fs.writeFileSync('$2', $1)
 NODE_FSREAD       = fs.readFileSync('$1', 'utf-8')
@@ -162,7 +163,7 @@ IMAGE_ALL_EXTS   := $(IMAGE_CONV_EXTS) $(IMAGE_VALID_EXTS)
 AUDIO_VALID_EXTS := ogg
 AUDIO_CONV_EXTS  := wav mp3 opus mpga
 AUDIO_ALL_EXTS   := $(AUDIO_CONV_EXTS) $(AUDIO_VALID_EXTS)
-FILE_ALL_EXT     := cfg skin menu shaderx mtr arena bot txt shader
+FILE_ALL_EXTS    := cfg skin menu shaderx mtr arena bot txt shader
 
 
 ################################################# DO WORK DEFINES
@@ -202,7 +203,7 @@ define DO_ARCHIVE
 	$(Q)if [ -f "$(DESTDIR)/$3" ]; \
 		then $(MOVE) "$(DESTDIR)/$3" "$2../$3";fi
 	$(Q)pushd "$2" && \
-	$(ZIP) -o ../$3 "$(subst \space, ,$(subst .do-always,dir,$(call RPK_LOCAL,$1)))" && \
+	$(ZIP) -o ../$3 "$1" && \
 	popd 2> /dev/null
 	$(Q)$(MOVE) "$2../$3" "$(DESTDIR)/$3"
 endef
@@ -398,11 +399,14 @@ ifdef TARGET_REPACK
 
 QVMS             := cgame.qvm qagame.qvm ui.qvm
 QVM_SRC          := $(addprefix build/*/*/vm/,$(QVMS))
-QVM_DESTINED     := $(wildcard $(QVM_SRC))
+QVM_DESTINED     := $(addprefix $(DESTDIR)/$(RPK_TARGET).do-always-vms/,$(wildcard $(QVM_SRC)))
 
 IMAGE_SRC        := $(call FILTER_EXT,$(IMAGE_ALL_EXTS),$(ALL_FILES))
 IMAGE_SRCWILD    := $(call REPLACE_EXT,$(IMAGE_ALL_EXTS),$(IMAGE_SRC))
 IMAGE_DESTINED   := $(addprefix $(DESTDIR)/$(RPK_TARGET).do-always/,$(filter $(IMAGE_SRCWILD),$(ALL_DONE)))
+
+FILES_RPK        := $(call FILTER_EXT,$(FILE_ALL_EXTS),$(ALL_FILES))
+FILES_DESTINED   := $(addprefix $(DESTDIR)/$(RPK_TARGET).do-always-files/,$(FILES_RPK))
 
 package: $(addprefix $(DESTDIR)/,$(TARGET_REPACK))
 	$(eval RPK_TARGET := $(subst .do-always,.pk3,$(notdir $<)))
@@ -412,23 +416,30 @@ package: $(addprefix $(DESTDIR)/,$(TARGET_REPACK))
 	-$(Q)$(UNLINK) $(DESTDIR)/$(RPK_TARGET).bak 2> /dev/null
 
 $(DESTDIR)/$(RPK_TARGET).do-always/%:
-	$(call DO_ARCHIVE,$@,$(DESTDIR)/$(RPK_TARGET)dir,$(subst \space, ,$(PK3_PREFIX)).zip)
+	$(call DO_ARCHIVE,$(subst \space, ,$(subst .do-always,dir,$(call RPK_LOCAL,$@))),$(DESTDIR)/$(RPK_TARGET)dir,$(subst \space, ,$(PK3_PREFIX)).zip)
 
 $(DESTDIR)/$(PK3_PREFIX).do-always: $(IMAGE_DESTINED)
 	@:
 
-ifeq ($(QVM_DESTINED),)
-
-$(error no vms, build game first)
-
+ifeq ($(FILES_DESTINED),)
+$(DESTDIR)/$(PK3_PREFIX)-files.do-always: $(FILES_DESTINED)
+	$(error no files for $(PK3_PREFIX)-files $(FILES_RPK), must be run on a pk3dir)
 else
+$(DESTDIR)/$(RPK_TARGET).do-always-files/%:
+	$(call DO_ARCHIVE,$(subst $(DESTDIR)/$(RPK_TARGET).do-always-files/,,$@),$(SRCDIR)/,$(subst \space, ,$(PK3_PREFIX))-files.zip)
+
+$(DESTDIR)/$(PK3_PREFIX)-files.do-always: $(FILES_DESTINED)
+	@:
+endif
+
+ifeq ($(QVM_DESTINED),)
+$(error no vms, build game first)
+else
+$(DESTDIR)/$(RPK_TARGET).do-always-vms/%:
+	$(call DO_ARCHIVE,vm/$(notdir $@),$(subst /vm,,$(subst \space, ,$(subst $(DESTDIR)/$(RPK_TARGET).do-always-vms/,,$(dir $@)))),$(subst \space, ,$(PK3_PREFIX))-vms.zip)
 
 $(DESTDIR)/$(PK3_PREFIX)-vms.do-always: $(QVM_DESTINED)
-	$(call DO_ARCHIVE,$(DESTDIR)/$(RPK_TARGET).do-always/vm/ui.qvm,$(dir $(filter %/ui.qvm,$(QVM_DESTINED)))../,$(subst \space, ,$(PK3_PREFIX))-vms.zip)
-	$(call DO_ARCHIVE,$(DESTDIR)/$(RPK_TARGET).do-always/vm/cgame.qvm,$(dir $(filter %/cgame.qvm,$(QVM_DESTINED)))../,$(subst \space, ,$(PK3_PREFIX))-vms.zip)
-	$(call DO_ARCHIVE,$(DESTDIR)/$(RPK_TARGET).do-always/vm/qagame.qvm,$(dir $(filter %/qagame.qvm,$(QVM_DESTINED)))../,$(subst \space, ,$(PK3_PREFIX))-vms.zip)
 	@:
-
 endif
 
 $(DESTDIR)/%.do-always:

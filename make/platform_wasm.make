@@ -120,8 +120,10 @@ endif
 index: $(WASM_INDEX) $(WASM_INDEX:.wasm=.html) ## create an index.html page out of the current build target
 	$(Q)$(MAKE) -f make/build_package.make package \
 		TARGET_REPACK="xxx-multigame-vms.do-always"
+	$(Q)$(MAKE) -f make/build_package.make package \
+		TARGET_REPACK="xxx-multigame-files.do-always"
 	$(Q)$(MAKE) -f make/build_package.make \
-    WASM_VFS="xxx-multigame-vms.pk3" \
+    WASM_VFS="xxx-multigame-vms.pk3 xxx-multigame-files.pk3" \
 		DESTDIR="$(dir $(WASM_INDEX))" index
 #xxx-multigame-files.do-always 
 
