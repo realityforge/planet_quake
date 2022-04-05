@@ -68,11 +68,9 @@ endif
 endif
 
 CLIENT_LDFLAGS      += code/wasm/wasi/libclang_rt.builtins-wasm32.a
-
 # -fno-common -ffreestanding -nostdinc --no-standard-libraries
 MUSL_SOURCE         := libs/musl-1.2.2
 SDL_SOURCE          := libs/SDL2-2.0.14
-
 BASE_CFLAGS         += -Wall --target=wasm32 \
                        -Wimplicit -fstrict-aliasing \
                        -ftree-vectorize -fsigned-char -MMD \
@@ -93,27 +91,24 @@ BASE_CFLAGS         += -Wall --target=wasm32 \
                        -Icode/wasm/include \
                        -Icode/wasm/emscripten \
                        -I$(MUSL_SOURCE)/include \
-											 -I$(SDL_SOURCE)/include \
+                       -I$(SDL_SOURCE)/include \
                        -Icode/wasm
-
 DEBUG_CFLAGS        := -fvisibility=default -fno-inline \
                        -DDEBUG -D_DEBUG -g -g3 -fPIC -gdwarf -gfull
 RELEASE_CFLAGS      := -fvisibility=hidden \
                        -DNDEBUG -Ofast -O3 -Oz -fPIC -ffast-math
                     # -flto 
+PK3_INCLUDES        := xxx-multigame-files.pk3  \
+                       xxx-multigame-vms.pk3    \
+                       lsdm3_v1-files.pk3       \
+                       lsdm3_v1-images.pk3      \
+                       xxx-multigame-sounds.pk3
 
-
-
-PK3_INCLUDES     := xxx-multigame-files.pk3  \
-                    xxx-multigame-vms.pk3    \
-                    lsdm3_v1-files.pk3       \
-                    lsdm3_v1-images.pk3      \
-                    xxx-multigame-sounds.pk3
 
 ifeq ($(filter $(MAKECMDGOALS),debug),debug)
-WASM_INDEX       += $(wildcard $(BD)/$(CNAME)*.wasm)
+WASM_INDEX          += $(wildcard $(BD)/$(CNAME)*.wasm)
 else
-WASM_INDEX       += $(wildcard $(BR)/$(CNAME)*.wasm)
+WASM_INDEX          += $(wildcard $(BR)/$(CNAME)*.wasm)
 endif
 
 
@@ -127,8 +122,9 @@ index: $(WASM_INDEX) $(WASM_INDEX:.wasm=.html) ## create an index.html page out 
 		TARGET_REPACK="lsdm3_v1-files.do-always"
 	$(Q)$(MAKE) -f make/build_package.make index \
 		WASM_VFS="xxx-multigame-vms.pk3 xxx-multigame-files.pk3 lsdm3_v1-files.pk3" \
-		STARTUP_COMMAND="+devmap\\', \\'lsdm3_v1" \
+		STARTUP_COMMAND="+set\\', \\'developer\\', \\'1" \
 		DESTDIR="$(dir $(WASM_INDEX))"
+#		STARTUP_COMMAND="+set\\', \\'developer\\', \\'1\\', \\'+devmap\\', \\'lsdm3_v1" \
 
 
 # TODO build quake 3 as a library that can be use for rendering embedded in other apps?
@@ -136,6 +132,8 @@ SDL_FLAGS := -DSDL_VIDEO_DISABLED=1 \
 						 -DSDL_JOYSTICK_DISABLED=1 \
 						 -DSDL_SENSOR_DISABLED=1 \
 						 -DSDL_HAPTIC_DISABLED=1 \
+             -DSDL_TIMER_UNIX=1 \
+             -DHAVE_CLOCK_GETTIME=1 \
              -D__EMSCRIPTEN__=1 \
 						 -D_GNU_SOURCE=1 \
 						 -DHAVE_STDLIB_H=1 \

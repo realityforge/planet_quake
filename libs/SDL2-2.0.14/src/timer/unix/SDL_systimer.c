@@ -191,13 +191,15 @@ void
 SDL_Delay(Uint32 ms)
 {
 #ifdef __EMSCRIPTEN__
+int emscripten_has_asyncify(void);
+void emscripten_sleep(unsigned int ms);
     if (emscripten_has_asyncify() && SDL_GetHintBoolean(SDL_HINT_EMSCRIPTEN_ASYNCIFY, SDL_TRUE)) {
         /* pseudo-synchronous pause, used directly or through e.g. SDL_WaitEvent */
         emscripten_sleep(ms);
         return;
     }
 #endif
-    int was_error;
+    int was_error = 0;
 
 #if HAVE_NANOSLEEP
     struct timespec elapsed, tv;
@@ -232,7 +234,9 @@ SDL_Delay(Uint32 ms)
         tv.tv_sec = ms / 1000;
         tv.tv_usec = (ms % 1000) * 1000;
 
+#ifndef __WASM__
         was_error = select(0, NULL, NULL, NULL, &tv);
+#endif
 #endif /* HAVE_NANOSLEEP */
     } while (was_error && (errno == EINTR));
 }

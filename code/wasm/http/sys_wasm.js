@@ -11,7 +11,6 @@ function instantiateWasm(bytes) {
     DATE: DATE,
     INPUT: INPUT,
     STD: STD,
-    SND: SND,
   }
   if(!bytes) {
     throw new Error('Couldn\'t find wasm!')

@@ -40,7 +40,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 extern void IN_Shutdown( void );
 extern void IN_Init( void );
 extern void IN_Frame( void );
-int errno;
+Q_EXPORT int errno;
 pthread_t _tp;
 pthread_t *__get_tp(void) { return &_tp; }
 int *___errno_location(void) { return &errno; }
@@ -253,7 +253,7 @@ void *eglGetProcAddress(const char *procname) {
 	return NULL;
 }
 
-void emscripten_sleep(int ms) {
+void emscripten_sleep(unsigned int ms) {
 	DebugBreak();
 }
 
@@ -426,6 +426,10 @@ void
 SDL_LogMessageV(int category, SDL_LogPriority priority, const char *fmt, va_list ap)
 {
     Com_Printf(fmt, ap);
+}
+
+qboolean emscripten_has_asyncify(void) {
+	return qfalse;
 }
 
 #if 0

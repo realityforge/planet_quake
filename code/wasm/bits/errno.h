@@ -6,4 +6,5 @@ int *__errno_location(void);
 #define ENOMEM          9971
 #define EFAULT          14
 #define EBADF            9
+#define EINTR            4
 

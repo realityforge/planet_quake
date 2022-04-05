@@ -67,6 +67,8 @@ MUSL_LOBJ        := string/stpcpy.o  string/memset.o  string/memcpy.o    \
                     multibyte/mbrtowc.o   multibyte/mbstowcs.o multibyte/wctomb.o \
                     multibyte/mbsrtowcs.o multibyte/wcrtomb.o  multibyte/mbsinit.o \
                     multibyte/mbtowc.o    multibyte/btowc.o    multibyte/internal.o \
+                    \
+                    time/gettimeofday.o
 
 
 MUSL_OBJ         += $(addprefix $(B)/musl/,$(MUSL_LOBJ))
@@ -76,7 +78,8 @@ ifeq ($(BUILD_CLIENT),1)
 MUSL_CFLAGS      += $(CLIENT_CFLAGS)
 endif
 MUSL_CFLAGS      += -D_XOPEN_SOURCE=700 \
-										-std=gnu11 \
+                    -D__EMSCRIPTEN__=1 \
+                    -std=gnu11 \
                     -Wno-unused-variable -Wvariadic-macros -Wno-extra-semi \
                     -Wno-shift-op-parentheses -Wno-c11-extensions \
                     -Wno-dollar-in-identifier-extension -Wno-unused-function \
@@ -84,10 +87,10 @@ MUSL_CFLAGS      += -D_XOPEN_SOURCE=700 \
                     -Wno-bitwise-op-parentheses -Wno-int-conversion \
                     -Wno-tautological-constant-out-of-range-compare \
                     -Wno-string-plus-int -Wno-unsupported-visibility \
-										-Wno-strict-prototypes  \
+                    -Wno-strict-prototypes  \
                     -Wno-bitwise-op-parentheses -Wno-gnu-include-next \
-                    -Wno-unknown-attributes -Wno-ignored-attributes \
-                    
+                    -Wno-unknown-attributes -Wno-ignored-attributes
+
 
 export MUSL_INCLUDE := -Ilibs/musl-1.2.2/arch/generic \
                        -Ilibs/musl-1.2.2/src/internal \

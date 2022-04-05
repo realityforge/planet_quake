@@ -89,7 +89,10 @@ static void *S_CodecGetSound(const char *filename, snd_info_t *info)
 		}
 
 		// A loader was found
+		// I don't get this, it doesn't try alternate names unless original .wav file exists?
+#if !defined(__WASM__) || defined(I_LIKE_STUPID_CODE)
 		if( codec )
+#endif
 		{
 			if( !rtn )
 			{

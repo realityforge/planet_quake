@@ -36,7 +36,6 @@ CLIENT_SYSTEM    := quake3e.js \
                     sys_net.js \
                     sys_in.js \
                     sys_em.js
-#                    sys_snd.js
 
 CLIENT_LIBS      := $(addprefix --js-library $(MOUNT_DIR)/wasm/http/,$(notdir $(CLIENT_SYSTEM)))
 

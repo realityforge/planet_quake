@@ -10,7 +10,6 @@ function getQueryCommands() {
 	//   I'm not using emscripten anymore.
 	let startup = [
 		'quake3e_web',
-		'+set', 'developer', '0',
 		'+set', 'fs_basepath', '/base',
 		'+set', 'fs_homepath', '/home',
 		'+set', 'sv_pure', '0', // require for now, TODO: server side zips
@@ -357,7 +356,27 @@ function updateGlobalBufferAndViews(buf) {
 	Q3e["HEAPF64"] = window.HEAPF64 = new Float64Array(buf);
 }
 
-		
+var _emscripten_get_now_is_monotonic = true;
+
+function _emscripten_get_now() {
+	return performance.now()
+}
+
+function clock_gettime(clk_id, tp) {
+	var now;
+	if (clk_id === 0) {
+			now = Date.now()
+	} else if ((clk_id === 1 || clk_id === 4) && _emscripten_get_now_is_monotonic) {
+			now = _emscripten_get_now()
+	} else {
+			HEAPU32[errno >> 2] = 28
+			return -1
+	}
+	HEAP32[tp >> 2] = now / 1e3 | 0;
+	HEAP32[tp + 4 >> 2] = now % 1e3 * 1e3 * 1e3 | 0;
+	return 0
+}
+
 function emscripten_realloc_buffer(size) {
 	try {
 		Q3e.memory.grow(size - Q3e.memory.buffer.byteLength + 65535 >>> 16);
@@ -442,4 +461,5 @@ var SYS = {
 	CL_MenuModified: CL_MenuModified,
 	Com_RealTime: Com_RealTime,
 	CreateAndCall: CreateAndCall,
+	clock_gettime: clock_gettime,
 }

@@ -296,6 +296,7 @@ typedef void * timer_t;
 
 #if defined(__NEED_clockid_t) && !defined(__DEFINED_clockid_t)
 typedef int clockid_t;
+typedef long long timestamp_t;
 #define __DEFINED_clockid_t
 #endif
 

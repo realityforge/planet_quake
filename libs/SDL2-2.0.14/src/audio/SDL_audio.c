@@ -304,9 +304,9 @@ is_in_audio_device_thread(SDL_AudioDevice * device)
        This check is in case the application, in the audio callback,
        tries to lock the thread that we've already locked from the
        device thread...just in case we only have non-recursive mutexes. */
-    if (device->thread && (SDL_ThreadID() == device->threadid)) {
-        return SDL_TRUE;
-    }
+    //if (device->thread && (SDL_ThreadID() == device->threadid)) {
+    //    return SDL_TRUE;
+    //}
 
     return SDL_FALSE;
 }
@@ -1230,6 +1230,7 @@ open_audio_device(const char *devname, int iscapture,
     void *handle = NULL;
     int i = 0;
 
+
     if (!SDL_WasInit(SDL_INIT_AUDIO)) {
         SDL_SetError("Audio subsystem is not initialized");
         return 0;
@@ -1460,7 +1461,6 @@ open_audio_device(const char *devname, int iscapture,
 
     return device->id;
 }
-
 
 int
 SDL_OpenAudio(SDL_AudioSpec * desired, SDL_AudioSpec * obtained)

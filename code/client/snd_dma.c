@@ -332,9 +332,11 @@ static sfxHandle_t S_Base_RegisterSound( const char *name, qboolean compressed )
 	sfx_t	*sfx;
 
 	compressed = qfalse;
+#ifndef __WASM__
 	if (!s_soundStarted) {
 		return 0;
 	}
+#endif
 
 	if ( strlen( name ) >= MAX_QPATH ) {
 		Com_Printf( "Sound name exceeds MAX_QPATH\n" );
@@ -347,12 +349,12 @@ static sfxHandle_t S_Base_RegisterSound( const char *name, qboolean compressed )
 	}
 
 	if ( sfx->soundData ) {
-		if ( sfx->defaultSound ) {
 #ifndef USE_LAZY_LOAD
+		if ( sfx->defaultSound ) {
 			Com_DPrintf( S_COLOR_YELLOW "WARNING: could not find %s - using default\n", sfx->soundName );
-#endif
 			return 0;
 		}
+#endif
 		return sfx - s_knownSfx;
 	}
 
@@ -398,13 +400,11 @@ static void S_memoryLoad( sfx_t *sfx ) {
 
 	// load the sound file
 	if (!S_LoadSound ( sfx ) ) {
-#ifndef USE_LAZY_LOAD
 		Com_DPrintf( S_COLOR_YELLOW "WARNING: couldn't load sound: %s\n", sfx->soundName );
-#endif
 		sfx->defaultSound = qtrue;
 		sfx->inMemory = qfalse;
 	} else {
-		//Com_Printf( S_COLOR_YELLOW "WARNING: load sound: %s\n", sfx->soundName );
+		Com_Printf( S_COLOR_YELLOW "WARNING: load sound: %s\n", sfx->soundName );
 		sfx->defaultSound = qfalse;
 		sfx->inMemory = qtrue;
 	}
@@ -492,9 +492,12 @@ static void S_Base_StartSound( const vec3_t origin, int entityNum, int entchanne
 	int i, oldest, chosen, startTime;
 	int	inplay, allowed;
 
+#ifndef __WASM__
+	// device is virtual so I'll control it there.
 	if ( !s_soundStarted || s_soundMuted ) {
 		return;
 	}
+#endif
 
 	if ( !origin && ( entityNum < 0 || entityNum >= MAX_GENTITIES ) ) {
 		Com_Error( ERR_DROP, "S_StartSound: bad entitynum %i", entityNum );
@@ -539,7 +542,7 @@ static void S_Base_StartSound( const vec3_t origin, int entityNum, int entchanne
 		}
 	}
 
-//	Com_Printf("playing %s\n", sfx->soundName);
+	Com_DPrintf("playing %s\n", sfx->soundName);
 	// pick a channel to play on
 
 	// try to limit sound duplication
@@ -618,8 +621,8 @@ static void S_Base_StartSound( const vec3_t origin, int entityNum, int entchanne
 				}
 			}
 		}
-			ch = &s_channels[chosen];
-			ch->allocTime = sfx->lastTimeUsed;
+		ch = &s_channels[chosen];
+		ch->allocTime = sfx->lastTimeUsed;
 		Com_DPrintf(S_COLOR_YELLOW "S_StartSound: No more channels free for %s, dropping earliest sound: %s\n", sfx->soundName, ch->thesfx->soundName);
 	}
 
@@ -647,9 +650,11 @@ S_StartLocalSound
 ==================
 */
 static void S_Base_StartLocalSound( sfxHandle_t sfxHandle, int channelNum ) {
+#ifndef __WASM__
 	if ( !s_soundStarted || s_soundMuted ) {
 		return;
 	}
+#endif
 
 	if ( sfxHandle < 0 || sfxHandle >= s_numSfx ) {
 		Com_Printf( S_COLOR_YELLOW "S_StartLocalSound: handle %i out of range\n", sfxHandle );
@@ -756,9 +761,11 @@ Include velocity in case I get around to doing doppler...
 void S_Base_AddLoopingSound( int entityNum, const vec3_t origin, const vec3_t velocity, sfxHandle_t sfxHandle ) {
 	sfx_t *sfx;
 
+#ifndef __WASM__
 	if ( !s_soundStarted || s_soundMuted ) {
 		return;
 	}
+#endif
 
 	if ( sfxHandle < 0 || sfxHandle >= s_numSfx ) {
 		Com_Printf( S_COLOR_YELLOW "S_AddLoopingSound: handle %i out of range\n", sfxHandle );
@@ -824,9 +831,11 @@ Include velocity in case I get around to doing doppler...
 void S_Base_AddRealLoopingSound( int entityNum, const vec3_t origin, const vec3_t velocity, sfxHandle_t sfxHandle ) {
 	sfx_t *sfx;
 
+#ifndef __WASM__
 	if ( !s_soundStarted || s_soundMuted ) {
 		return;
 	}
+#endif
 
 	if ( sfxHandle < 0 || sfxHandle >= s_numSfx ) {
 		Com_Printf( S_COLOR_YELLOW "S_AddRealLoopingSound: handle %i out of range\n", sfxHandle );
@@ -1074,6 +1083,7 @@ void S_Base_Respatialize( int entityNum, const vec3_t head, vec3_t axis[3], int 
 	channel_t	*ch;
 	vec3_t		origin;
 
+Com_Printf("S_Respatialize(%i, %i)\n", s_soundStarted , s_soundMuted);
 	if ( !s_soundStarted || s_soundMuted ) {
 		return;
 	}
@@ -1516,6 +1526,7 @@ void S_Base_Shutdown( void ) {
 #ifndef USE_LAZY_MEMORY
 	s_numSfx = 0; // clean up sound cache -EC-
 #else
+DebugBreak();
   // free all the sounds not used
   for ( int i = 1 ; i < s_numSfx ; i++ ) {
 		s_knownSfx[i].inMemory = qfalse;

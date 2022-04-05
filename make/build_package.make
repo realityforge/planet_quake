@@ -121,7 +121,7 @@ RPK_INDEXES      += $(notdir $(wildcard build/*/$(CNAME)*.wasm))
 WASM_HTML        := index.html
 WASM_HTTP        := code/wasm/http
 WASM_FILES       := $(CNAME).js sys_emgl.js sys_fs.js sys_in.js \
-                    sys_net.js sys_std.js sys_wasm.js sys_snd.js nipplejs.js
+                    sys_net.js sys_std.js sys_wasm.js nipplejs.js
 WASM_JS          := $(addprefix $(WASM_HTTP)/,$(notdir $(WASM_FILES)))
 WASM_ASSETS      := games/multigame/assets/xxx-multigame.pk3dir
 
@@ -422,6 +422,7 @@ IMAGE_DESTINED   := $(addprefix $(DESTDIR)/$(RPK_TARGET).do-always/,$(filter $(I
 FILES_RPK        := $(call FILTER_EXT,$(FILE_ALL_EXTS),$(ALL_FILES))
 FILES_DESTINED   := $(addprefix $(DESTDIR)/$(RPK_TARGET).do-always-files/,$(FILES_RPK))
 ifeq ($(PK3_PREFIX),xxx-multigame)
+# I'm kind of amazed this works, I thought the path would be missing, build fail
 FILES_DESTINED   += $(DESTDIR)/$(RPK_TARGET).do-always-files/sound/feedback/hit.ogg
 endif
 

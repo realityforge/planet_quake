@@ -107,6 +107,7 @@ Sys_GetFileStats
 Sys_FOpen
 tolower
 strtod
+clock_gettime
 SDL_OpenAudioDevice
 SDL_PauseAudioDevice
 SDL_CloseAudioDevice

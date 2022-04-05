@@ -4305,9 +4305,10 @@ void Com_Init( char *commandLine ) {
 #endif
 
 
-
+#ifndef __WASM__
 #ifndef DEDICATED
 	CL_StartHunkUsers();
+#endif
 #endif
 
 	// set com_frameTime so that if a map is started on the
@@ -4334,7 +4335,7 @@ void Com_Init( char *commandLine ) {
 #endif
 
   Cvar_SetCommonDescriptions();
-	Com_Printf( "--- Common Initialization Complete ---\n" );
+	Com_Printf( "--- Common Initialization Complete (%i) ---\n", com_fullyInitialized );
 
 #ifdef USE_PRINT_CONSOLE
   Com_PrintClear();
@@ -4608,7 +4609,6 @@ void Com_Frame( qboolean noDelay ) {
 
 			timeVal = com_frameTime - lastTime;
 			bias += timeVal - minMsec;
-			
 			if ( bias > minMsec )
 				bias = minMsec;
 

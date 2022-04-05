@@ -273,7 +273,7 @@ qboolean S_LoadSound( sfx_t *sfx )
 
 #ifdef USE_ASYNCHRONOUS
 	if(!FS_Initialized())
-		return qfalse;
+		Com_Error(ERR_FATAL, "no filesystem");
 #endif
 
 	// load it in
