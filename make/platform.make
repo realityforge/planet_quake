@@ -22,7 +22,8 @@ Q=@
 endif
 
 ifeq ($(COMPILE_PLATFORM),cygwin)
-PLATFORM=mingw32
+PLATFORM ?= mingw32
+COMPILE_PLATFORM := mingw32
 endif
 
 ifndef PLATFORM
@@ -118,22 +119,12 @@ include $(D_FILES)
 endif
 endif
 
-ifeq ($(filter $(MAKECMDGOALS),debug),debug)
-OUTPUT_DIR := $(BD)/
-else
-OUTPUT_DIR := $(BR)/
-endif
+
 # make sure clean happens before build directory creation
-$(BUILD_DIR)/: $(filter $(MAKECMDGOALS),clean)
+$(BUILD_DIR).mkdirs:
 	@if [ ! -d $(BUILD_DIR) ];then $(MKDIR) $(BUILD_DIR);fi
 
-$(BR)/: $(BUILD_DIR)/
-	@if [ ! -d $(BR) ];then $(MKDIR) $(BR);fi
-
-$(BD)/: $(BUILD_DIR)/
-	@if [ ! -d $(BD) ];then $(MKDIR) $(BD);fi
-
-$(BUILD_DIR)/%.mkdirs: $(OUTPUT_DIR)
+$(BUILD_DIR)/%.mkdirs: $(filter $(MAKECMDGOALS),clean) 
 	@if [ ! -d "./$(subst .mkdirs,,$@)/$$dir" ]; \
 		then $(MKDIR) "./$(subst .mkdirs,,$@)/$$dir";fi;
 
@@ -152,3 +143,5 @@ install: $(INSTALL_DIR) $(INSTALLS)
   debug default dist distclean makedirs release \
   targets tools toolsclean mkdirs build  \
     $(D_FILES)
+
+.NOTPARALLEL: index clean 

@@ -449,7 +449,7 @@ typedef unsigned short sa_family_t;
 #define SDL_Log Com_Printf
 #define SDL_memset memset
 #define SDL_strcmp strcmp
-#define SDL_getenv getenv
+#define SDL_getenv(x) (0)
 #define SDL_free free
 #define SDL_calloc calloc
 #define SDL_realloc realloc

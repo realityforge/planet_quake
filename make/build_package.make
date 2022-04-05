@@ -415,9 +415,13 @@ QVMS             := cgame.qvm qagame.qvm ui.qvm
 QVM_SRC          := $(addprefix build/*/*/vm/,$(QVMS))
 QVM_DESTINED     := $(addprefix $(DESTDIR)/$(RPK_TARGET).do-always-vms/,$(wildcard $(QVM_SRC)))
 
-IMAGE_SRC        := $(call FILTER_EXT,$(IMAGE_ALL_EXTS),$(ALL_FILES))
-IMAGE_SRCWILD    := $(call REPLACE_EXT,$(IMAGE_ALL_EXTS),$(IMAGE_SRC))
-IMAGE_DESTINED   := $(addprefix $(DESTDIR)/$(RPK_TARGET).do-always/,$(filter $(IMAGE_SRCWILD),$(ALL_DONE)))
+IMAGES_SRC       := $(call FILTER_EXT,$(IMAGE_ALL_EXTS),$(ALL_FILES))
+IMAGES_SRCWILD   := $(call REPLACE_EXT,$(IMAGE_ALL_EXTS),$(IMAGES_SRC))
+IMAGES_DESTINED  := $(addprefix $(DESTDIR)/$(RPK_TARGET).do-always-images/,$(filter $(IMAGES_SRCWILD),$(ALL_DONE)))
+
+SOUNDS_SRC       := $(call FILTER_EXT,$(AUDIO_ALL_EXTS),$(ALL_FILES))
+SOUNDS_SRCWILD   := $(call REPLACE_EXT,$(AUDIO_ALL_EXTS),$(SOUNDS_SRC))
+SOUNDS_DESTINED  := $(addprefix $(DESTDIR)/$(RPK_TARGET).do-always-sounds/,$(filter $(SOUNDS_SRCWILD),$(ALL_DONE)))
 
 FILES_RPK        := $(call FILTER_EXT,$(FILE_ALL_EXTS),$(ALL_FILES))
 FILES_DESTINED   := $(addprefix $(DESTDIR)/$(RPK_TARGET).do-always-files/,$(FILES_RPK))
@@ -425,6 +429,9 @@ ifeq ($(PK3_PREFIX),xxx-multigame)
 # I'm kind of amazed this works, I thought the path would be missing, build fail
 FILES_DESTINED   += $(DESTDIR)/$(RPK_TARGET).do-always-files/sound/feedback/hit.ogg
 endif
+
+REPACK_DESTINED  := $(subst .do-always-images,.do-always,$(IMAGES_DESTINED)) \
+                    $(subst .do-always-sounds,.do-always,$(SOUNDS_DESTINED))
 
 package: $(addprefix $(DESTDIR)/,$(TARGET_REPACK))
 	$(eval RPK_TARGET := $(subst .do-always,.pk3,$(notdir $<)))
@@ -436,8 +443,31 @@ package: $(addprefix $(DESTDIR)/,$(TARGET_REPACK))
 $(DESTDIR)/$(RPK_TARGET).do-always/%:
 	$(call DO_ARCHIVE,$(subst \space, ,$(subst .do-always,dir,$(call RPK_LOCAL,$@))),$(DESTDIR)/$(RPK_TARGET)dir,$(subst \space, ,$(PK3_PREFIX)).zip)
 
-$(DESTDIR)/$(PK3_PREFIX).do-always: $(IMAGE_DESTINED)
+$(DESTDIR)/$(PK3_PREFIX).do-always: $(REPACK_DESTINED)
 	@:
+
+
+ifeq ($(SOUNDS_DESTINED),)
+$(DESTDIR)/$(PK3_PREFIX)-sounds.do-always: $(SOUNDS_DESTINED)
+	$(error no sounds for $(PK3_PREFIX)-sounds $(FILES_RPK), must be run on a pk3dir)
+else
+$(DESTDIR)/$(RPK_TARGET).do-always-sounds/%:
+	$(call DO_ARCHIVE,$(subst $(DESTDIR)/$(RPK_TARGET).do-always-sounds/,,$@),$(SRCDIR)/,$(subst \space, ,$(PK3_PREFIX))-sounds.zip)
+
+$(DESTDIR)/$(PK3_PREFIX)-sounds.do-always: $(SOUNDS_DESTINED)
+	@:
+endif
+
+ifeq ($(IMAGES_DESTINED),)
+$(DESTDIR)/$(PK3_PREFIX)-images.do-always: $(IMAGES_DESTINED)
+	$(error no images for $(PK3_PREFIX)-images $(FILES_RPK), must be run on a pk3dir)
+else
+$(DESTDIR)/$(RPK_TARGET).do-always-images/%:
+	$(call DO_ARCHIVE,$(subst $(DESTDIR)/$(RPK_TARGET).do-always-images/,,$@),$(SRCDIR)/,$(subst \space, ,$(PK3_PREFIX))-images.zip)
+
+$(DESTDIR)/$(PK3_PREFIX)-images.do-always: $(IMAGES_DESTINED)
+	@:
+endif
 
 ifeq ($(FILES_DESTINED),)
 $(DESTDIR)/$(PK3_PREFIX)-files.do-always: $(FILES_DESTINED)
@@ -460,12 +490,12 @@ $(DESTDIR)/$(PK3_PREFIX)-vms.do-always: $(QVM_DESTINED)
 	@:
 endif
 
+ifneq ($(filter $(MAKECMDGOALS),package-pk3dirs),)
+
 $(DESTDIR)/%.do-always:
 	+$(Q)$(MAKE) -f $(MKFILE) V=$(V) repack \
 		SRCDIR="$(subst \space, ,$(call RPK_PK3DIR,$@))" \
 		DESTDIR="$(DESTDIR)"
-
-ifneq ($(filter $(MAKECMDGOALS),package-pk3dirs),)
 
 package-pk3dirs: $(addprefix $(DESTDIR)/,$(TARGET_REPACK))
 	@:

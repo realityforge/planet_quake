@@ -400,7 +400,9 @@ extern DECLSPEC int SDLCALL SDL_SetMemoryFunctions(SDL_malloc_func malloc_func,
  */
 extern DECLSPEC int SDLCALL SDL_GetNumAllocations(void);
 
+#ifndef __WASM__
 extern DECLSPEC char *SDLCALL SDL_getenv(const char *name);
+#endif
 extern DECLSPEC int SDLCALL SDL_setenv(const char *name, const char *value, int overwrite);
 
 extern DECLSPEC void SDLCALL SDL_qsort(void *base, size_t nmemb, size_t size, int (*compare) (const void *, const void *));

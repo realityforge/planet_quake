@@ -59,7 +59,6 @@ Sys_IsLANAddress
 IN_FirstClick
 SDL_GetTicks
 SDL_Delay
-Sys_getenv
 Sys_SendPacket
 Sys_StringToAdr
 CreateAndCall

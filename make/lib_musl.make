@@ -12,7 +12,6 @@ MUSL_SOURCES     :=
 MUSL_INCLUDES    := 
 MUSL_LIBS        := 
 
-ifeq ($(BUILD_CLIENT),1)
 WORKDIRS         += musl          musl/string musl/stdio  musl/stdlib    \
                     musl/signal   musl/errno  musl/math   musl/unistd    \
                     musl/internal musl/time   musl/locale musl/network   \
@@ -22,7 +21,6 @@ WORKDIRS         += musl          musl/string musl/stdio  musl/stdlib    \
                     musl/multibyte musl/malloc
 
 CLEANS           += musl $(CNAME)$(ARCHEXT).bc $(CNAME)$(ARCHEXT).o
-endif
 
 #                malloc/lite_malloc.o malloc/free.o malloc/calloc.o malloc/realloc.o \
 
@@ -105,7 +103,7 @@ ifdef B
 $(B)/musl/%.o: $(MUSL_SOURCE)/src/%.c
 	$(DO_MUSL_CC)
 
-$(B)/$(MUSL_TARGET): $(MUSL_Q3OBJ)
+$(B)/$(MUSL_TARGET): $(addsuffix .mkdirs,$(addprefix $(B)/,$(WORKDIRS))) $(MUSL_Q3OBJ)
 	$(echo_cmd) "LD $@"
 	$(Q)$(CC) -o $@ $(MUSL_Q3OBJ) $(MUSL_CFLAGS) $(CLIENT_LDFLAGS)
 endif

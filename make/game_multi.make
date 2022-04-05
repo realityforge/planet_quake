@@ -96,53 +96,37 @@ endef
 #############################################################################
 
 ifneq ($(BUILD_CLIENT),1)
-ifneq ($(BUILD_GAME_QVM),0)
-debug:
-	$(echo_cmd) "MAKE $(MOD)"
-	@$(MAKE) -f make/lib_q3lcc.make release 
-	@$(MAKE) -f $(MKFILE)  -j 8 \
-		$(BD)/$(MOD)/cgame$(SHLIBNAME) \
-		$(BD)/$(MOD)/qagame$(SHLIBNAME) \
-		$(BD)/$(MOD)/ui$(SHLIBNAME) \
-		$(BD)/$(MOD)/vm/cgame.qvm \
-	  $(BD)/$(MOD)/vm/qagame.qvm \
-	  $(BD)/$(MOD)/vm/ui.qvm \
-	  B=$(BD) GAME_CFLAGS="$(GAME_CFLAGS)" \
-	  OPTIMIZE="$(DEBUG_CFLAGS)" V=$(V)
-
-release:
-	$(echo_cmd) "MAKE $(MOD)"
-	@$(MAKE) -f make/lib_q3lcc.make release 
-	@$(MAKE) -f $(MKFILE)  -j 8 \
-	  $(BR)/$(MOD)/cgame$(SHLIBNAME) \
-	  $(BR)/$(MOD)/qagame$(SHLIBNAME) \
-	  $(BR)/$(MOD)/ui$(SHLIBNAME) \
-		$(BR)/$(MOD)/vm/cgame.qvm \
-	  $(BR)/$(MOD)/vm/qagame.qvm \
-	  $(BR)/$(MOD)/vm/ui.qvm \
-	  B=$(BR) GAME_CFLAGS="$(GAME_CFLAGS)" \
-	  OPTIMIZE="-DNDEBUG $(OPTIMIZE)" V=$(V)
-
-else
-debug:
-	$(echo_cmd) "MAKE $(MOD)"
-	@$(MAKE) -f $(MKFILE)  -j 8 \
-		$(BD)/$(MOD)/cgame$(SHLIBNAME) \
-		$(BD)/$(MOD)/qagame$(SHLIBNAME) \
-		$(BD)/$(MOD)/ui$(SHLIBNAME) \
-	  B=$(BD) GAME_CFLAGS="$(GAME_CFLAGS)" \
-	  OPTIMIZE="$(DEBUG_CFLAGS)" V=$(V)
-
-release:
-	$(echo_cmd) "MAKE $(MOD)"
-	@$(MAKE) -f $(MKFILE)  -j 8 \
-	  $(BR)/$(MOD)/cgame$(SHLIBNAME) \
-	  $(BR)/$(MOD)/qagame$(SHLIBNAME) \
-	  $(BR)/$(MOD)/ui$(SHLIBNAME) \
-	  B=$(BR) GAME_CFLAGS="$(GAME_CFLAGS)" \
-	  OPTIMIZE="-DNDEBUG $(OPTIMIZE)" V=$(V)
-
+GAME_TARGETS := 
+ifneq ($(BUILD_GAME_LIB),0)
+GAME_TARGETS += $(MOD)/cgame$(SHLIBNAME) \
+                $(MOD)/qagame$(SHLIBNAME) \
+                $(MOD)/ui$(SHLIBNAME)
 endif
+ifneq ($(BUILD_GAME_QVM),0)
+GAME_TARGETS += $(MOD)/vm/cgame.qvm \
+                $(MOD)/vm/qagame.qvm \
+                $(MOD)/vm/ui.qvm
+endif
+ifeq ($(GAME_TARGETS),)
+$(error BUILD_GAME_LIB and BUILD_GAME_QVM switched off)
+endif
+
+debug:
+	$(echo_cmd) "MAKE $(MOD)"
+	@$(MAKE) -f make/lib_q3lcc.make release 
+	@$(MAKE) -f $(MKFILE)  -j 8 \
+		$(addprefix $(BD)/,$(GAME_TARGETS))
+		B=$(BD) GAME_CFLAGS="$(GAME_CFLAGS)" \
+		OPTIMIZE="$(DEBUG_CFLAGS)" V=$(V)
+
+release:
+	$(echo_cmd) "MAKE $(MOD)"
+	@$(MAKE) -f make/lib_q3lcc.make release 
+	@$(MAKE) -f $(MKFILE)  -j 8 \
+		$(addprefix $(BR)/,$(GAME_TARGETS))
+		B=$(BR) GAME_CFLAGS="$(GAME_CFLAGS)" \
+		OPTIMIZE="-DNDEBUG $(OPTIMIZE)" V=$(V)
+
 endif
 
 #############################################################################
@@ -337,6 +321,8 @@ ifdef B
 
 mkdirs: $(addsuffix .mkdirs,$(addprefix $(B)/,$(WORKDIRS)))
 
+ifneq ($(BUILD_GAME_LIB),0)
+
 $(B)/$(MOD)/cgame$(SHLIBNAME): mkdirs $(CGOBJ)
 	$(echo_cmd) "LD $@"
 	$(Q)$(CC) $(GAME_CFLAGS) $(GAME_LDFLAGS) -o $@ $(CGOBJ)
@@ -348,6 +334,8 @@ $(B)/$(MOD)/qagame$(SHLIBNAME): mkdirs $(QAOBJ)
 $(B)/$(MOD)/ui$(SHLIBNAME): mkdirs $(UIOBJ)
 	$(echo_cmd) "LD $@"
 	$(Q)$(CC) $(GAME_CFLAGS) $(GAME_LDFLAGS) -o $@ $(UIOBJ)
+
+endif
 
 # qvms
 
@@ -368,6 +356,8 @@ $(B)/$(MOD)/vm/ui.qvm: mkdirs $(UIVMOBJ) $(Q3ASM)
 endif
 
 # game codes
+
+ifneq ($(BUILD_GAME_LIB),0)
 
 $(B)/$(MOD)/cgame/bg_%.o: $(QADIR)/bg_%.c
 	$(DO_CGAME_CC)
@@ -398,6 +388,8 @@ endif
 ifeq ($(INCLUDE_VANILLA),1)
 $(B)/$(MOD)/q3_ui/%.o: $(UIDIR)/%.c
 	$(DO_UI_CC)
+endif
+
 endif
 
 ifneq ($(BUILD_GAME_QVM),0)

@@ -168,7 +168,7 @@ endif
 SYSTEM           := 
 
 ifeq ($(PLATFORM),js)
-SYSTEM           += sys_main.o 
+SYSTEM           += sys_main.o sdl_snd.o 
 endif # not js
 ifeq ($(PLATFORM),wasm)
 SYSTEM           += sys_main.o 	dlmalloc.o sbrk.o SDL.o SDL_audio.o SDL_error.o \
@@ -302,6 +302,7 @@ release: ## build the release version of the client engine
 		$(BR)/$(CLIENT_TARGET)
 
 clean: ## clean all built files and start over
+	$(echo_cmd) "CLEANING"
 	$(Q)rm -rf ./$(BD)/$(CLIENT_WORKDIR) ./$(BD)/$(CLIENT_TARGET)
 	$(Q)rm -rf ./$(BR)/$(CLIENT_WORKDIR) ./$(BR)/$(CLIENT_TARGET)
 	$(Q)for i in $(CLEANS); \
@@ -325,7 +326,7 @@ $(B)/$(CLIENT_WORKDIR)/%.o: $(MOUNT_DIR)/*/%.c
 	$(DO_CLIENT_CC)
 
 $(B)/$(CLIENT_TARGET): $(addsuffix .mkdirs,$(addprefix $(B)/,$(WORKDIRS))) $(Q3OBJ)
-	$(echo_cmd) "LD $@"
+	$(echo_cmd) "LD $(addsuffix .mkdirs,$(addprefix $(B)/,$(WORKDIRS)))"
 	$(Q)$(CC) -o $@ $(Q3OBJ) $(CLIENT_LDFLAGS)
 
 endif

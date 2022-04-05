@@ -399,7 +399,7 @@ static void S_Base_BeginRegistration( void ) {
 static void S_memoryLoad( sfx_t *sfx ) {
 
 	// load the sound file
-	if (!S_LoadSound ( sfx ) ) {
+	if ( !S_LoadSound ( sfx ) || sfx->soundLength ) {
 		Com_DPrintf( S_COLOR_YELLOW "WARNING: couldn't load sound: %s\n", sfx->soundName );
 		sfx->defaultSound = qtrue;
 		sfx->inMemory = qfalse;
@@ -410,6 +410,7 @@ static void S_memoryLoad( sfx_t *sfx ) {
 	}
 
 }
+
 
 //=============================================================================
 
@@ -510,7 +511,16 @@ static void S_Base_StartSound( const vec3_t origin, int entityNum, int entchanne
 
 	sfx = &s_knownSfx[ sfxHandle ];
 
+	if( dma.speed ) {
+		return;
+	}
+
 	if (sfx->inMemory == qfalse) {
+		S_memoryLoad(sfx);
+	}
+
+	if(!sfx->soundLength && Com_Milliseconds() - sfx->lastTimeUsed > 2000) {
+		sfx->lastTimeUsed = Com_Milliseconds();
 		S_memoryLoad(sfx);
 	}
 
@@ -542,7 +552,7 @@ static void S_Base_StartSound( const vec3_t origin, int entityNum, int entchanne
 		}
 	}
 
-	Com_DPrintf("playing %s\n", sfx->soundName);
+	//Com_DPrintf("playing %s\n", sfx->soundName);
 	// pick a channel to play on
 
 	// try to limit sound duplication
@@ -782,8 +792,13 @@ void S_Base_AddLoopingSound( int entityNum, const vec3_t origin, const vec3_t ve
 	if ( !sfx->soundLength ) {
 #ifndef USE_LAZY_LOAD
 		Com_DPrintf( S_COLOR_YELLOW "%s has length 0", sfx->soundName );
-#endif
     return;
+#else
+		if(Com_Milliseconds() - sfx->lastTimeUsed > 2000) {
+			sfx->lastTimeUsed = Com_Milliseconds();
+			S_memoryLoad(sfx);
+		}
+#endif
 	}
 
 	VectorCopy( origin, loopSounds[entityNum].origin );
@@ -851,8 +866,13 @@ void S_Base_AddRealLoopingSound( int entityNum, const vec3_t origin, const vec3_
 	if ( !sfx->soundLength ) {
 #ifndef USE_LAZY_LOAD
 		Com_DPrintf( S_COLOR_YELLOW "%s has length 0\n", sfx->soundName );
-#endif
     return;
+#else
+		if(Com_Milliseconds() - sfx->lastTimeUsed > 2000) {
+			sfx->lastTimeUsed = Com_Milliseconds();
+			S_memoryLoad(sfx);
+		}
+#endif
 	}
 	VectorCopy( origin, loopSounds[entityNum].origin );
 	VectorCopy( velocity, loopSounds[entityNum].velocity );
@@ -1526,7 +1546,6 @@ void S_Base_Shutdown( void ) {
 #ifndef USE_LAZY_MEMORY
 	s_numSfx = 0; // clean up sound cache -EC-
 #else
-DebugBreak();
   // free all the sounds not used
   for ( int i = 1 ; i < s_numSfx ; i++ ) {
 		s_knownSfx[i].inMemory = qfalse;

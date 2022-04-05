@@ -25,11 +25,11 @@ TARGET_Q3CPP   = q3cpp
 TARGET_LBURG   = lburg
 
 ifdef B
-Q3ASM          = $(BR)/$(Q3LCC_WORKDIR)/$(TARGET_Q3ASM)
-Q3LCC          = $(BR)/$(Q3LCC_WORKDIR)/$(TARGET_Q3LCC)
-Q3RCC          = $(BR)/$(Q3LCC_WORKDIR)/$(TARGET_Q3RCC)
-Q3CPP          = $(BR)/$(Q3LCC_WORKDIR)/$(TARGET_Q3CPP)
-LBURG          = $(BR)/$(Q3LCC_WORKDIR)/lburg/$(TARGET_LBURG)
+Q3ASM          = $(Q3LCC_BUILD)/$(Q3LCC_WORKDIR)/$(TARGET_Q3ASM)
+Q3LCC          = $(Q3LCC_BUILD)/$(Q3LCC_WORKDIR)/$(TARGET_Q3LCC)
+Q3RCC          = $(Q3LCC_BUILD)/$(Q3LCC_WORKDIR)/$(TARGET_Q3RCC)
+Q3CPP          = $(Q3LCC_BUILD)/$(Q3LCC_WORKDIR)/$(TARGET_Q3CPP)
+LBURG          = $(Q3LCC_BUILD)/$(Q3LCC_WORKDIR)/lburg/$(TARGET_LBURG)
 endif
 
 TOOLS_CFLAGS  := $(BASE_CFLAGS) \
@@ -54,27 +54,28 @@ endef
 
 
 ifdef NOT_INCLUDED_Q3LCC
+Q3LCC_BUILD := $(BUILD_DIR)/release-$(COMPILE_PLATFORM)-$(COMPILE_ARCH)
 
 release:
 	$(echo_cmd) "MAKE Q3LCC"
-	$(Q)$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) \
-	  WORKDIRS="$(Q3LCC_WORKDIRS)" \
-	  CFLAGS="$(TOOLS_CFLAGS) $(RELEASE_CFLAGS)" \
-	  LDFLAGS="$(TOOLS_LDFLAGS) $(RELEASE_LDFLAGS)" \
-	  $(BR)/$(Q3LCC_WORKDIR)/$(TARGET_Q3ASM) \
-	  $(BR)/$(Q3LCC_WORKDIR)/$(TARGET_Q3LCC) \
-	  $(BR)/$(Q3LCC_WORKDIR)/$(TARGET_Q3RCC) \
-	  $(BR)/$(Q3LCC_WORKDIR)/$(TARGET_Q3CPP) \
-	  $(BR)/$(Q3LCC_WORKDIR)/lburg/$(TARGET_LBURG)
-
+	$(Q)$(MAKE) -f $(MKFILE) B=$(Q3LCC_BUILD) V=$(V) \
+		WORKDIRS="$(Q3LCC_WORKDIRS)" PLATFORM="" \
+		CFLAGS="$(TOOLS_CFLAGS) $(RELEASE_CFLAGS)" \
+		LDFLAGS="$(TOOLS_LDFLAGS) $(RELEASE_LDFLAGS)" \
+		$(Q3LCC_BUILD)/$(Q3LCC_WORKDIR)/$(TARGET_Q3ASM) \
+		$(Q3LCC_BUILD)/$(Q3LCC_WORKDIR)/$(TARGET_Q3LCC) \
+		$(Q3LCC_BUILD)/$(Q3LCC_WORKDIR)/$(TARGET_Q3RCC) \
+		$(Q3LCC_BUILD)/$(Q3LCC_WORKDIR)/$(TARGET_Q3CPP) \
+		$(Q3LCC_BUILD)/$(Q3LCC_WORKDIR)/lburg/$(TARGET_LBURG)
 
 clean:
 	@rm -rf ./$(BD)/$(Q3LCC_WORKDIR) ./$(BD)/$(TARGET_Q3ASM) \
 					./$(BD)/$(TARGET_Q3LCC)  ./$(BD)/$(TARGET_Q3RCC) \
 					./$(BD)/$(TARGET_Q3CPP)  ./$(BD)/$(TARGET_LBURG)
-	@rm -rf ./$(BR)/$(Q3LCC_WORKDIR) ./$(BR)/$(TARGET_Q3ASM) \
-					./$(BR)/$(TARGET_Q3LCC)  ./$(BR)/$(TARGET_Q3RCC) \
-					./$(BR)/$(TARGET_Q3CPP)  ./$(BR)/$(TARGET_LBURG)
+	@rm -rf ./$(Q3LCC_BUILD)/$(Q3LCC_WORKDIR) ./$(Q3LCC_BUILD)/$(TARGET_Q3ASM) \
+					./$(Q3LCC_BUILD)/$(TARGET_Q3LCC)  ./$(Q3LCC_BUILD)/$(TARGET_Q3RCC) \
+					./$(Q3LCC_BUILD)/$(TARGET_Q3CPP)  ./$(Q3LCC_BUILD)/$(TARGET_LBURG)
+
 else
 WORKDIRS      += $(Q3LCC_WORKDIRS)
 CLEANS        += $(Q3LCC_WORKDIRS) \
@@ -85,58 +86,58 @@ CLEANS        += $(Q3LCC_WORKDIRS) \
                  $(Q3LCC_WORKDIR)/$(TARGET_LBURG)
 endif
 
-Q3ASMOBJ       = $(BR)/tools/asm/q3asm.o \
-                 $(BR)/tools/asm/q3vm.o \
-                 $(BR)/tools/asm/cmdlib.o
+Q3ASMOBJ       = $(Q3LCC_BUILD)/tools/asm/q3asm.o \
+                 $(Q3LCC_BUILD)/tools/asm/q3vm.o \
+                 $(Q3LCC_BUILD)/tools/asm/cmdlib.o
 
-Q3LCCOBJ       = $(BR)/tools/etc/lcc.o \
-                 $(BR)/tools/etc/bytecode.o
+Q3LCCOBJ       = $(Q3LCC_BUILD)/tools/etc/lcc.o \
+                 $(Q3LCC_BUILD)/tools/etc/bytecode.o
 
-Q3CPPOBJ       = $(BR)/tools/cpp/cpp.o \
-                 $(BR)/tools/cpp/lex.o \
-                 $(BR)/tools/cpp/nlist.o \
-                 $(BR)/tools/cpp/tokens.o \
-                 $(BR)/tools/cpp/macro.o \
-                 $(BR)/tools/cpp/eval.o \
-                 $(BR)/tools/cpp/include.o \
-                 $(BR)/tools/cpp/hideset.o \
-                 $(BR)/tools/cpp/getopt.o \
-                 $(BR)/tools/cpp/unix.o
+Q3CPPOBJ       = $(Q3LCC_BUILD)/tools/cpp/cpp.o \
+                 $(Q3LCC_BUILD)/tools/cpp/lex.o \
+                 $(Q3LCC_BUILD)/tools/cpp/nlist.o \
+                 $(Q3LCC_BUILD)/tools/cpp/tokens.o \
+                 $(Q3LCC_BUILD)/tools/cpp/macro.o \
+                 $(Q3LCC_BUILD)/tools/cpp/eval.o \
+                 $(Q3LCC_BUILD)/tools/cpp/include.o \
+                 $(Q3LCC_BUILD)/tools/cpp/hideset.o \
+                 $(Q3LCC_BUILD)/tools/cpp/getopt.o \
+                 $(Q3LCC_BUILD)/tools/cpp/unix.o
 
-Q3RCCOBJ       = $(BR)/tools/rcc/alloc.o \
-                 $(BR)/tools/rcc/bind.o \
-                 $(BR)/tools/rcc/bytecode.o \
-                 $(BR)/tools/rcc/dag.o \
-                 $(BR)/tools/rcc/dagcheck.o \
-                 $(BR)/tools/rcc/decl.o \
-                 $(BR)/tools/rcc/enode.o \
-                 $(BR)/tools/rcc/error.o \
-                 $(BR)/tools/rcc/event.o \
-                 $(BR)/tools/rcc/expr.o \
-                 $(BR)/tools/rcc/gen.o \
-                 $(BR)/tools/rcc/init.o \
-                 $(BR)/tools/rcc/inits.o \
-                 $(BR)/tools/rcc/input.o \
-                 $(BR)/tools/rcc/lex.o \
-                 $(BR)/tools/rcc/list.o \
-                 $(BR)/tools/rcc/main.o \
-                 $(BR)/tools/rcc/null.o \
-                 $(BR)/tools/rcc/output.o \
-                 $(BR)/tools/rcc/prof.o \
-                 $(BR)/tools/rcc/profio.o \
-                 $(BR)/tools/rcc/simp.o \
-                 $(BR)/tools/rcc/stmt.o \
-                 $(BR)/tools/rcc/string.o \
-                 $(BR)/tools/rcc/sym.o \
-                 $(BR)/tools/rcc/symbolic.o \
-                 $(BR)/tools/rcc/trace.o \
-                 $(BR)/tools/rcc/tree.o \
-                 $(BR)/tools/rcc/types.o
+Q3RCCOBJ       = $(Q3LCC_BUILD)/tools/rcc/alloc.o \
+                 $(Q3LCC_BUILD)/tools/rcc/bind.o \
+                 $(Q3LCC_BUILD)/tools/rcc/bytecode.o \
+                 $(Q3LCC_BUILD)/tools/rcc/dag.o \
+                 $(Q3LCC_BUILD)/tools/rcc/dagcheck.o \
+                 $(Q3LCC_BUILD)/tools/rcc/decl.o \
+                 $(Q3LCC_BUILD)/tools/rcc/enode.o \
+                 $(Q3LCC_BUILD)/tools/rcc/error.o \
+                 $(Q3LCC_BUILD)/tools/rcc/event.o \
+                 $(Q3LCC_BUILD)/tools/rcc/expr.o \
+                 $(Q3LCC_BUILD)/tools/rcc/gen.o \
+                 $(Q3LCC_BUILD)/tools/rcc/init.o \
+                 $(Q3LCC_BUILD)/tools/rcc/inits.o \
+                 $(Q3LCC_BUILD)/tools/rcc/input.o \
+                 $(Q3LCC_BUILD)/tools/rcc/lex.o \
+                 $(Q3LCC_BUILD)/tools/rcc/list.o \
+                 $(Q3LCC_BUILD)/tools/rcc/main.o \
+                 $(Q3LCC_BUILD)/tools/rcc/null.o \
+                 $(Q3LCC_BUILD)/tools/rcc/output.o \
+                 $(Q3LCC_BUILD)/tools/rcc/prof.o \
+                 $(Q3LCC_BUILD)/tools/rcc/profio.o \
+                 $(Q3LCC_BUILD)/tools/rcc/simp.o \
+                 $(Q3LCC_BUILD)/tools/rcc/stmt.o \
+                 $(Q3LCC_BUILD)/tools/rcc/string.o \
+                 $(Q3LCC_BUILD)/tools/rcc/sym.o \
+                 $(Q3LCC_BUILD)/tools/rcc/symbolic.o \
+                 $(Q3LCC_BUILD)/tools/rcc/trace.o \
+                 $(Q3LCC_BUILD)/tools/rcc/tree.o \
+                 $(Q3LCC_BUILD)/tools/rcc/types.o
 
-LBURGOBJ       = $(BR)/tools/lburg/lburg.o \
-                 $(BR)/tools/lburg/gram.o
+LBURGOBJ       = $(Q3LCC_BUILD)/tools/lburg/lburg.o \
+                 $(Q3LCC_BUILD)/tools/lburg/gram.o
 
-DAGCHECK_C     = $(BR)/tools/rcc/dagcheck.c
+DAGCHECK_C     = $(Q3LCC_BUILD)/tools/rcc/dagcheck.c
 
 ifdef B
 
@@ -146,35 +147,35 @@ ifdef B
 %.c: %.y
 	$(DO_YACC)
 
-$(BR)/$(Q3LCC_WORKDIR)/lburg/%.o: $(LBURGDIR)/%.c
+$(Q3LCC_BUILD)/$(Q3LCC_WORKDIR)/lburg/%.o: $(LBURGDIR)/%.c
 	$(DO_TOOLS_CC)
 
 $(DAGCHECK_C): $(LBURG) $(Q3LCCDIR)/src/dagcheck.md
 	$(echo_cmd) "LBURG $(Q3LCCDIR)/src/dagcheck.md"
 	$(Q)$(LBURG) $(Q3LCCDIR)/src/dagcheck.md $@
 
-$(BR)/$(Q3LCC_WORKDIR)/rcc/dagcheck.o: $(DAGCHECK_C)
+$(Q3LCC_BUILD)/$(Q3LCC_WORKDIR)/rcc/dagcheck.o: $(DAGCHECK_C)
 	$(DO_TOOLS_CC)
 
-$(BR)/$(Q3LCC_WORKDIR)/rcc/%.o: $(Q3LCCDIR)/src/%.c
+$(Q3LCC_BUILD)/$(Q3LCC_WORKDIR)/rcc/%.o: $(Q3LCCDIR)/src/%.c
 	$(DO_TOOLS_CC)
 
-$(BR)/$(Q3LCC_WORKDIR)/rcc/%.o: $(Q3LCCDIR)/etc/%.c
+$(Q3LCC_BUILD)/$(Q3LCC_WORKDIR)/rcc/%.o: $(Q3LCCDIR)/etc/%.c
 	$(DO_TOOLS_CC)
 
-$(BR)/$(Q3LCC_WORKDIR)/cpp/%.o: $(Q3CPPDIR)/%.c
+$(Q3LCC_BUILD)/$(Q3LCC_WORKDIR)/cpp/%.o: $(Q3CPPDIR)/%.c
 	$(DO_TOOLS_CC)
 
-$(BR)/$(Q3LCC_WORKDIR)/asm/%.o: $(Q3ASMDIR)/%.c
+$(Q3LCC_BUILD)/$(Q3LCC_WORKDIR)/asm/%.o: $(Q3ASMDIR)/%.c
 	$(DO_TOOLS_CC)
   
-$(BR)/$(Q3LCC_WORKDIR)/etc/%.o: $(Q3LCCDIR)/etc/%.c
+$(Q3LCC_BUILD)/$(Q3LCC_WORKDIR)/etc/%.o: $(Q3LCCDIR)/etc/%.c
 	$(DO_TOOLS_CC)
 
 
 # targets
 
-mkdirs: $(BR)/ $(addsuffix .mkdirs,$(addprefix $(BR)/,$(Q3LCC_WORKDIRS)))
+mkdirs: $(Q3LCC_BUILD).mkdirs $(addsuffix .mkdirs,$(addprefix $(Q3LCC_BUILD)/,$(Q3LCC_WORKDIRS)))
   @:
 
 $(Q3ASM): mkdirs $(Q3ASMOBJ)

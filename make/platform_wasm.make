@@ -99,31 +99,59 @@ RELEASE_CFLAGS      := -fvisibility=hidden \
                        -DNDEBUG -Ofast -O3 -Oz -fPIC -ffast-math
                     # -flto 
 PK3_INCLUDES        := xxx-multigame-files.pk3  \
-                       xxx-multigame-vms.pk3    \
-                       lsdm3_v1-files.pk3       \
-                       lsdm3_v1-images.pk3      \
-                       xxx-multigame-sounds.pk3
-
+                       xxx-multigame-vms.pk3    
+#                       lsdm3_v1-files.pk3       
+#                       lsdm3_v1-images.pk3      
+#                       xxx-multigame-sounds.pk3
 
 ifeq ($(filter $(MAKECMDGOALS),debug),debug)
 WASM_INDEX          += $(wildcard $(BD)/$(CNAME)*.wasm)
+WASM_TRGTDIR        := $(BD)
 else
+ifeq ($(filter $(MAKECMDGOALS),release),release)
 WASM_INDEX          += $(wildcard $(BR)/$(CNAME)*.wasm)
+WASM_TRGTDIR        := $(BR)
+endif
 endif
 
+INDEX_OBJS          := $(WASM_TRGTDIR)/multigame/vm.do-always \
+                       $(addprefix $(BUILD_DIR)/,$(PK3_INCLUDES)) \
+                       $(WASM_INDEX) $(WASM_INDEX:.wasm=.html)
 
-index: $(WASM_INDEX) $(WASM_INDEX:.wasm=.html) ## create an index.html page out of the current build target
-	$(Q)$(MAKE) -f make/build_package.make package \
-		TARGET_REPACK="xxx-multigame-vms.do-always"
-	$(Q)$(MAKE) -f make/build_package.make package \
-		TARGET_REPACK="xxx-multigame-files.do-always"
-	$(Q)$(MAKE) -f make/build_package.make package \
-		SRCDIR="games/multigame/assets/lsdm3_v1.pk3dir" \
-		TARGET_REPACK="lsdm3_v1-files.do-always"
-	$(Q)$(MAKE) -f make/build_package.make index \
-		WASM_VFS="xxx-multigame-vms.pk3 xxx-multigame-files.pk3 lsdm3_v1-files.pk3" \
+ifdef WASM_TRGTDIR
+GAME_BUILD := $(BUILD_DIR)/release-$(COMPILE_PLATFORM)-$(COMPILE_ARCH)
+
+$(WASM_TRGTDIR)/multigame/vm.do-always:
+	$(Q)$(MAKE) -f make/game_multi.make V=$(V) release \
+		PLATFORM="$(COMPILE_PLATFORM)" BUILD_GAME_QVM=1 \
+		B="$(GAME_BUILD)" ARCH="$(COMPILE_ARCH)" \
+		BUILD_GAME_LIB=0 
+
+$(BUILD_DIR)/%.pk3:
+	$(eval REPACK_PATH := $(subst -sounds.pk3,.pk3,$(subst -vms.pk3,.pk3,$(subst -images.pk3,.pk3,$(subst -files.pk3,.pk3,$(notdir $@))))))
+	$(eval REPACK_BUILD:= $(if $(filter %-files.pk3,$@),games/multigame/assets/$(subst .pk3,.pk3dir,$(REPACK_PATH)),$(if $(filter %-vms.pk3,$@),$(WASM_TRGTDIR)/multigame,$(BUILD_DIR)/$(subst .pk3,.pk3dir,$(REPACK_PATH)))))
+	$(Q)$(if $(filter build/%.pk3dir,$(REPACK_BUILD)), \
+	$(MAKE) -f make/build_package.make V=$(V) convert \
+		SRCDIR="games/multigame/assets/$(subst .pk3,.pk3dir,$(REPACK_PATH))" \
+		DESTDIR="$(BUILD_DIR)" TARGET_CONVERT="$(subst .pk3,.do-always,$(REPACK_PATH))" && \
+	$(MAKE) -f make/build_package.make V=$(V) encode \
+		SRCDIR="games/multigame/assets/$(subst .pk3,.pk3dir,$(REPACK_PATH))" \
+		DESTDIR="$(BUILD_DIR)" TARGET_ENCODE="$(subst .pk3,.do-always,$(REPACK_PATH))")
+	$(Q)$(MAKE) -f make/build_package.make V=$(V) package \
+		SRCDIR="$(REPACK_BUILD)" \
+		DESTDIR="$(BUILD_DIR)" \
+		TARGET_REPACK="$(subst .pk3,.do-always,$(notdir $@))"
+
+$(WASM_TRGTDIR)/%.html: $(WASM_TRGTDIR)/%.wasm
+	$(Q)$(MAKE) -f make/build_package.make V=$(V) index \
+		WASM_VFS="$(PK3_INCLUDES)" \
 		STARTUP_COMMAND="+set\\', \\'developer\\', \\'1" \
-		DESTDIR="$(dir $(WASM_INDEX))"
+		DESTDIR="$(dir $@)"
+
+endif
+
+index: $(INDEX_OBJS) ## create an index.html page out of the current build target
+	@:
 #		STARTUP_COMMAND="+set\\', \\'developer\\', \\'1\\', \\'+devmap\\', \\'lsdm3_v1" \
 
 
@@ -139,7 +167,7 @@ SDL_FLAGS := -DSDL_VIDEO_DISABLED=1 \
 						 -DHAVE_STDLIB_H=1 \
 						 -DHAVE_UNISTD_H=1 \
 						 -DHAVE_MATH_H=1 \
-						 -DHAVE_GETENV=1 \
+						 -DHAVE_GETENV=0 \
 						 -DHAVE_M_PI \
 						 -DSDL_THREADS_DISABLED=1 \
 						 -DSDL_AUDIO_DRIVER_EMSCRIPTEN=1
@@ -180,7 +208,6 @@ endif
 
 
 
-.NOTPARALLEL: index
 # TODO: compile all js files into one/minify/webpack
 # TODO: insert bigchars font into index page, insert all javascript and wasm into index page
 # TODO: deploy index page with Actions

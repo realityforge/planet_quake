@@ -298,6 +298,9 @@ qboolean S_LoadSound( sfx_t *sfx )
 	// install assured we can rely upon the sound memory
 	// manager to do the right thing for us and page
 	// sound in as needed
+#ifdef __WASM__
+	sfx->soundCompressed = qfalse;
+#endif
 
 	if( info.channels == 1 && sfx->soundCompressed == qtrue) {
 		sfx->soundCompressionMethod = 1;
@@ -320,6 +323,7 @@ qboolean S_LoadSound( sfx_t *sfx )
 		sfx->soundCompressionMethod = 0;
 		sfx->soundData = NULL;
 		sfx->soundLength = ResampleSfx( sfx, info.channels, info.rate, info.width, info.samples, data + info.dataofs, qfalse );
+		encodeMuLaw( sfx, samples);
 	}
 
 	sfx->soundChannels = info.channels;

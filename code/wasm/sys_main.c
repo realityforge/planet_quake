@@ -239,15 +239,6 @@ RSERR_UNKNOWN
 cvar_t *r_stereoEnabled;
 cvar_t *in_nograb;
 
-void SDL_GL_SwapWindow(SDL_Window *window) {
-  // this probably prevents that flashing when changing mods
-}
-
-int SDL_GL_SetSwapInterval(int interval) {
-  // set values for request animation frame?
-  return 0;
-}
-
 void *eglGetProcAddress(const char *procname) {
 	DebugBreak();
 	return NULL;
@@ -370,6 +361,16 @@ void Sys_SetClipboardBitmap( const byte *bitmap, int length )
 }
 
 
+#ifndef __EMSCRIPTEN__
+
+void SDL_GL_SwapWindow(SDL_Window *window) {
+  // this probably prevents that flashing when changing mods
+}
+
+int SDL_GL_SetSwapInterval(int interval) {
+  // set values for request animation frame?
+  return 0;
+}
 void SDL_LogResetPriorities(void) {
 
 }
@@ -431,6 +432,8 @@ SDL_LogMessageV(int category, SDL_LogPriority priority, const char *fmt, va_list
 qboolean emscripten_has_asyncify(void) {
 	return qfalse;
 }
+
+#endif
 
 #if 0
 

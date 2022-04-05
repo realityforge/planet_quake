@@ -317,6 +317,8 @@ qboolean SNDDMA_Init( void )
 	dma.fullsamples = dma.samples / dma.channels;
 	dma.submission_chunk = 1;
 	dma.speed = obtained.freq;
+	Com_Printf("wtf? %i\n", dma.speed);
+	DebugBreak();
 	dmasize = (dma.samples * (dma.samplebits/8));
 	dma.buffer = calloc(1, dmasize);
 

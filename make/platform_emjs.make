@@ -43,7 +43,8 @@ BASE_CFLAGS      += -Wall -Wno-unused-variable -fno-strict-aliasing \
                     -Wimplicit -Wstrict-prototypes \
                     -DGL_GLEXT_PROTOTYPES=1 -DGL_ARB_ES2_compatibility=1\
                     -DGL_EXT_direct_state_access=1 \
-                    -DUSE_Q3KEY -DUSE_MD5 -D__WASM__
+                    -DUSE_Q3KEY -DUSE_MD5 -D__WASM__ \
+                    -DHAVE_GETENV=0
 
 DEBUG_CFLAGS     := -DDEBUG -D_DEBUG -frtti -fPIC -O0 -g -gsource-map
           
