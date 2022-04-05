@@ -1,14 +1,24 @@
+# This script feels terrible. I don't like the defined functions and file lookups.
+# Too much code for everything that it does. But I feel this way about most Makefiles. 
+# Scaffolding should look like scaffolding?
+
+# SRCDIR - games/multigame/assets/xxx-multigame.pk3dir
+# SRCDIR | *.bsp,*.map | make $< -o $@
+
+# The pipes look like studs. Or limp on with this system and build a parser 
+#   and convert it all to bash/M$ subsystem?
+
 
 # most .make files are the format 
 # 1) PLATFORM
-# 2) BUILD OBJS
-# 3) DEFINES
+# 2) BUILD OBJECTS
+# 3) DEFINES / FLAGS
 # 4) GOALS
-#this make file adds an additional BUILD OBJS and defined down below
+#this make file adds an additional BUILD OBJS and defines down below
 
 # .do-always is used to force a command to run, even if the target files already exist
 #   this is for things like putting all the images and js files inside quake3e.html
-# some of these calls are idempotent, which means you can call it multiple times
+# some of these targets are idempotent, which means you can call it multiple times
 #   and get the same/expected result every time, with minimal repetative work done
 
 ifeq ($(V),1)
@@ -29,6 +39,9 @@ PK3_PREFIX       := $(subst $(_),\space,$(subst .pk3dir,,$(notdir $(SRCDIR))))
 endif
 
 ifeq ($(SRCDIR),games/multigame/assets/xxx-multigame.pk3dir)
+# there is 2 reasons I put xxx- here. 1) because people associate it with the porn
+# industry and it freaks them out to see it and jump to conclusions. 2) the real reason,
+# so the packed pk3 filename is listed later to override the VMs in the earlier pk3s.
 PK3_PREFIX       := xxx-multigame
 endif
 
@@ -135,6 +148,7 @@ endif
 
 ################################################ BUILD OBJS / DIFF FILES 
 
+
 ############## DANGER ZONE
 # because lvlworld conversion has so many files we limit automatic pk3 
 #   packaging to .pk3dir names
@@ -163,7 +177,8 @@ IMAGE_ALL_EXTS   := $(IMAGE_CONV_EXTS) $(IMAGE_VALID_EXTS)
 AUDIO_VALID_EXTS := ogg
 AUDIO_CONV_EXTS  := wav mp3 opus mpga
 AUDIO_ALL_EXTS   := $(AUDIO_CONV_EXTS) $(AUDIO_VALID_EXTS)
-FILE_ALL_EXTS    := cfg skin menu shaderx mtr arena bot txt shader
+# TODO: remove lightmaps/vis from BSPs to save space
+FILE_ALL_EXTS    := cfg skin menu shaderx mtr arena bot txt shader map bsp
 
 
 ################################################# DO WORK DEFINES
@@ -235,7 +250,7 @@ endef
 
 define DO_CSS_EMBED
 	$(echo_cmd) "CSS_EMBED $<"
-	$(Q)$(NODE) -e "$(call NODE_FSREPLACE,'$(call HTML_LINK,$(subst $(WASM_HTTP)/,,$<))','$(call HTML_STYLE,$(subst $(WASM_ASSETS)/,,$<),$<)',$(DESTDIR)/$(WASM_HTML))"
+	$(Q)$(NODE) -e "$(call NODE_FSREPLACE,'$(call HTML_LINK,$(subst $(WASM_HTTP)/,,$<))','$(call HTML_STYLE,$(notdir $<),$<)',$(DESTDIR)/$(WASM_HTML))"
 endef
 
 define DO_JS_LIST
@@ -278,8 +293,7 @@ endef
 
 ifdef TARGET_CONVERT
 
-# list images with converted pathname then check for existing alt-name in 
-#   defined script
+# list images with converted pathname then check for existing alt-name in defined script
 # convert jpg from source dirs in case there is a quality conversion
 IMAGE_SRC        := $(call FILTER_EXT,$(IMAGE_ALL_EXTS),$(ALL_FILES))
 IMAGE_DONE       := $(call FILTER_EXT,$(IMAGE_VALID_EXTS),$(ALL_DONE))
@@ -407,6 +421,9 @@ IMAGE_DESTINED   := $(addprefix $(DESTDIR)/$(RPK_TARGET).do-always/,$(filter $(I
 
 FILES_RPK        := $(call FILTER_EXT,$(FILE_ALL_EXTS),$(ALL_FILES))
 FILES_DESTINED   := $(addprefix $(DESTDIR)/$(RPK_TARGET).do-always-files/,$(FILES_RPK))
+ifeq ($(PK3_PREFIX),xxx-multigame)
+FILES_DESTINED   += $(DESTDIR)/$(RPK_TARGET).do-always-files/sound/feedback/hit.ogg
+endif
 
 package: $(addprefix $(DESTDIR)/,$(TARGET_REPACK))
 	$(eval RPK_TARGET := $(subst .do-always,.pk3,$(notdir $<)))
@@ -444,10 +461,15 @@ endif
 
 $(DESTDIR)/%.do-always:
 	+$(Q)$(MAKE) -f $(MKFILE) V=$(V) repack \
-		SRCDIR="$(subst \space, ,$(call RPK_PK3DIR,$@))" DESTDIR="$(DESTDIR)"
+		SRCDIR="$(subst \space, ,$(call RPK_PK3DIR,$@))" \
+		DESTDIR="$(DESTDIR)"
+
+ifneq ($(filter $(MAKECMDGOALS),package-pk3dirs),)
 
 package-pk3dirs: $(addprefix $(DESTDIR)/,$(TARGET_REPACK))
 	@:
+
+endif
 
 endif
 
@@ -460,9 +482,9 @@ ifdef TARGET_INDEX
 WASM_ESSENTIAL   := gfx/2d/bigchars.png \
                     index.css $(WASM_VFS)
 WASM_OBJS        := $(DESTDIR).do-always/$(WASM_HTML) \
-										$(addprefix $(DESTDIR).do-always/,$(WASM_ESSENTIAL)) \
-										$(DESTDIR)/quake3e.opt \
-										$(DESTDIR).do-always/quake3e.wasm
+                    $(addprefix $(DESTDIR).do-always/,$(WASM_ESSENTIAL)) \
+                    $(DESTDIR)/quake3e.opt \
+                    $(DESTDIR).do-always/quake3e.wasm
 
 $(DESTDIR)/%.opt: $(DESTDIR)/%.wasm
 	$(DO_OPT_CC)

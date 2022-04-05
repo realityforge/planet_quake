@@ -4596,9 +4596,11 @@ void Com_Frame( qboolean noDelay ) {
 			minMsec = 0;
 			bias = 0;
 		} else {
+#ifndef __WASM__
 			if ( !gw_active && com_maxfpsUnfocused->integer > 0 )
 				minMsec = 1000 / com_maxfpsUnfocused->integer;
 			else
+#endif
 			if ( com_maxfps->integer > 0 )
 				minMsec = 1000 / com_maxfps->integer;
 			else

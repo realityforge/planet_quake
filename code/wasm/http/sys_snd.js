@@ -15,7 +15,7 @@ var SND = {
 
 function SDL_Delay(delay) {
 	// horrible busy-wait, but in a worker it at least does not block rendering
-	var now = Date.now();
-	while (Date.now() - now < delay) {}
+	//var now = Date.now()
+	//while (Date.now() - now < delay) {}
 }
 

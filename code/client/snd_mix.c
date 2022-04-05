@@ -683,6 +683,7 @@ void S_PaintChannels( int endtime ) {
 
 	snd_vol = s_volume->value * 255;
 
+#ifndef __WASM__
 	if ( (!gw_active && !gw_minimized && s_muteWhenUnfocused->integer) || (gw_minimized && s_muteWhenMinimized->integer) ) {
 		buffer = dma_buffer2;
 		if ( !muted ) {
@@ -690,7 +691,9 @@ void S_PaintChannels( int endtime ) {
 			Com_Memset( dma.buffer, 0, dma.samples * dma.samplebits/8 );
 		}
 		muted = qtrue;
-	} else {
+	} else 
+#endif
+	{
 		buffer = dma.buffer;
 		// switching to unmuted, clear both buffers
 		if ( muted ) {

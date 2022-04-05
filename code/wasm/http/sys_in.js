@@ -353,7 +353,7 @@ function InputPushMouseEvent (evt) {
 
   if(!(Key_GetCatcher() & KEYCATCH_CONSOLE)) {
     if (evt.type == 'mousemove') {
-      if(Key_GetCatcher() & KEYCATCH_CGAME) {
+      if(Key_GetCatcher() === 0) {
         Sys_QueEvent( Sys_Milliseconds(), SE_MOUSE, 
           getMovementX(evt), getMovementY(evt), 0, null );
       } else {
@@ -367,7 +367,7 @@ function InputPushMouseEvent (evt) {
   }
 
   // always unlock on menus because it's position absolute now
-  if ( !(Key_GetCatcher() & KEYCATCH_CGAME) ) {
+  if ( Key_GetCatcher() !== 0 ) {
     if(document.pointerLockElement) {
       SDL_ShowCursor()
       // ruins sound //HEAP32[gw_active >> 2] = false
@@ -400,7 +400,8 @@ function Com_MaxFPSChanged() {
   if(Q3e.frameInterval) {
     clearInterval(Q3e.frameInterval)
   }
-  Q3e.frameInterval = setInterval(Sys_Frame, 1000.0 / (HEAP32[gw_active >> 2] ? INPUT.fps : INPUT.fpsUnfocused))
+  Q3e.frameInterval = setInterval(Sys_Frame, 1000.0 / (HEAP32[gw_active >> 2] 
+    ? INPUT.fps : INPUT.fpsUnfocused))
 }
 
 function Sys_ConsoleInput() {
