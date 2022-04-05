@@ -359,7 +359,11 @@ static sfxHandle_t S_Base_RegisterSound( const char *name, qboolean compressed )
 	}
 
 	sfx->inMemory = qfalse;
+#ifndef __WASM__
 	sfx->soundCompressed = compressed;
+#else
+	sfx->soundCompressed = qfalse;
+#endif
 
 	S_memoryLoad( sfx );
 
@@ -379,13 +383,30 @@ static sfxHandle_t S_Base_RegisterSound( const char *name, qboolean compressed )
 S_BeginRegistration
 =====================
 */
-static void S_Base_BeginRegistration( void ) {
+#ifndef __WASM__
+static 
+#else
+Q_EXPORT
+#endif
+void S_Base_BeginRegistration( void ) {
 	s_soundMuted = qfalse;		// we can play again
 
+#ifndef __WASM__
 	if ( s_numSfx )
 		return;
 
+	if(!s_soundStarted) {
+		return;
+	}
+#endif
+
+#ifdef __WASM__
+	if(dma.speed) {
+		SND_setup();
+	}
+#else
 	SND_setup();
+#endif
 
 #ifndef USE_LAZY_MEMORY
 	Com_Memset( s_knownSfx, 0, sizeof( s_knownSfx ) );
@@ -399,7 +420,7 @@ static void S_Base_BeginRegistration( void ) {
 static void S_memoryLoad( sfx_t *sfx ) {
 
 	// load the sound file
-	if ( !S_LoadSound ( sfx ) || sfx->soundLength ) {
+	if ( !S_LoadSound ( sfx ) || !sfx->soundLength ) {
 		Com_DPrintf( S_COLOR_YELLOW "WARNING: couldn't load sound: %s\n", sfx->soundName );
 		sfx->defaultSound = qtrue;
 		sfx->inMemory = qfalse;
@@ -408,7 +429,6 @@ static void S_memoryLoad( sfx_t *sfx ) {
 		sfx->defaultSound = qfalse;
 		sfx->inMemory = qtrue;
 	}
-
 }
 
 
@@ -511,15 +531,11 @@ static void S_Base_StartSound( const vec3_t origin, int entityNum, int entchanne
 
 	sfx = &s_knownSfx[ sfxHandle ];
 
-	if( dma.speed ) {
+	if( !dma.speed ) {
 		return;
 	}
 
-	if (sfx->inMemory == qfalse) {
-		S_memoryLoad(sfx);
-	}
-
-	if(!sfx->soundLength && Com_Milliseconds() - sfx->lastTimeUsed > 2000) {
+	if (sfx->inMemory == qfalse && Com_Milliseconds() - sfx->lastTimeUsed > 2000) {
 		sfx->lastTimeUsed = Com_Milliseconds();
 		S_memoryLoad(sfx);
 	}
@@ -792,13 +808,8 @@ void S_Base_AddLoopingSound( int entityNum, const vec3_t origin, const vec3_t ve
 	if ( !sfx->soundLength ) {
 #ifndef USE_LAZY_LOAD
 		Com_DPrintf( S_COLOR_YELLOW "%s has length 0", sfx->soundName );
-    return;
-#else
-		if(Com_Milliseconds() - sfx->lastTimeUsed > 2000) {
-			sfx->lastTimeUsed = Com_Milliseconds();
-			S_memoryLoad(sfx);
-		}
 #endif
+    return;
 	}
 
 	VectorCopy( origin, loopSounds[entityNum].origin );
@@ -859,20 +870,16 @@ void S_Base_AddRealLoopingSound( int entityNum, const vec3_t origin, const vec3_
 
 	sfx = &s_knownSfx[ sfxHandle ];
 
-	if (sfx->inMemory == qfalse) {
+	if (sfx->inMemory == qfalse && Com_Milliseconds() - sfx->lastTimeUsed > 2000) {
+		sfx->lastTimeUsed = Com_Milliseconds();
 		S_memoryLoad(sfx);
 	}
 
 	if ( !sfx->soundLength ) {
 #ifndef USE_LAZY_LOAD
 		Com_DPrintf( S_COLOR_YELLOW "%s has length 0\n", sfx->soundName );
-    return;
-#else
-		if(Com_Milliseconds() - sfx->lastTimeUsed > 2000) {
-			sfx->lastTimeUsed = Com_Milliseconds();
-			S_memoryLoad(sfx);
-		}
 #endif
+    return;
 	}
 	VectorCopy( origin, loopSounds[entityNum].origin );
 	VectorCopy( velocity, loopSounds[entityNum].velocity );

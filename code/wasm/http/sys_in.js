@@ -349,7 +349,8 @@ function InputPushMouseEvent (evt) {
     HEAP32[s_soundStarted >> 2] = 1
     HEAP32[s_soundMuted >> 2] = 0
     S_Base_SoundInfo();
-  }
+    S_Base_BeginRegistration()
+}
 
   if(!(Key_GetCatcher() & KEYCATCH_CONSOLE)) {
     if (evt.type == 'mousemove') {
