@@ -362,7 +362,7 @@ static sfxHandle_t S_Base_RegisterSound( const char *name, qboolean compressed )
 #ifndef __WASM__
 	sfx->soundCompressed = compressed;
 #else
-	sfx->soundCompressed = qfalse;
+	sfx->soundCompressed = qtrue;
 #endif
 
 	S_memoryLoad( sfx );
@@ -391,7 +391,7 @@ Q_EXPORT
 void S_Base_BeginRegistration( void ) {
 	s_soundMuted = qfalse;		// we can play again
 
-#ifndef __WASM__
+#ifndef USE_LAZY_MEMORY
 	if ( s_numSfx )
 		return;
 
@@ -409,8 +409,10 @@ void S_Base_BeginRegistration( void ) {
 #endif
 
 #ifndef USE_LAZY_MEMORY
-	Com_Memset( s_knownSfx, 0, sizeof( s_knownSfx ) );
-	Com_Memset( sfxHash, 0, sizeof( sfxHash ) );
+	if(!s_numSfx) {
+		Com_Memset( s_knownSfx, 0, sizeof( s_knownSfx ) );
+		Com_Memset( sfxHash, 0, sizeof( sfxHash ) );
+	}
 #endif
 
 	S_Base_RegisterSound( "sound/feedback/hit.wav", qfalse ); // changed to a sound in baseq3

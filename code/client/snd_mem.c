@@ -87,6 +87,12 @@ void SND_setup( void )
 	cv = Cvar_Get( "com_soundMegs", DEF_COMSOUNDMEGS, CVAR_LATCH | CVAR_ARCHIVE );
 	Cvar_CheckRange( cv, "1", "512", CV_INTEGER );
 
+#ifdef USE_LAZY_MEMORY
+	if(inUse) {
+		return;
+	}
+#endif
+
 	scs = ( cv->integer * /*1536*/ 12 * dma.speed ) / 22050;
 	scs *= 128;
 
