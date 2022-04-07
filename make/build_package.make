@@ -76,6 +76,7 @@ endif
 # TODO: make script for repack files, just like repack.js but no graphing
 # TODO: use _hi _lo formats and the renderer and same directory to load converted web content
 # TODO: figure out how this fits in with AMP file-naming style
+RSYNC            := gsutil -m rsync -r
 CNAME            := quake3e
 NODE             := node
 UGLIFY           := uglifyjs
@@ -154,7 +155,6 @@ endif
 #   packaging to .pk3dir names
 
 ifneq ($(filter %.pk3dir,$(SRCDIR)),)
-
 # must convert files in 2 seperate steps because of images 
 #   we don't know what format we end up with until after the
 #   conversion so we don't repeat the the GETEXT command excessively
@@ -168,7 +168,6 @@ ALL_DONE         := $(filter-out $(FILES_DONEPK3),$(FILES_DONE))
 ifeq ($(filter-out $(_),$(ALL_FILES)),)
 $(error no files in source directory $(SRCDIR))
 endif
-
 endif
 
 IMAGE_VALID_EXTS := jpg png
@@ -292,7 +291,6 @@ endef
 
 
 ifdef TARGET_CONVERT
-
 # list images with converted pathname then check for existing alt-name in defined script
 # convert jpg from source dirs in case there is a quality conversion
 IMAGE_SRC        := $(call FILTER_EXT,$(IMAGE_ALL_EXTS),$(ALL_FILES))
@@ -301,17 +299,12 @@ IMAGE_DONE_WILD  := $(call REPLACE_EXT,$(IMAGE_VALID_EXTS),$(IMAGE_DONE))
 IMAGE_NEEDED     := $(filter-out $(IMAGE_DONE_WILD),$(IMAGE_SRC))
 IMAGE_OBJS       := $(addprefix $(DESTDIR)/$(RPK_TARGET)dir/,$(IMAGE_NEEDED))
 
-
 ifeq ($(IMAGE_OBJS),)
-
 convert:
 	$(echo_cmd) "NOTHING TO CONVERT"
-
 else
-
 convert: $(addprefix $(DESTDIR)/,$(TARGET_CONVERT))
 	@:
-
 endif
 
 $(DESTDIR)/$(RPK_TARGET)dir/%.tga:
@@ -331,7 +324,6 @@ endif # TARGET_CONVERT
 
 
 ifdef TARGET_ENCODE
-
 # list images with converted pathname then check for existing alt-name in 
 #   defined script
 # convert jpg from source dirs in case there is a quality conversion
@@ -343,15 +335,11 @@ AUDIO_NEEDED     := $(filter-out $(AUDIO_DONE_WILD),$(AUDIO_SRC))
 AUDIO_OBJS       := $(addprefix $(DESTDIR)/$(RPK_TARGET)dir/,$(AUDIO_NEEDED))
 
 ifeq ($(AUDIO_OBJS),)
-
 encode:
 	$(echo_cmd) "NOTHING TO ENCODE"
-
 else
-
 encode: $(addprefix $(DESTDIR)/,$(TARGET_ENCODE))
 	@:
-
 endif
 
 $(DESTDIR)/$(RPK_TARGET)dir/%.mp3:
@@ -424,14 +412,18 @@ SOUNDS_SRCWILD   := $(call REPLACE_EXT,$(AUDIO_ALL_EXTS),$(SOUNDS_SRC))
 SOUNDS_DESTINED  := $(addprefix $(DESTDIR)/$(RPK_TARGET).do-always-sounds/,$(filter $(SOUNDS_SRCWILD),$(ALL_DONE)))
 
 FILES_RPK        := $(call FILTER_EXT,$(FILE_ALL_EXTS),$(ALL_FILES))
-FILES_DESTINED   := $(addprefix $(DESTDIR)/$(RPK_TARGET).do-always-files/,$(FILES_RPK))
+FILES_DESTINED   := $(addprefix $(DESTDIR)/$(RPK_TARGET).do-always-files/,$(FILES_RPK)) \
+                    $(DESTDIR)/$(RPK_TARGET).do-always-files/scripts/palette.shader
 ifeq ($(PK3_PREFIX),xxx-multigame)
 # I'm kind of amazed this works, I thought the path would be missing, build fail
 FILES_DESTINED   += $(DESTDIR)/$(RPK_TARGET).do-always-files/sound/misc/silence.ogg
 endif
-
 REPACK_DESTINED  := $(subst .do-always-images,.do-always,$(IMAGES_DESTINED)) \
-                    $(subst .do-always-sounds,.do-always,$(SOUNDS_DESTINED))
+                    $(subst .do-always-sounds,.do-always,$(SOUNDS_DESTINED)) \
+                    $(subst .do-always-files,.do-always,$(FILES_DESTINED))
+
+collect: $(addprefix $(DESTDIR)/,$(TARGET_REPACK))
+	@:
 
 package: $(addprefix $(DESTDIR)/,$(TARGET_REPACK))
 	$(eval RPK_TARGET := $(subst .do-always,.pk3,$(notdir $<)))
@@ -443,9 +435,11 @@ package: $(addprefix $(DESTDIR)/,$(TARGET_REPACK))
 $(DESTDIR)/$(RPK_TARGET).do-always/%:
 	$(call DO_ARCHIVE,$(subst \space, ,$(subst .do-always,dir,$(call RPK_LOCAL,$@))),$(DESTDIR)/$(RPK_TARGET)dir,$(subst \space, ,$(PK3_PREFIX)).zip)
 
-$(DESTDIR)/$(PK3_PREFIX).do-always: $(REPACK_DESTINED)
+$(DESTDIR)/$(PK3_PREFIX).do-always-collect: $(subst .do-always,dir,$(REPACK_DESTINED))
 	@:
 
+$(DESTDIR)/$(PK3_PREFIX).do-always: $(REPACK_DESTINED)
+	@:
 
 ifeq ($(SOUNDS_DESTINED),)
 $(DESTDIR)/$(PK3_PREFIX)-sounds.do-always: $(SOUNDS_DESTINED)
@@ -490,12 +484,24 @@ $(DESTDIR)/$(PK3_PREFIX)-vms.do-always: $(QVM_DESTINED)
 	@:
 endif
 
+ifneq ($(filter $(MAKECMDGOALS),sync-pk3dirs),)
+
+$(DESTDIR)/%.do-always:
+	+$(Q)$(MAKE) -f $(MKFILE) V=$(V) sync \
+		SRCDIR="$(subst \space, ,$(subst .do-always,.pk3dir,$(call RPK_PK3DIR,$@)))" \
+		DESTDIR="$(DESTDIR)" TARGET_REPACK=""
+
+sync-pk3dirs: $(addprefix $(DESTDIR)/,$(TARGET_REPACK))
+	@:
+
+endif
+
 ifneq ($(filter $(MAKECMDGOALS),package-pk3dirs),)
 
 $(DESTDIR)/%.do-always:
 	+$(Q)$(MAKE) -f $(MKFILE) V=$(V) repack \
-		SRCDIR="$(subst \space, ,$(call RPK_PK3DIR,$@))" \
-		DESTDIR="$(DESTDIR)"
+		SRCDIR="$(subst \space, ,$(subst .do-always,.pk3dir,$(call RPK_PK3DIR,$@)))" \
+		DESTDIR="$(DESTDIR)" TARGET_REPACK=""
 
 package-pk3dirs: $(addprefix $(DESTDIR)/,$(TARGET_REPACK))
 	@:
@@ -623,6 +629,13 @@ ifeq ($(RPK_PK3DIRS),)
 package-pk3dirs:
 	$(echo_cmd) "NOTHING TO PACKAGE"
 
+ifndef TARGET_REPACK
+collect: mkdirs convert encode ## compress converted assets back into a single .pk3 zip
+	+$(Q)$(MAKE) -f $(MKFILE) V=$(V) collect \
+		SRCDIR="$(SRCDIR)" DESTDIR="$(DESTDIR)" \
+		TARGET_REPACK="$(PK3_PREFIX).do-always-collect"
+endif
+
 else
 ifndef TARGET_REPACK
 
@@ -655,8 +668,30 @@ endif
 
 
 
-sync: ## synchronize a local copy of all lvlworld content
+ifeq ($(RPK_PK3DIRS),)
+
+ifndef TARGET_REPACK
+
+upload: ## convert assets to web compatible format
+	$(Q)$(RSYNC) "$(SRCDIR)" "gs://nightly.quake.games/assets/multigame/$(PK3_PREFIX).pk3dir"
+	$(Q)$(RSYNC) "$(DESTDIR)/$(PK3_PREFIX).pk3dir" "gs://nightly.quake.games/assets/multigame/$(PK3_PREFIX).pk3dir"
+
+sync: mkdirs convert encode collect upload 
 	@:
+
+endif
+
+else
+ifndef TARGET_REPACK
+
+sync: ## synchronize a local copy of all lvlworld content
+	$(echo_cmd) "SYNCING $(RPK_PK3DIRS)"
+	$(Q)$(MAKE) -f $(MKFILE) V=$(V) sync-pk3dirs \
+		SRCDIR="$(SRCDIR)" DESTDIR="$(DESTDIR)" \
+		TARGET_REPACK="$(subst .pk3,.do-always,$(RPK_PK3DIRS))"
+
+endif
+endif
 
 
 help:

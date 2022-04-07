@@ -446,7 +446,8 @@ printDebug = qfalse;
 Com_DPrintf("file needed! %i, %i - %s, %s\n", hash, state, localName, loading);
 
 	downloadSize = sizeof(downloadLazy_t)
-			+ MAX_OSPATH * 2 /* because it's replaced with temp download name strlen(loading) + 1 */ 
+			/* because it's replaced with temp download name strlen(loading) + 1 */ 
+			+ MAX_OSPATH * 2 
 			+ strlen(localName) + 8;
 	download = (downloadLazy_t *)Z_Malloc(downloadSize);
 	memset(download, 0, downloadSize);
