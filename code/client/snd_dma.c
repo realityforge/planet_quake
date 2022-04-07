@@ -415,7 +415,11 @@ void S_Base_BeginRegistration( void ) {
 	}
 #endif
 
+#ifdef USE_LAZY_LOAD
+	S_Base_RegisterSound( "sound/misc/silence.wav", qfalse );
+#else
 	S_Base_RegisterSound( "sound/feedback/hit.wav", qfalse ); // changed to a sound in baseq3
+#endif
 }
 
 

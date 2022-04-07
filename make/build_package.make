@@ -427,7 +427,7 @@ FILES_RPK        := $(call FILTER_EXT,$(FILE_ALL_EXTS),$(ALL_FILES))
 FILES_DESTINED   := $(addprefix $(DESTDIR)/$(RPK_TARGET).do-always-files/,$(FILES_RPK))
 ifeq ($(PK3_PREFIX),xxx-multigame)
 # I'm kind of amazed this works, I thought the path would be missing, build fail
-FILES_DESTINED   += $(DESTDIR)/$(RPK_TARGET).do-always-files/sound/feedback/hit.ogg
+FILES_DESTINED   += $(DESTDIR)/$(RPK_TARGET).do-always-files/sound/misc/silence.ogg
 endif
 
 REPACK_DESTINED  := $(subst .do-always-images,.do-always,$(IMAGES_DESTINED)) \

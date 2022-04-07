@@ -29,15 +29,15 @@ snd_codec_t *codecs;
 static void S_CodecRegister(snd_codec_t *codec);
 
 #ifdef USE_LAZY_LOAD
+extern char asyncSoundName[MAX_OSPATH * 2];
 qboolean updateSound = qfalse;
-cvar_t *s_lazyLoad;
 void S_UpdateSound(char *name, qboolean compressed)
 {
 	updateSound = qtrue;
 
 	S_RegisterSound(name, compressed);
-	
-	updateSound = s_lazyLoad->integer < 2;
+
+	updateSound = Cvar_VariableIntegerValue("cl_lazyLoad") < 2;
 }
 #endif
 
@@ -175,11 +175,10 @@ void S_CodecInit( void )
 #endif
 
 #ifdef USE_LAZY_LOAD
-	s_lazyLoad = Cvar_Get( "cl_lazyLoad", "", 0 );
-	Cvar_Get("snd_loadingSound", "", CVAR_TEMP);
-	updateSound = s_lazyLoad->integer < 2;
+	asyncSoundName[0] = 0;
+	updateSound = Cvar_VariableIntegerValue("cl_lazyLoad") < 2;
 #endif
-	
+
 }
 
 /*
@@ -214,11 +213,11 @@ void *S_CodecLoad(const char *filename, snd_info_t *info)
 {
 	void *result;
 #ifdef USE_LAZY_LOAD
-	Cvar_Set( "snd_loadingSound", filename );	
+	strcpy(asyncSoundName, filename);
 #endif
 	result = S_CodecGetSound(filename, info);
 #ifdef USE_LAZY_LOAD
-	Cvar_Set( "snd_loadingSound", "" );	
+	asyncSoundName[0] = 0;
 #endif
 
 	return result;
@@ -234,11 +233,11 @@ snd_stream_t *S_CodecOpenStream(const char *filename)
 {
 	snd_stream_t *result;
 #ifdef USE_LAZY_LOAD
-	Cvar_Set( "snd_loadingSound", filename );	
+	strcpy(asyncSoundName, filename);
 #endif
 	result = S_CodecGetSound(filename, NULL);
 #ifdef USE_LAZY_LOAD
-	Cvar_Set( "snd_loadingSound", "" );	
+	asyncSoundName[0] = 0;
 #endif
 
 	return result;

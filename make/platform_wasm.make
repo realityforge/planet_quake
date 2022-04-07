@@ -62,7 +62,7 @@ endif
 ifndef BUILD_VORBIS
 ifeq ($(USE_CODEC_VORBIS),1)
 ifneq ($(USE_INTERNAL_VORBIS),1)
-  CLIENT_LDFLAGS    += -L$(INSTALL_FROM) -lvorbis_$(ARCH)
+CLIENT_LDFLAGS      += -L$(INSTALL_FROM) -lvorbis_$(ARCH)
 endif
 endif
 endif
@@ -100,9 +100,9 @@ RELEASE_CFLAGS      := -fvisibility=hidden \
                     # -flto 
 PK3_INCLUDES        := xxx-multigame-files.pk3  \
                        xxx-multigame-vms.pk3    
-#                       lsdm3_v1-files.pk3       
-#                       lsdm3_v1-images.pk3      
-#                       xxx-multigame-sounds.pk3
+#                       lsdm3_v1-files.do-always       
+#                       lsdm3_v1-images.do-always      
+
 
 ifeq ($(filter $(MAKECMDGOALS),debug),debug)
 WASM_INDEX          += $(wildcard $(BD)/$(CNAME)*.wasm)
@@ -113,39 +113,43 @@ WASM_INDEX          += $(wildcard $(BR)/$(CNAME)*.wasm)
 WASM_TRGTDIR        := $(BR)
 endif
 endif
+CLEANS              += $(subst .wasm,.html,$(notdir $(wildcard $(BD)/$(CNAME)*.wasm))) \
+                       $(subst .wasm,.html,$(notdir $(wildcard $(BR)/$(CNAME)*.wasm)))
 
-INDEX_OBJS          := $(WASM_TRGTDIR)/multigame/vm.do-always \
-                       $(addprefix $(BUILD_DIR)/,$(PK3_INCLUDES)) \
+INDEX_OBJS          := $(WASM_TRGTDIR)/multigame/vm.do-always      \
+                       $(BUILD_DIR)/xxx-multigame-sounds.do-always \
+                       $(addprefix $(BUILD_DIR)/,$(subst .pk3,.do-always,$(PK3_INCLUDES)))  \
                        $(WASM_INDEX) $(WASM_INDEX:.wasm=.html)
 
 ifdef WASM_TRGTDIR
-GAME_BUILD := $(BUILD_DIR)/release-$(COMPILE_PLATFORM)-$(COMPILE_ARCH)
+GAME_BUILD          := $(BUILD_DIR)/release-$(COMPILE_PLATFORM)-$(COMPILE_ARCH)
 
 $(WASM_TRGTDIR)/multigame/vm.do-always:
 	$(Q)$(MAKE) -f make/game_multi.make V=$(V) release \
-		PLATFORM="$(COMPILE_PLATFORM)" BUILD_GAME_QVM=1 \
-		B="$(GAME_BUILD)" ARCH="$(COMPILE_ARCH)" \
+		PLATFORM="$(COMPILE_PLATFORM)" BUILD_GAME_QVM=1  \
+		B="$(GAME_BUILD)" ARCH="$(COMPILE_ARCH)"         \
 		BUILD_GAME_LIB=0 
 
-$(BUILD_DIR)/%.pk3:
-	$(eval REPACK_PATH := $(subst -sounds.pk3,.pk3,$(subst -vms.pk3,.pk3,$(subst -images.pk3,.pk3,$(subst -files.pk3,.pk3,$(notdir $@))))))
-	$(eval REPACK_BUILD:= $(if $(filter %-files.pk3,$@),games/multigame/assets/$(subst .pk3,.pk3dir,$(REPACK_PATH)),$(if $(filter %-vms.pk3,$@),$(WASM_TRGTDIR)/multigame,$(BUILD_DIR)/$(subst .pk3,.pk3dir,$(REPACK_PATH)))))
-	$(Q)$(if $(filter build/%.pk3dir,$(REPACK_BUILD)), \
+EXT01 := .do-always
+$(BUILD_DIR)/%.do-always:
+	$(eval REPACK_PATH := $(subst -sounds$(EXT01),$(EXT01),$(subst -vms$(EXT01),$(EXT01),$(subst -images$(EXT01),$(EXT01),$(subst -files$(EXT01),$(EXT01),$(notdir $@))))))
+	$(eval REPACK_BUILD:= $(if $(filter %-files$(EXT01),$@),games/multigame/assets/$(subst $(EXT01),.pk3dir,$(REPACK_PATH)),$(if $(filter %-vms$(EXT01),$@),$(WASM_TRGTDIR)/multigame,$(BUILD_DIR)/$(subst $(EXT01),.pk3dir,$(REPACK_PATH)))))
+	$(Q)$(if $(filter $(BUILD_DIR)/%.pk3dir,$(REPACK_BUILD)), \
 	$(MAKE) -f make/build_package.make V=$(V) convert \
-		SRCDIR="games/multigame/assets/$(subst .pk3,.pk3dir,$(REPACK_PATH))" \
-		DESTDIR="$(BUILD_DIR)" TARGET_CONVERT="$(subst .pk3,.do-always,$(REPACK_PATH))" && \
+		SRCDIR="games/multigame/assets/$(subst $(EXT01),.pk3dir,$(REPACK_PATH))" \
+		DESTDIR="$(BUILD_DIR)" TARGET_CONVERT="$(subst $(EXT01),.do-always,$(REPACK_PATH))" && \
 	$(MAKE) -f make/build_package.make V=$(V) encode \
-		SRCDIR="games/multigame/assets/$(subst .pk3,.pk3dir,$(REPACK_PATH))" \
-		DESTDIR="$(BUILD_DIR)" TARGET_ENCODE="$(subst .pk3,.do-always,$(REPACK_PATH))")
+		SRCDIR="games/multigame/assets/$(subst $(EXT01),.pk3dir,$(REPACK_PATH))" \
+		DESTDIR="$(BUILD_DIR)" TARGET_ENCODE="$(subst $(EXT01),.do-always,$(REPACK_PATH))")
 	$(Q)$(MAKE) -f make/build_package.make V=$(V) package \
 		SRCDIR="$(REPACK_BUILD)" \
 		DESTDIR="$(BUILD_DIR)" \
-		TARGET_REPACK="$(subst .pk3,.do-always,$(notdir $@))"
+		TARGET_REPACK="$(subst $(EXT01),.do-always,$(notdir $@))"
 
 $(WASM_TRGTDIR)/%.html: $(WASM_TRGTDIR)/%.wasm
-	$(Q)$(MAKE) -f make/build_package.make V=$(V) index \
-		WASM_VFS="$(PK3_INCLUDES)" \
-		STARTUP_COMMAND="+set\\', \\'developer\\', \\'1" \
+	$(MAKE) -f make/build_package.make V=$(V) index     \
+		WASM_VFS="$(PK3_INCLUDES)"                        \
+		STARTUP_COMMAND="+set\\', \\'developer\\', \\'1"  \
 		DESTDIR="$(dir $@)"
 
 endif

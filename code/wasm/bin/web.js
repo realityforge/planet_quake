@@ -55,6 +55,13 @@ function findFile(filename) {
     if(fs.existsSync(path.resolve(newPath))) {
       return newPath
     }
+
+    if(newPath.includes('.pk3dir')) {
+      let pk3 = path.join(BUILD_DIRECTORY, filename.substring(GAME_DIRECTORY.length))
+      if(fs.existsSync(path.resolve(pk3))) {
+        return pk3
+      }
+    }
   }
 
   let newPath = path.join(WEB_DIRECTORY, filename)
@@ -95,7 +102,7 @@ function startFileWatcher() {
 }
 
 
-function findAltFile(localName) {
+function findAltImage(localName) {
   // what makes this clever is it only converts when requested
   let ext = path.extname(localName)
   let strippedName = localName
@@ -112,10 +119,26 @@ function findAltFile(localName) {
 }
 
 
+function findAltAudio(localName) {
+  // what makes this clever is it only converts when requested
+  let ext = path.extname(localName)
+  let strippedName = localName
+  if(ext) {
+    strippedName = strippedName.substring(0, localName.length - ext.length)
+  }
+  let file
+  if((file = findFile(strippedName + '.wav'))) {
+    return file
+  }
+  if((file = findFile(strippedName + '.mp3'))) {
+    return file
+  }
+}
+
 function hasAlpha(otherFormatName) {
   try {
-    let alphaCmd = execSync(`identify -format '%[opaque]' "${path.resolve(otherFormatName)}"`, 
-      {stdio : 'pipe'}).toString('utf-8')
+    let alphaCmd = execSync(`identify -format '%[opaque]' "${path
+      .resolve(otherFormatName)}"`, {stdio : 'pipe'}).toString('utf-8')
     // if it is alpha
     if(/* true || TODO: allAlpha? */ alphaCmd.match(/true/ig)) {
       return false
@@ -155,6 +178,14 @@ function layeredDir(filename) {
         .map(dir => dir.replace('.bsp', '.shader'))
       list.push.apply(list, bsps)
     }
+
+    if(filename.includes('.pk3dir')) {
+      let newPath = path.join(BUILD_DIRECTORY, filename.substring(GAME_DIRECTORY.length))
+      if(fs.existsSync(path.resolve(newPath))
+        && fs.statSync(path.resolve(newPath)).isDirectory()) {
+        list.push.apply(list, fs.readdirSync(path.resolve(newPath)))
+      }
+    }
   }
 
   let newPath = path.join(WEB_DIRECTORY, filename)
@@ -167,20 +198,22 @@ function layeredDir(filename) {
     list.push('version.json')
   }
 
-  return list
-    .reduce((list, i) => {
-      if(i.endsWith('.pcx') || i.endsWith('.tga')) {
-        if(!findFile(path.join(filename, i.replace(path.extname(i), '.png')))
-          && !findFile(path.join(filename, i.replace(path.extname(i), '.jpg')))) {
-          list.push(i.replace(path.extname(i), '.png'))
-          list.push(i.replace(path.extname(i), '.jpg'))
-        }
-      } else {
-        list.push(i)
+  return list.reduce((list, i) => {
+    if(i.endsWith('.pcx') || i.endsWith('.tga')) {
+      if(!findFile(path.join(filename, i.replace(path.extname(i), '.png')))
+        && !findFile(path.join(filename, i.replace(path.extname(i), '.jpg')))) {
+        list.push(i.replace(path.extname(i), '.png'))
+        list.push(i.replace(path.extname(i), '.jpg'))
       }
-      return list
-    }, [])
-    .filter((p, i, l) => p[0] != '.' && l.indexOf(p) == i)
+    } else if (i.endsWith('.wav') || i.endsWith('.mp3')) {
+      if(!findFile(path.join(filename, i.replace(path.extname(i), '.ogg')))) {
+        list.push(i.replace(path.extname(i), '.ogg'))
+      }
+    } else {
+      list.push(i)
+    }
+    return list
+  }, []).filter((p, i, l) => p[0] != '.' && l.indexOf(p) == i)
 }
 
 
@@ -372,7 +405,7 @@ function respondRequest(request, response) {
   }
 
   // if loading an image in a different format convert it
-  if((file = findAltFile(localName))) {
+  if((file = findAltImage(localName))) {
     let newPath = path.join(ASSETS_DIRECTORY, localName.substring(GAME_DIRECTORY.length))
     let alpha = hasAlpha(file)
     if((!alpha && localName.includes('.jpeg'))
@@ -387,6 +420,24 @@ function respondRequest(request, response) {
       }
     }
   }
+
+  // if loading audio in a different format
+  if((file = findAltAudio(localName))) {
+    let newPath = path.join(ASSETS_DIRECTORY, localName.substring(GAME_DIRECTORY.length))
+    if(file.includes('.mp3')) {
+      execSync(`ffmpeg -i "${file}" -c:a libvorbis -q:a 4 "${path.resolve(newPath)}"`, {stdio : 'pipe'})
+    } if (localName.includes('.ogg') || file.includes('.wav')) {
+      execSync(`oggenc -q 7 --downmix --resample 11025 --quiet "${file}" -n "${path.resolve(newPath)}"`, {stdio : 'pipe'})
+    }
+    if(fs.existsSync(newPath)) {
+      if(request.headers['accept-encoding']) {
+        return sendCompressed(path.resolve(file), response, request.headers['accept-encoding'])
+      } else {
+        return response.sendFile(path.resolve(newPath))
+      }
+    }
+  }
+
 
   if((file = findFile('index.html'))) {
     // if loading a missing path return the index page
@@ -439,5 +490,6 @@ if(runServer) {
 module.exports = {
   writeVersionFile,
   respondRequest,
+  makePaletteShader,
 
 }

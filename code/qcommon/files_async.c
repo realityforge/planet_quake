@@ -281,9 +281,9 @@ static downloadLazy_t *Sys_FileNeeded_real(const char *filename, int state, qboo
 
 
 #ifdef _DEBUG
-if(NEEDED[0] != '\0' && Q_stristr(localName, NEEDED)) {
-printDebug = qtrue;
-}
+	if(NEEDED[0] != '\0' && Q_stristr(localName, NEEDED)) {
+		printDebug = qtrue;
+	}
 #endif
 
 
@@ -700,7 +700,6 @@ void MakeDirectoryBuffer(char *paths, int count, int length, const char *parentD
 		}
 
 #ifdef USE_LIVE_RELOAD
-
 		// FIXME: move mtime to Sys_FileNeeded_real()
 		if(FS_FileExists(currentPath)) {
 			//fileOffset_t _s;
@@ -713,6 +712,7 @@ void MakeDirectoryBuffer(char *paths, int count, int length, const char *parentD
 			//curFile->mtime = 0;
 		}
 #endif
+
 		// store the file position in the zip
 		// TODO: update this when Accept-Ranges is implemented
 		s = Q_stristr(currentPath, ".pk3dir/");
@@ -762,6 +762,33 @@ void MakeDirectoryBuffer(char *paths, int count, int length, const char *parentD
 	// default.cfg purged from directory listing
 	//assert(!defaultCfg || defaultCfg->state > VFS_NOENT);
 	assert(!defaultCfg || defaultCfg->state <= VFS_NOENT);
+
+}
+
+
+void RetryDownloads( void ) {
+  downloadLazy_t *download;
+	const char *s;
+	int len, state;
+	for(int i = 0; i < PK3_HASH_SIZE; i++) {
+		download = readyCallback[i];
+		if(!download) {
+			continue;
+		}
+		do {
+			s = Q_stristr(download->downloadName, ".pk3dir/");
+			len = strlen(download->downloadName);
+			state = download->state;
+			if(state < 0) {
+				state = -state;
+			}
+			if(state > VFS_NOW) {
+				state = VFS_NOW;
+			}
+			Sys_FileNeeded_real(s ? s + 8 : download->downloadName, 
+				state, download->downloadName[len] == '/');
+		} while ((download = download->next) != NULL);
+	}
 
 }
 
@@ -832,30 +859,6 @@ void Sys_FileReady(const char *filename, const char* tempname) {
 				}
 				break;
 			} else 
-
-#if 0
-			if ( i == hash 
-				// ignore pk3dir and mark all as ready
-				&& ((!s && !Q_stricmp( &download->downloadName[lengthGame + 1], &localName[lengthGame + 1] ))
-					|| (s && !Q_stricmp( s + 8, &localName[lengthGame + 1] )))
-			) {
-				// file is ready for processing!
-				if(tempname) {
-					download->state = VFS_READY;
-					strcpy(&download->loadingName[MAX_OSPATH], tempname);
-#ifdef USE_LIVE_RELOAD
-					// update file mtime so we know if it changed again
-					download->lastRequested = lastVersionTime;
-#endif
-				} else {
-					// download failed!
-					download->state = VFS_FAIL;
-					Com_Printf("WARNING: %i %s download failed.\n", hash, localName);
-				}
-				found = qtrue;
-				// break; // used to stop here, but now this will cover .pk3dir paths
-			} else 
-#endif
 
 			// really reduce misfires by removing missing download files once directory index is received
 			//   we know we won't find shader images with alternate extensions, so those downloads are marked
@@ -939,10 +942,16 @@ Com_DPrintf("updating files: %s -> %s\n", filename, tempname);
 	} else
 #endif
 
+	if(Q_stristr(tempname, ".pk3dir/sounds/feedback/menu1.ogg")) {
+		FS_AddGameDirectory( Cvar_VariableString("fs_homepath"), FS_GetCurrentGameDir(), 0 );
+		RetryDownloads();
+	} else
+
 	if(Q_stristr(tempname, ".bsp") && Q_stristr(tempname, "maps/")) {
 		// load map if we just tried to start it
 		if(Q_stristr(tempname, ".pk3dir/")) {
 			FS_AddGameDirectory( Cvar_VariableString("fs_homepath"), FS_GetCurrentGameDir(), 0 );
+			RetryDownloads();
 		}
 		if(Q_stristr(tempname, Cvar_VariableString("mapname")) && !com_sv_running->integer) {
 			Cbuf_AddText(va("wait lazy; devmap %s;", Cvar_VariableString("mapname")));
@@ -1044,7 +1053,7 @@ void CL_CheckLazyUpdates( void ) {
 	// TODO: remove this, good to see 1 color during testing
 	if(!first) {
 		first = qtrue;
-		Sys_FileNeeded("multigame/lsdm3_v1.pk3dir/textures/lsdm3/nunuk-bluedark.jpg", VFS_LAZY);
+		Sys_FileNeeded("multigame/xxx-multigame.pk3dir/sound/feedback/menu1.ogg", VFS_LAZY);
 	}
 
 	// files must process faster otherwise we will have a bunch of indexes queued  
@@ -1107,7 +1116,7 @@ void CL_CheckLazyUpdates( void ) {
 	if(!Q_stricmp(ext, "wav") || !Q_stricmp(ext, "ogg")
 		|| !Q_stricmp(ext, "mp3") || !Q_stricmp(ext, "opus")) {
 		if(cls.soundRegistered) {
-			//S_UpdateSound(ready->loadingName, qtrue);
+			S_UpdateSound(ready->loadingName, qtrue);
 		}
 	}
 

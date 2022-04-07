@@ -46,18 +46,18 @@ client: ## build the client program for this system
 	$(eval HELPFILTER += client)
 	@:
 
-experimental: ## build drag and drop and persistent console
+experimental:
 	$(eval CLIENT_OPTIONS += BUILD_EXPERIMENTAL=1)
 	@:
 
-static: ## build drag and drop and persistent console
+static:
 	$(eval CLIENT_OPTIONS += BUILD_CLIENT_STATIC=1)
 	@:
 
-mw: multiworld ## build drag and drop and persistent console
+mw: multiworld
 	@:
 
-multiworld: ## build drag and drop and persistent console
+multiworld:
 	$(eval HELPFILTER += mw multiworld)
 	$(eval CLIENT_OPTIONS += USE_MULTIVM_CLIENT=1 USE_MULTIVM_SERVER=1)
 	@:

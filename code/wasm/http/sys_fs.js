@@ -212,7 +212,8 @@ function Sys_FOpen(filename, mode) {
     return createFP()
   } else if (modeStr.includes('w')
     && (!(parentDirectory = localName.substring(0, localName.lastIndexOf('/')).length)
-    || typeof FS.virtual[parentDirectory] != 'undefined')) {
+    || typeof FS.virtual[parentDirectory] != 'undefined')
+  ) {
     // create the file for write because the parent directory exists
     FS.virtual[localName] = {
       timestamp: new Date(),
@@ -335,8 +336,7 @@ function Sys_ListFiles (directory, extension, filter, numfiles, wantsubs) {
   }
   // TODO: don't combine /home and /base?
   let localName = addressToString(directory)
-  if(localName.startsWith('/base')
-    || localName.startsWith('/home'))
+  if(localName.startsWith('/base'))
     localName = localName.substring('/base'.length)
   if(localName[0] == '/')
     localName = localName.substring(1)

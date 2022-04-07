@@ -114,16 +114,16 @@ endif
 debug:
 	$(echo_cmd) "MAKE $(MOD)"
 	@$(MAKE) -f make/lib_q3lcc.make release 
-	@$(MAKE) -f $(MKFILE)  -j 8 \
-		$(addprefix $(BD)/,$(GAME_TARGETS))
+	@$(MAKE) -f $(MKFILE) -j 8 \
+		$(addprefix $(BD)/,$(GAME_TARGETS)) \
 		B=$(BD) GAME_CFLAGS="$(GAME_CFLAGS)" \
 		OPTIMIZE="$(DEBUG_CFLAGS)" V=$(V)
 
 release:
 	$(echo_cmd) "MAKE $(MOD)"
 	@$(MAKE) -f make/lib_q3lcc.make release 
-	@$(MAKE) -f $(MKFILE)  -j 8 \
-		$(addprefix $(BR)/,$(GAME_TARGETS))
+	@$(MAKE) -f $(MKFILE) -j 8 \
+		$(addprefix $(BR)/,$(GAME_TARGETS)) \
 		B=$(BR) GAME_CFLAGS="$(GAME_CFLAGS)" \
 		OPTIMIZE="-DNDEBUG $(OPTIMIZE)" V=$(V)
 
@@ -451,8 +451,7 @@ clean:
 	@rm -f ./$(BR)/$(MOD)/ui$(SHLIBNAME)
 	@rm -rf ./$(BD)/$(MOD)
 	@rm -rf ./$(BR)/$(MOD)
+endif
 
-else
 GAME_OBJ  = $(QAOBJ) $(CGOBJ) $(UIOBJ)
 CLEANS 	 += $(MOD)/cgame $(MOD)/game $(MOD)/q3_ui $(MOD)/ui $(MOD)/vm $(MOD)
-endif
