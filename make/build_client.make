@@ -20,7 +20,6 @@ endif
 
 WORKDIRS         += $(CLIENT_WORKDIR)
 CLEANS           += $(CLIENT_WORKDIR) $(CLIENT_TARGET)
-INSTALLS         += $(B)/$(CLIENT_TARGET)
 
 INCLUDES         := $(MOUNT_DIR)/qcommon
 ifeq ($(USE_INTERNAL_VORBIS),1)
@@ -310,6 +309,15 @@ clean: ## clean all built files and start over
 	rm -r "./$(BD)/$$i" 2> /dev/null || true; \
 	rm -r "./$(BR)/$$i" 2> /dev/null || true; \
 	done
+
+install: ## copy build targets to install directory
+	$(echo_cmd) "INSTALLED $(CLIENT_TARGET)"
+	$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) \
+		CLIENT_CFLAGS="$(CLIENT_CFLAGS) $(RELEASE_CFLAGS)" \
+		CLIENT_LDFLAGS="$(CLIENT_LDFLAGS) $(RELEASE_LDFLAGS)" \
+		$(INSTALL_DIR)/$(CLIENT_TARGET) \
+		$(INSTALL_DIR)/$(CLIENT_TARGET:.wasm=.html)
+
 
 ifdef B
 

@@ -135,10 +135,6 @@ $(INSTALL_DIR)/%: $(BUILD_DIR)/*/%
 	$(echo_cmd) "INSTALL $<"
 	$(Q)cp -f "$<" "$@"
 
-install: $(INSTALL_DIR) $(INSTALLS)
-	@$(MAKE) -f $(MKFILE) $(addprefix $(INSTALL_DIR)/,$(notdir $(INSTALLS)))
-	@:
-
 .PHONY: all clean clean2 clean-debug clean-release copyfiles \
   debug default dist distclean makedirs release \
   targets tools toolsclean mkdirs build  \
