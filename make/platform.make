@@ -129,16 +129,10 @@ $(BUILD_DIR)/%.mkdirs: $(filter $(MAKECMDGOALS),clean)
 	@if [ ! -d "./$(subst .mkdirs,,$@)/$$dir" ]; \
 		then $(MKDIR) "./$(subst .mkdirs,,$@)/$$dir";fi;
 
-$(INSTALL_DIR):
-	@if [ ! -d "$(INSTALL_DIR)" ];then $(MKDIR) $(INSTALL_DIR);fi
-
-$(INSTALL_DIR)/%: $(BUILD_DIR)/*/%
-	$(echo_cmd) "INSTALL $<"
-	$(Q)cp -f "$<" "$@"
 
 .PHONY: all clean clean2 clean-debug clean-release copyfiles \
   debug default dist distclean makedirs release \
-  targets tools toolsclean mkdirs build  \
+  targets tools toolsclean mkdirs build install  \
     $(D_FILES)
 
-.NOTPARALLEL: index clean 
+.NOTPARALLEL: index clean install
