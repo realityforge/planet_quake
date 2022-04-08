@@ -315,6 +315,7 @@ install: ## copy build targets to install directory
 	$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) \
 		CLIENT_CFLAGS="$(CLIENT_CFLAGS) $(RELEASE_CFLAGS)" \
 		CLIENT_LDFLAGS="$(CLIENT_LDFLAGS) $(RELEASE_LDFLAGS)" \
+		$(INSTALL_DIR)/ \
 		$(INSTALL_DIR)/$(CLIENT_TARGET) \
 		$(INSTALL_DIR)/$(CLIENT_TARGET:.wasm=.html)
 
