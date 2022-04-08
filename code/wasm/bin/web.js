@@ -268,15 +268,26 @@ function writeVersionFile(time) {
 var MATCH_PALETTE = /palette\s"(.*?)"\s([0-9]+(,[0-9]+)*)/ig
 
 function makePaletteShader(localName, response) {
-  let pk3dir = localName.substring(GAME_DIRECTORY.length, localName.indexOf('.pk3dir') + 7)
-  let shaderPath = path.join(ASSETS_DIRECTORY, localName.substring(GAME_DIRECTORY.length))
-  let images = findTypes(imageTypes, path.join(ASSETS_DIRECTORY, pk3dir))
+  let pk3dir = localName
+  if(localName.startsWith(GAME_DIRECTORY)) {
+    pk3dir = localName.substring(GAME_DIRECTORY.length)
+  }
+  pk3dir = pk3dir.substr(0, pk3dir.indexOf('.pk3dir') + 7)
+  let shaderPath = localName
+  if(localName.startsWith(GAME_DIRECTORY)) {
+    shaderPath = localName.substring(GAME_DIRECTORY.length)
+  }
+  if(!fs.existsSync(pk3dir)) {
+    console.log('wtf', pk3dir)
+    pk3dir = path.join(ASSETS_DIRECTORY, pk3dir)
+    shaderPath = path.join(ASSETS_DIRECTORY, shaderPath)
+  }
+  let images = findTypes(imageTypes, pk3dir)
   let palette = {}
   let existingPalette = ''
   if(fs.existsSync(shaderPath)) {
     let m
-    existingPalette = fs.readFileSync(shaderPath)
-      .toString('utf-8')
+    existingPalette = fs.readFileSync(shaderPath).toString('utf-8')
     while((m = (MATCH_PALETTE).exec(existingPalette)) !== null) {
       palette[m[1]] = m[2]
     }
@@ -301,7 +312,8 @@ function makePaletteShader(localName, response) {
     .map(k => `  palette "${k}" ${palette[k]}`).join('\n')
   existingPalette = `palettes\/${pk3dir.substr(1, pk3dir.length - 8)}\n{\n${imagePixels}\n}\n` + existingPalette
   fs.writeFileSync(shaderPath, existingPalette)
-  return response.send(existingPalette)
+  if(response)
+    return response.send(existingPalette)
 }
 
 

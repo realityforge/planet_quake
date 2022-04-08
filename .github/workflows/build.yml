@@ -29,7 +29,7 @@ on:
       targets:
         required: false
         type: string
-        default: clean release install
+        default: clean release index install
       sparse:
         required: false
         type: string

@@ -1,6 +1,12 @@
 
 I began working on this project by updating QuakeJS. At the time, around 2018, there was a long thread describing compilation errors. It didn't make sense to me to only update emscripten, but instead also update the latest ioq3 codebase. It also made more sense to integrate the changes cleanly into ioq3 and submit it as a build mode for ioq3. For political reasons, I switched to Q3e, and all the WebAssembly code exists under `code/wasm`, along-side the other OS dependent folders.
 
+Bucket storage for converted, public, lvlworld.com content.
+https://www.googleapis.com/storage/v1/b/nightly.quake.games/o/
+Each of the ~3,000 pk3 has been unzipped and down-converted to web formats. This will 
+serve as a test bed for enhancing the media pipeline. For example, I've also auto-generated the palette.shader files for each pk3 to give the map some nice color 
+while it loads for the first time. Next, lightmaps could be removed and ISM (https://www.cs.cmu.edu/afs/cs/academic/class/15462-s14/www/lec_slides/p75-cohen.pdf) added to minimize the size of BSP. Vis could possibly be regenerated first time the map loads and cached, that only leaves partitioning out metas and models to not interfere with FPS.
+
 ## WebAssembly Features
 
   * ...using OpenGL OpenGL ES 3.0 (WebGL 2.0 (OpenGL ES 3.0 Chromium))
@@ -23,6 +29,8 @@ I began working on this project by updating QuakeJS. At the time, around 2018, t
 
 ## TODO Features
 
+  * FIX: server side proxy duplexing that works on client side
+  * Vis could possibly be regenerated first time the map loads and cached, that only leaves partitioning out metas and models to not interfere with FPS.
   * Drag and dropped content uploaded and accepted by the package manager for sharing with other clients/servers
   * Popup keyboard on mobile, somehow detecting a text box from UIVM, might not work on all mods. 
   * IN PROGRESS: Compile baseq3a from EC directly to WASM and load asynchronously, https://github.com/emscripten-core/emscripten/wiki/Linking

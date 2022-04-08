@@ -76,6 +76,8 @@ endif
 # TODO: make script for repack files, just like repack.js but no graphing
 # TODO: use _hi _lo formats and the renderer and same directory to load converted web content
 # TODO: figure out how this fits in with AMP file-naming style
+#GSPATH           := gs://quake.games/assets/baseq3-cc
+GSPATH           := gs://nightly.quake.games/assets/multigame
 RSYNC            := gsutil -m rsync -r
 CNAME            := quake3e
 NODE             := node
@@ -435,7 +437,18 @@ package: $(addprefix $(DESTDIR)/,$(TARGET_REPACK))
 $(DESTDIR)/$(RPK_TARGET).do-always/%:
 	$(call DO_ARCHIVE,$(subst \space, ,$(subst .do-always,dir,$(call RPK_LOCAL,$@))),$(DESTDIR)/$(RPK_TARGET)dir,$(subst \space, ,$(PK3_PREFIX)).zip)
 
-$(DESTDIR)/$(PK3_PREFIX).do-always-collect: $(subst .do-always,dir,$(REPACK_DESTINED))
+define PALETTE_CC
+	$(Q)$(NODE) -e "require('./code/wasm/bin/web.js').makePaletteShader('$(subst ',\',$1)')"
+endef
+
+$(DESTDIR)/$(RPK_TARGET).do-always-collect/scripts/palette.shader:
+	$(Q)$(MKDIR) "$(subst \space, ,$(subst .do-always-collect,dir,$(dir $@)))"
+	$(call PALETTE_CC,$(subst \space, ,$(subst .do-always-collect,dir,$@)))
+
+$(DESTDIR)/$(RPK_TARGET).do-always-collect/%:
+	@if [ ! -f "$(subst \space, ,$(subst .do-always-collect,dir,$@))" ];then echo "file not found $(subst \space, ,$(subst .do-always-collect,dir,$@))" && exit 1;fi
+
+$(DESTDIR)/$(PK3_PREFIX).do-always-collect: $(subst .do-always,.do-always-collect,$(REPACK_DESTINED))
 	@:
 
 $(DESTDIR)/$(PK3_PREFIX).do-always: $(REPACK_DESTINED)
@@ -673,8 +686,8 @@ ifeq ($(RPK_PK3DIRS),)
 ifndef TARGET_REPACK
 
 upload: ## convert assets to web compatible format
-	$(Q)$(RSYNC) "$(SRCDIR)" "gs://nightly.quake.games/assets/multigame/$(PK3_PREFIX).pk3dir"
-	$(Q)$(RSYNC) "$(DESTDIR)/$(PK3_PREFIX).pk3dir" "gs://nightly.quake.games/assets/multigame/$(PK3_PREFIX).pk3dir"
+	$(RSYNC) "$(SRCDIR)" "$(subst \space, ,$(GSPATH)/$(PK3_PREFIX).pk3dir)"
+	$(RSYNC) "$(subst \space, ,$(DESTDIR)/$(PK3_PREFIX)).pk3dir" "$(subst \space, ,$(GSPATH)/$(PK3_PREFIX)).pk3dir"
 
 sync: mkdirs convert encode collect upload 
 	@:
