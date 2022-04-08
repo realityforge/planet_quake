@@ -54,7 +54,14 @@ endef
 
 
 ifdef NOT_INCLUDED_Q3LCC
-Q3LCC_BUILD := $(BUILD_DIR)/release-$(COMPILE_PLATFORM)-$(COMPILE_ARCH)
+Q3LCC_BUILD   := $(BUILD_DIR)/release-$(COMPILE_PLATFORM)-$(COMPILE_ARCH)
+WORKDIRS      += $(Q3LCC_WORKDIRS)
+CLEANS        += $(Q3LCC_WORKDIRS) \
+                 $(Q3LCC_WORKDIR)/$(TARGET_Q3ASM) \
+                 $(Q3LCC_WORKDIR)/$(TARGET_Q3LCC) \
+                 $(Q3LCC_WORKDIR)/$(TARGET_Q3RCC) \
+                 $(Q3LCC_WORKDIR)/$(TARGET_Q3CPP) \
+                 $(Q3LCC_WORKDIR)/$(TARGET_LBURG)
 
 release:
 	$(echo_cmd) "MAKE Q3LCC"
@@ -75,15 +82,6 @@ clean:
 	@rm -rf ./$(Q3LCC_BUILD)/$(Q3LCC_WORKDIR) ./$(Q3LCC_BUILD)/$(TARGET_Q3ASM) \
 					./$(Q3LCC_BUILD)/$(TARGET_Q3LCC)  ./$(Q3LCC_BUILD)/$(TARGET_Q3RCC) \
 					./$(Q3LCC_BUILD)/$(TARGET_Q3CPP)  ./$(Q3LCC_BUILD)/$(TARGET_LBURG)
-
-else
-WORKDIRS      += $(Q3LCC_WORKDIRS)
-CLEANS        += $(Q3LCC_WORKDIRS) \
-                 $(Q3LCC_WORKDIR)/$(TARGET_Q3ASM) \
-                 $(Q3LCC_WORKDIR)/$(TARGET_Q3LCC) \
-                 $(Q3LCC_WORKDIR)/$(TARGET_Q3RCC) \
-                 $(Q3LCC_WORKDIR)/$(TARGET_Q3CPP) \
-                 $(Q3LCC_WORKDIR)/$(TARGET_LBURG)
 endif
 
 Q3ASMOBJ       = $(Q3LCC_BUILD)/tools/asm/q3asm.o \
