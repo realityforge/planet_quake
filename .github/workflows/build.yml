@@ -14,6 +14,8 @@ env:
     /make/
     /games/multigame/
     /libs/musl-1.2.2/
+    /libs/tools/q3lcc/
+    /libs/tools/q3asm/
     /libs/tools/quake3/
     /libs/SDL2-2.0.14/
     /libs/libvorbis-1.3.7/
