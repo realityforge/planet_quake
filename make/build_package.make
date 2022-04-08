@@ -78,7 +78,8 @@ endif
 # TODO: figure out how this fits in with AMP file-naming style
 #GSPATH           := gs://quake.games/assets/baseq3-cc
 GSPATH           := gs://nightly.quake.games/assets/multigame
-RSYNC            := gsutil -m rsync -r
+GSUTIL           := gsutil 
+RSYNC            := $(GSUTIL) -m rsync -r
 CNAME            := quake3e
 NODE             := node
 UGLIFY           := uglifyjs
@@ -686,7 +687,7 @@ ifeq ($(RPK_PK3DIRS),)
 ifndef TARGET_REPACK
 
 upload: ## convert assets to web compatible format
-	$(RSYNC) "$(SRCDIR)" "$(subst \space, ,$(GSPATH)/$(PK3_PREFIX).pk3dir)"
+	$(GSUTIL) -m cp -n -r "$(SRCDIR)/*" "$(subst \space, ,$(GSPATH)/$(PK3_PREFIX).pk3dir)"
 	$(RSYNC) "$(subst \space, ,$(DESTDIR)/$(PK3_PREFIX)).pk3dir" "$(subst \space, ,$(GSPATH)/$(PK3_PREFIX)).pk3dir"
 
 sync: mkdirs convert encode collect upload 
