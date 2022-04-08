@@ -2,7 +2,7 @@ name: build
 
 env:
   BASEPATH: /home/runner/work/planet_quake/planet_quake
-  STANDARDTOOLS: libcurl4-openssl-dev mesa-common-dev libxxf86dga-dev libxrandr-dev libxxf86vm-dev libasound-dev libsdl2-dev gcc-multilib ffmpeg
+  STANDARDTOOLS: libcurl4-openssl-dev mesa-common-dev libxxf86dga-dev libxrandr-dev libxxf86vm-dev libasound-dev libsdl2-dev gcc-multilib ffmpeg vorbis-tools
   EXTRATOOLS: wget binaryen
   WASISDK: wget --no-check-certificate https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-14/wasi-sdk-14.0-linux.tar.gz
   WASIINSTALL: |
