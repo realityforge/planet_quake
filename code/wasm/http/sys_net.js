@@ -284,10 +284,10 @@ function socketMessage(evt) {
 function socketError(evt) {
   NET.reconnect = true
   if(evt.target == NET.socket1) {
-    NET.socket1 = NULL
+    NET.socket1 = null
   }
   if(evt.target == NET.socket2) {
-    NET.socket2 = NULL
+    NET.socket2 = null
   }
 }
 

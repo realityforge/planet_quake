@@ -100,6 +100,7 @@ else
 ifeq ($(PLATFORM),wasm)
 include make/platform_wasm.make
 else
+COMPILE_PLATFORM    := linux
 include make/platform_unix.make
 endif
 endif

@@ -18,7 +18,8 @@ function getQueryCommands() {
 		'+set', 'r_ext_framebuffer_object', '0',
 		'+set', 'bot_enable', '0',
 		'+set', 'net_socksServer', window.location.hostname || '',
-		'+set', 'net_socksPort', window.location.port || '0',
+		'+set', 'net_socksPort', window.location.port 
+			|| (window.location.protocol == 'https:' ? 443 : 80),
 		'+set', 'sv_fps', '100',
 		'+set', 'snaps', '100',
 		//'+set', 'r_ext_multitexture', '0',
