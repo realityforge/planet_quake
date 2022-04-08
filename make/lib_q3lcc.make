@@ -66,14 +66,14 @@ Q3LCC_MKDIRS  := $(Q3LCC_BUILD).mkdirs $(addsuffix .mkdirs,$(addprefix $(Q3LCC_B
 
 release: $(Q3LCC_MKDIRS)
 	$(echo_cmd) "MAKE Q3LCC"
-  ls -la /home/runner/work/planet_quake/planet_quake
-  ls -la /home/runner/work/planet_quake/planet_quake/build
-  ls -la /home/runner/work/planet_quake/planet_quake/build/release-linux-x86_64
-  ls -la /home/runner/work/planet_quake/planet_quake/build/release-linux-x86_64/tools
+	ls -la /home/runner/work/planet_quake/planet_quake
+	ls -la /home/runner/work/planet_quake/planet_quake/build
+	ls -la /home/runner/work/planet_quake/planet_quake/build/release-linux-x86_64
+	ls -la /home/runner/work/planet_quake/planet_quake/build/release-linux-x86_64/tools
 	$(Q)$(MAKE) -f $(MKFILE) B=$(Q3LCC_BUILD) V=$(V) \
 		WORKDIRS="$(Q3LCC_WORKDIRS)" \
-    PLATFORM="$(COMPILE_PLATFORM)" \
-    ARCH="$(COMPILE_ARCH)" \
+		PLATFORM="$(COMPILE_PLATFORM)" \
+		ARCH="$(COMPILE_ARCH)" \
 		CFLAGS="$(TOOLS_CFLAGS) $(RELEASE_CFLAGS)" \
 		LDFLAGS="$(TOOLS_LDFLAGS) $(RELEASE_LDFLAGS)" \
 		$(Q3LCC_BUILD)/$(Q3LCC_WORKDIR)/$(TARGET_Q3ASM) \
