@@ -219,7 +219,7 @@ define DO_ARCHIVE
 	$(echo_cmd) "ARCHIVE $1"
 	$(Q)if [ -f "$(DESTDIR)/$3" ];then $(MOVE) "$(DESTDIR)/$3" "$2../$3";fi
 	$(Q)cd "$2" && $(ZIP) -o ../$3 "$1"
-	$(Q)$(MOVE) "$2../$3" "$(DESTDIR)/$3"
+	$(Q)if [ ! -f "$(DESTDIR)/$3" ] ; then $(MOVE) "$2../$3" "$(DESTDIR)/$3"
 endef
 
 
