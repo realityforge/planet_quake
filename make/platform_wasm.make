@@ -144,19 +144,14 @@ $(BUILD_DIR)/%.do-always:
 		TARGET_REPACK="$(subst $(EXT01),.do-always,$(notdir $@))"
 
 $(WASM_TRGTDIR)/%.html: $(WASM_TRGTDIR)/%.wasm
-	$(MAKE) -f make/build_package.make V=$(V) index     \
-		WASM_VFS="$(PK3_INCLUDES)"                        \
-		STARTUP_COMMAND="+set\\', \\'developer\\', \\'1"  \
-		DESTDIR="$(dir $@)"
 
 endif
 
-WASM_INDEX :=
-evaluate-index:
-	$(eval WASM_INDEX := wildcard $(BUILD_DIR)/*/$(CNAME)*.wasm)
-
-index: $(INDEX_OBJS) evaluate-index $(WASM_INDEX) $(WASM_INDEX:.wasm=.html) ## create an index.html page out of the current build target
-	@:
+index: $(INDEX_OBJS) ## create an index.html page out of the current build target
+	$(MAKE) -f make/build_package.make V=$(V) index     \
+		WASM_VFS="$(PK3_INCLUDES)"                        \
+		STARTUP_COMMAND="+set\\', \\'developer\\', \\'1"  \
+		DESTDIR="$(WASM_TRGTDIR)"
 #		STARTUP_COMMAND="+set\\', \\'developer\\', \\'1\\', \\'+devmap\\', \\'lsdm3_v1" \
 
 
