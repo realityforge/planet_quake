@@ -1,8 +1,5 @@
 #define __pthread_self() ((pthread_t)__get_tp())
 #define __LONG_MAX 0x7fffffffL
-void Sys_Exit( int code ) __attribute((noreturn));
-#define getenv Sys_getenv
-#define exit Sys_Exit
 #define alloca __builtin_alloca
 
 #define _Addr __PTRDIFF_TYPE__

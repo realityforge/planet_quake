@@ -88,7 +88,6 @@ BASE_CFLAGS         += -Wall --target=wasm32 \
                        -DUSE_MASTER_LAN \
                        -D__WASM__ \
                        -std=gnu11 \
-                       -Icode/wasm/include \
                        -Icode/wasm/emscripten \
                        -I$(MUSL_SOURCE)/include \
                        -I$(SDL_SOURCE)/include \
