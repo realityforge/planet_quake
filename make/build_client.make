@@ -312,12 +312,9 @@ clean: ## clean all built files and start over
 
 install: ## copy build targets to install directory
 	$(echo_cmd) "INSTALLED $(CLIENT_TARGET)"
-	$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) \
-		CLIENT_CFLAGS="$(CLIENT_CFLAGS) $(RELEASE_CFLAGS)" \
-		CLIENT_LDFLAGS="$(CLIENT_LDFLAGS) $(RELEASE_LDFLAGS)"
 	$(Q)if [ ! -d "$(INSTALL_DIR)" ];then $(MKDIR) $(INSTALL_DIR);fi
-	$(Q)cp -f "$(BUILD_DIR)/*/$(CLIENT_TARGET)" "$(INSTALL_DIR)/"
-	$(Q)cp -f "$(BUILD_DIR)/*/$(CLIENT_TARGET:.wasm=.html)" "$(INSTALL_DIR)/"
+	$(Q)cp -f $(BUILD_DIR)/*/$(CLIENT_TARGET) $(INSTALL_DIR)/
+	$(Q)cp -f $(BUILD_DIR)/*/$(CLIENT_TARGET:.wasm=.html) $(INSTALL_DIR)/
 
 
 ifdef B
