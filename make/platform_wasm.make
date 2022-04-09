@@ -103,23 +103,12 @@ PK3_INCLUDES        := xxx-multigame-files.pk3  \
 #                       lsdm3_v1-files.do-always       
 #                       lsdm3_v1-images.do-always      
 
-
-ifeq ($(filter $(MAKECMDGOALS),debug),debug)
-WASM_INDEX          += $(wildcard $(BD)/$(CNAME)*.wasm)
-WASM_TRGTDIR        := $(BD)
-else
-ifeq ($(filter $(MAKECMDGOALS),release),release)
-WASM_INDEX          += $(wildcard $(BR)/$(CNAME)*.wasm)
-WASM_TRGTDIR        := $(BR)
-endif
-endif
 CLEANS              += $(subst .wasm,.html,$(notdir $(wildcard $(BD)/$(CNAME)*.wasm))) \
                        $(subst .wasm,.html,$(notdir $(wildcard $(BR)/$(CNAME)*.wasm)))
-
 INDEX_OBJS          := $(WASM_TRGTDIR)/multigame/vm.do-always      \
                        $(BUILD_DIR)/xxx-multigame-sounds.do-always \
-                       $(addprefix $(BUILD_DIR)/,$(subst .pk3,.do-always,$(PK3_INCLUDES)))  \
-                       $(WASM_INDEX) $(WASM_INDEX:.wasm=.html)
+                       $(addprefix $(BUILD_DIR)/,$(subst .pk3,.do-always,$(PK3_INCLUDES)))
+
 
 ifdef WASM_TRGTDIR
 GAME_BUILD          := $(BUILD_DIR)/release-$(COMPILE_PLATFORM)-$(COMPILE_ARCH)
@@ -154,7 +143,11 @@ $(WASM_TRGTDIR)/%.html: $(WASM_TRGTDIR)/%.wasm
 
 endif
 
-index: $(INDEX_OBJS) ## create an index.html page out of the current build target
+WASM_INDEX :=
+evaluate-index:
+	$(eval WASM_INDEX := wildcard $(BUILD_DIR)/*/$(CNAME)*.wasm)
+
+index: $(INDEX_OBJS) evaluate-index $(WASM_INDEX) $(WASM_INDEX:.wasm=.html) ## create an index.html page out of the current build target
 	@:
 #		STARTUP_COMMAND="+set\\', \\'developer\\', \\'1\\', \\'+devmap\\', \\'lsdm3_v1" \
 
