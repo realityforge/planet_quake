@@ -103,6 +103,14 @@ PK3_INCLUDES        := xxx-multigame-files.pk3  \
 #                       lsdm3_v1-files.do-always       
 #                       lsdm3_v1-images.do-always      
 
+
+ifeq ($(filter $(MAKECMDGOALS),debug),debug)
+WASM_TRGTDIR        := $(BD)
+else
+ifeq ($(filter $(MAKECMDGOALS),release),release)
+WASM_TRGTDIR        := $(BR)
+endif
+endif
 CLEANS              += $(subst .wasm,.html,$(notdir $(wildcard $(BD)/$(CNAME)*.wasm))) \
                        $(subst .wasm,.html,$(notdir $(wildcard $(BR)/$(CNAME)*.wasm)))
 INDEX_OBJS          := $(WASM_TRGTDIR)/multigame/vm.do-always      \
