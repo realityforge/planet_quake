@@ -685,7 +685,7 @@ ifeq ($(RPK_PK3DIRS),)
 ifndef TARGET_REPACK
 
 upload: ## convert assets to web compatible format
-	$(GSUTIL) -m cp -n -r "$(SRCDIR)/*" "$(subst \space, ,$(GSPATH)/$(PK3_PREFIX).pk3dir)"
+	$(GSUTIL) cp -n -r "$(SRCDIR)/*" "$(subst \space, ,$(GSPATH)/$(PK3_PREFIX).pk3dir)"
 	$(RSYNC) "$(subst \space, ,$(DESTDIR)/$(PK3_PREFIX)).pk3dir" "$(subst \space, ,$(GSPATH)/$(PK3_PREFIX)).pk3dir"
 
 sync: mkdirs convert encode collect upload 
