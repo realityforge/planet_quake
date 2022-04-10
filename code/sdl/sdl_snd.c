@@ -216,10 +216,6 @@ qboolean SNDDMA_Init( void )
 	SDL_AudioSpec desired;
 	SDL_AudioSpec obtained;
 	int tmp;
-	
-#ifdef __WASM__
-	return qfalse;
-#endif
 
 #ifdef __WASM__
 	if(IN_FirstClick()) {

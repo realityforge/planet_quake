@@ -1587,10 +1587,6 @@ S_Init
 qboolean S_Base_Init( soundInterface_t *si ) {
 	qboolean	r;
 
-#ifdef __WASM__
-	return qfalse;
-#endif
-
 	if ( !si ) {
 		return qfalse;
 	}

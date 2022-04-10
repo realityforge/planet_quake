@@ -191,6 +191,9 @@ int			com_frameTime;
 static int	com_frameNumber;
 
 qboolean	com_errorEntered = qfalse;
+#ifdef __WASM__
+Q_EXPORT
+#endif
 qboolean	com_fullyInitialized = qfalse;
 qboolean  com_skipLoadUI = qfalse;
 #ifdef USE_ASYNCHRONOUS
@@ -926,18 +929,22 @@ static qboolean Com_AddStartupCommands( void ) {
 			continue;
 		}
 
-#ifndef BUILD_GAME_STATIC
 		if( !Q_stricmpn(com_consoleLines[i], "map ", 4)
 			|| !Q_stricmpn(com_consoleLines[i], "devmap ", 7)
 			|| !Q_stricmpn(com_consoleLines[i], "spmap ", 6)
 			|| !Q_stricmpn(com_consoleLines[i], "spdevmap ", 9) ) {
+#ifndef BUILD_GAME_STATIC
 			com_skipLoadUI = qtrue;
-		}
 #endif
+#ifdef USE_ASYNCHRONOUS
+			Cbuf_AddText( "wait lazy\n" ); // wait for FS to finish loading
+#endif
+		}
 
 #ifdef USE_ASYNCHRONOUS
     if( !Q_stricmpn(com_consoleLines[i], "connect ", 8) ) {
 			com_earlyConnect = qtrue;
+			Cbuf_AddText( "wait lazy\n" ); // wait for FS to finish loading
     }
 #endif
 

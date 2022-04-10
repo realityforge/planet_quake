@@ -81,6 +81,7 @@ function startProgram(program) {
 			// Startup args is expecting a char **
 			let startup = getQueryCommands()
 			RunGame(startup.length, stringsToMemory(startup))
+			HEAPU32[fs_loading >> 2] = Q3e.fs_loading
 			// should have Cvar system by now
 			INPUT.fpsUnfocused = Cvar_VariableIntegerValue(stringToAddress('com_maxfpsUnfocused'));
 			INPUT.fps = Cvar_VariableIntegerValue(stringToAddress('com_maxfps'))

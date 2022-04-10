@@ -22,10 +22,6 @@ function instantiateWasm(bytes) {
     Object.assign(Q3e.env, Object.values(libraries)[i])
   }
 
-  Q3e['table'] = Q3e['__indirect_function_table'] =
-    new WebAssembly.Table({ initial: 1000, element: 'anyfunc', maximum: 10000 })
-  Q3e['memory'] = new WebAssembly.Memory({ 'initial': 2048, /* 'shared': true */ })
-  updateGlobalBufferAndViews(Q3e.memory.buffer)
   return WebAssembly.instantiate(bytes, Q3e)
 }
 
@@ -44,6 +40,10 @@ function init() {
   Q3e['imports'] = Q3e
   // might as well start this early, transfer IndexedDB from disk/memory to application memory
   Q3e['cacheBuster'] = Date.now()
+  Q3e['table'] = Q3e['__indirect_function_table'] =
+    new WebAssembly.Table({ initial: 1000, element: 'anyfunc', maximum: 10000 })
+  Q3e['memory'] = new WebAssembly.Memory({ 'initial': 2048, /* 'shared': true */ })
+  updateGlobalBufferAndViews(Q3e.memory.buffer)
   readAll()
 
   // TODO: offline download so it saves binary to IndexedDB

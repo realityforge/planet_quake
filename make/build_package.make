@@ -575,6 +575,12 @@ $(DESTDIR).do-always/quake3e-slim.html: $(WASM_OBJS)
 	$(Q)$(MOVE) $(DESTDIR)/$(WASM_HTML) $(subst .do-always,,$@) 2> /dev/null
 	-$(Q)$(UNLINK) $(subst .do-always,,$@).bak 2> /dev/null
 
+$(DESTDIR).do-always/quake3e-mv.html: $(WASM_OBJS)
+	$(DO_JS_LIST)
+	-$(Q)$(MOVE) $(subst .do-always,,$@) $(subst .do-always,,$@).bak 2> /dev/null
+	$(Q)$(MOVE) $(DESTDIR)/$(WASM_HTML) $(subst .do-always,,$@) 2> /dev/null
+	-$(Q)$(UNLINK) $(subst .do-always,,$@).bak 2> /dev/null
+
 index: $(addprefix $(DESTDIR).do-always/,$(TARGET_INDEX))
 	@:
 

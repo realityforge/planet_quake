@@ -51,7 +51,13 @@ function openDatabase(noWait) {
 
 
 function readAll() {
+  let hadPk3 = false
+  let hadDefault = false
   let startTime = Date.now()
+  Q3e.fs_loading = 1
+  if(typeof window.fs_loading != 'undefined') {
+    HEAPU32[fs_loading >> 2] = Q3e.fs_loading
+  }
   console.log('sync started at ', new Date())
   return openDatabase()
   .then(function(db) {
@@ -63,6 +69,12 @@ function readAll() {
         let cursor = event.target.result
         if(!cursor) {
           return resolve()
+        }
+        if(cursor.key.endsWith('.pk3dir')) {
+          hadPk3 = true
+        }
+        if(cursor.key.endsWith('default.cfg')) {
+          hadDefault = true
         }
         FS.virtual[cursor.key] = {
           timestamp: cursor.value.timestamp,
@@ -83,6 +95,17 @@ function readAll() {
         (tookTime > 60 * 1000 ? (Math.floor(tookTime / 1000 / 60) + ' minutes, ') : '')
         + Math.floor(tookTime / 1000) % 60 + ' seconds, '
         + (tookTime % 1000) + ' milliseconds')
+      Q3e.fs_loading = 0
+      if(typeof window.fs_loading != 'undefined') {
+        HEAPU32[fs_loading >> 2] = 0
+        if(hadPk3) {
+          Cbuf_AddText(stringToAddress('wait lazy; fs_restart;'))
+        }
+        if(hadDefault) {
+          HEAPU32[com_fullyInitialized >> 2] = 1
+          Cbuf_AddText(stringToAddress('wait lazy; exec default.cfg;'))
+        }
+      }
     })
   })
   .catch(function (e) {

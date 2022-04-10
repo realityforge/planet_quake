@@ -22,6 +22,7 @@ qboolean FS_GeneralRef( const char *filename );
 #if defined(USE_LAZY_LOAD) || defined(USE_ASYNCHRONOUS)
 
 extern int cmd_lazy;
+Q_EXPORT int fs_loading;
 
 #ifdef _DEBUG
 static const char *NEEDED = "";
@@ -231,11 +232,6 @@ void Sys_UpdateNeeded( downloadLazy_t **ready, downloadLazy_t **downloadNeeded )
 		//if(Q_stristr(highest->downloadName, "icona_grenade.jpeg")) {
 		//	assert(highest->state <= VFS_NOENT);
 		//}
-		if(highestDownload && highestDownload->state >= VFS_NOW) {
-			//cmd_lazy = 1;
-		} else {
-			cmd_lazy = 0;
-		}
 		*downloadNeeded = highestDownload;
 	}
 }
@@ -900,10 +896,10 @@ Com_DPrintf("updating files: %s -> %s\n", filename, tempname);
 	if(Q_stristr(tempname, "default.cfg")) {
 		// will restart automatically from NextDownload()
 		if(!FS_Initialized()) {
+			com_fullyInitialized = qtrue;
 			FS_Restart(0);
 		}
 		// TODO: check on networking, shaderlist, anything else we skipped, etc again
-		com_fullyInitialized = qtrue;
 		Cbuf_AddText("exec default.cfg; vid_restart lazy;");
 		//if(cls.state < CA_CONNECTED && *Cvar_VariableString("cl_reconnectArgs") != '\0') {
 		//	cls.state = CA_AUTHORIZING;
@@ -1088,9 +1084,19 @@ void CL_CheckLazyUpdates( void ) {
 	// check for files that need to be downloaded, runs on separate thread!?
 	if(thirdTimer == newTime && downloadNeeded) {
 
-#if defined(USE_CURL) // || defined(__WASM__)
+#if defined(USE_CURL) || defined(__WASM__)
 		// we don't care if the USE_ASYNCHRONOUS code in the call cancels 
 		//   because it is requeued 1.5 seconds later
+		if(downloadNeeded->state >= VFS_NOW) {
+			//cmd_lazy = 1;
+		} else if (!fs_loading) {
+			cmd_lazy = 0;
+		}
+
+		if(FS_SV_FileExists(downloadNeeded->downloadName)) {
+			downloadNeeded->lastRequested = newTime;
+			downloadNeeded->state = VFS_DL;
+		} else
 		if(CL_Download( "lazydl", downloadNeeded->state == VFS_INDEX 
 			? va("%s/", downloadNeeded->downloadName) 
 			: downloadNeeded->downloadName, qfalse )
@@ -1099,6 +1105,8 @@ void CL_CheckLazyUpdates( void ) {
 			downloadNeeded->state = VFS_DL;
 		}
 #endif
+	} else {
+		cmd_lazy = 0;
 	}
 
 	// if we break here, nothing will update while download is in progress
@@ -1120,7 +1128,6 @@ void CL_CheckLazyUpdates( void ) {
 		|| !Q_stricmp(ext, "mp3") || !Q_stricmp(ext, "opus")) {
 		if(cls.soundRegistered) {
 			//S_UpdateSound(ready->loadingName, qtrue);
-			secondTimer += 10;
 		}
 	}
 
@@ -1145,17 +1152,17 @@ void CL_CheckLazyUpdates( void ) {
 	}
 
 	ready->loadingName[MAX_OSPATH - 1] = '\0';
-	FS_UpdateFiles(ready->downloadName, &ready->loadingName[MAX_OSPATH]);
+	//FS_UpdateFiles(ready->downloadName, &ready->loadingName[MAX_OSPATH]);
 
 #if defined(USE_ASYNCHRONOUS) || defined(__WASM__)
 	// multigame has a special feature to reload an missing assets when INIT is called
 	if(((cls.uiStarted && uivm) || (cls.cgameStarted && cgvm))
 		&& !Q_stricmp(FS_GetCurrentGameDir(), "multigame")) {
-		//Cvar_Set("cl_lazyLoad", ready->downloadName);
+		Cvar_Set("cl_lazyLoad", ready->downloadName);
 		//cl_lazyLoad->modificationCount++;
 		//cl_lazyLoad->string = ready->downloadName;
 	} else {
-		//Cvar_Set("cl_lazyLoad", "");
+		Cvar_Set("cl_lazyLoad", "");
 	}
 #endif
 

@@ -37,7 +37,8 @@ typedef struct {
 static int    cmd_wait;
 #ifndef DEDICATED
 #ifdef USE_LAZY_LOAD
-int    cmd_lazy;
+Q_EXPORT
+int    cmd_lazy = 1;
 #endif
 #endif
 
