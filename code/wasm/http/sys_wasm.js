@@ -23,7 +23,7 @@ function instantiateWasm(bytes) {
   }
 
   Q3e['table'] = Q3e['__indirect_function_table'] =
-    new WebAssembly.Table({ initial: 2048, element: 'anyfunc' })
+    new WebAssembly.Table({ initial: 1000, element: 'anyfunc', maximum: 10000 })
   Q3e['memory'] = new WebAssembly.Memory({ 'initial': 2048, /* 'shared': true */ })
   updateGlobalBufferAndViews(Q3e.memory.buffer)
   return WebAssembly.instantiate(bytes, Q3e)

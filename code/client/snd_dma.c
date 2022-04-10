@@ -1116,7 +1116,6 @@ void S_Base_Respatialize( int entityNum, const vec3_t head, vec3_t axis[3], int 
 	channel_t	*ch;
 	vec3_t		origin;
 
-Com_Printf("S_Respatialize(%i, %i)\n", s_soundStarted , s_soundMuted);
 	if ( !s_soundStarted || s_soundMuted ) {
 		return;
 	}
@@ -1587,6 +1586,10 @@ S_Init
 */
 qboolean S_Base_Init( soundInterface_t *si ) {
 	qboolean	r;
+
+#ifdef __WASM__
+	return qfalse;
+#endif
 
 	if ( !si ) {
 		return qfalse;

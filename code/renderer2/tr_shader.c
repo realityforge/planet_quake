@@ -4635,7 +4635,7 @@ void RE_ReloadShaders( qboolean createNew ) {
 
   ScanAndLoadShaderFiles();
 
-  GL_SetDefaultState();
+  //GL_SetDefaultState();
 
 	// quickly recheck any missing
 #ifdef USE_LAZY_LOAD

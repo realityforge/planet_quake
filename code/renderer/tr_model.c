@@ -1074,7 +1074,6 @@ void R_ModelInit( void ) {
 	// leave a space for NULL model
 	tr.numModels = 0;
 
-	// leave a space for NULL model
 	mod = R_AllocModel();
 	mod->type = MOD_BAD;
 

@@ -4,8 +4,10 @@
 #include "lock.h"
 #include "fork_impl.h"
 
+#ifndef __WASM__
 #define malloc __libc_malloc
 #define calloc __libc_calloc
+#endif
 #define realloc undef
 #define free undef
 

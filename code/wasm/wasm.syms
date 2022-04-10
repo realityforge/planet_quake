@@ -18,6 +18,7 @@ atan2
 floor
 sqrtf
 sqrt
+exit
 acosf
 powf
 sin

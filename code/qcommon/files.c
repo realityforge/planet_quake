@@ -4493,44 +4493,11 @@ void FS_AddGameDirectory( const char *path, const char *dir, int igvm ) {
 	int				path_len;
 	int				dir_len;
 
-#ifndef USE_ASYNCHRONOUS
 	for ( sp = fs_searchpaths ; sp ; sp = sp->next ) {
 		if ( sp->dir && !Q_stricmp( sp->dir->path, path ) && !Q_stricmp( sp->dir->gamedir, dir )) {
 			return;	// we've already got this one
 		}
 	}
-#else
-  searchpath_t *sprev = NULL;
-	sp = fs_searchpaths;
-  // but it could just be the path marker with no pk3s in it yet
-  while(sp) {
-		if ( sp->dir && !Q_stricmp( sp->dir->path, path ) && !Q_stricmp( sp->dir->gamedir, dir )) {
-			/* if ( sp->pack ) {
-        FS_FreePak(sp->pack);
-				fs_packFiles--;
-				fs_packCount--;
-      } else if ( sp->dir ) {
-				if(Q_stricmpn(&sp->dir->path[strlen(sp->dir->path) - 7], ".pk3dir", 7)) {
-					fs_pk3dirCount--;
-				} else {
-					fs_dirCount--;
-				}
-			} */
-
-			if(!sprev) {
-				fs_searchpaths = sp->next;
-			} else {
-				sprev->next = sp->next; // remove from linked list
-			}
-			searchpath_t *toDelete = sp;
-			sp = sp->next;
-			Z_Free(toDelete);
-		} else {
-			sprev = sp;
-			sp = sp->next;
-		}
-	}
-#endif
 	
 	Q_strncpyz( fs_gamedir, dir, sizeof( fs_gamedir ) );
 

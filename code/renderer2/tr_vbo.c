@@ -718,6 +718,10 @@ void VaoCache_Commit(void)
 	int *batchLength;
 	queuedSurface_t *surf, *end = vcq.surfaces + vcq.numSurfaces;
 
+	if(!vc.vao) {
+		return;
+	}
+
 	R_BindVao(vc.vao);
 
 	// Search for a matching batch
@@ -870,6 +874,9 @@ void VaoCache_Init(void)
 
 void VaoCache_BindVao(void)
 {
+	if(!vc.vao) {
+		return;
+	}
 	R_BindVao(vc.vao);
 }
 

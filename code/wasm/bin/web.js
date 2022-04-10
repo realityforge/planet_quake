@@ -462,6 +462,7 @@ function respondRequest(request, response) {
 
 }
 
+var noFS = false
 var runServer = false
 var forwardIP = ''
 for(var i = 0; i < process.argv.length; i++) {
@@ -472,6 +473,9 @@ for(var i = 0; i < process.argv.length; i++) {
     console.log('Forwarding ip address: ', process.argv[i+1])
     forwardIP = process.argv[i+1]
     i++
+  } else if (a == '--no-fs') {
+    console.log('Turning off file-system access.')
+    noFS = true
   }
 }
 
@@ -485,7 +489,9 @@ if(runServer) {
   master(27950)
   app.enable('etag')
   app.set('etag', 'strong')
-  app.use(respondRequest)
+  if(!noFS) {
+    app.use(respondRequest)
+  }
   express.static.mime.types['wasm'] = 'application/wasm'
   express.static.mime.types['pk3'] = 'application/octet-stream'
   express.static.mime.types['bsp'] = 'application/octet-stream'

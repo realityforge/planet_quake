@@ -63,7 +63,6 @@ const char *Sys_DefaultBasePath( void ) { return "/base"; }
 qboolean Sys_ResetReadOnlyAttribute( const char *ospath ) { return qfalse; }
 const char *Sys_DefaultHomePath( void ) { return "/base/home"; }
 
-
 /*
 =================
 Sys_FreeFileList

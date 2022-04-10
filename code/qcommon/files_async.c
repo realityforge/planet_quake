@@ -905,10 +905,10 @@ Com_DPrintf("updating files: %s -> %s\n", filename, tempname);
 		// TODO: check on networking, shaderlist, anything else we skipped, etc again
 		com_fullyInitialized = qtrue;
 		Cbuf_AddText("exec default.cfg; vid_restart lazy;");
-		if(cls.state < CA_CONNECTED && *Cvar_VariableString("cl_reconnectArgs") != '\0') {
-			cls.state = CA_AUTHORIZING;
-			Cbuf_AddText( va( "wait lazy; connect %s\n", Cvar_VariableString("cl_reconnectArgs") ) );
-		}
+		//if(cls.state < CA_CONNECTED && *Cvar_VariableString("cl_reconnectArgs") != '\0') {
+		//	cls.state = CA_AUTHORIZING;
+		//	Cbuf_AddText( va( "wait lazy; connect %s\n", Cvar_VariableString("cl_reconnectArgs") ) );
+		//}
 	} else 
 	
 #if defined(USE_LIVE_RELOAD) || defined(__WASM__)
@@ -944,14 +944,16 @@ Com_DPrintf("updating files: %s -> %s\n", filename, tempname);
 #endif
 
 	if(Q_stristr(tempname, ".pk3dir/sounds/feedback/menu1.ogg")) {
-		FS_AddGameDirectory( Cvar_VariableString("fs_homepath"), FS_GetCurrentGameDir(), 0 );
+		FS_Restart(0);
+		//FS_AddGameDirectory( Cvar_VariableString("fs_basepath"), FS_GetCurrentGameDir(), 0 );
 		RetryDownloads();
 	} else
 
 	if(Q_stristr(tempname, ".bsp") && Q_stristr(tempname, "maps/")) {
 		// load map if we just tried to start it
 		if(Q_stristr(tempname, ".pk3dir/")) {
-			FS_AddGameDirectory( Cvar_VariableString("fs_homepath"), FS_GetCurrentGameDir(), 0 );
+			FS_Restart(0);
+			//FS_AddGameDirectory( Cvar_VariableString("fs_basepath"), FS_GetCurrentGameDir(), 0 );
 			RetryDownloads();
 		}
 		if(Q_stristr(tempname, Cvar_VariableString("mapname")) && !com_sv_running->integer) {
@@ -972,12 +974,12 @@ Com_DPrintf("updating files: %s -> %s\n", filename, tempname);
 	if(Q_stristr(tempname, "vm/ui.qvm") && !cls.uiStarted) {
     Cvar_Set("com_skipLoadUI", "0");
 		//Cbuf_AddText("wait; vid_restart lazy;");
-		CL_StartHunkUsers();
+		//CL_StartHunkUsers();
 	} else 
 
 	// TODO: load default model and current player model
 	if(Q_stristr(tempname, "vm/cgame.qvm") && !cls.cgameStarted) {
-		CL_StartHunkUsers();
+		//CL_StartHunkUsers();
 	} else 
 
 #endif
@@ -1035,9 +1037,9 @@ Com_DPrintf("updating files: %s -> %s\n", filename, tempname);
 		if(Q_stristr(tempname, "maps/maplist.json")
 			&& Q_stricmp(Cvar_VariableString("mapname"), "nomap")) {
 			const char *mapname = Cvar_VariableString("mapname");
-			Sys_FileNeeded_real(va("maps/%s.bsp", mapname), VFS_NOW, qtrue);
+			FS_ReadFile(va("maps/%s.bsp", mapname), NULL);
 			// force download of map shaders from specific pk3dir
-			Sys_FileNeeded_real(va("scripts/%s.shader", mapname), VFS_NOW, qtrue);
+			FS_ReadFile(va("scripts/%s.shader", mapname), NULL);
 		} else {
 			//Cbuf_AddText("wait; vid_restart lazy;");
 		}
@@ -1054,7 +1056,7 @@ void CL_CheckLazyUpdates( void ) {
 	// TODO: remove this, good to see 1 color during testing
 	if(!first) {
 		first = qtrue;
-		Sys_FileNeeded("multigame/xxx-multigame.pk3dir/sound/feedback/menu1.ogg", VFS_LAZY);
+		Sys_FileNeeded("xxx-multigame.pk3dir/sound/feedback/menu1.ogg", VFS_LAZY);
 	}
 
 	// files must process faster otherwise we will have a bunch of indexes queued  
@@ -1086,7 +1088,7 @@ void CL_CheckLazyUpdates( void ) {
 	// check for files that need to be downloaded, runs on separate thread!?
 	if(thirdTimer == newTime && downloadNeeded) {
 
-#if defined(USE_CURL) || defined(__WASM__)
+#if defined(USE_CURL) // || defined(__WASM__)
 		// we don't care if the USE_ASYNCHRONOUS code in the call cancels 
 		//   because it is requeued 1.5 seconds later
 		if(CL_Download( "lazydl", downloadNeeded->state == VFS_INDEX 
@@ -1109,7 +1111,7 @@ void CL_CheckLazyUpdates( void ) {
 	if(!Q_stricmp(ext, "md3") || !Q_stricmp(ext, "mdr")
 		|| !Q_stricmp(ext, "md5")) {
 		if(cls.rendererStarted) {
-			re.UpdateModel(ready->loadingName);
+			//re.UpdateModel(ready->loadingName);
 			secondTimer += 10;
 		}
 	}
@@ -1117,14 +1119,15 @@ void CL_CheckLazyUpdates( void ) {
 	if(!Q_stricmp(ext, "wav") || !Q_stricmp(ext, "ogg")
 		|| !Q_stricmp(ext, "mp3") || !Q_stricmp(ext, "opus")) {
 		if(cls.soundRegistered) {
-			S_UpdateSound(ready->loadingName, qtrue);
+			//S_UpdateSound(ready->loadingName, qtrue);
+			secondTimer += 10;
 		}
 	}
 
 	if(ready->loadingName[12] == ';') {
 		ready->loadingName[12] = '\0';
 		if(cls.rendererStarted) {
-			re.UpdateShader(&ready->loadingName[13], atoi(&ready->loadingName[0]));
+			//re.UpdateShader(&ready->loadingName[13], atoi(&ready->loadingName[0]));
 			secondTimer += 10;
 		}
 		ready->loadingName[12] = ';';
@@ -1133,7 +1136,7 @@ void CL_CheckLazyUpdates( void ) {
 	// intercept this here because it's client only code
 	if(Q_stristr(&ready->loadingName[MAX_OSPATH], "/scripts/")
 		&& Q_stristr(&ready->loadingName[MAX_OSPATH], ".shader")) {
-		re.ReloadShaders(qfalse);
+		//re.ReloadShaders(qfalse);
 	}
 #endif
 
@@ -1148,10 +1151,11 @@ void CL_CheckLazyUpdates( void ) {
 	// multigame has a special feature to reload an missing assets when INIT is called
 	if(((cls.uiStarted && uivm) || (cls.cgameStarted && cgvm))
 		&& !Q_stricmp(FS_GetCurrentGameDir(), "multigame")) {
-		cl_lazyLoad->modificationCount++;
-		cl_lazyLoad->string = ready->downloadName;
+		//Cvar_Set("cl_lazyLoad", ready->downloadName);
+		//cl_lazyLoad->modificationCount++;
+		//cl_lazyLoad->string = ready->downloadName;
 	} else {
-		cl_lazyLoad->string = "";
+		//Cvar_Set("cl_lazyLoad", "");
 	}
 #endif
 

@@ -567,13 +567,12 @@ void QDECL Com_Error( errorParm_t code, const char *fmt, ... ) {
 	Q_vsnprintf( com_errorMessage, sizeof( com_errorMessage ), fmt, argptr );
 	va_end( argptr );
 
-	if ( code != ERR_DISCONNECT && code != ERR_NEED_CD ) {
+	if ( code != ERR_DISCONNECT && code != ERR_NEED_CD && code != ERR_FATAL ) {
 		// we can't recover from ERR_FATAL so there is no recipients for com_errorMessage
 		// also if ERR_FATAL was called from S_Malloc - CopyString for a long (2+ chars) text
 		// will trigger recursive error without proper client/server shutdown
-		if ( code != ERR_FATAL ) {
-			Cvar_Set( "com_errorMessage", com_errorMessage );
-		}
+		Cvar_Set("com_skipLoadUI", "0");
+		Cvar_Set( "com_errorMessage", com_errorMessage );
 	}
 
 	Cbuf_Init();

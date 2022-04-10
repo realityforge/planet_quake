@@ -396,6 +396,7 @@ function InputPushMouseEvent (evt) {
 }
 
 function Com_MaxFPSChanged() {
+  return;
   INPUT.fpsUnfocused = Cvar_VariableIntegerValue(stringToAddress('com_maxfpsUnfocused'));
   INPUT.fps = Cvar_VariableIntegerValue(stringToAddress('com_maxfps'));
   if(Q3e.frameInterval) {

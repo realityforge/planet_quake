@@ -46,6 +46,7 @@ function getQueryCommands() {
 		'+set', 'r_fullscreen', window.fullscreen ? '1' : '0',
 		'+set', 'r_customHeight', '' + window.innerHeight || 0,
 		'+set', 'r_customWidth', '' + window.innerWidth || 0,
+		'+exec', 'autoexec-' + window.location.hostname.replace('.quake.games', '') + '.cfg',
 	])
 	return startup
 }
@@ -116,19 +117,6 @@ function addressToString(addr, length) {
 		}
 		newString += String.fromCharCode(HEAPU8[addr + i])
 	}
-
-	/*
-	if(typeof g_bigcharsSize != 'undefined' && HEAPU32[g_bigcharsSize >> 2] == 0) {
-		let bigchars = atob(document.getElementById('bigchars').src.substring(22))
-			.split("").map(function(c) { return c.charCodeAt(0); })
-		let startPos = HEAPU32[g_bigcharsData >> 2] = malloc(bigchars.length)
-		HEAPU32[g_bigcharsSize >> 2] = bigchars.length
-		for(let i = 0; i < bigchars.length; i++) {
-			HEAP8[startPos] = bigchars[i]
-			startPos++
-		}
-	}
-	*/
 
 	return newString
 }
@@ -263,7 +251,7 @@ function Sys_Exit(code) {
 function Sys_Error(fmt, args) {
 	let len = BG_sprintf(Q3e.sharedMemory + Q3e.sharedCounter, fmt, args)
 	if(len > 0)
-		console.log('Sys_Error: ', addressToString(Q3e.sharedMemory + Q3e.sharedCounter))
+		console.error('Sys_Error: ', addressToString(Q3e.sharedMemory + Q3e.sharedCounter))
 	Sys_Exit( 1 )
 	throw new Error(addressToString(fmt))
 }
@@ -320,17 +308,26 @@ function CL_ModifyMenu(event) {
 }
 
 function Sys_Frame() {
+	if(Q3e.inFrame) {
+		return
+	}
 	function doFrame() {
+		Q3e.inFrame = true
 		Q3e.running = !Q3e.running
 		try {
 			Com_Frame(Q3e.running)
 		} catch (e) {
-			console.log(e)
+			if(!Q3e.exited && e.message == 'longjmp') {
+				// let game Com_Frame handle it, it will restart UIVM
+				Cbuf_AddText(stringToAddress('vid_restart;'));
+				console.error(e)
+			} else
 			if(!Q3e.exited || e.message != 'unreachable') {
 				Sys_Exit(1)
 				throw e
 			}
 		}
+		Q3e.inFrame = false
 	}
 	if(HEAP32[gw_active >> 2]) {
 		requestAnimationFrame(doFrame)
@@ -451,6 +448,7 @@ var SYS = {
 	Sys_Milliseconds: Sys_Milliseconds,
 	Sys_Microseconds: Sys_Microseconds,
 	Sys_Exit: Sys_Exit,
+	exit: Sys_Exit,
 	Sys_Frame: Sys_Frame,
 	Sys_Error: Sys_Error,
 	Sys_UnloadLibrary: Sys_UnloadLibrary,

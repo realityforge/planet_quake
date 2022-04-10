@@ -1295,7 +1295,7 @@ void R_ModelInit( void ) {
   // make default model reference available to all worlds, so there is no confusion,
   //   subsequent worlds will just continue to load new models in addition
   //   this is just a few pointers afterall
-#if 0 //def USE_MULTIVM_CLIENT
+#ifdef USE_MULTIVM_CLIENT
 	for(int i = 0; i < MAX_NUM_WORLDS; i++) {
 		trWorlds[i].models[0] = mod;
 		trWorlds[i].numModels = 1;

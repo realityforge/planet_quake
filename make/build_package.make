@@ -255,7 +255,7 @@ endef
 
 define DO_JS_LIST
 	$(echo_cmd) "JS_LIST $<"
-	$(Q)$(NODE) -e "$(call NODE_FSREPLACE,'$(call HTML_SCRIPT,$(CNAME).js)','$(WASM_FILES)'.split(' ').map(jsFile => '$(call JS_SCRIPT,'+$(call NODE_FSREAD,$(WASM_HTTP)/'+jsFile+')+','+jsFile+')').join(''),$(DESTDIR)/$(WASM_HTML))"
+	$(Q)$(NODE) -e "$(call NODE_FSREPLACE,'$(call HTML_SCRIPT,quake3e.js)','$(WASM_FILES)'.split(' ').map(jsFile => '$(call JS_SCRIPT,'+$(call NODE_FSREAD,$(WASM_HTTP)/'+jsFile+')+','+jsFile+')').join(''),$(DESTDIR)/$(WASM_HTML))"
 endef
 
 define DO_JSBUILD_EMBED
@@ -564,6 +564,12 @@ $(DESTDIR).do-always/$(WASM_HTML):
 #	$(DO_JS_EMBED)
 
 $(DESTDIR).do-always/quake3e.html: $(WASM_OBJS)
+	$(DO_JS_LIST)
+	-$(Q)$(MOVE) $(subst .do-always,,$@) $(subst .do-always,,$@).bak 2> /dev/null
+	$(Q)$(MOVE) $(DESTDIR)/$(WASM_HTML) $(subst .do-always,,$@) 2> /dev/null
+	-$(Q)$(UNLINK) $(subst .do-always,,$@).bak 2> /dev/null
+
+$(DESTDIR).do-always/quake3e-slim.html: $(WASM_OBJS)
 	$(DO_JS_LIST)
 	-$(Q)$(MOVE) $(subst .do-always,,$@) $(subst .do-always,,$@).bak 2> /dev/null
 	$(Q)$(MOVE) $(DESTDIR)/$(WASM_HTML) $(subst .do-always,,$@) 2> /dev/null
