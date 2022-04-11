@@ -422,7 +422,7 @@ function Com_DL_Perform(nameStr, localName, responseData) {
     FS_CreatePath(stringToAddress(nameStr))
     FS.virtual[tempName] = {
       timestamp: new Date(),
-      mode: 33206,
+      mode: FS_FILE,
       contents: new Uint8Array(responseData)
     }
     Sys_FileReady(stringToAddress(localName), stringToAddress(tempName));
@@ -432,7 +432,7 @@ function Com_DL_Perform(nameStr, localName, responseData) {
     FS_CreatePath(stringToAddress(nameStr))
     FS.virtual[nameStr] = {
       timestamp: new Date(),
-      mode: 33206,
+      mode: FS_FILE,
       contents: new Uint8Array(responseData)
     }
     // async to filesystem
@@ -481,11 +481,15 @@ function CL_Download(cmd, name, auto) {
   }
   try {
     NET.downloadCount++
-
-    readStore(nameStr)
-      .then(function (result) {
+    let newPromise
+    if(nameStr.includes('version.json') || nameStr.includes('maps/maplist.json')) {
+      newPromise = Promise.resolve()
+    } else {
+      newPromise = readStore(nameStr)
+    }
+    newPromise.then(function (result) {
         // always redownload indexes in case the content has changed?
-        if(!result || result.mode == 16895) {
+        if(!result || (result.mode >> 12) == ST_DIR) {
           return Com_DL_Begin(localName, remoteURL)
         // bust the caches!
         } else if(result.timestamp.getTime() < Q3e.cacheBuster) {

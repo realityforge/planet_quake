@@ -135,7 +135,6 @@ NODE_FSREAD       = fs.readFileSync('$1', 'utf-8')
 NODE_FSREAD64     = fs.readFileSync('$1', 'base64')
 NODE_FSREPLACE    = $(call NODE_FSWRITE,$(call NODE_FSREAD,$3).replace($1, $2),$3)
 WASM_BASE64       = data:image/png;base64,'+$(call NODE_FSREAD64,$1)+'
-HTML_VFSHEAD     := <!-- BEGIN VFS INCLUDES -->
 HTML_SCRIPT       = <script async type=\"text/javascript\" src=\"$1\"></script>
 HTML_LINK         = <link rel=\"stylesheet\" href=\"$1\" />
 HTML_STYLE        = <style type=\"text/css\">\n/* <!-- $1 */\n'+$(call NODE_FSREAD,$2)+'\n/* --> */\n</style>
@@ -245,7 +244,7 @@ endef
 
 define DO_BASE64_CC
 	$(echo_cmd) "BASE64_CC $<"
-	$(Q)$(NODE) -e "$(call NODE_FSREPLACE,'$(HTML_VFSHEAD)','$(HTML_VFSHEAD)\n<img title=\"$(subst $(SRCDIR)/,,$<)\" src=\"$(call WASM_BASE64,$<)\" />',$(DESTDIR)/$(WASM_HTML))"
+	$(Q)$(NODE) -e "$(call NODE_FSREPLACE,'$(HTML_BODY)','$(HTML_BODY)\n<img title=\"$(subst $(SRCDIR)/,,$<)\" src=\"$(call WASM_BASE64,$<)\" />',$(DESTDIR)/$(WASM_HTML))"
 endef
 
 define DO_CSS_EMBED
@@ -569,13 +568,13 @@ $(DESTDIR).do-always/quake3e.html: $(WASM_OBJS)
 	$(Q)$(MOVE) $(DESTDIR)/$(WASM_HTML) $(subst .do-always,,$@) 2> /dev/null
 	-$(Q)$(UNLINK) $(subst .do-always,,$@).bak 2> /dev/null
 
-$(DESTDIR).do-always/quake3e-slim.html: $(WASM_OBJS)
+$(DESTDIR).do-always/quake3e_slim.html: $(WASM_OBJS)
 	$(DO_JS_LIST)
 	-$(Q)$(MOVE) $(subst .do-always,,$@) $(subst .do-always,,$@).bak 2> /dev/null
 	$(Q)$(MOVE) $(DESTDIR)/$(WASM_HTML) $(subst .do-always,,$@) 2> /dev/null
 	-$(Q)$(UNLINK) $(subst .do-always,,$@).bak 2> /dev/null
 
-$(DESTDIR).do-always/quake3e-mv.html: $(WASM_OBJS)
+$(DESTDIR).do-always/quake3e_mw.html: $(WASM_OBJS)
 	$(DO_JS_LIST)
 	-$(Q)$(MOVE) $(subst .do-always,,$@) $(subst .do-always,,$@).bak 2> /dev/null
 	$(Q)$(MOVE) $(DESTDIR)/$(WASM_HTML) $(subst .do-always,,$@) 2> /dev/null

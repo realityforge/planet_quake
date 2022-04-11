@@ -450,7 +450,7 @@ static const cvarTable_t cvarTable[] = {
 #endif
 	{ &cg_atmosphere, "g_atmosphere", "", CVAR_SERVERINFO | CVAR_TEMP },
 	{ &cg_breadCrumb, "ui_breadCrumb", "", 0 },
-	{ &cg_lazyLoad, "cl_lazyLoad", "", 0 },
+	{ &cg_lazyLoad, "ui_lazyLoad", "", 0 },
 	{ &cg_atmosphericEffects, "cg_atmosphericEffects", "1", CVAR_ARCHIVE },
 	{ &cg_smoothClients, "cg_smoothClients", "0", CVAR_USERINFO | CVAR_ARCHIVE },
 	{ &cg_cameraMode, "com_cameraMode", "0", CVAR_CHEAT },

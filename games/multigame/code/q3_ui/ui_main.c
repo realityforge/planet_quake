@@ -208,7 +208,7 @@ static cvarTable_t		cvarTable[] = {
 
 	{ &ui_cdkeychecked, "ui_cdkeychecked", "0", CVAR_ROM },
 	{ &ui_breadCrumb, "ui_breadCrumb", "", CVAR_ROM },
-	{ &ui_lazyLoad, "cl_lazyLoad", "", 0 },
+	{ &ui_lazyLoad, "ui_lazyLoad", "", 0 },
 	{ &ui_developer, "developer", "", 0 },
 
 };

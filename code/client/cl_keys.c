@@ -760,7 +760,8 @@ static void CL_KeyDownEvent( int key, unsigned time, int fingerId )
 	// only process touch events for 3rd device which is hidden on screen
 	//   this simulates tapping on the menu screen
 	// TODO: use second finger as K_MOUSE2 for zooming on weapons?
-	if (fingerId > 0 && (fingerId != 3 || !(Key_GetCatcher( ) & KEYCATCH_UI))) {
+	if (fingerId > 0 
+		&& (fingerId != 3 || !(Key_GetCatcher( ) & KEYCATCH_UI))) {
 		return;
 	}
 #endif

@@ -115,6 +115,12 @@ const KEYCATCH_CGAME   =  0x0008
 function InputPushFocusEvent (evt) {
   if(evt.type == 'pointerlockchange') {
     HEAP32[gw_active >> 2] = (document.pointerLockElement === Q3e.canvas)
+    if(!HEAP32[gw_active >> 2] && !(Key_GetCatcher() & KEYCATCH_CONSOLE)) {
+      Sys_QueEvent( Sys_Milliseconds(), SE_KEY, 
+      INPUT.keystrings['ESCAPE'], true, 0, null );
+      Sys_QueEvent( Sys_Milliseconds(), SE_KEY, 
+      INPUT.keystrings['ESCAPE'], false, 0, null );
+    }
     return
   }
   if (document.visibilityState != 'visible' || evt.type == 'blur') {
@@ -424,35 +430,11 @@ function IN_Init() {
 
 	console.log( '\n------- Input Initialization -------\n' );
 
-  if(Cvar_VariableIntegerValue(stringToAddress('in_joystick'))) {
-    InitNippleJoysticks()
-  }
+  InitNippleJoysticks()
 
 	let in_keyboardDebug = Cvar_Get( stringToAddress('in_keyboardDebug'), stringToAddress('0'), CVAR_ARCHIVE );
 	let in_mouse = Cvar_Get( stringToAddress('in_mouse'), stringToAddress('1'), CVAR_ARCHIVE );
 	Cvar_CheckRange( in_mouse, stringToAddress('-1'), stringToAddress('1'), CV_INTEGER );
-
-  /*
-	in_joystick = Cvar_Get( 'in_joystick', '0', CVAR_ARCHIVE );
-	in_joystickThreshold = Cvar_Get( 'joy_threshold', '0.15', CVAR_ARCHIVE );
-	j_pitch =        Cvar_Get( 'j_pitch',        '0.022', CVAR_ARCHIVE_ND );
-	j_yaw =          Cvar_Get( 'j_yaw',          '-0.022', CVAR_ARCHIVE_ND );
-	j_forward =      Cvar_Get( 'j_forward',      '-0.25', CVAR_ARCHIVE_ND );
-	j_side =         Cvar_Get( 'j_side',         '0.25', CVAR_ARCHIVE_ND );
-	j_up =           Cvar_Get( 'j_up',           '0', CVAR_ARCHIVE_ND );
-
-	j_pitch_axis =   Cvar_Get( 'j_pitch_axis',   '3', CVAR_ARCHIVE_ND );
-	j_yaw_axis =     Cvar_Get( 'j_yaw_axis',     '2', CVAR_ARCHIVE_ND );
-	j_forward_axis = Cvar_Get( 'j_forward_axis', '1', CVAR_ARCHIVE_ND );
-	j_side_axis =    Cvar_Get( 'j_side_axis',    '0', CVAR_ARCHIVE_ND );
-	j_up_axis =      Cvar_Get( 'j_up_axis',      '4', CVAR_ARCHIVE_ND );
-
-	Cvar_CheckRange( j_pitch_axis,   '0', va('%i',MAX_JOYSTICK_AXIS-1), CV_INTEGER );
-	Cvar_CheckRange( j_yaw_axis,     '0', va('%i',MAX_JOYSTICK_AXIS-1), CV_INTEGER );
-	Cvar_CheckRange( j_forward_axis, '0', va('%i',MAX_JOYSTICK_AXIS-1), CV_INTEGER );
-	Cvar_CheckRange( j_side_axis,    '0', va('%i',MAX_JOYSTICK_AXIS-1), CV_INTEGER );
-	Cvar_CheckRange( j_up_axis,      '0', va('%i',MAX_JOYSTICK_AXIS-1), CV_INTEGER );
-  */
 
 	// ~ and `, as keys and characters
 	Cvar_Get( stringToAddress('cl_consoleKeys'), stringToAddress('~ ` \u007e \u0060'), CVAR_ARCHIVE );
@@ -511,6 +493,38 @@ function IN_Init() {
 }
 
 function InitNippleJoysticks () {
+  // TODO: finish joystick settings
+  /*
+	in_joystick = Cvar_Get( 'in_joystick', '0', CVAR_ARCHIVE );
+	in_joystickThreshold = Cvar_Get( 'joy_threshold', '0.15', CVAR_ARCHIVE );
+	j_pitch =        Cvar_Get( 'j_pitch',        '0.022', CVAR_ARCHIVE_ND );
+	j_yaw =          Cvar_Get( 'j_yaw',          '-0.022', CVAR_ARCHIVE_ND );
+	j_forward =      Cvar_Get( 'j_forward',      '-0.25', CVAR_ARCHIVE_ND );
+	j_side =         Cvar_Get( 'j_side',         '0.25', CVAR_ARCHIVE_ND );
+	j_up =           Cvar_Get( 'j_up',           '0', CVAR_ARCHIVE_ND );
+
+	j_pitch_axis =   Cvar_Get( 'j_pitch_axis',   '3', CVAR_ARCHIVE_ND );
+	j_yaw_axis =     Cvar_Get( 'j_yaw_axis',     '2', CVAR_ARCHIVE_ND );
+	j_forward_axis = Cvar_Get( 'j_forward_axis', '1', CVAR_ARCHIVE_ND );
+	j_side_axis =    Cvar_Get( 'j_side_axis',    '0', CVAR_ARCHIVE_ND );
+	j_up_axis =      Cvar_Get( 'j_up_axis',      '4', CVAR_ARCHIVE_ND );
+
+	Cvar_CheckRange( j_pitch_axis,   '0', va('%i',MAX_JOYSTICK_AXIS-1), CV_INTEGER );
+	Cvar_CheckRange( j_yaw_axis,     '0', va('%i',MAX_JOYSTICK_AXIS-1), CV_INTEGER );
+	Cvar_CheckRange( j_forward_axis, '0', va('%i',MAX_JOYSTICK_AXIS-1), CV_INTEGER );
+	Cvar_CheckRange( j_side_axis,    '0', va('%i',MAX_JOYSTICK_AXIS-1), CV_INTEGER );
+	Cvar_CheckRange( j_up_axis,      '0', va('%i',MAX_JOYSTICK_AXIS-1), CV_INTEGER );
+  */
+  let joy = false
+  if (navigator && navigator.userAgent && navigator.userAgent.match(/mobile/i)) {
+    joy = true
+  }
+  Cvar_Get(stringToAddress('in_joystick'), stringToAddress(joy ? '1' : '0'), CVAR_ARCHIVE)
+
+  if(!Cvar_VariableIntegerValue(stringToAddress('in_joystick'))) {
+    return
+  }
+
   document.body.classList.add('joysticks')
   if(SYSI.joysticks.length > 0) {
     for(var i = 0; i < SYSI.joysticks.length; i++) {

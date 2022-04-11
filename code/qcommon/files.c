@@ -373,7 +373,10 @@ static	int			fs_loadCount;			// total files read
 static	int			fs_loadStack;			// total files in memory
 static	int			fs_packFiles;			// total number of files in all loaded packs
 
-static	int			fs_pk3dirCount;			// total number of pk3 directories in searchpath
+#ifndef USE_ASYNCHRONOUS
+static	
+#endif
+int			fs_pk3dirCount;			// total number of pk3 directories in searchpath
 static	int			fs_packCount;			// total number of packs in searchpath
 static	int			fs_dirCount;			// total number of directories in searchpath
 
@@ -5991,6 +5994,7 @@ void FS_Restart( int checksumFeed ) {
 
 	Q_strncpyz( lastValidBase, fs_basepath->string, sizeof( lastValidBase ) );
 	Q_strncpyz( lastValidGame, fs_gamedirvar->string, sizeof( lastValidGame ) );
+
 }
 
 
@@ -6001,7 +6005,18 @@ FS_Reload
 */
 void FS_Reload( void ) 
 {
+#ifdef USE_ASYNCHRONOUS
+void RetryDownloads( void );
+	qboolean isLazy = !Q_stricmp(Cmd_Argv(1), "lazy");
+#endif
+
 	FS_Restart( fs_checksumFeed );
+
+#ifdef USE_ASYNCHRONOUS
+	if(isLazy) {
+		RetryDownloads();
+	}
+#endif
 }
 
 

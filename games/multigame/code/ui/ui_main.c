@@ -5875,7 +5875,7 @@ static cvarTable_t		cvarTable[] = {
 	{ &ui_realCaptureLimit, "capturelimit", "8", CVAR_SERVERINFO | CVAR_ARCHIVE | CVAR_NORESTART},
 	{ &ui_serverStatusTimeOut, "ui_serverStatusTimeOut", "7000", CVAR_ARCHIVE},
 	{ &ui_breadCrumb, "ui_breadCrumb", "", CVAR_ROM },
-	{ &ui_lazyLoad, "cl_lazyLoad", "", 0 },
+	{ &ui_lazyLoad, "ui_lazyLoad", "", 0 },
 	{ &ui_developer, "developer", "", 0 }
 
 };

@@ -21,6 +21,7 @@ qboolean FS_GeneralRef( const char *filename );
 
 #if defined(USE_LAZY_LOAD) || defined(USE_ASYNCHRONOUS)
 
+extern int fs_pk3dirCount;
 extern int cmd_lazy;
 Q_EXPORT int fs_loading;
 
@@ -35,6 +36,7 @@ typedef struct downloadLazy_s {
 	char *loadingName; // this is the name of the shader to update
 	time_t lastRequested;
 	int state;
+  struct downloadLazy_s *parent;
   struct downloadLazy_s *next;
 } downloadLazy_t;
 
@@ -136,7 +138,7 @@ void CL_ChangeNotifcations( void ) {
 
 #ifdef USE_ASYNCHRONOUS
 	// ping the server version.json file for a file time
-	Sys_FileNeeded("version.json", qfalse);
+	Sys_FileNeeded("version.json", VFS_NOW);
 #endif
 
 	ready[0] = '\0';
@@ -213,6 +215,7 @@ void Sys_UpdateNeeded( downloadLazy_t **ready, downloadLazy_t **downloadNeeded )
 			}
 			if(download->state > VFS_LATER && download->state < VFS_DL 
 				&& downloadNeeded && !*downloadNeeded
+				&& (download->state == VFS_INDEX || download->parent->state == VFS_DONE)
 				&& time - download->lastRequested > 1500
 				&& (!highestDownload || highestDownload->state < download->state)
 			) {
@@ -311,7 +314,7 @@ static downloadLazy_t *Sys_FileNeeded_real(const char *filename, int state, qboo
 		lengthGame = (s - localName) + 7;
 	} else {
 		// check pk3dir paths
-		if(state == VFS_NOW) {
+		if(state == VFS_NOW && FS_Initialized()) {
 			char realPath[MAX_OSPATH];
 			char			**pakdirs;
 			int				pakdirsi = 0;
@@ -320,7 +323,7 @@ static downloadLazy_t *Sys_FileNeeded_real(const char *filename, int state, qboo
 			Com_sprintf( realPath, sizeof( realPath ), "%s/%s", 
 				Cvar_VariableString("fs_homepath"), FS_GetCurrentGameDir() );
 			// TODO: remove this shit and get it from searchpaths
-			pakdirs = Sys_ListFiles( realPath, "/", NULL, &numdirs, qfalse );
+			pakdirs = FS_ListFiles( "", "/", &numdirs );
 			while (pakdirsi < numdirs) 
 			{
 				len = strlen(pakdirs[pakdirsi]);
@@ -390,24 +393,6 @@ printDebug = qfalse;
 }
 #endif
 
-
-	if(!isRoot && !parentDownload && !isDirectoryList && state < VFS_INDEX) {
-		if(printDebug) {
-			Com_Printf("missing parent! %i, %i - %s, %s\n", hash, state, localName, loading);
-		}
-		// no parent? no children
-		return found;
-	}
-
-	if(parentDownload && !isDirectoryList && (parentDownload->state == VFS_FAIL
-		|| parentDownload->state <= VFS_NOENT)) {
-		// parent is done, !partial, so no more adding files
-		if(printDebug) {
-			Com_Printf("parent failed! %i, %i - %s, %s\n", hash, state, localName, loading);
-		}
-		return found;
-	}
-
 	if(found) {
 #if 0 //defined(USE_LIVE_RELOAD) || defined(__WASM__)
 		// allow redownloading of this file because when it's received the game updates
@@ -425,7 +410,25 @@ printDebug = qfalse;
 		if(printDebug) {
 			Com_Printf("found! %i, %i - %s, %s\n", hash, state, localName, loading);
 		}
+		found->parent = parentDownload;
 		return found; // skip debug message below, that's all
+	}
+
+	if(!isRoot && !parentDownload && !isDirectoryList && state < VFS_INDEX) {
+		if(printDebug) {
+			Com_Printf("missing parent! %i, %i - %s, %s\n", hash, state, localName, loading);
+		}
+		// no parent? no children
+		return found;
+	}
+
+	if(parentDownload && !isDirectoryList && (parentDownload->state == VFS_FAIL
+		|| parentDownload->state <= VFS_NOENT)) {
+		// parent is done, !partial, so no more adding files
+		if(printDebug) {
+			Com_Printf("parent failed! %i, %i - %s, %s\n", hash, state, localName, loading);
+		}
+		return found;
 	}
 
 	if(parentDownload && parentDownload->state == VFS_DONE) {
@@ -455,6 +458,7 @@ Com_DPrintf("file needed! %i, %i - %s, %s\n", hash, state, localName, loading);
 	download->downloadName[strlen(localName)] = '\0';
 	download->next = readyCallback[hash];
 	download->state = newState;
+	download->parent = parentDownload;
 	readyCallback[hash] = download;
 	download->lastRequested = 0; // request immediately, updated after first request
 
@@ -472,12 +476,15 @@ Com_DPrintf("file needed! %i, %i - %s, %s\n", hash, state, localName, loading);
 	return download;
 }
 
+#ifdef __WASM__
+Q_EXPORT
+#endif
 void Sys_FileNeeded(const char *filename, int state) {
 	Sys_FileNeeded_real(filename, state, qfalse);
 }
 
 
-static void ParseJSONFileList(char *buf, int len, char *list, int *count, int *max) {
+static void ParseJSONFileList(const char *buf, int len, char *list, int *count, int *max) {
 	// count <tr/<li/<td/<ol/<ul/<div/<h
 	//   until default.cfg is found, then add all the detected file names
 	//   to the pk3cache.dat file. This will make it easy for the server
@@ -540,7 +547,7 @@ static void ParseJSONFileList(char *buf, int len, char *list, int *count, int *m
 }
 
 
-static void ParseHTMLFileList(char *buf, int len, char *list, int *count, int *max) {
+static void ParseHTMLFileList(const char *buf, int len, char *list, int *count, int *max) {
 	// count <tr/<li/<td/<ol/<ul/<div/<h
 	//   until default.cfg is found, then add all the detected file names
 	//   to the pk3cache.dat file. This will make it easy for the server
@@ -606,161 +613,6 @@ static void ParseHTMLFileList(char *buf, int len, char *list, int *count, int *m
 	}
 }
 
-
-// basically just storing a virtual path system
-//   in addition to the files that are already there
-// when a valid but not yet existing file is request, queue it 
-//   for download and indicate to the renderer/client that it is valid
-//   and will be update when it arrives (i.e. returns 1 for a file length)
-// TODO: add header longs for the new file-based checksum system
-
-void MakeDirectoryBuffer(char *paths, int count, int length, const char *parentDirectory, qboolean incomplete) {
-	const char *s;
-	long hash;
-  downloadLazy_t *download;
-  downloadLazy_t *defaultCfg = NULL;
-	int lengthDir = strlen(parentDirectory);
-
-	// when a directory index is received, remove any files from the download list
-	//   that aren't in the now "known" directory listing
-	// mark all as failed
-	if(!incomplete) {
-		for(int i = 0; i < PK3_HASH_SIZE; i++) {
-			download = readyCallback[i];
-			if(!download) {
-				continue;
-			}
-
-			do {
-#ifdef _DEBUG
-				//if(!Q_stristr(download->downloadName, ".pk3dir/")
-				//	&& Q_stristr(download->downloadName, "default.cfg")) {
-				//	defaultCfg = download;
-				//}
-				//if(!Q_stristr(download->downloadName, ".pk3dir/")
-				//	&& Q_stristr(download->downloadName, "vm/ui.qvm")) {
-				//	defaultCfg = download;
-				//}
-				//if(Q_stristr(download->downloadName, "palette.shader")) {
-				//	defaultCfg = download;
-				//}
-				if(NEEDED[0] != '\0' 
-					&& !Q_stristr(download->downloadName, ".pk3dir/")
-					&& Q_stristr(download->downloadName, NEEDED)) {
-					defaultCfg = download;
-				}
-				//if(Q_stristr(parentDirectory, "icons")
-				//	&& Q_stristr(download->downloadName, "icona_grenade.jpeg")) {
-				//	defaultCfg = download;
-				//}
-#endif
-				if(incomplete && !Q_stricmp( download->downloadName, parentDirectory )) {
-					download->state = VFS_PARTIAL;
-				}
-
-				if(download->state > VFS_NOENT && download->state < VFS_DL
-					// don't purge indexes this way
-					&& download->state != VFS_INDEX
-					// reset file states for all files in the directory just received
-					&& !Q_stricmpn(download->downloadName, parentDirectory, lengthDir)
-					&& download->downloadName[lengthDir] == '/'
-					// last folder in the path
-					&& strchr(&download->downloadName[lengthDir + 1], '/') == NULL 
-				) {
-//if(Q_stristr(parentDirectory, "menu/art"))
-//Com_Printf("purging: %s\n", download->downloadName);
-					download->state = VFS_NOENT - download->state;
-				} else {
-//Com_Printf("skipping: %s != %s\n", download->downloadName, parentDirectory);
-				}
-			} while ((download = download->next) != NULL);
-		}
-	}
-
-	// insert into the hash table
-	char *currentPath = paths;
-	for ( int i = 0; i < count; i++ )
-	{
-		// remove game dir
-		if(Q_stristr(currentPath, FS_GetCurrentGameDir())) {
-			currentPath += strlen(FS_GetCurrentGameDir()) + 1;
-		}
-
-		// remove leading /
-		if(currentPath[0] == '/') {
-			currentPath++;
-		}
-
-		if(strlen(currentPath) == 0) {
-			currentPath++;
-			continue;
-		}
-
-#ifdef USE_LIVE_RELOAD
-		// FIXME: move mtime to Sys_FileNeeded_real()
-		if(FS_FileExists(currentPath)) {
-			//fileOffset_t _s;
-			//fileTime_t _c;
-			// TODO: FS_RealPath() so pk3 files can be bundled as updates
-			//Sys_GetFileStats(FS_BuildOSPath(fs_homepath->string, FS_GetCurrentGameDir(), currentPath),
-			//	&_s, &curFile->mtime, &_c);
-		} else {
-			// set mtime to at least when the engine starts up
-			//curFile->mtime = 0;
-		}
-#endif
-
-		// store the file position in the zip
-		// TODO: update this when Accept-Ranges is implemented
-		s = Q_stristr(currentPath, ".pk3dir/");
-		if(s) {
-			hash = FS_HashPK3( s + 8 );
-		} else {
-			hash = FS_HashPK3( currentPath );
-		}
-
-		// download more directories recursively, at least for like 2 levels
-		if(qfalse
-			//!strrchr(currentPath, '.')
-			//&& (Q_stristr(currentPath, "/maps")
-			//|| Q_stristr(currentPath, "/vm")
-			|| currentPath[Q_stristr(currentPath, ".pk3") - currentPath] + 4 == '\0'
-			|| Q_stristr(currentPath, "botfiles/")
-			|| !FS_GeneralRef(currentPath)
-		) {
-			// TODO: fix this, only works if directory listing allows slashes at the end?
-			// TODO: right thing to do would be test the content-type and duck out early 
-			//   on big files for anything that doesn't have a . dot in the name.
-			download = Sys_FileNeeded_real(currentPath, VFS_NOW, qtrue);
-		} else {
-			download = Sys_FileNeeded_real(currentPath, VFS_LATER, qtrue);
-		}
-
-		assert(download != NULL);
-
-		// then it was already in the list which means we intended to download now,
-		if(download->state < VFS_NOENT) {
-			// and now we know it's there because its in the directory listing
-			download->state = -download->state + VFS_NOENT;
-//if(Q_stristr(parentDirectory, "weapons2/bfg")) {
-//if(Q_stristr(parentDirectory, "icons")) {
-//Com_Printf("keeping %li, %s\n", hash, currentPath);
-//}
-		} else {
-//if(Q_stristr(parentDirectory, "lsdm3_v1.pk3dir/maps")) {
-//if(Q_stristr(parentDirectory, "icons")) {
-//Com_Printf("adding %li, %s\n", hash, currentPath);
-//}
-		}
-
-		currentPath += strlen( currentPath ) + 1;
-	}
-
-	// default.cfg purged from directory listing
-	//assert(!defaultCfg || defaultCfg->state > VFS_NOENT);
-	assert(!defaultCfg || defaultCfg->state <= VFS_NOENT);
-
-}
 
 
 void RetryDownloads( void ) {
@@ -849,7 +701,9 @@ void Sys_FileReady(const char *filename, const char* tempname) {
 			if( i == hash && !Q_stricmp( download->downloadName, localName ) ) {
 				found = download;
 				if(tempname) {
-					download->state = VFS_READY;
+					if(download->state < VFS_READY) {
+						download->state = VFS_READY;
+					}
 					strcpy(&download->loadingName[MAX_OSPATH], tempname);
 				} else {
 					download->state = VFS_FAIL;
@@ -888,6 +742,14 @@ void Sys_FileReady(const char *filename, const char* tempname) {
 
 }
 
+void FS_UpdateIndex(const char *filename, const char *tempname) {
+	const char *s = strchr( tempname, '/' );
+Com_DPrintf("updating index: %s -> %s\n", filename, tempname);
+	FS_HomeRemove( s ? s+1 : tempname );
+	if(Q_stristr(".pk3dir/", tempname)) {
+		Cbuf_AddText("wait lazy; fs_restart lazy;");
+	}
+}
 
 void FS_UpdateFiles(const char *filename, const char *tempname) {
 Com_DPrintf("updating files: %s -> %s\n", filename, tempname);
@@ -897,16 +759,22 @@ Com_DPrintf("updating files: %s -> %s\n", filename, tempname);
 		// will restart automatically from NextDownload()
 		if(!FS_Initialized()) {
 			com_fullyInitialized = qtrue;
-			FS_Restart(0);
+			Cbuf_AddText("wait lazy; fs_restart lazy; exec default.cfg; vid_restart lazy;");
 		}
 		// TODO: check on networking, shaderlist, anything else we skipped, etc again
-		Cbuf_AddText("exec default.cfg; vid_restart lazy;");
-		//if(cls.state < CA_CONNECTED && *Cvar_VariableString("cl_reconnectArgs") != '\0') {
-		//	cls.state = CA_AUTHORIZING;
-		//	Cbuf_AddText( va( "wait lazy; connect %s\n", Cvar_VariableString("cl_reconnectArgs") ) );
-		//}
+		if(cls.state < CA_CONNECTED && *Cvar_VariableString("cl_reconnectArgs") != '\0') {
+			//cls.state = CA_AUTHORIZING;
+			Cbuf_AddText( va( "wait lazy; connect %s\n", Cvar_VariableString("cl_reconnectArgs") ) );
+		}
+		
 	} else 
 	
+	if(fs_pk3dirCount == 0 
+		&& Q_stristr(tempname, ".pk3dir/sounds/feedback/menu1.ogg")) {
+		Cbuf_AddText("wait lazy; fs_restart lazy;");
+	} else
+
+
 #if defined(USE_LIVE_RELOAD) || defined(__WASM__)
 	if(Q_stristr(tempname, "version.json")) {
 		int y, mo, d, h, m, s;
@@ -939,30 +807,22 @@ Com_DPrintf("updating files: %s -> %s\n", filename, tempname);
 	} else
 #endif
 
-	if(Q_stristr(tempname, ".pk3dir/sounds/feedback/menu1.ogg")) {
-		FS_Restart(0);
-		//FS_AddGameDirectory( Cvar_VariableString("fs_basepath"), FS_GetCurrentGameDir(), 0 );
-		RetryDownloads();
-	} else
-
 	if(Q_stristr(tempname, ".bsp") && Q_stristr(tempname, "maps/")) {
 		// load map if we just tried to start it
-		if(Q_stristr(tempname, ".pk3dir/")) {
-			FS_Restart(0);
-			//FS_AddGameDirectory( Cvar_VariableString("fs_basepath"), FS_GetCurrentGameDir(), 0 );
-			RetryDownloads();
+		if(fs_pk3dirCount == 0 && Q_stristr(tempname, ".pk3dir/")) {
+			Cbuf_AddText("wait lazy; fs_restart lazy;");
 		}
+		// TODO: fix this
+		if(cls.state == CA_CONNECTED) {
+			Cbuf_AddText( va( "wait lazy; connect %s\n", Cvar_VariableString("cl_reconnectArgs") ) );
+		} else
 		if(Q_stristr(tempname, Cvar_VariableString("mapname")) && !com_sv_running->integer) {
 			Cbuf_AddText(va("wait lazy; devmap %s;", Cvar_VariableString("mapname")));
 		}
-		if(cls.state == CA_CONNECTED) {
-			Cbuf_AddText( va( "wait lazy; connect %s\n", Cvar_VariableString("cl_reconnectArgs") ) );
-		}
 	} else 
 
-	// TODO:
 	if(Q_stristr(tempname, "description.txt")) {
-		// refresh mod list
+		// TODO: refresh mod list
 	} else 
 
 #ifndef DEDICATED
@@ -983,64 +843,13 @@ Com_DPrintf("updating files: %s -> %s\n", filename, tempname);
 #ifndef BUILD_SLIM_CLIENT
 	// try to reload UI with current game if needed
 	if(Q_stristr(tempname, "vm/qagame.qvm") && !com_sv_running->integer) {
-		if(Q_stricmp(Cvar_VariableString("mapname"), "nomap")) {
-			Cbuf_AddText(va("wait lazy; devmap %s;", Cvar_VariableString("mapname")));
-		}
-	} else 
+		//if(Q_stricmp(Cvar_VariableString("mapname"), "nomap")) {
+		//	Cbuf_AddText(va("wait lazy; devmap %s;", Cvar_VariableString("mapname")));
+		//}
+	}  
 #endif
-
-	// scan index files for HTTP directories and add links to pk3cache.dat
-	if ((Q_stristr(tempname, ".tmp") && Q_stristr(tempname, "/."))
-		|| Q_stristr(tempname, "maps/maplist.json")) {
-		// left in the temp directory, must be an index file
-		char realPath[MAX_OSPATH];
-		const char *s;
-		memset(realPath, 0, sizeof(realPath));
-		s = strchr( tempname, '/' );
-		if(s) {
-			s++;
-		} else {
-			s = tempname;
-		}
-		Com_sprintf( realPath, sizeof( realPath ), "%s/%s", 
-			Cvar_VariableString("fs_homepath"), tempname );
-
-//Com_Printf("Adding %s (from: %s) to directory index.\n", filename, realPath);
-
-		// don't use FS_* here because that would create a loop
-		FILE *indexFile = Sys_FOpen(realPath, "rb");
-		int len = FS_FileLength(indexFile);
-		if(len < 1024 * 1024 * 50) {
-			char paths[1024 * MAX_OSPATH];
-			int count = 0, nameLength = 0;
-			memset(paths, 0, sizeof(paths));
-			char *buf = (char *)Z_TagMalloc(len + 1, TAG_PACK);
-			fread(buf, len, 1, indexFile);
-			buf[len] = '\0';
-			if(buf[0] == '{' || buf[0] == '[') {
-				ParseJSONFileList(buf, len, paths, &count, &nameLength);
-			} else {
-				ParseHTMLFileList(buf, len, paths, &count, &nameLength);
-			}
-			// can't purge missing files from an incomplete file index
-			MakeDirectoryBuffer(paths, count, nameLength, filename, !!Q_stristr(buf, "nextPageToken"));
-			// TODO: add next page token every time it's requested as if we're actually paging too
-			Z_Free(buf);
-		}
-		fclose(indexFile);
-		FS_HomeRemove( s );
-		// we should have a directory index by now to check for VMs and files we need
-		if(Q_stristr(tempname, "maps/maplist.json")
-			&& Q_stricmp(Cvar_VariableString("mapname"), "nomap")) {
-			const char *mapname = Cvar_VariableString("mapname");
-			FS_ReadFile(va("maps/%s.bsp", mapname), NULL);
-			// force download of map shaders from specific pk3dir
-			FS_ReadFile(va("scripts/%s.shader", mapname), NULL);
-		} else {
-			//Cbuf_AddText("wait; vid_restart lazy;");
-		}
-	}
 }
+
 
 
 static qboolean first = qfalse;
@@ -1052,7 +861,10 @@ void CL_CheckLazyUpdates( void ) {
 	// TODO: remove this, good to see 1 color during testing
 	if(!first) {
 		first = qtrue;
-		Sys_FileNeeded("xxx-multigame.pk3dir/sound/feedback/menu1.ogg", VFS_LAZY);
+		asyncSoundName[0] = '\0';
+		strcpy(asyncSoundName, "sound/feedback/menu1.ogg");
+		Sys_FileNeeded(va("xxx-multigame.pk3dir/%s", asyncSoundName), VFS_LAZY);
+		asyncSoundName[0] = '\0';
 	}
 
 	// files must process faster otherwise we will have a bunch of indexes queued  
@@ -1093,9 +905,14 @@ void CL_CheckLazyUpdates( void ) {
 			cmd_lazy = 0;
 		}
 
-		if(FS_SV_FileExists(downloadNeeded->downloadName)) {
+		if(FS_SV_FileExists(downloadNeeded->downloadName) 
+			&& !Q_stristr(downloadNeeded->downloadName, "/maps/maplist.json")
+			&& !Q_stristr(downloadNeeded->downloadName, "/version.json")
+			&& downloadNeeded->state != VFS_INDEX
+		) {
 			downloadNeeded->lastRequested = newTime;
-			downloadNeeded->state = VFS_DL;
+			downloadNeeded->state = VFS_READY;
+			strcpy(&downloadNeeded->loadingName[MAX_OSPATH], downloadNeeded->downloadName);
 		} else
 		if(CL_Download( "lazydl", downloadNeeded->state == VFS_INDEX 
 			? va("%s/", downloadNeeded->downloadName) 
@@ -1119,7 +936,7 @@ void CL_CheckLazyUpdates( void ) {
 	if(!Q_stricmp(ext, "md3") || !Q_stricmp(ext, "mdr")
 		|| !Q_stricmp(ext, "md5")) {
 		if(cls.rendererStarted) {
-			//re.UpdateModel(ready->loadingName);
+			re.UpdateModel(ready->loadingName);
 			secondTimer += 10;
 		}
 	}
@@ -1127,14 +944,14 @@ void CL_CheckLazyUpdates( void ) {
 	if(!Q_stricmp(ext, "wav") || !Q_stricmp(ext, "ogg")
 		|| !Q_stricmp(ext, "mp3") || !Q_stricmp(ext, "opus")) {
 		if(cls.soundRegistered) {
-			//S_UpdateSound(ready->loadingName, qtrue);
+			S_UpdateSound(ready->loadingName, qtrue);
 		}
 	}
 
 	if(ready->loadingName[12] == ';') {
 		ready->loadingName[12] = '\0';
 		if(cls.rendererStarted) {
-			//re.UpdateShader(&ready->loadingName[13], atoi(&ready->loadingName[0]));
+			re.UpdateShader(&ready->loadingName[13], atoi(&ready->loadingName[0]));
 			secondTimer += 10;
 		}
 		ready->loadingName[12] = ';';
@@ -1143,7 +960,7 @@ void CL_CheckLazyUpdates( void ) {
 	// intercept this here because it's client only code
 	if(Q_stristr(&ready->loadingName[MAX_OSPATH], "/scripts/")
 		&& Q_stristr(&ready->loadingName[MAX_OSPATH], ".shader")) {
-		//re.ReloadShaders(qfalse);
+		re.ReloadShaders(qfalse);
 	}
 #endif
 
@@ -1152,17 +969,27 @@ void CL_CheckLazyUpdates( void ) {
 	}
 
 	ready->loadingName[MAX_OSPATH - 1] = '\0';
-	//FS_UpdateFiles(ready->downloadName, &ready->loadingName[MAX_OSPATH]);
+
+	
+	if(Q_stristr(&ready->loadingName[MAX_OSPATH], "maps/maplist.json")) {
+		FS_UpdateIndex(ready->downloadName, &ready->loadingName[MAX_OSPATH]);
+	} else
+	if (Q_stristr(&ready->loadingName[MAX_OSPATH], ".tmp") 
+		&& Q_stristr(&ready->loadingName[MAX_OSPATH], "/.")) {
+		FS_UpdateIndex(ready->downloadName, &ready->loadingName[MAX_OSPATH]);
+	} else {
+		//FS_UpdateFiles(ready->downloadName, &ready->loadingName[MAX_OSPATH]);
+	}
 
 #if defined(USE_ASYNCHRONOUS) || defined(__WASM__)
 	// multigame has a special feature to reload an missing assets when INIT is called
 	if(((cls.uiStarted && uivm) || (cls.cgameStarted && cgvm))
 		&& !Q_stricmp(FS_GetCurrentGameDir(), "multigame")) {
-		Cvar_Set("cl_lazyLoad", ready->downloadName);
+		Cvar_Set("ui_lazyLoad", ready->downloadName);
 		//cl_lazyLoad->modificationCount++;
 		//cl_lazyLoad->string = ready->downloadName;
 	} else {
-		Cvar_Set("cl_lazyLoad", "");
+		Cvar_Set("ui_lazyLoad", "");
 	}
 #endif
 

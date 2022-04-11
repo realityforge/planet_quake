@@ -172,7 +172,7 @@ async function mkdirp(path) {
     var dir = '/' + segments.slice(0, i).join('/')
     var obj = {
       timestamp: new Date(),
-      mode: 16895
+      mode: FS_DIR
     }
     await writeStore(obj, dir)
   }

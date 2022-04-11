@@ -32,6 +32,13 @@ function getQueryCommands() {
 		//'+set', 'r_normalMapping', '0',
 		//'+set', 'r_specularMapping', '0',
 	]
+	startup.push.apply(startup, window.preStart)
+	startup.push.apply(startup, [
+		'+set', 'r_fullscreen', window.fullscreen ? '1' : '0',
+		'+set', 'r_customHeight', '' + window.innerHeight || 0,
+		'+set', 'r_customWidth', '' + window.innerWidth || 0,
+		'+exec', 'autoexec-' + window.location.hostname.match(/^(.*?)\./i)[1] + '.cfg',
+	])
 	var search = /([^&=]+)/g
 	var query  = window.location.search.substring(1)
 	var match
@@ -41,13 +48,6 @@ function getQueryCommands() {
 		val[0] = (val[0][0] != '+' ? '+' : '') + val[0]
 		startup.push.apply(startup, val)
 	}
-	startup.push.apply(startup, window.preStart)
-	startup.unshift.apply(startup, [
-		'+set', 'r_fullscreen', window.fullscreen ? '1' : '0',
-		'+set', 'r_customHeight', '' + window.innerHeight || 0,
-		'+set', 'r_customWidth', '' + window.innerWidth || 0,
-		'+exec', 'autoexec-' + window.location.hostname.replace('.quake.games', '') + '.cfg',
-	])
 	return startup
 }
 

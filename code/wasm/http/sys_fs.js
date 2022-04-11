@@ -49,9 +49,21 @@ function openDatabase(noWait) {
   }
 }
 
+const VFS_NOW = 3
+const ST_FILE = 8
+const ST_DIR = 4
+
+// 438 = 0o666
+const FS_DEFAULT = (6 << 3) + (6 << 6) + (6) 
+const FS_FILE = (ST_FILE << 12) + FS_DEFAULT
+const FS_DIR = (ST_DIR << 12) + FS_DEFAULT
+
+// (33206 & (((1 << 3) - 1) << 3) >> 3 = 6
+const S_IRGRP = ((1 << 3) - 1) << 3
+const S_IRUSR = ((1 << 3) - 1) << 6
+const S_IROTH = ((1 << 3) - 1) << 0
 
 function readAll() {
-  let hadPk3 = false
   let hadDefault = false
   let startTime = Date.now()
   Q3e.fs_loading = 1
@@ -70,11 +82,8 @@ function readAll() {
         if(!cursor) {
           return resolve()
         }
-        if(cursor.key.endsWith('.pk3dir')) {
-          hadPk3 = true
-        }
         if(cursor.key.endsWith('default.cfg')) {
-          hadDefault = true
+          hadDefault = cursor.key
         }
         FS.virtual[cursor.key] = {
           timestamp: cursor.value.timestamp,
@@ -98,12 +107,11 @@ function readAll() {
       Q3e.fs_loading = 0
       if(typeof window.fs_loading != 'undefined') {
         HEAPU32[fs_loading >> 2] = 0
-        if(hadPk3) {
-          Cbuf_AddText(stringToAddress('wait lazy; fs_restart;'))
-        }
         if(hadDefault) {
           HEAPU32[com_fullyInitialized >> 2] = 1
-          Cbuf_AddText(stringToAddress('wait lazy; exec default.cfg;'))
+          setTimeout(function () {
+            Sys_FileReady(stringToAddress('default.cfg'), stringToAddress(hadDefault))
+          }, 100)
         }
       }
     })
@@ -176,7 +184,7 @@ function Sys_Mkdir(filename) {
     localName = localName.substring(1)
   FS.virtual[localName] = {
     timestamp: new Date(),
-    mode: 16895,
+    mode: FS_DIR,
   }
   // async to filesystem
   // does it REALLY matter if it makes it? wont it just redownload?
@@ -230,7 +238,8 @@ function Sys_FOpen(filename, mode) {
   }
 
   // TODO: check mode?
-  if(typeof FS.virtual[localName] != 'undefined') {
+  if(typeof FS.virtual[localName] != 'undefined'
+    && (FS.virtual[localName].mode >> 12) == ST_FILE) {
     // open the file successfully
     return createFP()
   } else if (modeStr.includes('w')
@@ -240,7 +249,7 @@ function Sys_FOpen(filename, mode) {
     // create the file for write because the parent directory exists
     FS.virtual[localName] = {
       timestamp: new Date(),
-      mode: 33206,
+      mode: FS_FILE,
       contents: new Uint8Array(0)
     }
     return createFP()
@@ -368,10 +377,10 @@ function Sys_ListFiles (directory, extension, filter, numfiles, wantsubs) {
   // can't use utility because FS_* frees and moves stuff around
   let matches = Object.keys(FS.virtual).filter(function (key) { 
     return (!extensionStr || key.endsWith(extensionStr) 
-      || (extensionStr == '/' && FS.virtual[key].mode == 16895))
+      || (extensionStr == '/' && (FS.virtual[key].mode >> 12) == ST_DIR))
       // TODO: match directory 
       && (!localName || key.startsWith(localName))
-      && (!wantsubs || FS.virtual[key].mode == 16895)
+      && (!wantsubs || (FS.virtual[key].mode >> 12) == ST_DIR)
   })
   // return a copy!
   let listInMemory = Z_Malloc( ( matches.length + 1 ) * 4 )

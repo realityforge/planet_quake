@@ -98,7 +98,8 @@ RELEASE_CFLAGS      := -fvisibility=hidden \
                        -DNDEBUG -Ofast -O3 -Oz -fPIC -ffast-math
                     # -flto 
 PK3_INCLUDES        := xxx-multigame-files.pk3  \
-                       xxx-multigame-vms.pk3    
+                       xxx-multigame-vms.pk3    \
+											 lsdm3_v1-files.pk3
 #                       lsdm3_v1-files.do-always       
 #                       lsdm3_v1-images.do-always      
 

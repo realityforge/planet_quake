@@ -44,6 +44,8 @@ function init() {
     new WebAssembly.Table({ initial: 1000, element: 'anyfunc', maximum: 10000 })
   Q3e['memory'] = new WebAssembly.Memory({ 'initial': 2048, /* 'shared': true */ })
   updateGlobalBufferAndViews(Q3e.memory.buffer)
+
+  // load IndexedDB
   readAll()
 
   // TODO: offline download so it saves binary to IndexedDB
@@ -53,7 +55,7 @@ function init() {
 
       FS.virtual[preloadedPaths[i]] = {
         timestamp: new Date(),
-        mode: 33206,
+        mode: FS_FILE,
         contents: _base64ToArrayBuffer(window.preFS[preloadedPaths[i]])
       }
     }
