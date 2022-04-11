@@ -42,6 +42,7 @@ jobs:
     name: ${{ matrix.name }} (${{ matrix.arch }}) ${{ matrix.proper }}
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
         platform: [wasm]
         runtime: [client, client-mw, client-slim]

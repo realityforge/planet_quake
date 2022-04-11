@@ -568,13 +568,13 @@ $(DESTDIR).do-always/quake3e.html: $(WASM_OBJS)
 	$(Q)$(MOVE) $(DESTDIR)/$(WASM_HTML) $(subst .do-always,,$@) 2> /dev/null
 	-$(Q)$(UNLINK) $(subst .do-always,,$@).bak 2> /dev/null
 
-$(DESTDIR).do-always/quake3e_slim.html: $(WASM_OBJS)
+$(DESTDIR).do-always/quake3e_slim.html: $(subst quake3e.,quake3e_slim,$(WASM_OBJS))
 	$(DO_JS_LIST)
 	-$(Q)$(MOVE) $(subst .do-always,,$@) $(subst .do-always,,$@).bak 2> /dev/null
 	$(Q)$(MOVE) $(DESTDIR)/$(WASM_HTML) $(subst .do-always,,$@) 2> /dev/null
 	-$(Q)$(UNLINK) $(subst .do-always,,$@).bak 2> /dev/null
 
-$(DESTDIR).do-always/quake3e_mw.html: $(WASM_OBJS)
+$(DESTDIR).do-always/quake3e_mw.html: $(subst quake3e.,quake3e_mw,$(WASM_OBJS))
 	$(DO_JS_LIST)
 	-$(Q)$(MOVE) $(subst .do-always,,$@) $(subst .do-always,,$@).bak 2> /dev/null
 	$(Q)$(MOVE) $(DESTDIR)/$(WASM_HTML) $(subst .do-always,,$@) 2> /dev/null
