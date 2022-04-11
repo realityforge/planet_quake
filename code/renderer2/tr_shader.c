@@ -120,12 +120,16 @@ void RE_RemapShader(const char *shaderName, const char *newShaderName, const cha
 #endif
 
 	if (sh2 == NULL || sh2 == tr.defaultShader) {
+		if(Q_stristr(newShaderName, "firegorre2")) {
+			ri.Error(ERR_FATAL, "god fucking damnit");
+		}
 		ri.Printf( PRINT_WARNING, "WARNING: RE_RemapShader: new shader %s not found\n", newShaderName );
 		return;
 	}
 
 	// remap all the shaders with the given name
 	// even tho they might have different lightmaps
+	qboolean found = qfalse;
 	COM_StripExtension(shaderName, strippedName, sizeof(strippedName));
 	hash = generateHashValue(strippedName, FILE_HASH_SIZE);
 	for (sh = hashTable[hash]; sh; sh = sh->next) {
@@ -138,6 +142,7 @@ void RE_RemapShader(const char *shaderName, const char *newShaderName, const cha
 #endif
     ) {
 			sh->defaultShader = qfalse;
+			found = qtrue;
 			if (sh != sh2) {
 				sh->remappedShader = sh2;
 			} else {
@@ -145,6 +150,11 @@ void RE_RemapShader(const char *shaderName, const char *newShaderName, const cha
 			}
       sh2->timeOffset = sh->timeOffset;
 		}
+	}
+
+	if(!found) {
+		ri.Printf( PRINT_WARNING, "WARNING: RE_RemapShader: shader %s not found\n", shaderName );
+		ri.Error(ERR_FATAL, "god fucking damnit");
 	}
 
 	if ( timeOffset ) {

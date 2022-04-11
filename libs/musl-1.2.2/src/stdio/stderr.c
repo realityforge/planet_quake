@@ -14,5 +14,6 @@ hidden FILE __stderr_FILE = {
 	.close = __stdio_close,
 	.lock = -1,
 };
+__attribute__((visibility("default")))
 FILE *const stderr = &__stderr_FILE;
 FILE *volatile __stderr_used = &__stderr_FILE;

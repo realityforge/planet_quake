@@ -243,8 +243,8 @@ function Sys_FOpen(filename, mode) {
     // open the file successfully
     return createFP()
   } else if (modeStr.includes('w')
-    && (!(parentDirectory = localName.substring(0, localName.lastIndexOf('/')).length)
-    || typeof FS.virtual[parentDirectory] != 'undefined')
+    && ((parentDirectory = localName.substring(0, localName.lastIndexOf('/')))
+    && typeof FS.virtual[parentDirectory] != 'undefined')
   ) {
     // create the file for write because the parent directory exists
     FS.virtual[localName] = {

@@ -1283,11 +1283,12 @@ void UI_Refresh( int realtime )
 
 	if(ui_lazyLoad.modificationCount > lazyloadModificationCount)
 	{
+		Menu_Cache();
+
 		lazyloadModificationCount = ui_lazyLoad.modificationCount;
 		if(((menuframework_s *)uis.activemenu)->init) {
 			((menuframework_s *)uis.activemenu)->init();
 		} else {
-			Menu_Cache();
 		}
 	}
 

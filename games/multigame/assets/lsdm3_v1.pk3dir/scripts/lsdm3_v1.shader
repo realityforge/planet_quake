@@ -29,4 +29,5 @@ palettes/lsdm3_v1
   palette "multigame/lsdm3_v1.pk3dir/textures/lsdm3/wsupprt1_12.blend.blue.jpg" 255,58,76,95
   palette "multigame/lsdm3_v1.pk3dir/textures/lsdm3/xblueflare2.png" 255,0,17,21
   palette "multigame/lsdm3_v1.pk3dir/textures/lsdm3/xblueflare2.tga" 255,0,17,21
+  palette "multigame/lsdm3_v1.pk3dir/textures/lsdm3/xblueflare2.jpeg" 255,1,17,21
 }
