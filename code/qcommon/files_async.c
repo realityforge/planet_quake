@@ -823,7 +823,7 @@ Com_DPrintf("updating files: %s -> %s\n", filename, tempname);
 
 	if(Q_stristr(tempname, "description.txt")) {
 		// TODO: refresh mod list
-	} else 
+	} 
 
 #ifndef DEDICATED
 	// try to reload UI with current game if needed
@@ -836,7 +836,7 @@ Com_DPrintf("updating files: %s -> %s\n", filename, tempname);
 	// TODO: load default model and current player model
 	if(Q_stristr(tempname, "vm/cgame.qvm") && !cls.cgameStarted) {
 		//CL_StartHunkUsers();
-	} else 
+	} 
 
 #endif
 
