@@ -1139,11 +1139,11 @@ void CL_CheckLazyUpdates( void ) {
 	}
 
 
-	if(Q_stristr(ready->downloadName, ".pk3dir/")) {
+	/* if(Q_stristr(ready->downloadName, ".pk3dir/")) {
 		if(fs_pk3dirCount == 0) {
 			Com_Error(ERR_FATAL, "CL_CheckLazyUpdates: fs_pk3dirCount == 0");
 		}
-	}
+	} */
 
 	if(Q_stristr(ready->downloadName, "firegorre2.png")) {
 		DebugBreak();
