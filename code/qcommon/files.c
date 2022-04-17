@@ -48,6 +48,12 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define USE_MULTIFS 1
 #endif
 
+#ifdef __WASM__
+void Sys_Edit( void );
+#endif
+#ifdef USE_ASYNCHRONOUS
+void Sys_Offline( void );
+#endif
 /*
 TODO: make a virtual file-system of files included with page load
 #ifdef USE_ASYNCHRONOUS
@@ -4890,6 +4896,9 @@ void FS_Shutdown( qboolean closemfp )
 	Cmd_RemoveCommand( "fs_restart" );
 	Cmd_RemoveCommand ("fs_openedList");
 	Cmd_RemoveCommand ("fs_referencedList");
+#ifdef __WASM__
+	Cmd_RemoveCommand ("edit");
+#endif
 #ifdef USE_ASYNCHRONOUS
 	Cmd_RemoveCommand ("offline");
 #endif
@@ -5228,6 +5237,11 @@ static void FS_Startup( void ) {
 	Cmd_SetDescription( "which", "Show the full path of a file\nUsage: which <file>");
 	Cmd_AddCommand( "fs_restart", FS_Reload );
 	Cmd_SetDescription( "fs_restart", "Restart the filesystem and load new game paths\nUsage: fs_restart");
+#ifdef __WASM__
+	Cmd_AddCommand( "edit", Sys_Edit );
+	Cmd_SetCommandCompletionFunc( "edit", FS_CompleteFileName );
+#else
+#endif
 #ifdef USE_ASYNCHRONOUS
 	Cmd_AddCommand( "offline", Sys_Offline );
 	Cmd_SetDescription( "offline", "Download all the files needed to play offline without an internet connection\nUsage: offline");

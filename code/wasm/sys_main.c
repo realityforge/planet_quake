@@ -360,8 +360,6 @@ void Sys_SetClipboardBitmap( const byte *bitmap, int length )
 }
 
 
-#ifndef __EMSCRIPTEN__
-
 void SDL_GL_SwapWindow(SDL_Window *window) {
   // this probably prevents that flashing when changing mods
 }
@@ -432,60 +430,9 @@ qboolean emscripten_has_asyncify(void) {
 	return qfalse;
 }
 
-#endif
 
-#if 0
+/*
 
-/**
- *  \brief Touch finger event structure (event.tfinger.*)
- */
-typedef struct SDL_TouchFingerEvent
-{
-    uint32_t type;        /**< ::SDL_FINGERMOTION or ::SDL_FINGERDOWN or ::SDL_FINGERUP */
-    uint32_t timestamp;   /**< In milliseconds, populated using SDL_GetTicks() */
-    uint32_t touchId;       /**< The touch device id */
-    uint32_t fingerId;
-    float x;            /**< Normalized in the range 0...1 */
-    float y;            /**< Normalized in the range 0...1 */
-    float dx;           /**< Normalized in the range -1...1 */
-    float dy;           /**< Normalized in the range -1...1 */
-    float pressure;     /**< Normalized in the range 0...1 */
-} SDL_TouchFingerEvent;
-
-
-void IN_PushTouchFinger(SDL_TouchFingerEvent e)
-{
-	if(e.type == SDL_FINGERMOTION) {
-		float ratio = (float)cls.glconfig.vidWidth / (float)cls.glconfig.vidHeight;
-		touchhats[e.fingerId][0] = (e.x * ratio) * 50;
-		touchhats[e.fingerId][1] = e.y * 50;
-	}
-	else if (e.type == SDL_FINGERDOWN) {
-		if((Key_GetCatcher( ) & KEYCATCH_UI) && e.fingerId == 3) {
-			Com_QueueEvent( in_eventTime, SE_MOUSE_ABS, e.x * cls.glconfig.vidWidth, e.y * cls.glconfig.vidHeight, 0, NULL );
-		}
-		Com_QueueEvent( in_eventTime+1, SE_FINGER_DOWN, K_MOUSE1, e.fingerId, 0, NULL );
-	}
-	else if(e.type == SDL_FINGERUP) {
-		//Com_QueueEvent( in_eventTime+1, SE_KEY, K_MOUSE1, qfalse, 0, NULL );
-		Com_QueueEvent( in_eventTime+1, SE_FINGER_UP, K_MOUSE1, e.fingerId, 0, NULL );
-		touchhats[e.fingerId][0] = 0;
-		touchhats[e.fingerId][1] = 0;
-	}
-}
-
-/**
- *  \brief An event used to request a file open by the system (event.drop.*)
- *         This event is enabled by default, you can disable it with SDL_EventState().
- *  \note If this event is enabled, you must free the filename in the event.
- */
-typedef struct SDL_DropEvent
-{
-    uint32_t type;        /**< ::SDL_DROPBEGIN or ::SDL_DROPFILE or ::SDL_DROPTEXT or ::SDL_DROPCOMPLETE */
-    uint32_t timestamp;   /**< In milliseconds, populated using SDL_GetTicks() */
-    char *file;         /**< The file name, which should be freed with SDL_free(), is NULL on begin/complete */
-    uint32_t windowID;    /**< The window that was dropped on, if any */
-} SDL_DropEvent;
 
 void IN_PushDropEvent(SDL_DropEvent e)
 {
@@ -509,28 +456,4 @@ void IN_PushDropEvent(SDL_DropEvent e)
 		g_consoleField.cursor = strlen(g_consoleField.buffer);
 	}
 }
-
-/*
-===============
-IN_Frame
-===============
 */
-void IN_Frame( void ) {
-  // TODO
-	//for(i = 1; i < 4; i++) {
-		/*
-		if(i == 2 && !(Key_GetCatcher( ) & KEYCATCH_UI)) {
-			if(touchhats[i][0] != 0 || touchhats[i][1] != 0) {
-				Com_QueueEvent( in_eventTime, SE_MOUSE, touchhats[i][0], touchhats[i][1], 0, NULL );
-			}
-		}
-		*/
-		// TODO: make config options for this?
-		if(i == 2 && !(Key_GetCatcher( ) & KEYCATCH_UI)) {
-			if(touchhats[i][0] != 0 || touchhats[i][1] != 0) {
-				Com_QueueEvent( in_eventTime, SE_MOUSE, touchhats[i][0], 0, 0, NULL );
-			}
-		}
-	}
-}
-#endif

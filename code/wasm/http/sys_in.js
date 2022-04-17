@@ -14,12 +14,13 @@ function GLimp_StartDriverAndSetMode(mode, modeFS, fullscreen, fallback) {
   }
   */
   if(!Q3e.canvas) {
-    Q3e['canvas'] = document.createElement('canvas')
-    Q3e.canvas.setAttribute('width', document.body.clientWidth)
-    Q3e.canvas.setAttribute('height', document.body.clientHeight)
-    Q3e.canvas.width = document.body.clientWidth
-    Q3e.canvas.height = document.body.clientHeight
-    document.getElementById('viewport-frame').appendChild(Q3e.canvas)
+    //Q3e.canvas.width = viewport.clientWidth / 2
+    //Q3e.canvas.height = document.body.clientHeight
+  }
+  Q3e.canvas.setAttribute('width', Q3e.canvas.clientWidth)
+  Q3e.canvas.setAttribute('height', Q3e.canvas.clientHeight)
+  if(window.flipper) {
+    window.flipper.remove()
   }
 
   //HEAP32[win>>2] = 1
@@ -66,20 +67,22 @@ function GLimp_StartDriverAndSetMode(mode, modeFS, fullscreen, fallback) {
 }
 
 function updateVideoCmd () {
-  if(!Q3e.canvas) {
-    Q3e.canvas.setAttribute('width', canvas.clientWidth)
-    Q3e.canvas.setAttribute('height', canvas.clientHeight)
-
-  }
-  // TODO: make this an SDL/Sys_Queue event to `vid_restart fast` on native
+  Q3e.canvas.setAttribute('width', Q3e.canvas.clientWidth)
+  Q3e.canvas.setAttribute('height', Q3e.canvas.clientHeight)
+  // THIS IS THE NEW VID_RESTART FAST HACK
+  HEAP32[INPUT.updateWidth>>2] = Q3e.canvas.width
+  HEAP32[INPUT.updateHeight>>2] = Q3e.canvas.height
   Cvar_Set(stringToAddress('r_customWidth'), stringToAddress('' + Q3e.canvas.clientWidth))
   Cvar_Set(stringToAddress('r_customHeight'), stringToAddress('' + Q3e.canvas.clientHeight))
+  // TODO: make this an SDL/Sys_Queue event to `vid_restart fast` on native
+  Cbuf_AddText(stringToAddress('vid_restart fast\n'));
 }
 
 function resizeViewport () {
   // ignore if the canvas hasn't yet initialized
   if(!Q3e.canvas) return
-
+  Q3e.canvas.removeAttribute('width')
+  Q3e.canvas.removeAttribute('height')
   if (Q3e.resizeDelay) clearTimeout(Q3e.resizeDelay)
   Q3e.resizeDelay = setTimeout(updateVideoCmd, 100);
 }
@@ -206,6 +209,11 @@ function checkPasteEvent (evt) {
 }
 
 function InputPushKeyEvent(evt) {
+  if (INPUT.editorActive) {
+    return true
+  }
+
+
   if(evt.keyCode === 8) {
     INPUT.cancelBackspace = true;
     setTimeout(function () { INPUT.cancelBackspace = false }, 100)
@@ -301,6 +309,9 @@ function InputPushKeyEvent(evt) {
 }
 
 function InputPushTextEvent (evt) {
+  if (INPUT.editorActive) {
+    return true
+  }
   if ( INPUT.consoleKeys.includes(String.fromCharCode(evt.charCode)) )
   {
     Sys_QueEvent( Sys_Milliseconds(), SE_KEY, INPUT.keystrings['CONSOLE'], true, 0, null )
@@ -334,6 +345,9 @@ function getMovementY(event) {
 }
 
 function InputPushWheelEvent(evt) {
+  if (INPUT.editorActive) {
+    return true
+  }
 	if( evt.deltaY > 0 ) {
 		Sys_QueEvent( Sys_Milliseconds(), SE_KEY, INPUT.keystrings['MWHEELUP'], true, 0, null );
 		Sys_QueEvent( Sys_Milliseconds(), SE_KEY, INPUT.keystrings['MWHEELUP'], false, 0, null );
@@ -402,7 +416,6 @@ function InputPushMouseEvent (evt) {
 }
 
 function Com_MaxFPSChanged() {
-  return;
   INPUT.fpsUnfocused = Cvar_VariableIntegerValue(stringToAddress('com_maxfpsUnfocused'));
   INPUT.fps = Cvar_VariableIntegerValue(stringToAddress('com_maxfps'));
   if(Q3e.frameInterval) {
@@ -492,6 +505,93 @@ function IN_Init() {
   console.log( '------------------------------------\n' )
 }
 
+function InputPushTouchEvent(joystick, id, evt, data) {
+  INPUT.cancelBackspace = false
+  if(id == 1) {
+    if (data.vector && data.vector.y > .4) {
+      InputPushKeyEvent({type: 'keydown', repeat: true, keyCode: 87})
+    } else {
+      InputPushKeyEvent({type: 'keyup', keyCode: 87})
+    }
+    if (data.vector && data.vector.y < -.4) {
+      InputPushKeyEvent({type: 'keydown', repeat: true, keyCode: 83})
+    } else {
+      InputPushKeyEvent({type: 'keyup', keyCode: 83})
+    }
+    if (data.vector && data.vector.x < -.4) {
+      InputPushKeyEvent({type: 'keydown', repeat: true, keyCode: 65})
+    } else {
+      InputPushKeyEvent({type: 'keyup', keyCode: 65})
+    }
+    if (data.vector && data.vector.x > .4) {
+      InputPushKeyEvent({type: 'keydown', repeat: true, keyCode: 68})
+    } else {
+      InputPushKeyEvent({type: 'keyup', keyCode: 68})
+    }
+  }
+  
+  if(id == 2) {
+    if (data.vector && data.vector.y > .4) {
+      InputPushKeyEvent({type: 'keydown', repeat: true, keyCode: 40})
+    } else {
+      InputPushKeyEvent({type: 'keyup', keyCode: 40})
+    }
+    if (data.vector && data.vector.y < -.4) {
+      InputPushKeyEvent({type: 'keydown', repeat: true, keyCode: 38})
+    } else {
+      InputPushKeyEvent({type: 'keyup', keyCode: 38})
+    }
+    if (data.vector && data.vector.x < -.4) {
+      InputPushKeyEvent({type: 'keydown', repeat: true, keyCode: 37})
+    } else {
+      InputPushKeyEvent({type: 'keyup', keyCode: 37})
+    }
+    if (data.vector && data.vector.x > .4) {
+      InputPushKeyEvent({type: 'keydown', repeat: true, keyCode: 39})
+    } else {
+      InputPushKeyEvent({type: 'keyup', keyCode: 39})
+    }
+  }
+
+  var w = Module['canvas'].width;
+  var h = Module['canvas'].height;
+  var dx = data.angle ? (Math.cos(data.angle.radian) * data.distance) : 0
+  var dy = data.angle ? (Math.sin(data.angle.radian) * data.distance) : 0
+  var x = data.angle ? dx : Math.round(data.position.x)
+  var y = data.angle ? dy : Math.round(data.position.y)
+
+  if(evt.type == 'start') {
+    if((Key_GetCatcher( ) & KEYCATCH_UI) && id == 3) {
+			Sys_QueEvent( Sys_Milliseconds(), SE_MOUSE_ABS, x, y, 0, null );
+		}
+		Sys_QueEvent( Sys_Milliseconds(), SE_FINGER_DOWN, INPUT.keystrings['MOUSE1'], id, 0, null );
+  }
+
+  if(evt.type == 'end') {
+    //Sys_QueEvent( in_eventTime+1, SE_KEY, K_MOUSE1, qfalse, 0, null );
+		Sys_QueEvent( Sys_Milliseconds(), SE_FINGER_UP, INPUT.keystrings['MOUSE1'], id, 0, null );
+		INPUT.touchhats[id][0] = 0;
+		INPUT.touchhats[id][1] = 0;
+  }
+
+  if(evt.type == 'move') {
+    let ratio = Q3e.canvas.clientWidth / Q3e.canvas.clientHeight
+		INPUT.touchhats[id][0] = (x * ratio) * 50
+		INPUT.touchhats[id][1] = y * 50
+  }
+}
+
+function IN_Frame() {
+  let i = 2
+  if(i == 2 && !(Key_GetCatcher( ) & KEYCATCH_UI)) {
+    if(INPUT.touchhats[i][0] != 0 || INPUT.touchhats[i][1] != 0) {
+      Sys_QueEvent( Sys_Milliseconds(), SE_MOUSE, INPUT.touchhats[i][0], 0, 0, null )
+    }
+  }
+
+}
+
+
 function InitNippleJoysticks () {
   // TODO: finish joystick settings
   /*
@@ -526,12 +626,12 @@ function InitNippleJoysticks () {
   }
 
   document.body.classList.add('joysticks')
-  if(SYSI.joysticks.length > 0) {
-    for(var i = 0; i < SYSI.joysticks.length; i++) {
-      SYSI.joysticks[i].destroy()
+  if(INPUT.joysticks.length > 0) {
+    for(var i = 0; i < INPUT.joysticks.length; i++) {
+      INPUT.joysticks[i].destroy()
     }
   }
-  SYSI.joysticks[0] = nipplejs.create({
+  INPUT.joysticks[0] = nipplejs.create({
     zone: document.getElementById('left-joystick'),
     multitouch: false,
     mode: 'semi',
@@ -540,7 +640,7 @@ function InitNippleJoysticks () {
     maxNumberOfNipples: 1,
     position: {bottom: '50px', left: '50px'},
   })
-  SYSI.joysticks[1] = nipplejs.create({
+  INPUT.joysticks[1] = nipplejs.create({
     zone: document.getElementById('right-joystick'),
     multitouch: false,
     mode: 'semi',
@@ -549,7 +649,7 @@ function InitNippleJoysticks () {
     maxNumberOfNipples: 1,
     position: {bottom: '50px', right: '50px'},
   })
-  SYSI.joysticks[2] = nipplejs.create({
+  INPUT.joysticks[2] = nipplejs.create({
     dataOnly: true,
     zone: document.body,
     multitouch: false,
@@ -558,9 +658,9 @@ function InitNippleJoysticks () {
     catchDistance: 2,
     maxNumberOfNipples: 1,
   })
-  SYSI.joysticks[0].on('start end move', SYSI.InputPushTouchEvent.bind(null, SYSI.joysticks[0], 1))
-  SYSI.joysticks[1].on('start end move', SYSI.InputPushTouchEvent.bind(null, SYSI.joysticks[1], 2))
-  SYSI.joysticks[2].on('start end move', SYSI.InputPushTouchEvent.bind(null, SYSI.joysticks[2], 3))
+  INPUT.joysticks[0].on('start end move', InputPushTouchEvent.bind(null, INPUT.joysticks[0], 1))
+  INPUT.joysticks[1].on('start end move', InputPushTouchEvent.bind(null, INPUT.joysticks[1], 2))
+  INPUT.joysticks[2].on('start end move', InputPushTouchEvent.bind(null, INPUT.joysticks[2], 3))
 }
 
 
@@ -615,6 +715,9 @@ function GLimp_Shutdown(destroy) {
 }
 
 var INPUT = {
+  editorActive: false,
+  touchhats: [[0,0],[0,0],[0,0],[0,0]], // x/y values for nipples
+  joysticks: [],
   keystrings: {},
   firstClick: true,
   IN_Init: IN_Init,

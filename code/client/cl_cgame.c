@@ -736,11 +736,6 @@ void CL_ShutdownCGame( void ) {
 #endif
 	FS_VM_CloseFiles( H_CGAME );
 
-#ifdef USE_VID_FAST
-	cls.cgameGlConfig = NULL;
-	cls.cgameFirstCvar = NULL;
-	cls.numCgamePatches = 0;
-#endif
 }
 
 
@@ -825,13 +820,6 @@ static intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 		return Sys_Milliseconds();
 	case CG_CVAR_REGISTER:
 	{
-#ifdef USE_VID_FAST
-		vmCvar_t *cvar;
-		cvar = (vmCvar_t *)VMA(1);
-		if (cvar && (!cls.cgameFirstCvar || cvar < cls.cgameFirstCvar)) {
-			cls.cgameFirstCvar = cvar;
-		}
-#endif
 		Cvar_Register( VMA(1), VMA(2), VMA(3), args[4], cgvm->privateFlag );
 		return 0;
 	}
@@ -1112,10 +1100,6 @@ static intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 		return re.LerpTag( VMA(1), args[2], args[3], args[4], VMF(5), VMA(6) );
 	case CG_GETGLCONFIG:
 		VM_CHECKBOUNDS( cgvm, args[1], sizeof( glconfig_t ) );
-#ifdef USE_VID_FAST
-		// TODO: add this to native build
-		cls.cgameGlConfig = VMA(1);
-#endif
 		CL_GetGlconfig( VMA(1) );
 		return 0;
 	case CG_GETGAMESTATE:

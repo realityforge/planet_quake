@@ -2017,10 +2017,6 @@ refexport_t *GetRefAPI ( int apiVersion, refimport_t *rimp ) {
   re.CreateShaderFromImageBytes = RE_CreateShaderFromImageBytes;
 #endif
 
-#ifdef USE_VID_FAST
-	re.UpdateMode = RE_UpdateMode;
-#endif
-
 #ifdef BUILD_EXPERIMENTAL
 	re.FastCapture = RB_FastCapture;
 	re.FastCaptureOld = RB_FastCaptureOld;

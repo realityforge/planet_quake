@@ -277,6 +277,9 @@ void Com_PrintClear(void)
 
 void QDECL Com_PrintfReal( char *file, int line, const uint32_t source, const uint32_t flags, const char *fmt, ... )
 #else
+#ifdef __WASM__
+Q_EXPORT
+#endif
 void QDECL Com_Printf( const char *fmt, ... )
 #endif
 {
@@ -4304,7 +4307,7 @@ void Com_Init( char *commandLine ) {
 
 #ifdef USE_ASYNCHRONOUS
 	if(!com_earlyConnect) {
-		Com_Printf("WARNING: Using asynchronous build without an early \\connect <address> command.\n");
+		Com_Printf( S_COLOR_RED "WARNING: Using asynchronous build without an early \\connect <address> command.\n");
 	} else if (!FS_Initialized()) {
 		Cvar_Set("com_skipLoadUI", "1");
 	}

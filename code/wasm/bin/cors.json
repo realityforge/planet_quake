@@ -30,6 +30,12 @@
       "maxAgeSeconds": 3600
     },
     {
+      "origin": ["https://briancullinan.github.com"],
+      "responseHeader": ["*"],
+      "method": ["GET", "HEAD"],
+      "maxAgeSeconds": 3600
+    },
+    {
       "origin": ["*"],
       "responseHeader": ["*"],
       "method": ["*"],

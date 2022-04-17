@@ -93,6 +93,7 @@ Sys_UnloadLibrary
 Sys_Remove
 Sys_Rename
 Sys_Mkdir
+Sys_Edit
 Sys_Offline
 Sys_Error
 Sys_Exit

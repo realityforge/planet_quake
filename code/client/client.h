@@ -407,24 +407,6 @@ typedef struct {
 	int			g_needpass;
 } serverInfo_t;
 
-#ifdef USE_VID_FAST
-
-#define MAX_PATCHES  8
-
-typedef enum {
-	PATCH_NONE,
-	PATCH_XSCALE,
-	PATCH_YSCALE,
-	PATCH_BIAS
-} patch_type_t;
-
-typedef struct patch_s {
-	patch_type_t type;
-	void *addr;
-} patch_t;
-
-#endif
-
 typedef struct {
 	connstate_t	state;				// connection status
 	qboolean	gameSwitch;
@@ -498,21 +480,6 @@ typedef struct {
 	float		 cursorx;
 	float    cursory;
 	qboolean postgame;
-#ifdef USE_VID_FAST
-	glconfig_t *uiGlConfig;
-
-	patch_t uiPatches[MAX_PATCHES];
-	unsigned numUiPatches;
-
-	// the cgame scales are normally stuffed somewhere inbetween
-	// cgameGlConfig and cgameFirstCvar
-	glconfig_t *cgameGlConfig;
-	vmCvar_t *cgameFirstCvar;
-
-	patch_t cgamePatches[MAX_PATCHES];
-	unsigned numCgamePatches;
-#endif
-
   qboolean synchronousClients;
   int meanPing;
 #ifdef USE_LAZY_LOAD

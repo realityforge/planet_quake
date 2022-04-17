@@ -124,7 +124,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #ifdef __WASM__
 // vid_restart fast hack scans memory to change ratio values cgame uses to position the HUD and game
-//#define USE_VID_FAST 1
+#define USE_VID_FAST 1
 // allow touch events to set exact cursor position using "cursor spy"
 #define USE_ABS_MOUSE 1
 // start a dedicated server even for single player mode, automatically join a match

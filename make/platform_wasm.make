@@ -127,6 +127,7 @@ $(WASM_TRGTDIR)/multigame/vm.do-always:
 		B="$(GAME_BUILD)" ARCH="$(COMPILE_ARCH)"         \
 		BUILD_GAME_LIB=0 
 
+# TODO: YIKES, how is this more complicated than build.yml, why can't they be the same thing?
 EXT01 := .do-always
 $(BUILD_DIR)/%.do-always:
 	$(eval REPACK_PATH := $(subst -sounds$(EXT01),$(EXT01),$(subst -vms$(EXT01),$(EXT01),$(subst -images$(EXT01),$(EXT01),$(subst -files$(EXT01),$(EXT01),$(notdir $@))))))

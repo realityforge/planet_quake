@@ -6,6 +6,7 @@ var Q3e = {}
 window.Q3e = Q3e
 
 function getQueryCommands() {
+	let viewport = document.getElementById('viewport-frame')
 	// Wow, look at all the unfuckery I don't have to do with startup options because
 	//   I'm not using emscripten anymore.
 	let startup = [
@@ -35,8 +36,8 @@ function getQueryCommands() {
 	startup.push.apply(startup, window.preStart)
 	startup.push.apply(startup, [
 		'+set', 'r_fullscreen', window.fullscreen ? '1' : '0',
-		'+set', 'r_customHeight', '' + window.innerHeight || 0,
-		'+set', 'r_customWidth', '' + window.innerWidth || 0,
+		'+set', 'r_customHeight', '' + (viewport || document.body).clientHeight || 0,
+		'+set', 'r_customWidth', '' + (viewport || document.body).clientWidth || 0,
 	])
 	if(window.location.hostname) {
 		startup.push.apply(startup, [
@@ -238,6 +239,40 @@ function Sys_Print(message) {
 	console.log(addressToString(message))
 }
 
+function Sys_Edit() {
+	if(typeof window.ace == 'undefined') {
+		return
+	}
+
+	if(Cmd_Argc() < 2) {
+		Com_Printf(stringToAddress('Usage: edit [filename]\n'))
+		return
+	}
+
+	let filename = Cmd_Argv(1)
+	let filenameStr = addressToString(filename)
+	if(!filenameStr || !filenameStr.length) {
+		Com_Printf(stringToAddress('Usage: edit [filename]\n'))
+		return
+	}
+
+	let buf = stringToAddress('DEADBEEF') // pointer to pointer
+	let length
+	if ((length = FS_ReadFile(filename, buf)) > 0 && HEAPU32[buf >> 2] > 0) {
+		let imageView = Array.from(HEAPU8.slice(HEAPU32[buf >> 2], HEAPU32[buf >> 2] + length))
+		let utfEncoded = imageView.map(function (c) { return String.fromCharCode(c) }).join('')
+		FS_FreeFile(HEAPU32[buf >> 2])
+		ace.setValue(utfEncoded)
+		// TODO: show relationships in Jarvis, 
+		//   one module refers to another module
+		//   these are the leaves of change that worry code reviewers
+		ACE.filename = filenameStr
+	} else {
+		Com_Printf(stringToAddress('File not found \'%s\'.\nUsage: edit [filename]\n'), filename)
+	}
+}
+
+
 function Sys_Exit(code) {
 	Q3e.exited = true
 	GLimp_Shutdown();
@@ -320,11 +355,14 @@ function Sys_Frame() {
 		Q3e.inFrame = true
 		Q3e.running = !Q3e.running
 		try {
+			if(typeof window.ace != 'undefined') {
+				Ace_Frame()
+			}
 			Com_Frame(Q3e.running)
 		} catch (e) {
 			if(!Q3e.exited && e.message == 'longjmp') {
 				// let game Com_Frame handle it, it will restart UIVM
-				Cbuf_AddText(stringToAddress('vid_restart;'));
+				Cbuf_AddText(stringToAddress('vid_restart\n'));
 				console.error(e)
 			} else
 			if(!Q3e.exited || e.message != 'unreachable') {
@@ -453,6 +491,7 @@ var SYS = {
 	Sys_Milliseconds: Sys_Milliseconds,
 	Sys_Microseconds: Sys_Microseconds,
 	Sys_Exit: Sys_Exit,
+	Sys_Edit: Sys_Edit,
 	exit: Sys_Exit,
 	Sys_Frame: Sys_Frame,
 	Sys_Error: Sys_Error,
