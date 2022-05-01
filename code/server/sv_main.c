@@ -308,9 +308,22 @@ static void SV_MasterHeartbeat( const char *message )
 	int			netenabled;
 
 	netenabled = Cvar_VariableIntegerValue("net_enabled");
+#ifndef DEDICATED
+#ifdef USE_LOCAL_DED
+	extern cvar_t *cl_master;
+	cvar_t *masterList = sv_master
+	if(com_dedicated->integer == 1)
+		masterList = cl_master;
+#define sv_master
+#endif
+#endif
 
 	// "dedicated 1" is for lan play, "dedicated 2" is for inet public play
-	if (!com_dedicated || com_dedicated->integer != 2 || !(netenabled & (NET_ENABLEV4 | NET_ENABLEV6)))
+	if (!com_dedicated 
+#ifndef USE_LOCAL_DED
+		|| com_dedicated->integer != 2 
+#endif
+		|| !(netenabled & (NET_ENABLEV4 | NET_ENABLEV6)))
 		return;		// only dedicated servers send heartbeats
 
 	// if not time yet, don't send anything
@@ -384,6 +397,9 @@ static void SV_MasterHeartbeat( const char *message )
 		if(adr[i][1].type != NA_BAD)
 			NET_OutOfBandPrint( NS_SERVER, &adr[i][1], "heartbeat %s\n", message);
 	}
+#ifdef USE_LOCAL_DED
+#undef sv_master
+#endif
 }
 
 

@@ -3735,10 +3735,10 @@ void CL_Frame( int msec, int realMsec ) {
 
 
 #if defined(USE_LAZY_LOAD) || defined(USE_ASYNCHRONOUS)
-	CL_CheckLazyUpdates();
+	//CL_CheckLazyUpdates();
 #endif
 #ifdef USE_LIVE_RELOAD
-	CL_ChangeNotifcations();
+	//CL_ChangeNotifcations();
 #endif
 
 

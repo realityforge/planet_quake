@@ -315,29 +315,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #endif
 
-#ifdef __WASM__
-#define getenv Sys_getenv
-#define exit Sys_Exit
-#define ftell Sys_FTell
-#define fseek Sys_FSeek
-#define fclose Sys_FClose
-#define fwrite Sys_FWrite
-#define fflush Sys_FFlush
-#define fread Sys_FRead
-#define rename Sys_Rename
-#define remove Sys_Remove
-long Sys_FTell(FILE *f);
-int Sys_FSeek(FILE *f, long off, int whence);
-int Sys_FClose(FILE *f);
-size_t Sys_FWrite(const void *restrict src, size_t size, size_t nmemb, FILE *restrict f);
-int Sys_FFlush(FILE *f);
-size_t Sys_FRead(void *restrict destv, size_t size, size_t nmemb, FILE *restrict f);
-size_t Sys_Remove(const char *);
-size_t Sys_Rename(const char *, const char *);
-void Sys_Exit( int code ) __attribute((noreturn));
-
-#endif
-
 //endianness
 short ShortSwap( short l );
 int LongSwap( int l );
@@ -373,6 +350,10 @@ float FloatSwap( const float *f );
 	#endif
 #endif
 
+
+#ifdef __WASM__
+#include "../wasm/sys_overrides.h"
+#endif
 
 #ifdef USE_PRINT_CONSOLE
 // these define where the print message is coming from for broad filtering with

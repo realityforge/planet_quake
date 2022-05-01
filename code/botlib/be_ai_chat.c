@@ -211,6 +211,7 @@ bot_randomlist_t *randomstrings = NULL;
 bot_replychat_t *replychats = NULL;
 
 
+#undef fprintf
 #define fprintf Com_fprintf
 static int Com_fprintf(fileHandle_t fp, const char *fmt, ...) {
 	char maxline[2048];

@@ -1,12 +1,5 @@
-const { execSync } = require('child_process');
-const { response } = require('express');
 const fs = require('fs');
 const path = require('path');
-const { findTypes, imageTypes } = require('./repack-whitelist');
-var mime = require('mime')
-var zlib = require('zlib')
-
-
 const GAME_DIRECTORY = 'multigame'
 const WEB_DIRECTORY = path.resolve(__dirname + '/../http')
 const ASSETS_DIRECTORY = path.resolve(__dirname + '/../../../games/multigame/assets/')
@@ -136,6 +129,7 @@ function findAltAudio(localName) {
 }
 
 function hasAlpha(otherFormatName) {
+  const { execSync } = require('child_process');
   try {
     let alphaCmd = execSync(`identify -format '%[opaque]' "${path
       .resolve(otherFormatName)}"`, {stdio : 'pipe'}).toString('utf-8')
@@ -268,6 +262,8 @@ function writeVersionFile(time) {
 var MATCH_PALETTE = /palette\s"(.*?)"\s([0-9]+(,[0-9]+)*)/ig
 
 function makePaletteShader(localName, response) {
+  const { execSync } = require('child_process');
+  const { findTypes, imageTypes } = require('./repack-whitelist');
   let pk3dir = localName
   if(localName.startsWith(GAME_DIRECTORY)) {
     pk3dir = localName.substring(GAME_DIRECTORY.length)
@@ -318,7 +314,9 @@ function makePaletteShader(localName, response) {
 
 
 function sendCompressed(file, res, acceptEncoding) {
-  var readStream = fs.createReadStream(file)
+  const zlib = require('zlib')
+  const mime = require('mime')
+  let readStream = fs.createReadStream(file)
   res.setHeader('cache-control', 'public, max-age=31557600')
   res.setHeader('content-type', mime.getType(file))
   // if compressed version already exists, send it directly
@@ -356,6 +354,7 @@ function sendCompressed(file, res, acceptEncoding) {
 //var fullUrl = req.protocol + '://' + req.get('host') + req.originalUrl;
 
 function respondRequest(request, response) {
+  const { execSync } = require('child_process');
   let localName = path.join(request.baseUrl, request.path)
   if(localName[0] == '/')
     localName = localName.substring(1)
@@ -462,11 +461,11 @@ function respondRequest(request, response) {
 
 }
 
-var noFS = false
-var runServer = false
-var forwardIP = ''
-for(var i = 0; i < process.argv.length; i++) {
-  var a = process.argv[i]
+let noFS = false
+let runServer = false
+let forwardIP = ''
+for(let i = 0; i < process.argv.length; i++) {
+  let a = process.argv[i]
   if(a.match(__filename)) {
     runServer = true
   } else if (a == '--proxy-ip') {
@@ -505,9 +504,10 @@ if(runServer) {
   startFileWatcher()
 }
 
+
+
 module.exports = {
   writeVersionFile,
   respondRequest,
   makePaletteShader,
-
 }

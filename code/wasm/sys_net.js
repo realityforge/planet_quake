@@ -383,7 +383,7 @@ function Com_DL_Begin(localName, remoteURL) {
   if(AbortController && !NET.controller) {
     NET.controller = new AbortController()
   }
-  remoteURL += (remoteURL.includes('?') ? '&' : '?') + 'time=' + Q3e.cacheBuster
+  remoteURL += (remoteURL.includes('?') ? '&' : '?') + 'time=' + NET.cacheBuster
   return fetch(remoteURL, {
     mode: 'cors',
     responseType: 'arraybuffer',
@@ -411,7 +411,7 @@ function Com_DL_Perform(nameStr, localName, responseData) {
   }
   // TODO: intercept this information here so we can invalidate the IDBFS storage
   if(localName.includes('version.json')) {
-    Q3e.cacheBuster = Date.parse(JSON.parse(Array.from(new Uint8Array(responseData))
+    NET.cacheBuster = Date.parse(JSON.parse(Array.from(new Uint8Array(responseData))
       .map(c => String.fromCharCode(c)).join(''))[0])
   }
 
@@ -492,7 +492,7 @@ function CL_Download(cmd, name, auto) {
         if(!result || (result.mode >> 12) == ST_DIR) {
           return Com_DL_Begin(localName, remoteURL)
         // bust the caches!
-        } else if(result.timestamp.getTime() < Q3e.cacheBuster) {
+        } else if(result.timestamp.getTime() < NET.cacheBuster) {
           return Com_DL_Begin(localName, remoteURL)
         // valid from disk
         } else {
@@ -534,4 +534,10 @@ var NET = {
   Sys_NET_MulticastLocal: Sys_NET_MulticastLocal,
   CL_Download: CL_Download,
 
+}
+
+
+if (typeof module != 'undefined') {
+  // SOMETHING SOMETHING fs.writeFile
+  module.exports = NET
 }

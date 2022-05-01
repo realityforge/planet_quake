@@ -124,9 +124,9 @@ RPK_INDEXES      += $(notdir $(wildcard build/*/$(CNAME)*.wasm))
 
 WASM_HTML        := index.html
 WASM_HTTP        := code/wasm/http
-WASM_FILES       := $(CNAME).js sys_emgl.js sys_fs.js sys_in.js \
-                    sys_net.js sys_std.js sys_wasm.js nipplejs.js
-WASM_JS          := $(addprefix $(WASM_HTTP)/,$(notdir $(WASM_FILES)))
+WASM_FILES       := sys_emgl.js sys_fs.js sys_idbfs.js sys_in.js sys_net.js \
+                    sys_std.js sys_wasm.js sys_web.js nipplejs.js
+WASM_JS          := $(addprefix code/wasm/,$(notdir $(WASM_FILES)))
 WASM_ASSETS      := games/multigame/assets/xxx-multigame.pk3dir
 
 
@@ -254,7 +254,7 @@ endef
 
 define DO_JS_LIST
 	$(echo_cmd) "JS_LIST $<"
-	$(Q)$(NODE) -e "$(call NODE_FSREPLACE,'$(call HTML_SCRIPT,quake3e.js)','$(WASM_FILES)'.split(' ').map(jsFile => '$(call JS_SCRIPT,'+$(call NODE_FSREAD,$(WASM_HTTP)/'+jsFile+')+','+jsFile+')').join(''),$(DESTDIR)/$(WASM_HTML))"
+	$(Q)$(NODE) -e "$(call NODE_FSREPLACE,'$(call HTML_SCRIPT,quake3e.js)','$(WASM_FILES)'.split(' ').map(jsFile => '$(call JS_SCRIPT,'+$(call NODE_FSREAD,code/wasm/'+jsFile+')+','+jsFile+')').join(''),$(DESTDIR)/$(WASM_HTML))"
 endef
 
 define DO_JSBUILD_EMBED

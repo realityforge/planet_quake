@@ -635,6 +635,24 @@ static void CL_KeyDownEvent( int key, unsigned time, int fingerId )
 		}
 	}
 
+#ifdef __WASM__
+void S_SoundInfo( void );
+qboolean SNDDMA_Init( void );
+extern qboolean s_soundStarted;
+extern qboolean s_soundMuted;
+
+	if(key == K_MOUSE1 && first_click) {
+		first_click = qfalse;
+    SNDDMA_Init();
+    gw_active = qtrue;
+    s_soundStarted = qtrue;
+    s_soundMuted = qfalse;
+    S_SoundInfo();
+    //S_BeginRegistration();
+	}
+
+#endif
+
 
 #ifdef USE_MV
 	if ( (key == K_MOUSE1 || key == K_MOUSE2) && clc.demoplaying 

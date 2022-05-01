@@ -1278,6 +1278,10 @@ extern	int		com_frameTime;
 #ifndef DEDICATED
 extern	qboolean	gw_minimized;
 extern	qboolean	gw_active;
+#ifdef __WASM__
+// for starting sound after player clicks on page
+extern	qboolean	first_click;
+#endif
 #endif
 
 extern	qboolean	com_errorEntered;

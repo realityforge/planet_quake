@@ -2380,6 +2380,10 @@ static void Com_InitZoneMemory( void ) {
 		Com_Error( ERR_FATAL, "Zone data failed to allocate %i megs", mainZoneSize / (1024*1024) );
 	}
 	Z_ClearZone( mainzone, mainzone, mainZoneSize, 1 );
+#ifdef __WASM__
+	void updateGlobalBufferAndViews( void );
+	updateGlobalBufferAndViews();
+#endif
 }
 
 

@@ -1154,7 +1154,7 @@ void CL_CheckLazyUpdates( void ) {
 	if(!Q_stricmp(ext, "md3") || !Q_stricmp(ext, "mdr")
 		|| !Q_stricmp(ext, "md5")) {
 		if(cls.rendererStarted) {
-			re.UpdateModel(ready->loadingName);
+			//re.UpdateModel(ready->loadingName);
 			secondTimer += 10;
 		}
 	}
@@ -1162,7 +1162,7 @@ void CL_CheckLazyUpdates( void ) {
 	if(!Q_stricmp(ext, "wav") || !Q_stricmp(ext, "ogg")
 		|| !Q_stricmp(ext, "mp3") || !Q_stricmp(ext, "opus")) {
 		if(cls.soundRegistered) {
-			S_UpdateSound(ready->loadingName, qtrue);
+			//S_UpdateSound(ready->loadingName, qtrue);
 		}
 	}
 
@@ -1170,7 +1170,7 @@ void CL_CheckLazyUpdates( void ) {
 		ready->loadingName[12] = '\0';
 
 		if(cls.rendererStarted) {
-			re.UpdateShader(&ready->loadingName[13], atoi(&ready->loadingName[0]));
+			//re.UpdateShader(&ready->loadingName[13], atoi(&ready->loadingName[0]));
 			secondTimer += 10;
 		}
 		ready->loadingName[12] = ';';

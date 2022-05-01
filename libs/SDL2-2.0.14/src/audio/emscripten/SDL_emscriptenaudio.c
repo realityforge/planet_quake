@@ -26,7 +26,7 @@
 #include "../SDL_audio_c.h"
 #include "SDL_emscriptenaudio.h"
 
-#include <emscripten/emscripten.h>
+#include <emscripten.h>
 
 static void
 FeedAudioDevice(_THIS, const void *buf, const int buflen)
@@ -287,9 +287,14 @@ EMSCRIPTENAUDIO_OpenDevice(_THIS, void *handle, const char *devname, int iscaptu
                 SDL2.capture.scriptProcessorNode = SDL2.audioContext.createScriptProcessor($1, $0, 1);
                 SDL2.capture.scriptProcessorNode.onaudioprocess = function(audioProcessingEvent) {
                     if ((SDL2 === undefined) || (SDL2.capture === undefined)) { return; }
-                    audioProcessingEvent.outputBuffer.getChannelData(0).fill(0.0);
+                    let dataView = audioProcessingEvent.outputBuffer.getChannelData(0);
+                    dataView.fill(0.0);
                     SDL2.capture.currentCaptureBuffer = audioProcessingEvent.inputBuffer;
-                    dynCall('vi', $2, [$3]);
+                    try {
+                        dynCall('vi', $2, [$3]);
+                    } catch (e) {
+                        debugger;
+                    }
                 };
                 SDL2.capture.mediaStreamNode.connect(SDL2.capture.scriptProcessorNode);
                 SDL2.capture.scriptProcessorNode.connect(SDL2.audioContext.destination);
@@ -324,7 +329,10 @@ EMSCRIPTENAUDIO_OpenDevice(_THIS, void *handle, const char *devname, int iscaptu
             SDL2.audio.scriptProcessorNode['onaudioprocess'] = function (e) {
                 if ((SDL2 === undefined) || (SDL2.audio === undefined)) { return; }
                 SDL2.audio.currentOutputBuffer = e['outputBuffer'];
-                dynCall('vi', $2, [$3]);
+                try {
+                    dynCall('vi', $2, [$3]);
+                } catch (e) {
+                }
             };
             SDL2.audio.scriptProcessorNode['connect'](SDL2.audioContext['destination']);
         }, this->spec.channels, this->spec.samples, HandleAudioProcess, this);

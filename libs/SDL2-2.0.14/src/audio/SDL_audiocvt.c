@@ -1653,7 +1653,12 @@ SDL_AudioStreamClear(SDL_AudioStream *stream)
     if (!stream) {
         SDL_InvalidParamError("stream");
     } else {
+#ifdef __WASM__
+        // TODO: come back to this, I don't have patience.
+        SDL_ClearDataQueue(stream->queue, stream->packetlen);
+#else
         SDL_ClearDataQueue(stream->queue, stream->packetlen * 2);
+#endif
         if (stream->reset_resampler_func) {
             stream->reset_resampler_func(stream);
         }

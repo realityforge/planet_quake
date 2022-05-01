@@ -6273,12 +6273,18 @@ const char *FS_GetCurrentGameDir( void )
 }
 
 
+#ifdef __WASM__
+Q_EXPORT
+#endif
 const char *FS_GetBaseGameDir( void )
 {
 	return fs_basegame->string;
 }
 
 
+#ifdef __WASM__
+Q_EXPORT
+#endif
 const char *FS_GetBasePath( void )
 {
 	if ( fs_basepath && fs_basepath->string[0] )
@@ -6288,6 +6294,9 @@ const char *FS_GetBasePath( void )
 }
 
 
+#ifdef __WASM__
+Q_EXPORT
+#endif
 const char *FS_GetHomePath( void )
 {
 	if ( fs_homepath && fs_homepath->string[0] )
@@ -6297,6 +6306,9 @@ const char *FS_GetHomePath( void )
 }
 
 
+#ifdef __WASM__
+Q_EXPORT
+#endif
 const char *FS_GetGamePath( void )
 {
 	static char buffer[ MAX_OSPATH + MAX_CVAR_VALUE_STRING + 1 ];

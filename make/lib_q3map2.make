@@ -143,17 +143,15 @@ endef
 
 debug:
 	$(echo_cmd) "MAKE $(Q3MAP2_TARGET)"
-	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) \
-		WORKDIRS="$(Q3MAP2_WORKDIR) $(Q3MAP2_WORKDIR)/picomodel" mkdirs
 	@$(MAKE) -f $(MKFILE) B=$(BD) -j 8 \
+		WORKDIRS="$(Q3MAP2_WORKDIR) $(Q3MAP2_WORKDIR)/picomodel" \
 		CFLAGS="$(CFLAGS) $(DEBUG_CFLAGS)" \
 		LDFLAGS="$(LDFLAGS) $(DEBUG_LDFLAGS)" $(BD)/$(Q3MAP2_TARGET)
 
 release:
 	$(echo_cmd) "MAKE $(Q3MAP2_TARGET)"
-	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) \
-		WORKDIRS="$(Q3MAP2_WORKDIR) $(Q3MAP2_WORKDIR)/picomodel" mkdirs
 	@$(MAKE) -f $(MKFILE) B=$(BR) -j 8 \
+		WORKDIRS="$(Q3MAP2_WORKDIR) $(Q3MAP2_WORKDIR)/picomodel" \
 		CFLAGS="$(CFLAGS) $(RELEASE_CFLAGS)" \
 		LDFLAGS="$(LDFLAGS) $(RELEASE_LDFLAGS)" $(BR)/$(Q3MAP2_TARGET)
 
@@ -164,6 +162,10 @@ clean:
 	@rm -rf ./$(BR)/$(Q3MAP2_TARGET)
 
 ifdef B
+
+mkdirs: $(addsuffix .mkdirs,$(addprefix $(B)/,$(WORKDIRS)))
+
+
 $(B)/$(Q3MAP2_WORKDIR)/%.o: $(Q3MAP2DIR)/common/%.cpp
 	$(DO_Q3MAP2_GXX)
 
@@ -186,11 +188,11 @@ $(B)/$(Q3MAP2_WORKDIR)/picomodel/%.o: $(Q3MAP2DIR)/../libs/picomodel/lwo/%.c
 	$(DO_Q3MAP2_CC)
 
 ifeq ($(LINKABLE),1)
-$(B)/$(Q3MAP2_TARGET): $(Q3MAP2_OBJ) 
+$(B)/$(Q3MAP2_TARGET): mkdirs $(Q3MAP2_OBJ) 
 	$(echo_cmd) "LD $@"
 	$(Q)$(CC) -o $@ $(Q3MAP2_OBJ) $(Q3MAP2_LIBS) $(SHLIBLDFLAGS)
 else
-$(B)/$(Q3MAP2_TARGET): $(Q3MAP2_OBJ) 
+$(B)/$(Q3MAP2_TARGET): mkdirs $(Q3MAP2_OBJ) 
 	$(echo_cmd) "LD $@"
 	$(Q)$(CC) -o $@ $(Q3MAP2_OBJ) $(Q3MAP2_LIBS) $(LDFLAGS)
 endif

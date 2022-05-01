@@ -729,7 +729,10 @@ qboolean RE_CanMinimize( void )
 }
 
 
-const glconfig_t *RE_GetConfig( void )
+#ifndef USE_VID_FAST
+const 
+#endif
+glconfig_t *RE_GetConfig( void )
 {
 	return &glConfig;
 }

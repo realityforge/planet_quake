@@ -198,13 +198,16 @@ static int SNDDMA_KHzToHz( int khz )
 	}
 }
 
-
 /*
 ===============
 SNDDMA_Init
 ===============
 */
 #ifdef __WASM__
+__attribute__((visibility("default")))
+qboolean first_click = qtrue;
+
+
 Q_EXPORT
 #endif
 qboolean SNDDMA_Init( void )
@@ -212,6 +215,12 @@ qboolean SNDDMA_Init( void )
 	SDL_AudioSpec desired;
 	SDL_AudioSpec obtained;
 	int tmp;
+
+#ifdef __WASM__
+	if(first_click) {
+		return qfalse;
+	}
+#endif
 
 	if ( snd_inited )
 		return qtrue;

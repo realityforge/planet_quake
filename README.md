@@ -36,6 +36,7 @@ This is not a cheat server. There are experimental features that can be used to 
   * [Multiple game styles](./docs/games.md)
   * [Slim client/auto connect and more](./docs/client.md)
   * [Referee, persistent sessions, event system](./docs/server.md)
+  * WebAssembly build target without Emscripten
   * PNG support
   * Drag and drop
   * Many, many bug fixes
@@ -50,15 +51,14 @@ This is not a cheat server. There are experimental features that can be used to 
 ## Future TODOs
 
   * Authenticated clients
+  * Always on twitch.tv streaming at no expense to the game server
   * Copy kubernetes support https://github.com/criticalstack/quake-kube
   * Asynchronous rendering for portals, mirrors, demos, videos, multiple maps, etc
   * Make a simple thread manager https://stackoverflow.com/questions/7269709/sending-information-with-a-signal-in-linux or use oneTBB as an alternative?
-  * IN PROGRESS: removing Emscripten and compiling only to wasm with clang.
-  * Move more features like EULA, file extension alternatives from ListFiles that comes from menu system, etc out of JS and in to C system.
+  * Move more features like EULA, etc out of JS and in to C system.
   * Quake 3 1.16n and dm3 integrated support from https://github.com/zturtleman/lilium-arena-classic.
-  * IN FAILURE: HTML and CSS menu renderer
-  * Always on twitch.tv streaming at no expense to the game server
-  * IN FAILURE: webm/VPX/vorbis video format, SVG
+  * IN FAILURE: HTML and CSS menu renderer with RmlUI
+  * IN FAILURE: webm/VPX/vorbis video format, SVG, GIF
 
 ## Console
 

@@ -515,9 +515,11 @@ extern DECLSPEC int SDLCALL SDL_vsscanf(const char *text, const char *fmt, va_li
 extern DECLSPEC int SDLCALL SDL_snprintf(SDL_OUT_Z_CAP(maxlen) char *text, size_t maxlen, SDL_PRINTF_FORMAT_STRING const char *fmt, ... ) SDL_PRINTF_VARARG_FUNC(3);
 extern DECLSPEC int SDLCALL SDL_vsnprintf(SDL_OUT_Z_CAP(maxlen) char *text, size_t maxlen, const char *fmt, va_list ap);
 
+#ifndef __WASM__
 #ifndef HAVE_M_PI
 #ifndef M_PI
 #define M_PI    3.14159265358979323846264338327950288   /**< pi */
+#endif
 #endif
 #endif
 
@@ -588,7 +590,7 @@ extern DECLSPEC char *SDLCALL SDL_iconv_string(const char *tocode,
 
 /* force builds using Clang's static analysis tools to use literal C runtime
    here, since there are possibly tests that are ineffective otherwise. */
-#if defined(__clang_analyzer__) && !defined(SDL_DISABLE_ANALYZE_MACROS)
+#if (defined(__clang_analyzer__) && !defined(SDL_DISABLE_ANALYZE_MACROS)) || defined(__WASM__)
 
 /* The analyzer knows about strlcpy even when the system doesn't provide it */
 #ifndef HAVE_STRLCPY
@@ -631,12 +633,24 @@ size_t strlcat(char* dst, const char* src, size_t size);
 #define SDL_vsscanf vsscanf
 #define SDL_snprintf snprintf
 #define SDL_vsnprintf vsnprintf
+#define SDL_getenv getenv
+#define SDL_atoi atoi
+#define SDL_pow pow
+#define SDL_sqrt sqrt
+#define SDL_sinf sinf
+#define SDL_ceil ceil
+#ifdef __WASM__
+#define SDL_Log Com_Printf
+#endif
+#define SDL_strtoll strtoll
 #endif
 
+#ifndef __WASM__
 SDL_FORCE_INLINE void *SDL_memcpy4(SDL_OUT_BYTECAP(dwords*4) void *dst, SDL_IN_BYTECAP(dwords*4) const void *src, size_t dwords)
 {
     return SDL_memcpy(dst, src, dwords * 4);
 }
+#endif
 
 /* Ends C function definitions when using C++ */
 #ifdef __cplusplus

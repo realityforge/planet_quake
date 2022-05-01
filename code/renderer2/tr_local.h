@@ -2632,7 +2632,10 @@ void RE_ThrottleBackend( void );
 void RE_SetDvrFrame( float x, float y, float width, float height );
 #endif
 qboolean RE_CanMinimize( void );
-const glconfig_t *RE_GetConfig( void );
+#ifndef USE_VID_FAST
+const 
+#endif
+glconfig_t *RE_GetConfig( void );
 void RE_VertexLighting( qboolean allowed );
 void RE_UpdateMode(glconfig_t *glconfigOut);
 

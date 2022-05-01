@@ -320,6 +320,7 @@ int ReadStructure(source_t *source, structdef_t *def, char *structure)
 } //end of the function ReadStructure
 
 
+#undef fprintf
 #define fprintf Com_fprintf
 static int Com_fprintf(fileHandle_t fp, const char *fmt, ...) {
 	char maxline[2048];

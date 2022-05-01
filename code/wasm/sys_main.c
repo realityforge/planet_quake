@@ -384,8 +384,11 @@ void SDL_MinimizeWindow(SDL_Window * window) {
 
 }
 int SDL_ShowMessageBox(const SDL_MessageBoxData *messageboxdata, int *buttonid) {
-	DebugBreak();
+#ifdef __WASM__
+	return 1;
+#else
 	return 0;
+#endif
 }
 void SDL_RestoreWindow(SDL_Window * window) {
 

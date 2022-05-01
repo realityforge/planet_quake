@@ -314,7 +314,10 @@ S_SoundInfo
 =================
 */
 extern snd_codec_t *codecs;
-static void S_SoundInfo( void )
+#ifndef __WASM__
+static 
+#endif
+void S_SoundInfo( void )
 {
 	if( si.SoundInfo ) {
 		si.SoundInfo();

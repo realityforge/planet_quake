@@ -1543,8 +1543,8 @@ function GL_GetDrawableSize(width, height) {
   // THIS IS THE NEW VID_RESTART FAST HACK
   INPUT.updateWidth = width
   INPUT.updateHeight = height
-  HEAP32[width>>2] = Q3e.canvas.width
-  HEAP32[height>>2] = Q3e.canvas.height
+  HEAP32[width>>2] = GL.canvas.width
+  HEAP32[height>>2] = GL.canvas.height
 }
 
 var GLctx;

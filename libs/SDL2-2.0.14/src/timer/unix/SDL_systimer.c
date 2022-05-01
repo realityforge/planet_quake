@@ -53,6 +53,10 @@
 #include <mach/mach_time.h>
 #endif
 
+#ifdef __WASM__
+#include <sys_overrides.h>
+#endif
+
 /* Use CLOCK_MONOTONIC_RAW, if available, which is not subject to adjustment by NTP */
 #if HAVE_CLOCK_GETTIME
 #ifdef CLOCK_MONOTONIC_RAW

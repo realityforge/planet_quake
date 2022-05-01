@@ -6,7 +6,7 @@ USE_RENDERER_DLOPEN := 0
 USE_SYSTEM_JPEG     := 0
 USE_INTERNAL_JPEG   := 0
 USE_INTERNAL_VORBIS := 1
-USE_SYSTEM_LIBC     := 0
+USE_SYSTEM_LIBC     := 1
 USE_CODEC_VORBIS    := 1
 USE_CODEC_WAV       := 0
 USE_ABS_MOUSE       := 1
@@ -38,8 +38,14 @@ SHLIBCFLAGS         := -frtti -fPIC -MMD
 SHLIBLDFLAGS        := -fPIC -Wl,-shared \
                        -Wl,--import-memory -Wl,--import-table -Wl,--error-limit=200 \
                        -Wl,--no-entry --no-standard-libraries -Wl,--export-dynamic
-CLIENT_LDFLAGS      := -Wl,--import-memory -Wl,--import-table -Wl,--error-limit=200 \
-                       -Wl,--no-entry --no-standard-libraries -Wl,--export-dynamic
+
+CLIENT_LDFLAGS      := -Wl,--import-memory -Wl,--import-table \
+                       -Wl,--no-entry --no-standard-libraries \
+												-Wl,--export-dynamic -Wl,--error-limit=200 \
+												-Wl,--export=sprintf -Wl,--export=malloc  \
+												-Wl,--export=stderr -Wl,--export=stdout  \
+												-Wl,--export=errno --no-standard-libraries
+
 RELEASE_LDFLAGS     := 
 DEBUG_LDFLAGS       := -fvisibility=default -fno-inline
 
@@ -67,16 +73,19 @@ endif
 endif
 endif
 
-CLIENT_LDFLAGS      += code/wasm/wasi/libclang_rt.builtins-wasm32.a
+CLIENT_LDFLAGS      += code/wasm/wasi/libclang_rt.builtins-wasm32.a \
+	libs/wasi-sysroot/lib/wasm32-wasi/libc.a
 # -fno-common -ffreestanding -nostdinc --no-standard-libraries
-MUSL_SOURCE         := libs/musl-1.2.2
 SDL_SOURCE          := libs/SDL2-2.0.14
 BASE_CFLAGS         += -Wall --target=wasm32 \
                        -Wimplicit -fstrict-aliasing \
                        -ftree-vectorize -fsigned-char -MMD \
                        -ffast-math -fno-short-enums \
                        -Wno-extra-semi \
-                       -D_XOPEN_SOURCE=700 \
+											-D_XOPEN_SOURCE=700 -D__EMSCRIPTEN__=1 \
+											-D__WASM__=1 -D__wasi__=1 -D__wasm32__=1 \
+											-D_WASI_EMULATED_SIGNAL -D_WASI_EMULATED_MMAN=1 \
+                       -D_GNU_SOURCE=1 \
                        -DGL_GLEXT_PROTOTYPES=1 \
                        -DGL_ARB_ES2_compatibility=1 \
                        -DGL_EXT_direct_state_access=1 \
@@ -88,15 +97,14 @@ BASE_CFLAGS         += -Wall --target=wasm32 \
                        -DUSE_MASTER_LAN \
                        -D__WASM__ \
                        -std=gnu11 \
-                       -Icode/wasm/emscripten \
-                       -I$(MUSL_SOURCE)/include \
                        -I$(SDL_SOURCE)/include \
+											 -Ilibs/wasi-sysroot/include \
                        -Icode/wasm
 DEBUG_CFLAGS        := -fvisibility=default -fno-inline \
                        -DDEBUG -D_DEBUG -g -g3 -fPIC -gdwarf -gfull
-RELEASE_CFLAGS      := -fvisibility=hidden \
+RELEASE_CFLAGS      := -fvisibility=default  \
                        -DNDEBUG -Ofast -O3 -Oz -fPIC -ffast-math
-                    # -flto 
+# -flto
 PK3_INCLUDES        := xxx-multigame-files.pk3  \
                        xxx-multigame-vms.pk3    \
 											 lsdm3_v1-files.pk3
@@ -157,21 +165,15 @@ index: $(INDEX_OBJS) ## create an index.html page out of the current build targe
 
 
 # TODO build quake 3 as a library that can be use for rendering embedded in other apps?
-SDL_FLAGS := -DSDL_VIDEO_DISABLED=1 \
-						 -DSDL_JOYSTICK_DISABLED=1 \
-						 -DSDL_SENSOR_DISABLED=1 \
-						 -DSDL_HAPTIC_DISABLED=1 \
-             -DSDL_TIMER_UNIX=1 \
-             -DHAVE_CLOCK_GETTIME=1 \
-             -D__EMSCRIPTEN__=1 \
-						 -D_GNU_SOURCE=1 \
-						 -DHAVE_STDLIB_H=1 \
-						 -DHAVE_UNISTD_H=1 \
-						 -DHAVE_MATH_H=1 \
-						 -DHAVE_GETENV=0 \
-						 -DHAVE_M_PI \
-						 -DSDL_THREADS_DISABLED=1 \
-						 -DSDL_AUDIO_DRIVER_EMSCRIPTEN=1
+SDL_FLAGS := \
+	-DSDL_VIDEO_DISABLED=1 -DSDL_JOYSTICK_DISABLED=1 \
+	-DSDL_SENSOR_DISABLED=1 -DSDL_HAPTIC_DISABLED=1 \
+	-DSDL_TIMER_UNIX=1 -DHAVE_MEMORY_H=1 -DHAVE_CLOCK_GETTIME=1 \
+	-D_GNU_SOURCE=1 -DHAVE_STDLIB_H=1 -DHAVE_GETENV=0 \
+	-DHAVE_UNISTD_H=1 -DHAVE_MATH_H=1 -DHAVE_M_PI=1 \
+	-DHAVE_STDIO_H=1 -DHAVE_ALLOCA_H=1 -DHAVE_STRING_H=1 \
+	-DSDL_THREADS_DISABLED=1 -DSDL_AUDIO_DRIVER_EMSCRIPTEN=1
+
 
 define DO_SDL_CC
 	$(echo_cmd) "SDL_CC $<"
